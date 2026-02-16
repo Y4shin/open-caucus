@@ -84,3 +84,6 @@ Desktop.ini
 
 # Direnv
 .direnv
+
+# Air tempdir
+/tmp

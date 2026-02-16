@@ -1,0 +1,11 @@
+package templates
+
+import "strconv"
+
+type CounterInput struct {
+	Value int
+}
+
+templ CounterTemplate(input CounterInput) {
+	<span id="counter-value">{ strconv.Itoa(input.Value) }</span>
+}

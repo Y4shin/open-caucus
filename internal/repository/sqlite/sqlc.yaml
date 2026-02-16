@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: "migrations"
+    queries: "queries"
+    gen:
+      go:
+        package: "client"
+        out: "client"
+        output_files_suffix: "_generated"
+        output_db_file_name: "db_generated.go"
+        output_models_file_name: "models_generated.go"

@@ -68,16 +68,18 @@ func validateConfig(config *RouteConfig) error {
 				return fmt.Errorf("route[%d].method[%d]: handler is required", i, j)
 			}
 
-			if method.Template.Package == "" {
-				return fmt.Errorf("route[%d].method[%d]: template package is required", i, j)
-			}
+			if !method.SSE {
+				if method.Template.Package == "" {
+					return fmt.Errorf("route[%d].method[%d]: template package is required", i, j)
+				}
 
-			if method.Template.Type == "" {
-				return fmt.Errorf("route[%d].method[%d]: template type is required", i, j)
-			}
+				if method.Template.Type == "" {
+					return fmt.Errorf("route[%d].method[%d]: template type is required", i, j)
+				}
 
-			if method.Template.InputType == "" {
-				return fmt.Errorf("route[%d].method[%d]: template input_type is required", i, j)
+				if method.Template.InputType == "" {
+					return fmt.Errorf("route[%d].method[%d]: template input_type is required", i, j)
+				}
 			}
 		}
 	}

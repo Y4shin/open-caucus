@@ -152,14 +152,20 @@ func generateHandlerInterface(buf *bytes.Buffer, config *RouteConfig, imports ma
 	for _, route := range config.Routes {
 		for _, method := range route.Methods {
 			params := ExtractPathParams(route.Path)
-			templateAlias := getTemplateAlias(method.Template.Package, imports)
-			inputType := fmt.Sprintf("%s.%s", templateAlias, method.Template.InputType)
 
 			buf.WriteString(fmt.Sprintf("\t%s(w http.ResponseWriter, r *http.Request", method.Handler))
 			if len(params) > 0 {
 				buf.WriteString(", params RouteParams")
 			}
-			buf.WriteString(fmt.Sprintf(") (*%s, error)\n", inputType))
+
+			if method.SSE {
+				// SSE handlers own the response writer and stream directly
+				buf.WriteString(") error\n")
+			} else {
+				templateAlias := getTemplateAlias(method.Template.Package, imports)
+				inputType := fmt.Sprintf("%s.%s", templateAlias, method.Template.InputType)
+				buf.WriteString(fmt.Sprintf(") (*%s, error)\n", inputType))
+			}
 		}
 	}
 
@@ -288,8 +294,6 @@ func generateRouteHandlers(buf *bytes.Buffer, config *RouteConfig, imports map[s
 	for _, route := range config.Routes {
 		for _, method := range route.Methods {
 			params := ExtractPathParams(route.Path)
-			templateAlias := getTemplateAlias(method.Template.Package, imports)
-			templateFunc := fmt.Sprintf("%s.%s", templateAlias, method.Template.Type)
 
 			buf.WriteString(fmt.Sprintf("func (rt *Router) handle%s(w http.ResponseWriter, r *http.Request) {\n", method.Handler))
 
@@ -300,20 +304,37 @@ func generateRouteHandlers(buf *bytes.Buffer, config *RouteConfig, imports map[s
 					buf.WriteString(fmt.Sprintf("\t\t%s: r.PathValue(%q),\n", ToPascalCase(param), param))
 				}
 				buf.WriteString("\t}\n\n")
-
-				buf.WriteString(fmt.Sprintf("\tinput, err := rt.handler.%s(w, r, params)\n", method.Handler))
-			} else {
-				buf.WriteString(fmt.Sprintf("\tinput, err := rt.handler.%s(w, r)\n", method.Handler))
 			}
 
-			// Error handling
-			buf.WriteString("\tif err != nil {\n")
-			buf.WriteString("\t\thttp.Error(w, err.Error(), http.StatusInternalServerError)\n")
-			buf.WriteString("\t\treturn\n")
-			buf.WriteString("\t}\n\n")
+			if method.SSE {
+				// SSE handlers own the response — just call and handle error
+				if len(params) > 0 {
+					buf.WriteString(fmt.Sprintf("\tif err := rt.handler.%s(w, r, params); err != nil {\n", method.Handler))
+				} else {
+					buf.WriteString(fmt.Sprintf("\tif err := rt.handler.%s(w, r); err != nil {\n", method.Handler))
+				}
+				buf.WriteString("\t\thttp.Error(w, err.Error(), http.StatusInternalServerError)\n")
+				buf.WriteString("\t}\n")
+			} else {
+				templateAlias := getTemplateAlias(method.Template.Package, imports)
+				templateFunc := fmt.Sprintf("%s.%s", templateAlias, method.Template.Type)
 
-			// Call template with input
-			buf.WriteString(fmt.Sprintf("\t%s(*input).Render(r.Context(), w)\n", templateFunc))
+				if len(params) > 0 {
+					buf.WriteString(fmt.Sprintf("\tinput, err := rt.handler.%s(w, r, params)\n", method.Handler))
+				} else {
+					buf.WriteString(fmt.Sprintf("\tinput, err := rt.handler.%s(w, r)\n", method.Handler))
+				}
+
+				// Error handling
+				buf.WriteString("\tif err != nil {\n")
+				buf.WriteString("\t\thttp.Error(w, err.Error(), http.StatusInternalServerError)\n")
+				buf.WriteString("\t\treturn\n")
+				buf.WriteString("\t}\n\n")
+
+				// Call template with input
+				buf.WriteString(fmt.Sprintf("\t%s(*input).Render(r.Context(), w)\n", templateFunc))
+			}
+
 			buf.WriteString("}\n\n")
 		}
 	}
