@@ -1,0 +1,92 @@
+version: 1.0
+
+# Middleware groups apply to all routes matching the prefix
+middleware_groups:
+  - prefix: /api
+    middleware: [CORS, RateLimit]
+
+  - prefix: /admin
+    middleware: [RequireAuth, RequireAdmin, AuditLog]
+
+  - prefix: /api/protected
+    middleware: [RequireAuth, LoadUser]
+
+routes:
+  # Root route
+  - path: /
+    methods:
+      - verb: GET
+        handler: HomePage
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: HomePageTemplate
+          input_type: HomePageInput
+        middleware: [Logging]
+
+  # Post detail with path parameter
+  - path: /posts/{id}
+    methods:
+      - verb: GET
+        handler: GetPost
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: PostDetailTemplate
+          input_type: Post
+        middleware: [Logging]
+
+      - verb: DELETE
+        handler: DeletePost
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: PostDeletedTemplate
+          input_type: PostDeletedInput
+        middleware: [RequireAuth, Logging]
+
+  # API route - will automatically get CORS and RateLimit from /api prefix
+  - path: /api/posts
+    methods:
+      - verb: GET
+        handler: ListPosts
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: PostListTemplate
+          input_type: PostListInput
+
+      - verb: POST
+        handler: CreatePost
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: PostCreatedTemplate
+          input_type: Post
+        middleware: [RequireAuth]
+
+  # This will get middleware from both /api and /api/protected prefixes
+  - path: /api/protected/posts/{id}/comments
+    methods:
+      - verb: POST
+        handler: AddComment
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: CommentAddedTemplate
+          input_type: Comment
+
+  # SSE endpoint - gets /api middleware
+  - path: /api/events
+    methods:
+      - verb: GET
+        handler: StreamEvents
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: EventStreamTemplate
+          input_type: Event
+        sse: true
+
+  # Admin route - gets /admin middleware
+  - path: /admin/dashboard
+    methods:
+      - verb: GET
+        handler: AdminDashboard
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminDashboardTemplate
+          input_type: DashboardStats

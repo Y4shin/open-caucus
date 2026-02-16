@@ -1,0 +1,81 @@
+package templates
+
+type Post struct {
+	ID      string
+	Title   string
+	Content string
+	Author  string
+}
+
+type PostDeletedInput struct {
+	PostID string
+}
+
+type PostListInput struct {
+	Posts []Post
+}
+
+templ PostDetailTemplate(input Post) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>{ input.Title }</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+		</head>
+		<body>
+			<h1>{ input.Title }</h1>
+			<p>By { input.Author }</p>
+			<div class="content">
+				{ input.Content }
+			</div>
+			<div>
+				<button
+					hx-delete={ "/posts/" + input.ID }
+					hx-confirm="Are you sure?"
+				>
+					Delete Post
+				</button>
+			</div>
+		</body>
+	</html>
+}
+
+templ PostDeletedTemplate(input PostDeletedInput) {
+	<div class="alert success">
+		<p>Post { input.PostID } has been deleted successfully.</p>
+		<a href="/">Return to home</a>
+	</div>
+}
+
+templ PostListTemplate(input PostListInput) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>All Posts</title>
+			<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+		</head>
+		<body>
+			<h1>All Posts</h1>
+			<div id="posts">
+				for _, post := range input.Posts {
+					<article>
+						<h2><a href={ templ.URL("/posts/" + post.ID) }>{ post.Title }</a></h2>
+						<p>By { post.Author }</p>
+					</article>
+				}
+			</div>
+			<form hx-post="/api/posts" hx-target="#posts" hx-swap="afterbegin">
+				<input type="text" name="title" placeholder="Post Title" required/>
+				<textarea name="content" placeholder="Post Content" required></textarea>
+				<button type="submit">Create Post</button>
+			</form>
+		</body>
+	</html>
+}
+
+templ PostCreatedTemplate(input Post) {
+	<article hx-swap-oob="afterbegin:#posts">
+		<h2><a href={ templ.URL("/posts/" + input.ID) }>{ input.Title }</a></h2>
+		<p>By { input.Author }</p>
+	</article>
+}

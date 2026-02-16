@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "gopls": {
+      "type": "stdio",
+      "command": "mcp-gopls",
+      "args": [
+        "--workspace",
+        "./src",
+        "--log-level",
+        "info"
+      ],
+      "env": {}
+    },
+    "taskfile": {
+      "type": "stdio",
+      "command": "mcp-taskfile-server",
+      "args": [],
+      "env": {}
+    }
+  }
+}

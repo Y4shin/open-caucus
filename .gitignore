@@ -1,0 +1,83 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Go build cache
+.cache/
+
+# Compiled binaries
+/bin/
+/dist/
+conference-tool
+*.bin
+
+# Generated code - DO NOT COMMIT
+*_templ.go
+routes_gen.go
+
+# Compiled route-codegen tool
+/tools/routing/cmd/route-codegen/route-codegen
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Debug files
+__debug_bin*
+debug
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Log files
+*.log
+logs/
+
+# Database files (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration overrides (keep example files)
+config.local.yaml
+config.local.yml
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux specific
+.directory

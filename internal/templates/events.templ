@@ -1,0 +1,14 @@
+package templates
+
+type Event struct {
+	ID      string
+	Type    string
+	Message string
+}
+
+templ EventStreamTemplate(input Event) {
+	<div class="event" data-event-type={ input.Type }>
+		<span class="event-id">{ input.ID }</span>
+		<span class="event-message">{ input.Message }</span>
+	</div>
+}
