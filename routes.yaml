@@ -1,28 +1,165 @@
 version: 1.0
 
-middleware_groups: []
-
 routes:
+  # Admin Login
+  - path: /admin/login
+    methods:
+      - verb: GET
+        handler: AdminLogin
+        middleware:
+          - admin_session  # Check if already logged in
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminLoginTemplate
+          input_type: AdminLoginInput
+
+      - verb: POST
+        handler: AdminLoginSubmit
+        middleware:
+          - admin_session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminLoginTemplate
+          input_type: AdminLoginInput
+
+  # Admin Logout
+  - path: /admin/logout
+    methods:
+      - verb: POST
+        handler: AdminLogout
+        middleware:
+          - admin_session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminLoginTemplate
+          input_type: AdminLoginInput
+
+  # Admin Dashboard
+  - path: /admin
+    methods:
+      - verb: GET
+        handler: AdminDashboard
+        middleware:
+          - admin_session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminDashboardTemplate
+          input_type: AdminDashboardInput
+
+  # Create Committee
+  - path: /admin/committee/create
+    methods:
+      - verb: POST
+        handler: AdminCreateCommittee
+        middleware:
+          - admin_session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: CommitteeListPartial
+          input_type: CommitteeListPartialInput
+
+  # Delete Committee
+  - path: /admin/committee/{slug}/delete
+    methods:
+      - verb: POST
+        handler: AdminDeleteCommittee
+        middleware:
+          - admin_session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminDashboardTemplate
+          input_type: AdminDashboardInput
+
+  # Committee Users Page
+  - path: /admin/committee/{slug}
+    methods:
+      - verb: GET
+        handler: AdminCommitteeUsers
+        middleware:
+          - admin_session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminCommitteeUsersTemplate
+          input_type: AdminCommitteeUsersInput
+
+  # Create User
+  - path: /admin/committee/{slug}/user/create
+    methods:
+      - verb: POST
+        handler: AdminCreateUser
+        middleware:
+          - admin_session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminCommitteeUsersTemplate
+          input_type: AdminCommitteeUsersInput
+
+  # Delete User
+  - path: /admin/committee/{slug}/user/{user_id}/delete
+    methods:
+      - verb: POST
+        handler: AdminDeleteUser
+        middleware:
+          - admin_session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminCommitteeUsersTemplate
+          input_type: AdminCommitteeUsersInput
+
+  # ===== User Authentication Routes =====
+
+  # User Login Page
   - path: /
     methods:
       - verb: GET
-        handler: HomePage
+        handler: LoginPage
+        middleware:
+          - session  # Check if already logged in
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: HomePageTemplate
-          input_type: HomePageInput
+          type: LoginPageTemplate
+          input_type: LoginPageInput
 
-  - path: /increment
+  # User Login Submit
+  - path: /login
     methods:
       - verb: POST
-        handler: Increment
+        handler: LoginSubmit
+        middleware:
+          - session
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: CounterTemplate
-          input_type: CounterInput
+          type: LoginPageTemplate
+          input_type: LoginPageInput
 
-  - path: /subscribe
+  # Committee Dashboard
+  - path: /committee/{slug}
     methods:
       - verb: GET
-        handler: Subscribe
-        sse: true
+        handler: CommitteePage
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: CommitteePageTemplate
+          input_type: CommitteePageInput
+
+  # User Logout
+  - path: /logout
+    methods:
+      - verb: POST
+        handler: LogoutSubmit
+        middleware:
+          - session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: LoginPageTemplate
+          input_type: LoginPageInput

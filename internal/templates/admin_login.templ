@@ -1,0 +1,32 @@
+package templates
+
+type AdminLoginInput struct {
+	Error string
+}
+
+templ AdminLoginTemplate(input AdminLoginInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Admin Login</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<h1>Admin Login</h1>
+
+		if input.Error != "" {
+			<div class="error">{ input.Error }</div>
+		}
+
+		<form method="POST" action="/admin/login">
+			<div>
+				<label for="admin_key">Admin Key:</label>
+				<input type="password" id="admin_key" name="admin_key" required autofocus/>
+			</div>
+
+			<button type="submit">Login</button>
+		</form>
+	</body>
+	</html>
+}

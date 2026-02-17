@@ -28,6 +28,17 @@ type AgendaPoint struct {
 	CurrentSpeakerID sql.NullInt64
 }
 
+type Attendee struct {
+	ID        int64
+	MeetingID int64
+	UserID    sql.NullInt64
+	FullName  string
+	Secret    string
+	CreatedAt string
+	IsChair   bool
+	Quoted    bool
+}
+
 type BinaryBlob struct {
 	ID          int64
 	Filename    string
@@ -40,6 +51,7 @@ type BinaryBlob struct {
 type Committee struct {
 	ID               int64
 	Name             string
+	Slug             string
 	CreatedAt        string
 	UpdatedAt        string
 	CurrentMeetingID sql.NullInt64
@@ -50,9 +62,12 @@ type Meeting struct {
 	CommitteeID          int64
 	Name                 string
 	Description          string
+	Secret               string
+	SignupOpen           bool
 	CreatedAt            string
 	UpdatedAt            string
 	CurrentAgendaPointID sql.NullInt64
+	ProtocolWriterID     sql.NullInt64
 }
 
 type Motion struct {
@@ -68,10 +83,21 @@ type Motion struct {
 	UpdatedAt      string
 }
 
+type Session struct {
+	SessionID     string
+	SessionType   string
+	UserID        sql.NullInt64
+	CommitteeSlug sql.NullString
+	AttendeeID    sql.NullInt64
+	MeetingID     sql.NullInt64
+	CreatedAt     string
+	ExpiresAt     string
+}
+
 type SpeakersList struct {
 	ID            int64
 	AgendaPointID int64
-	UserID        int64
+	AttendeeID    int64
 	Type          string
 	Status        string
 	RequestedAt   string
@@ -85,8 +111,8 @@ type User struct {
 	Username     string
 	PasswordHash string
 	FullName     string
-	Gender       string
 	Role         string
 	CreatedAt    string
 	UpdatedAt    string
+	Quoted       bool
 }

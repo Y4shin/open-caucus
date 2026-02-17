@@ -1,0 +1,37 @@
+package templates
+
+type CommitteePageInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	Username      string
+	Role          string
+}
+
+templ CommitteePageTemplate(input CommitteePageInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>{ input.CommitteeName } - Conference Tool</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>{ input.CommitteeName }</h1>
+			<p>Logged in as: { input.Username } ({ input.Role })</p>
+		</header>
+
+		<main>
+			<h2>Committee Dashboard</h2>
+			<p>Welcome to the committee management system.</p>
+			<!-- TODO: Add committee functionality -->
+		</main>
+
+		<footer>
+			<form method="POST" action="/logout">
+				<button type="submit">Logout</button>
+			</form>
+		</footer>
+	</body>
+	</html>
+}

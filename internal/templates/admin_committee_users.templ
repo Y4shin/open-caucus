@@ -1,0 +1,114 @@
+package templates
+
+type AdminCommitteeUsersInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	Users         []UserItem
+	Error         string
+}
+
+type UserItem struct {
+	ID       int64
+	IDString string // String representation of ID for URLs
+	Username string
+	FullName string
+	Role     string
+	Quoted   bool
+}
+
+templ AdminCommitteeUsersTemplate(input AdminCommitteeUsersInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>{ input.CommitteeName } - Users</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>{ input.CommitteeName } - Users</h1>
+			<nav>
+				<a href="/admin">← Back to Dashboard</a>
+			</nav>
+		</header>
+
+		<main>
+			if input.Error != "" {
+				<div class="error">{ input.Error }</div>
+			}
+
+			<section>
+				<h2>Add New User</h2>
+				<form method="POST" action={ templ.URL("/admin/committee/" + input.CommitteeSlug + "/user/create") }>
+					<div>
+						<label for="username">Username:</label>
+						<input type="text" id="username" name="username" required/>
+					</div>
+					<div>
+						<label for="password">Password:</label>
+						<input type="password" id="password" name="password" required/>
+					</div>
+					<div>
+						<label for="full_name">Full Name:</label>
+						<input type="text" id="full_name" name="full_name" required/>
+					</div>
+					<div>
+						<label for="role">Role:</label>
+						<select id="role" name="role" required>
+							<option value="member">Member</option>
+							<option value="chairperson">Chairperson</option>
+						</select>
+					</div>
+					<div>
+						<label>
+							<input type="checkbox" name="quoted" value="true"/>
+							Uses quoted speech in protocols
+						</label>
+					</div>
+					<button type="submit">Create User</button>
+				</form>
+			</section>
+
+			<section>
+				<h2>Existing Users</h2>
+				if len(input.Users) == 0 {
+					<p>No users yet.</p>
+				} else {
+					<table>
+						<thead>
+							<tr>
+								<th>Username</th>
+								<th>Full Name</th>
+								<th>Role</th>
+								<th>Quoted</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							for _, user := range input.Users {
+								<tr>
+									<td>{ user.Username }</td>
+									<td>{ user.FullName }</td>
+									<td>{ user.Role }</td>
+									<td>
+										if user.Quoted {
+											Yes
+										} else {
+											No
+										}
+									</td>
+									<td>
+										<form method="POST" action={ templ.URL("/admin/committee/" + input.CommitteeSlug + "/user/" + user.IDString + "/delete") } style="display: inline;">
+											<button type="submit" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+										</form>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				}
+			</section>
+		</main>
+	</body>
+	</html>
+}

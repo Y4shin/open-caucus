@@ -1,0 +1,46 @@
+package templates
+
+type LoginPageInput struct {
+	Error     string
+	Committee string // Pre-fill on error
+	Username  string // Pre-fill on error
+}
+
+templ LoginPageTemplate(input LoginPageInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Login - Conference Tool</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<h1>Conference Tool Login</h1>
+
+		if input.Error != "" {
+			<div class="error">{ input.Error }</div>
+		}
+
+		<form method="POST" action="/login">
+			<div>
+				<label for="committee">Committee:</label>
+				<input type="text" id="committee" name="committee"
+				       value={ input.Committee } required/>
+			</div>
+
+			<div>
+				<label for="username">Username:</label>
+				<input type="text" id="username" name="username"
+				       value={ input.Username } required/>
+			</div>
+
+			<div>
+				<label for="password">Password:</label>
+				<input type="password" id="password" name="password" required/>
+			</div>
+
+			<button type="submit">Login</button>
+		</form>
+	</body>
+	</html>
+}

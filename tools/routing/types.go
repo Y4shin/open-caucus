@@ -21,11 +21,12 @@ type Route struct {
 
 // RouteMethod represents a specific HTTP verb handler for a route
 type RouteMethod struct {
-	Verb       string   `yaml:"verb"`
-	Handler    string   `yaml:"handler"`
-	Template   Template `yaml:"template"`
-	Middleware []string `yaml:"middleware,omitempty"`
-	SSE        bool     `yaml:"sse,omitempty"`
+	Verb       string     `yaml:"verb"`
+	Handler    string     `yaml:"handler"`
+	Template   Template   `yaml:"template"`
+	Middleware []string   `yaml:"middleware,omitempty"`
+	SSE        bool       `yaml:"sse,omitempty"`
+	Events     []SSEEvent `yaml:"events,omitempty"` // List of SSE events (required if SSE=true)
 }
 
 // Template specifies which templ template to use
@@ -33,4 +34,10 @@ type Template struct {
 	Package   string `yaml:"package"`
 	Type      string `yaml:"type"`
 	InputType string `yaml:"input_type"`
+}
+
+// SSEEvent represents a single SSE event type with its template
+type SSEEvent struct {
+	Name     string   `yaml:"name"`     // Event name (e.g., "CounterUpdated")
+	Template Template `yaml:"template"` // Template configuration for this event
 }

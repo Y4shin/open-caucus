@@ -42,7 +42,8 @@ A web application built with Go, HTMX, and Templ featuring type-safe routing thr
 ### Prerequisites
 
 - Go 1.25.5 or later
-- The project uses Go tools (templ) which are automatically managed via `go.mod`
+- The project uses Go tools (templ, air, sqlc) which are automatically managed via `go.mod`
+- (Optional) [Task](https://taskfile.dev/) for running common development tasks
 
 ### Installation
 
@@ -52,20 +53,26 @@ A web application built with Go, HTMX, and Templ featuring type-safe routing thr
    cd conference-tool
    ```
 
-2. Install dependencies:
+2. Install dependencies and generate code:
    ```bash
-   go mod download
-   ```
+   # Using Task (recommended)
+   task setup
 
-3. Generate code:
-   ```bash
+   # Or manually
+   go mod download
    go generate ./...
    ```
 
 ### Running the Application
 
 ```bash
-go run ./cmd/conference-tool serve
+# Using Task (recommended)
+task dev              # Start with hot reload
+task run              # Run directly
+
+# Or manually
+go tool air           # Start with hot reload
+go run . serve        # Run directly
 ```
 
 ## Route Code Generation
@@ -169,12 +176,12 @@ The code generator creates:
 After modifying `routes.yaml`:
 
 ```bash
+# Using Task (recommended)
+task generate:routes    # Generate only routes
+task generate           # Generate everything
+
+# Or manually
 go generate ./internal/routes
-```
-
-Or regenerate everything:
-
-```bash
 go generate ./...
 ```
 
@@ -214,6 +221,10 @@ templ PostDetailTemplate(input Post) {
 ### Generating Template Code
 
 ```bash
+# Using Task (recommended)
+task generate:templates
+
+# Or manually
 go generate ./internal/templates
 ```
 
@@ -305,19 +316,42 @@ Configuration is managed via environment variables and config files. See [`inter
 
 ## Development
 
+### Available Commands
+
+The project uses [Taskfile](https://taskfile.dev/) for common development tasks. Run `task --list` to see all available commands.
+
+Key tasks:
+- `task dev` - Run with hot reload
+- `task test` - Run tests
+- `task generate` - Generate all code
+- `task check` - Run all code quality checks
+- `task ci` - Run CI checks
+
+See [Taskfile.yaml](Taskfile.yaml) for the complete list of available tasks.
+
 ### Code Generation
 
 The project uses `go generate` for code generation:
 
-- **Routes**: `go generate ./internal/routes`
-- **Templates**: `go generate ./internal/templates`
-- **All**: `go generate ./...`
+```bash
+# Using Task (recommended)
+task generate              # All code generation
+task generate:routes       # Routes only
+task generate:templates    # Templates only
+task generate:db          # Database client only
+
+# Or manually
+go generate ./...                      # All
+go generate ./internal/routes          # Routes
+go generate ./internal/templates       # Templates
+go generate ./internal/repository/sqlite  # Database
+```
 
 ### Adding New Routes
 
 1. Add route definition to `routes.yaml`
 2. Create corresponding templ template in `internal/templates/`
-3. Run `go generate ./...`
+3. Run `task generate` (or `go generate ./...`)
 4. Implement the handler method
 5. Register any new middleware if needed
 

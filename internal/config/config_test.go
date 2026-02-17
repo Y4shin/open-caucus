@@ -104,7 +104,7 @@ func TestStringToStringMapHook(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Call the hook function
 			result, err := hook(
-				reflect.TypeOf(""),                 // from type: string
+				reflect.TypeOf(""),                  // from type: string
 				reflect.TypeOf(map[string]string{}), // to type: map[string]string
 				tt.input,
 			)
@@ -207,8 +207,7 @@ func TestLoadConfig_Defaults(t *testing.T) {
 		"ENVIRONMENT":  nil,
 		"PORT":         nil,
 		"HOST":         nil,
-		"LOG_LEVEL":    nil,
-		"LOG_FORMAT":   nil,
+		"ADMIN_KEY":    nil,
 	})
 	defer snapshot.Restore()
 
@@ -234,11 +233,8 @@ func TestLoadConfig_Defaults(t *testing.T) {
 	if cfg.Application.Host != "0.0.0.0" {
 		t.Errorf("Host: got %q, want %q", cfg.Application.Host, "0.0.0.0")
 	}
-	if cfg.Application.LogLevel != "info" {
-		t.Errorf("LogLevel: got %q, want %q", cfg.Application.LogLevel, "info")
-	}
-	if cfg.Application.LogFormat != "json" {
-		t.Errorf("LogFormat: got %q, want %q", cfg.Application.LogFormat, "json")
+	if cfg.Application.AdminKey != "changeme" {
+		t.Errorf("AdminKey: got %q, want %q", cfg.Application.AdminKey, "changeme")
 	}
 }
 
@@ -248,8 +244,7 @@ func TestLoadConfig_EnvOverrides(t *testing.T) {
 		"ENVIRONMENT":  stringPtr("production"),
 		"PORT":         stringPtr("9000"),
 		"HOST":         stringPtr("127.0.0.1"),
-		"LOG_LEVEL":    stringPtr("debug"),
-		"LOG_FORMAT":   stringPtr("text"),
+		"ADMIN_KEY":    stringPtr("my-secret-admin-key"),
 	})
 	defer snapshot.Restore()
 
@@ -275,11 +270,8 @@ func TestLoadConfig_EnvOverrides(t *testing.T) {
 	if cfg.Application.Host != "127.0.0.1" {
 		t.Errorf("Host: got %q, want %q", cfg.Application.Host, "127.0.0.1")
 	}
-	if cfg.Application.LogLevel != "debug" {
-		t.Errorf("LogLevel: got %q, want %q", cfg.Application.LogLevel, "debug")
-	}
-	if cfg.Application.LogFormat != "text" {
-		t.Errorf("LogFormat: got %q, want %q", cfg.Application.LogFormat, "text")
+	if cfg.Application.AdminKey != "my-secret-admin-key" {
+		t.Errorf("AdminKey: got %q, want %q", cfg.Application.AdminKey, "my-secret-admin-key")
 	}
 }
 
@@ -293,34 +285,23 @@ func TestLoadConfig_ValidationFailures(t *testing.T) {
 			name: "invalid_environment",
 			envVars: map[string]*string{
 				"ENVIRONMENT": stringPtr("invalid"),
-			},
-			wantErr: "validation failed",
-		},
-		{
-			name: "invalid_log_level",
-			envVars: map[string]*string{
-				"LOG_LEVEL": stringPtr("trace"),
-			},
-			wantErr: "validation failed",
-		},
-		{
-			name: "invalid_log_format",
-			envVars: map[string]*string{
-				"LOG_FORMAT": stringPtr("xml"),
+				"ADMIN_KEY":   stringPtr("test-key"),
 			},
 			wantErr: "validation failed",
 		},
 		{
 			name: "port_below_range",
 			envVars: map[string]*string{
-				"PORT": stringPtr("0"),
+				"PORT":      stringPtr("0"),
+				"ADMIN_KEY": stringPtr("test-key"),
 			},
 			wantErr: "validation failed",
 		},
 		{
 			name: "port_above_range",
 			envVars: map[string]*string{
-				"PORT": stringPtr("99999"),
+				"PORT":      stringPtr("99999"),
+				"ADMIN_KEY": stringPtr("test-key"),
 			},
 			wantErr: "validation failed",
 		},

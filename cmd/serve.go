@@ -9,7 +9,9 @@ import (
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/middleware"
+	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
+	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/spf13/cobra"
 )
 
@@ -22,12 +24,41 @@ var serveCmd = &cobra.Command{
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 
+		// Initialize database repository
+		repo, err := sqlite.New("conference.db")
+		if err != nil {
+			return fmt.Errorf("failed to create repository: %w", err)
+		}
+		defer repo.Close()
+
+		// Run migrations
+		if err := repo.MigrateUp(); err != nil {
+			return fmt.Errorf("failed to run migrations: %w", err)
+		}
+
+		// Initialize broker
 		b := broker.NewMemoryBroker()
 		defer b.Shutdown()
 
-		handler := handlers.NewHandler(b)
-		mw := middleware.NewRegistry()
+		// Initialize session manager with repository as store
+		sessionManager := session.NewManager(repo, []byte(cfg.Application.SessionSecret))
 
+		// Initialize admin session manager
+		adminSessionManager := session.NewAdminSessionManager([]byte(cfg.Application.SessionSecret))
+
+		// Initialize middleware registry with session managers
+		mw := middleware.NewRegistry(sessionManager, adminSessionManager)
+
+		// Initialize handlers with repository, broker, and session managers
+		handler := &handlers.Handler{
+			Broker:              b,
+			Repository:          repo,
+			SessionManager:      sessionManager,
+			AdminSessionManager: adminSessionManager,
+			AdminKey:            cfg.Application.AdminKey,
+		}
+
+		// Create router
 		router := routes.NewRouter(handler, mw)
 		mux := router.RegisterRoutes()
 

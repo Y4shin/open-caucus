@@ -385,7 +385,7 @@ func TestValidateConfig_NestedStructs(t *testing.T) {
 	}
 
 	type TestConfig struct {
-		TopLevel int          `validate:"enforceMin(1)"`
+		TopLevel int `validate:"enforceMin(1)"`
 		Nested   NestedConfig
 	}
 
@@ -479,8 +479,6 @@ func TestValidateConfig_RealApplicationConfig(t *testing.T) {
 				Environment: "development",
 				Port:        8080,
 				Host:        "0.0.0.0",
-				LogLevel:    "info",
-				LogFormat:   "json",
 			},
 			shouldErr: false,
 		},
@@ -491,8 +489,6 @@ func TestValidateConfig_RealApplicationConfig(t *testing.T) {
 				Environment: "invalid",
 				Port:        8080,
 				Host:        "0.0.0.0",
-				LogLevel:    "info",
-				LogFormat:   "json",
 			},
 			shouldErr: true,
 			errField:  "Environment",
@@ -504,8 +500,6 @@ func TestValidateConfig_RealApplicationConfig(t *testing.T) {
 				Environment: "development",
 				Port:        0,
 				Host:        "0.0.0.0",
-				LogLevel:    "info",
-				LogFormat:   "json",
 			},
 			shouldErr: true,
 			errField:  "Port",
@@ -517,37 +511,9 @@ func TestValidateConfig_RealApplicationConfig(t *testing.T) {
 				Environment: "development",
 				Port:        99999,
 				Host:        "0.0.0.0",
-				LogLevel:    "info",
-				LogFormat:   "json",
 			},
 			shouldErr: true,
 			errField:  "Port",
-		},
-		{
-			name: "invalid_log_level",
-			config: ApplicationConfig{
-				ServiceName: "test-service",
-				Environment: "development",
-				Port:        8080,
-				Host:        "0.0.0.0",
-				LogLevel:    "trace",
-				LogFormat:   "json",
-			},
-			shouldErr: true,
-			errField:  "LogLevel",
-		},
-		{
-			name: "invalid_log_format",
-			config: ApplicationConfig{
-				ServiceName: "test-service",
-				Environment: "development",
-				Port:        8080,
-				Host:        "0.0.0.0",
-				LogLevel:    "info",
-				LogFormat:   "xml",
-			},
-			shouldErr: true,
-			errField:  "LogFormat",
 		},
 	}
 

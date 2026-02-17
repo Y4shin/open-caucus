@@ -30,18 +30,50 @@ func Generate(config *RouteConfig, packageName string) (string, error) {
 
 	// Collect all unique template imports
 	imports := collectImports(config)
+
+	// Check if we have any SSE routes (they need bytes and fmt)
+	hasSSE := false
+	for _, route := range config.Routes {
+		for _, method := range route.Methods {
+			if method.SSE {
+				hasSSE = true
+				break
+			}
+		}
+		if hasSSE {
+			break
+		}
+	}
+
+	// Always include basic imports needed for Router, even with no routes
+	buf.WriteString("import (\n")
+	if hasSSE {
+		buf.WriteString("\t\"bytes\"\n")
+	}
 	if len(imports) > 0 {
-		buf.WriteString("import (\n")
-		buf.WriteString("\t\"net/http\"\n")
-		buf.WriteString("\t\"strings\"\n\n")
+		buf.WriteString("\t\"context\"\n")
+	}
+	if hasSSE {
+		buf.WriteString("\t\"fmt\"\n")
+	}
+	buf.WriteString("\t\"net/http\"\n")
+	buf.WriteString("\t\"strings\"\n")
+
+	if len(imports) > 0 {
+		buf.WriteString("\n")
 		for alias, pkg := range imports {
 			buf.WriteString(fmt.Sprintf("\t%s \"%s\"\n", alias, pkg))
 		}
-		buf.WriteString(")\n\n")
 	}
+	buf.WriteString(")\n\n")
 
 	// Generate RouteParams struct
 	if err := generateRouteParams(&buf, config); err != nil {
+		return "", err
+	}
+
+	// Generate SSE event types
+	if err := generateSSEEventTypes(&buf, config, imports); err != nil {
 		return "", err
 	}
 
@@ -90,21 +122,31 @@ func Generate(config *RouteConfig, packageName string) (string, error) {
 // collectImports gathers all unique template package imports
 func collectImports(config *RouteConfig) map[string]string {
 	imports := make(map[string]string)
+
+	addImport := func(pkg string) {
+		if pkg != "" {
+			// Create a short alias from the last part of the package path
+			alias := filepath.Base(pkg)
+			// Handle potential conflicts by using full path segments if needed
+			if existing, exists := imports[alias]; exists && existing != pkg {
+				// Create a more unique alias
+				parts := strings.Split(pkg, "/")
+				if len(parts) >= 2 {
+					alias = strings.Join(parts[len(parts)-2:], "_")
+				}
+			}
+			imports[alias] = pkg
+		}
+	}
+
 	for _, route := range config.Routes {
 		for _, method := range route.Methods {
-			pkg := method.Template.Package
-			if pkg != "" {
-				// Create a short alias from the last part of the package path
-				alias := filepath.Base(pkg)
-				// Handle potential conflicts by using full path segments if needed
-				if existing, exists := imports[alias]; exists && existing != pkg {
-					// Create a more unique alias
-					parts := strings.Split(pkg, "/")
-					if len(parts) >= 2 {
-						alias = strings.Join(parts[len(parts)-2:], "_")
-					}
-				}
-				imports[alias] = pkg
+			// Add regular template package
+			addImport(method.Template.Package)
+
+			// Add SSE event template packages
+			for _, event := range method.Events {
+				addImport(event.Template.Package)
 			}
 		}
 	}
@@ -144,6 +186,52 @@ func generateRouteParams(buf *bytes.Buffer, config *RouteConfig) error {
 	return nil
 }
 
+// generateSSEEventTypes creates event type interfaces and structs for SSE handlers
+func generateSSEEventTypes(buf *bytes.Buffer, config *RouteConfig, imports map[string]string) error {
+	// Track which SSE handlers we've generated types for
+	generatedHandlers := make(map[string]bool)
+
+	for _, route := range config.Routes {
+		for _, method := range route.Methods {
+			if !method.SSE || len(method.Events) == 0 {
+				continue
+			}
+
+			// Skip if we've already generated for this handler
+			if generatedHandlers[method.Handler] {
+				continue
+			}
+			generatedHandlers[method.Handler] = true
+
+			eventInterfaceName := fmt.Sprintf("%sEvent", method.Handler)
+
+			// Generate the event interface
+			buf.WriteString(fmt.Sprintf("// %s is the union type for all %s SSE events\n", eventInterfaceName, method.Handler))
+			buf.WriteString(fmt.Sprintf("type %s interface {\n", eventInterfaceName))
+			buf.WriteString(fmt.Sprintf("\tIs%s()\n", eventInterfaceName))
+			buf.WriteString("}\n\n")
+
+			// Generate concrete event types for each event
+			for _, event := range method.Events {
+				eventTypeName := fmt.Sprintf("%sEvent", event.Name)
+				templateAlias := getTemplateAlias(event.Template.Package, imports)
+				inputType := fmt.Sprintf("%s.%s", templateAlias, event.Template.InputType)
+
+				// Generate the struct
+				buf.WriteString(fmt.Sprintf("// %s represents a %s event\n", eventTypeName, event.Name))
+				buf.WriteString(fmt.Sprintf("type %s struct {\n", eventTypeName))
+				buf.WriteString(fmt.Sprintf("\tData %s\n", inputType))
+				buf.WriteString("}\n\n")
+
+				// Generate the interface method
+				buf.WriteString(fmt.Sprintf("func (e %s) Is%s() {}\n\n", eventTypeName, eventInterfaceName))
+			}
+		}
+	}
+
+	return nil
+}
+
 // generateHandlerInterface creates the Handler interface with all methods
 func generateHandlerInterface(buf *bytes.Buffer, config *RouteConfig, imports map[string]string) error {
 	buf.WriteString("// Handler interface with all route methods\n")
@@ -153,18 +241,26 @@ func generateHandlerInterface(buf *bytes.Buffer, config *RouteConfig, imports ma
 		for _, method := range route.Methods {
 			params := ExtractPathParams(route.Path)
 
-			buf.WriteString(fmt.Sprintf("\t%s(w http.ResponseWriter, r *http.Request", method.Handler))
-			if len(params) > 0 {
-				buf.WriteString(", params RouteParams")
-			}
+			// All handlers start with context.Context as first parameter
+			buf.WriteString(fmt.Sprintf("\t%s(ctx context.Context", method.Handler))
 
 			if method.SSE {
-				// SSE handlers own the response writer and stream directly
-				buf.WriteString(") error\n")
+				// SSE handlers take request but not response writer
+				buf.WriteString(", r *http.Request")
+				if len(params) > 0 {
+					buf.WriteString(", params RouteParams")
+				}
+				// SSE handlers return a channel of events
+				buf.WriteString(fmt.Sprintf(") (<-chan %sEvent, error)\n", method.Handler))
 			} else {
+				// Regular handlers take response writer and request
+				buf.WriteString(", w http.ResponseWriter, r *http.Request")
+				if len(params) > 0 {
+					buf.WriteString(", params RouteParams")
+				}
 				templateAlias := getTemplateAlias(method.Template.Package, imports)
 				inputType := fmt.Sprintf("%s.%s", templateAlias, method.Template.InputType)
-				buf.WriteString(fmt.Sprintf(") (*%s, error)\n", inputType))
+				buf.WriteString(fmt.Sprintf(") (*%s, *ResponseMeta, error)\n", inputType))
 			}
 		}
 	}
@@ -254,6 +350,10 @@ func generateRegisterRoutes(buf *bytes.Buffer, config *RouteConfig) error {
 	}
 
 	// Register each route
+	if len(config.Routes) == 0 {
+		buf.WriteString("\t_ = groups // suppress unused variable warning when no routes defined\n\n")
+	}
+
 	for _, route := range config.Routes {
 		for _, method := range route.Methods {
 			verb := strings.ToUpper(method.Verb)
@@ -307,27 +407,86 @@ func generateRouteHandlers(buf *bytes.Buffer, config *RouteConfig, imports map[s
 			}
 
 			if method.SSE {
-				// SSE handlers own the response — just call and handle error
+				// SSE handlers return a channel of events
+				// Call handler to get event channel
 				if len(params) > 0 {
-					buf.WriteString(fmt.Sprintf("\tif err := rt.handler.%s(w, r, params); err != nil {\n", method.Handler))
+					buf.WriteString(fmt.Sprintf("\teventChan, err := rt.handler.%s(r.Context(), r, params)\n", method.Handler))
 				} else {
-					buf.WriteString(fmt.Sprintf("\tif err := rt.handler.%s(w, r); err != nil {\n", method.Handler))
+					buf.WriteString(fmt.Sprintf("\teventChan, err := rt.handler.%s(r.Context(), r)\n", method.Handler))
 				}
+				buf.WriteString("\tif err != nil {\n")
 				buf.WriteString("\t\thttp.Error(w, err.Error(), http.StatusInternalServerError)\n")
+				buf.WriteString("\t\treturn\n")
+				buf.WriteString("\t}\n\n")
+
+				// Check for flusher support
+				buf.WriteString("\tflusher, ok := w.(http.Flusher)\n")
+				buf.WriteString("\tif !ok {\n")
+				buf.WriteString("\t\thttp.Error(w, \"streaming not supported\", http.StatusInternalServerError)\n")
+				buf.WriteString("\t\treturn\n")
+				buf.WriteString("\t}\n\n")
+
+				// Event streaming loop
+				buf.WriteString("\tfor {\n")
+				buf.WriteString("\t\tselect {\n")
+				buf.WriteString("\t\tcase <-r.Context().Done():\n")
+				buf.WriteString("\t\t\treturn\n")
+				buf.WriteString("\t\tcase evt, ok := <-eventChan:\n")
+				buf.WriteString("\t\t\tif !ok {\n")
+				buf.WriteString("\t\t\t\treturn\n")
+				buf.WriteString("\t\t\t}\n\n")
+
+				// Type switch on event types
+				buf.WriteString("\t\t\tswitch e := evt.(type) {\n")
+				for _, event := range method.Events {
+					eventTypeName := fmt.Sprintf("%sEvent", event.Name)
+					templateAlias := getTemplateAlias(event.Template.Package, imports)
+					templateFunc := fmt.Sprintf("%s.%s", templateAlias, event.Template.Type)
+
+					// Convert event name to kebab-case for SSE event type
+					eventName := toKebabCase(event.Name)
+
+					buf.WriteString(fmt.Sprintf("\t\t\tcase %s:\n", eventTypeName))
+					buf.WriteString("\t\t\t\tvar buf bytes.Buffer\n")
+					buf.WriteString(fmt.Sprintf("\t\t\t\t%s(e.Data).Render(r.Context(), &buf)\n", templateFunc))
+					buf.WriteString(fmt.Sprintf("\t\t\t\tfmt.Fprintf(w, \"event: %s\\ndata: %%s\\n\\n\", buf.String())\n", eventName))
+					buf.WriteString("\t\t\t\tflusher.Flush()\n")
+				}
+				buf.WriteString("\t\t\t}\n")
+				buf.WriteString("\t\t}\n")
 				buf.WriteString("\t}\n")
 			} else {
 				templateAlias := getTemplateAlias(method.Template.Package, imports)
 				templateFunc := fmt.Sprintf("%s.%s", templateAlias, method.Template.Type)
 
+				// Regular handlers - pass context as first parameter
 				if len(params) > 0 {
-					buf.WriteString(fmt.Sprintf("\tinput, err := rt.handler.%s(w, r, params)\n", method.Handler))
+					buf.WriteString(fmt.Sprintf("\tinput, meta, err := rt.handler.%s(r.Context(), w, r, params)\n", method.Handler))
 				} else {
-					buf.WriteString(fmt.Sprintf("\tinput, err := rt.handler.%s(w, r)\n", method.Handler))
+					buf.WriteString(fmt.Sprintf("\tinput, meta, err := rt.handler.%s(r.Context(), w, r)\n", method.Handler))
 				}
 
 				// Error handling
 				buf.WriteString("\tif err != nil {\n")
 				buf.WriteString("\t\thttp.Error(w, err.Error(), http.StatusInternalServerError)\n")
+				buf.WriteString("\t\treturn\n")
+				buf.WriteString("\t}\n\n")
+
+				// Set cookies and headers BEFORE redirect
+				buf.WriteString("\t// Set cookies and headers\n")
+				buf.WriteString("\tif meta != nil {\n")
+				buf.WriteString("\t\tfor _, cookie := range meta.Cookies {\n")
+				buf.WriteString("\t\t\thttp.SetCookie(w, cookie)\n")
+				buf.WriteString("\t\t}\n")
+				buf.WriteString("\t\tfor key, value := range meta.Headers {\n")
+				buf.WriteString("\t\t\tw.Header().Set(key, value)\n")
+				buf.WriteString("\t\t}\n")
+				buf.WriteString("\t}\n\n")
+
+				// Handle redirect if present
+				buf.WriteString("\t// Handle redirect\n")
+				buf.WriteString("\tif meta != nil && meta.Redirect != nil {\n")
+				buf.WriteString("\t\thttp.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)\n")
 				buf.WriteString("\t\treturn\n")
 				buf.WriteString("\t}\n\n")
 
@@ -498,6 +657,18 @@ func generateRouteGroup(buf *bytes.Buffer, group routeGroup) error {
 	}
 
 	return nil
+}
+
+// toKebabCase converts a PascalCase or camelCase string to kebab-case
+func toKebabCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			result.WriteRune('-')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToLower(result.String())
 }
 
 // getTemplateAlias returns the import alias for a template package

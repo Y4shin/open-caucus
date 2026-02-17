@@ -10,7 +10,10 @@ type ApplicationConfig struct {
 	Port int    `mapstructure:"port" env:"PORT" default:"8080" env_doc:"HTTP server port" validate:"enforceRangeInt(1:65535)" env_default:"8080"`
 	Host string `mapstructure:"host" env:"HOST" default:"0.0.0.0" env_doc:"HTTP server bind address" env_default:"0.0.0.0"`
 
-	// Logging
-	LogLevel  string `mapstructure:"log_level" env:"LOG_LEVEL" default:"info" env_doc:"Log level (debug, info, warn, error)" validate:"oneOf(debug,info,warn,error)" env_default:"info"`
-	LogFormat string `mapstructure:"log_format" env:"LOG_FORMAT" default:"json" env_doc:"Log format (json, text)" validate:"oneOf(json,text)" env_default:"json"`
+	// Security
+	AdminKey string `mapstructure:"admin_key" env:"ADMIN_KEY" default:"changeme" env_doc:"Site-wide administration API key" env_default:"changeme"`
+
+	// Session Management
+	SessionSecret     string `mapstructure:"session_secret" env:"SESSION_SECRET" default:"change-this-to-a-random-32-character-string" env_doc:"Secret key for signing session cookies (must be 32+ chars)" env_default:"change-this-to-a-random-32-character-string"`
+	SessionExpiration int    `mapstructure:"session_expiration" env:"SESSION_EXPIRATION" default:"86400" env_doc:"Session expiration in seconds" env_default:"86400"`
 }

@@ -87,3 +87,6 @@ Desktop.ini
 
 # Air tempdir
 /tmp
+
+# Claude
+.claude/settings.local.json

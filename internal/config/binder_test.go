@@ -252,8 +252,6 @@ func TestBindConfigToViper_RealApplicationConfig(t *testing.T) {
 		"ENVIRONMENT":  nil,
 		"PORT":         nil,
 		"HOST":         nil,
-		"LOG_LEVEL":    nil,
-		"LOG_FORMAT":   nil,
 	})
 	defer snapshot.Restore()
 
@@ -275,8 +273,6 @@ func TestBindConfigToViper_RealApplicationConfig(t *testing.T) {
 		{"application.environment", "development"},
 		{"application.port", 8080},
 		{"application.host", "0.0.0.0"},
-		{"application.log_level", "info"},
-		{"application.log_format", "json"},
 	}
 
 	for _, tt := range tests {

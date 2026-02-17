@@ -68,7 +68,38 @@ func validateConfig(config *RouteConfig) error {
 				return fmt.Errorf("route[%d].method[%d]: handler is required", i, j)
 			}
 
-			if !method.SSE {
+			if method.SSE {
+				// SSE routes must have events defined
+				if len(method.Events) == 0 {
+					return fmt.Errorf("route[%d].method[%d]: SSE routes must define at least one event", i, j)
+				}
+
+				// Validate each event and ensure unique names
+				seenEventNames := make(map[string]bool)
+				for k, event := range method.Events {
+					if event.Name == "" {
+						return fmt.Errorf("route[%d].method[%d].event[%d]: event name is required", i, j, k)
+					}
+
+					if seenEventNames[event.Name] {
+						return fmt.Errorf("route[%d].method[%d].event[%d]: duplicate event name '%s'", i, j, k, event.Name)
+					}
+					seenEventNames[event.Name] = true
+
+					if event.Template.Package == "" {
+						return fmt.Errorf("route[%d].method[%d].event[%d]: template package is required", i, j, k)
+					}
+
+					if event.Template.Type == "" {
+						return fmt.Errorf("route[%d].method[%d].event[%d]: template type is required", i, j, k)
+					}
+
+					if event.Template.InputType == "" {
+						return fmt.Errorf("route[%d].method[%d].event[%d]: template input_type is required", i, j, k)
+					}
+				}
+			} else {
+				// Non-SSE routes require template configuration
 				if method.Template.Package == "" {
 					return fmt.Errorf("route[%d].method[%d]: template package is required", i, j)
 				}

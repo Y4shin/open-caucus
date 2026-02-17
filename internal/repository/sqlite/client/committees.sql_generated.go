@@ -10,7 +10,7 @@ import (
 )
 
 const createCommittee = `-- name: CreateCommittee :one
-INSERT INTO committees (name) VALUES (?) RETURNING id, name, created_at, updated_at, current_meeting_id
+INSERT INTO committees (name) VALUES (?) RETURNING id, name, slug, created_at, updated_at, current_meeting_id
 `
 
 func (q *Queries) CreateCommittee(ctx context.Context, name string) (Committee, error) {
@@ -19,6 +19,7 @@ func (q *Queries) CreateCommittee(ctx context.Context, name string) (Committee, 
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Slug,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentMeetingID,
@@ -27,7 +28,7 @@ func (q *Queries) CreateCommittee(ctx context.Context, name string) (Committee, 
 }
 
 const getCommittee = `-- name: GetCommittee :one
-SELECT id, name, created_at, updated_at, current_meeting_id FROM committees WHERE id = ?
+SELECT id, name, slug, created_at, updated_at, current_meeting_id FROM committees WHERE id = ?
 `
 
 func (q *Queries) GetCommittee(ctx context.Context, id int64) (Committee, error) {
@@ -36,6 +37,7 @@ func (q *Queries) GetCommittee(ctx context.Context, id int64) (Committee, error)
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Slug,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentMeetingID,
@@ -44,7 +46,7 @@ func (q *Queries) GetCommittee(ctx context.Context, id int64) (Committee, error)
 }
 
 const listCommittees = `-- name: ListCommittees :many
-SELECT id, name, created_at, updated_at, current_meeting_id FROM committees ORDER BY name
+SELECT id, name, slug, created_at, updated_at, current_meeting_id FROM committees ORDER BY name
 `
 
 func (q *Queries) ListCommittees(ctx context.Context) ([]Committee, error) {
@@ -59,6 +61,7 @@ func (q *Queries) ListCommittees(ctx context.Context) ([]Committee, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Slug,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CurrentMeetingID,

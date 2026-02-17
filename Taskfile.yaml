@@ -1,0 +1,193 @@
+version: '3'
+
+vars:
+  BINARY_NAME: conference-tool
+  BUILD_DIR: ./tmp
+  MAIN_PATH: .
+  ROUTES_CONFIG: routes.yaml
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  # Development tasks
+  dev:
+    desc: Run the application with hot reload (using air)
+    cmds:
+      - go tool air
+
+  run:
+    desc: Run the application directly
+    cmds:
+      - go run {{.MAIN_PATH}} serve
+
+  build:
+    desc: Build the application
+    cmds:
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PATH}}
+
+  clean:
+    desc: Clean build artifacts and temporary files
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - go clean
+
+  # Code generation tasks
+  generate:
+    desc: Generate all code (routes, templates, database client)
+    cmds:
+      - go generate ./...
+
+  generate:routes:
+    desc: Generate routing code from routes.yaml
+    dir: internal/routes
+    cmds:
+      - go generate
+
+  generate:templates:
+    desc: Generate Go code from Templ templates
+    dir: internal/templates
+    cmds:
+      - go generate
+
+  generate:db:
+    desc: Generate database client code using SQLC
+    dir: internal/repository/sqlite
+    cmds:
+      - go generate
+
+  # Testing tasks
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  test:verbose:
+    desc: Run all tests with verbose output
+    cmds:
+      - go test -v ./...
+
+  test:coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -cover ./...
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report generated at coverage.html"
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - |
+        while true; do
+          go test ./...
+          inotifywait -r -e modify,create,delete --include '\.go$' .
+        done
+
+  # Code quality tasks
+  lint:
+    desc: Run linter
+    cmds:
+      - golangci-lint run
+
+  lint:fix:
+    desc: Run linter with auto-fix
+    cmds:
+      - golangci-lint run --fix
+
+  fmt:
+    desc: Format Go code
+    cmds:
+      - go fmt ./...
+
+  fmt:check:
+    desc: Check if Go code is formatted
+    cmds:
+      - test -z "$(gofmt -l .)"
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  check:
+    desc: Run all code quality checks
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: lint
+
+  # Dependency management
+  deps:
+    desc: Download dependencies
+    cmds:
+      - go mod download
+
+  deps:tidy:
+    desc: Tidy go.mod and go.sum
+    cmds:
+      - go mod tidy
+
+  deps:verify:
+    desc: Verify dependencies
+    cmds:
+      - go mod verify
+
+  deps:update:
+    desc: Update all dependencies
+    cmds:
+      - go get -u ./...
+      - go mod tidy
+
+  # Database tasks
+  db:migrate:up:
+    desc: Run database migrations up
+    cmds:
+      - echo "Database migration commands not yet implemented in the binary"
+
+  db:migrate:down:
+    desc: Run database migrations down
+    cmds:
+      - echo "Database migration commands not yet implemented in the binary"
+
+  db:migrate:create:
+    desc: Create a new migration
+    cmds:
+      - echo "Database migration commands not yet implemented in the binary"
+
+  db:reset:
+    desc: Reset database (down and up)
+    cmds:
+      - echo "Database migration commands not yet implemented in the binary"
+
+  # Validation tasks
+  validate:routes:
+    desc: Validate routes.yaml configuration
+    cmds:
+      - go run ./tools/routing/cmd/route-codegen/main.go -config {{.ROUTES_CONFIG}} -validate
+
+  # Development workflow tasks
+  fresh:
+    desc: Fresh start - clean, generate, and run
+    cmds:
+      - task: clean
+      - task: generate
+      - task: build
+      - task: run
+
+  ci:
+    desc: Run CI checks (format, vet, lint, test)
+    cmds:
+      - task: fmt:check
+      - task: vet
+      - task: lint
+      - task: test
+
+  setup:
+    desc: Initial project setup
+    cmds:
+      - task: deps
+      - task: generate
+      - echo "Setup complete! Run 'task dev' to start development."

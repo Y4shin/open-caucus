@@ -14,8 +14,8 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 		t.Fatalf("CollectEnvFields failed: %v", err)
 	}
 
-	// ApplicationConfig has 6 fields
-	expectedCount := 6
+	// ApplicationConfig has 5 fields
+	expectedCount := 5
 	if len(fields) != expectedCount {
 		t.Errorf("Expected %d fields, got %d", expectedCount, len(fields))
 	}
@@ -31,8 +31,7 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 		"ENVIRONMENT",
 		"PORT",
 		"HOST",
-		"LOG_LEVEL",
-		"LOG_FORMAT",
+		"ADMIN_KEY",
 	}
 
 	for _, envVar := range requiredEnvVars {
@@ -56,8 +55,7 @@ func TestCollectEnvFields_FieldTypes(t *testing.T) {
 		{"ENVIRONMENT", "string"},
 		{"PORT", "int"},
 		{"HOST", "string"},
-		{"LOG_LEVEL", "string"},
-		{"LOG_FORMAT", "string"},
+		{"ADMIN_KEY", "string"},
 	}
 
 	for _, tt := range tests {
@@ -92,8 +90,7 @@ func TestCollectEnvFields_RequiredVsOptional(t *testing.T) {
 		{"ENVIRONMENT", false},  // has default
 		{"PORT", false},         // has default
 		{"HOST", false},         // has default
-		{"LOG_LEVEL", false},    // has default
-		{"LOG_FORMAT", false},   // has default
+		{"ADMIN_KEY", false},    // has default
 	}
 
 	for _, tt := range tests {
@@ -132,16 +129,6 @@ func TestCollectEnvFields_ValidationHints(t *testing.T) {
 		},
 		{
 			envVar:          "PORT",
-			shouldHaveHints: true,
-			hintContains:    "Constraints:",
-		},
-		{
-			envVar:          "LOG_LEVEL",
-			shouldHaveHints: true,
-			hintContains:    "Constraints:",
-		},
-		{
-			envVar:          "LOG_FORMAT",
 			shouldHaveHints: true,
 			hintContains:    "Constraints:",
 		},
@@ -191,11 +178,8 @@ func TestGenerateExampleEnv(t *testing.T) {
 	if !strings.Contains(content, "HOST=0.0.0.0") {
 		t.Error("Expected HOST with default value")
 	}
-	if !strings.Contains(content, "LOG_LEVEL=info") {
-		t.Error("Expected LOG_LEVEL with default value")
-	}
-	if !strings.Contains(content, "LOG_FORMAT=json") {
-		t.Error("Expected LOG_FORMAT with default value")
+	if !strings.Contains(content, "ADMIN_KEY=changeme") {
+		t.Error("Expected ADMIN_KEY with default value")
 	}
 
 	// Check for documentation comments
@@ -220,8 +204,7 @@ SERVICE_NAME=test-service
 ENVIRONMENT=production
 PORT=9000
 HOST=127.0.0.1
-LOG_LEVEL=debug
-LOG_FORMAT=text
+ADMIN_KEY=test-admin-key
 `
 	if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {
 		t.Fatalf("Failed to write test file: %v", err)
@@ -256,16 +239,6 @@ func TestValidateEnv_InvalidFormats(t *testing.T) {
 		{
 			name:    "invalid_environment",
 			content: "ENVIRONMENT=invalid\n",
-			wantErr: "constraint_violation",
-		},
-		{
-			name:    "invalid_log_level",
-			content: "LOG_LEVEL=trace\n",
-			wantErr: "constraint_violation",
-		},
-		{
-			name:    "invalid_log_format",
-			content: "LOG_FORMAT=xml\n",
 			wantErr: "constraint_violation",
 		},
 	}
@@ -336,11 +309,11 @@ PORT=9000
 
 func TestDetectFieldType(t *testing.T) {
 	type TestStruct struct {
-		StringField  string
-		IntField     int
-		Int32Field   int32
-		BoolField    bool
-		Float64Field float64
+		StringField   string
+		IntField      int
+		Int32Field    int32
+		BoolField     bool
+		Float64Field  float64
 		DurationField time.Duration
 	}
 
