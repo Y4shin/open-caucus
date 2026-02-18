@@ -65,16 +65,22 @@ task db:reset
 
 ```bash
 # Using Task (preferred)
-task test                  # Run all tests
+task test                  # Run all tests (excludes E2E)
 task test:verbose          # Run with verbose output
 task test:coverage         # Generate coverage report
 task test:watch            # Run tests in watch mode
+task test:e2e              # Run browser-based E2E tests (requires Playwright browsers)
+
+# Playwright browser setup (run once per machine)
+task playwright:install    # Install Chromium and dependencies
+task playwright:cli -- <args>  # Run Playwright CLI with arbitrary arguments
 
 # Direct commands
 go test ./...              # Run all tests
 go test -v ./...           # Verbose output
 go test ./internal/config/...           # Specific package
 go test ./internal/config -run TestName # Specific test
+go test -v -tags=e2e -timeout=120s ./e2e/...  # Run E2E tests directly
 ```
 
 ### Code Quality
@@ -124,6 +130,23 @@ The project uses a custom code generation system for type-safe routing:
 3. Run `go generate ./...`
 4. Implement handler method in [internal/handlers/handlers.go](internal/handlers/handlers.go)
 5. Register any new middleware in [internal/middleware/middleware.go](internal/middleware/middleware.go)
+6. Add or update E2E tests in [e2e/](e2e/) to cover the new/changed route
+
+**Type-Safe URL Builders**:
+
+The code generator also produces [internal/routes/paths/paths_gen.go](internal/routes/paths/paths_gen.go) with type-safe URL builder functions. **Templates and handlers must use these instead of hardcoding URL strings.**
+
+- Routes without path parameters: `paths.Route.<MethodName>()` — e.g. `paths.Route.AdminDashboardGet()`
+- Routes with path parameters: `paths.New<Route>(params...).MethodName()` — e.g. `paths.NewCommitteeSlugRoute(slug).CommitteePageGet()`
+- Routes with query parameters: use the `WithQuery` variant — e.g. `paths.Route.AdminDashboardGetWithQuery(paths.AdminDashboardGetQueryParams{Page: "2"})`
+
+Example usage in a Templ template:
+```go
+import "github.com/Y4shin/conference-tool/internal/routes/paths"
+
+<form hx-post={ paths.NewCommitteeSlugMeetingCreateRoute(slug).CommitteeCreateMeetingPost() }>
+<a href={ templ.URL(paths.Route.AdminDashboardGet()) }>Dashboard</a>
+```
 
 ### Template System
 
@@ -194,6 +217,39 @@ The project uses three `go:generate` directives:
 
 ## Important Patterns
 
+### HTMX Usage
+
+**Rule**: Use HTMX for all dynamic interactions. A page should never do a full reload unless the user explicitly navigates to a different page (e.g., clicks a nav link or follows an anchor).
+
+- Form submissions that create, update, or delete data must use `hx-post`/`hx-put`/`hx-delete` and swap only the affected region (list, row, section) — not the full page
+- Use `hx-target` + `hx-swap` to update only the changed part of the DOM in response to a form submit
+- Use `hx-confirm` for destructive actions (delete) to trigger a native browser confirmation dialog
+- Avoid `hx-boost` on forms where partial-swap behavior is needed; use explicit `hx-post` attributes instead
+- Handler responses for HTMX requests return a partial HTML fragment (a single Templ component), not a full page
+
+### E2E Tests (Playwright)
+
+Browser-based E2E tests live in [e2e/](e2e/) and are built with the `e2e` build tag so they are never included in `task test`.
+
+**When to add/update E2E tests**:
+- Add a test whenever a new route or user-facing feature is introduced
+- Update existing tests when a route path, form field name, or page structure changes
+- Tests must cover both the happy path and key role-based visibility rules (e.g., chairperson vs. member)
+
+**Key helpers** (all in `e2e/helpers_test.go` / `e2e/browser_helpers_test.go`):
+- `newTestServer(t)` — boots the full app with `:memory:` SQLite
+- `newPage(t)` — launches isolated Chromium context; skips gracefully if browsers not installed
+- `adminLogin(t, page, baseURL)` / `userLogin(t, page, baseURL, committee, username, password)` — shared login flows
+- `ts.seedCommittee`, `ts.seedUser`, `ts.seedMeeting` — direct DB seeding without HTTP
+
+**HTMX assertions in tests**:
+- Capture `urlBefore := page.URL()` before an HTMX form submit and assert `page.URL() == urlBefore` after to confirm no full navigation occurred
+- Use `page.Locator("td:has-text('value')").WaitFor()` to wait for swapped-in content
+- Use `locator.WaitFor(playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateDetached})` to wait for removed content
+- Register `page.OnDialog(func(d playwright.Dialog) { d.Accept() })` **before** clicking a button with `hx-confirm`
+
+If Playwright browsers are not installed (`task playwright:install` has not been run), all E2E tests skip automatically via `t.Skip()`.
+
 ### Handler Implementation
 
 Handlers must implement the generated `Handler` interface from [internal/routes/routes_gen.go](internal/routes/routes_gen.go):
@@ -225,6 +281,12 @@ For Server-Sent Events endpoints:
 ├── cmd/                          # CLI commands (cobra)
 │   ├── root.go                   # Root command
 │   └── serve.go                  # HTTP server command
+├── e2e/                          # Browser-based E2E tests (build tag: e2e)
+│   ├── main_test.go              # TestMain: Playwright driver init
+│   ├── helpers_test.go           # testServer, seed helpers
+│   ├── browser_helpers_test.go   # newPage, adminLogin, userLogin
+│   ├── admin_test.go             # Admin UI tests
+│   └── committee_test.go         # Committee/chairperson UI tests
 ├── internal/
 │   ├── broker/                   # SSE broker for real-time updates
 │   ├── config/                   # Configuration management with Viper
@@ -264,11 +326,12 @@ Environment variables (see [.env.example](.env.example)):
 1. Design the data model and add database migrations if needed
 2. Add SQLC queries in `internal/repository/sqlite/queries/`
 3. Define route in [routes.yaml](routes.yaml)
-4. Create Templ template in `internal/templates/`
+4. Create Templ template in `internal/templates/` — use HTMX attributes so the feature never causes a full page reload
 5. Run `go generate ./...`
 6. Implement handler method in [internal/handlers/handlers.go](internal/handlers/handlers.go)
 7. Add business logic and database calls
-8. Test the endpoint
+8. Add E2E tests in [e2e/](e2e/) covering the new route and any role-based visibility
+9. Run `task test:e2e` to verify
 
 ### Adding Real-Time Updates
 

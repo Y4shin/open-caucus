@@ -1,7 +1,10 @@
 -- Committee Management
 
 -- name: ListAllCommittees :many
-SELECT * FROM committees ORDER BY name ASC;
+SELECT * FROM committees ORDER BY name ASC LIMIT ? OFFSET ?;
+
+-- name: CountAllCommittees :one
+SELECT COUNT(*) FROM committees;
 
 -- name: CreateCommitteeWithSlug :one
 INSERT INTO committees (name, slug, created_at, updated_at)
@@ -17,7 +20,12 @@ DELETE FROM committees WHERE slug = ?;
 SELECT u.* FROM users u
 JOIN committees c ON u.committee_id = c.id
 WHERE c.slug = ?
-ORDER BY u.username ASC;
+ORDER BY u.username ASC LIMIT ? OFFSET ?;
+
+-- name: CountUsersInCommittee :one
+SELECT COUNT(*) FROM users u
+JOIN committees c ON u.committee_id = c.id
+WHERE c.slug = ?;
 
 -- name: CreateUser :one
 INSERT INTO users (

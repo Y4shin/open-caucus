@@ -7,7 +7,20 @@ package client
 
 import (
 	"context"
+	"database/sql"
 )
+
+const countMeetingsForCommittee = `-- name: CountMeetingsForCommittee :one
+SELECT COUNT(*) FROM meetings
+WHERE committee_id = (SELECT id FROM committees WHERE slug = ?)
+`
+
+func (q *Queries) CountMeetingsForCommittee(ctx context.Context, slug string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countMeetingsForCommittee, slug)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
 
 const createMeeting = `-- name: CreateMeeting :exec
 INSERT INTO meetings (committee_id, name, description, secret, signup_open)
@@ -33,14 +46,51 @@ func (q *Queries) CreateMeeting(ctx context.Context, arg CreateMeetingParams) er
 	return err
 }
 
+const deleteMeeting = `-- name: DeleteMeeting :exec
+DELETE FROM meetings WHERE id = ?
+`
+
+func (q *Queries) DeleteMeeting(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteMeeting, id)
+	return err
+}
+
+const getMeetingByID = `-- name: GetMeetingByID :one
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id FROM meetings WHERE id = ?
+`
+
+func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error) {
+	row := q.db.QueryRowContext(ctx, getMeetingByID, id)
+	var i Meeting
+	err := row.Scan(
+		&i.ID,
+		&i.CommitteeID,
+		&i.Name,
+		&i.Description,
+		&i.Secret,
+		&i.SignupOpen,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CurrentAgendaPointID,
+		&i.ProtocolWriterID,
+	)
+	return i, err
+}
+
 const listMeetingsForCommittee = `-- name: ListMeetingsForCommittee :many
 SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id FROM meetings
 WHERE committee_id = (SELECT id FROM committees WHERE slug = ?)
-ORDER BY created_at DESC
+ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
 
-func (q *Queries) ListMeetingsForCommittee(ctx context.Context, slug string) ([]Meeting, error) {
-	rows, err := q.db.QueryContext(ctx, listMeetingsForCommittee, slug)
+type ListMeetingsForCommitteeParams struct {
+	Slug   string
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListMeetingsForCommittee(ctx context.Context, arg ListMeetingsForCommitteeParams) ([]Meeting, error) {
+	rows, err := q.db.QueryContext(ctx, listMeetingsForCommittee, arg.Slug, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -71,4 +121,18 @@ func (q *Queries) ListMeetingsForCommittee(ctx context.Context, slug string) ([]
 		return nil, err
 	}
 	return items, nil
+}
+
+const setActiveMeeting = `-- name: SetActiveMeeting :exec
+UPDATE committees SET current_meeting_id = ? WHERE slug = ?
+`
+
+type SetActiveMeetingParams struct {
+	CurrentMeetingID sql.NullInt64
+	Slug             string
+}
+
+func (q *Queries) SetActiveMeeting(ctx context.Context, arg SetActiveMeetingParams) error {
+	_, err := q.db.ExecContext(ctx, setActiveMeeting, arg.CurrentMeetingID, arg.Slug)
+	return err
 }

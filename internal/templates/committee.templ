@@ -1,14 +1,19 @@
 package templates
 
 import (
+	"strconv"
+
+	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
 )
 
 type MeetingItem struct {
 	ID          int64
+	IDString    string
 	Name        string
 	Description string
 	SignupOpen  bool
+	IsActive    bool
 }
 
 type CommitteePageInput struct {
@@ -17,6 +22,7 @@ type CommitteePageInput struct {
 	Username      string
 	Role          string
 	Meetings      []MeetingItem
+	Pagination    pagination.Page
 	FormError     string
 }
 
@@ -28,6 +34,163 @@ func (i *CommitteePageInput) CommitteeCreateMeetingPost() templ.SafeURL {
 	return templ.URL(paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost())
 }
 
+func (i *CommitteePageInput) MeetingViewGet(m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingViewGet())
+}
+
+func (i *CommitteePageInput) MeetingManageGet(m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet())
+}
+
+func (i *CommitteePageInput) MeetingDeletePost(m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdDeleteRoute(i.CommitteeSlug, m.IDString).CommitteeDeleteMeetingPost())
+}
+
+func (i *CommitteePageInput) MeetingActivatePost(m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost())
+}
+
+func (i *CommitteePageInput) PageURL(page int) templ.SafeURL {
+	q := paths.CommitteePageGetQueryParams{Page: strconv.Itoa(page)}
+	if i.Pagination.PageSize != pagination.DefaultPageSize {
+		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
+	}
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(q))
+}
+
+// MeetingListPartialInput is the input for the HTMX-swappable meeting list partial.
+// It is returned directly by create/delete/activate meeting mutation handlers so that
+// both the full page and the partial update share the exact same component.
+type MeetingListPartialInput struct {
+	CommitteeSlug string
+	Meetings      []MeetingItem
+	Pagination    pagination.Page
+	FormError     string
+}
+
+func (i *MeetingListPartialInput) CommitteeCreateMeetingPostStr() string {
+	return paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost()
+}
+
+func (i *MeetingListPartialInput) MeetingViewGet(m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingViewGet())
+}
+
+func (i *MeetingListPartialInput) MeetingManageGet(m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet())
+}
+
+func (i *MeetingListPartialInput) MeetingDeletePostStr(m *MeetingItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdDeleteRoute(i.CommitteeSlug, m.IDString).CommitteeDeleteMeetingPost()
+}
+
+func (i *MeetingListPartialInput) MeetingActivatePostStr(m *MeetingItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost()
+}
+
+func (i *MeetingListPartialInput) PageURL(page int) templ.SafeURL {
+	q := paths.CommitteePageGetQueryParams{Page: strconv.Itoa(page)}
+	if i.Pagination.PageSize != pagination.DefaultPageSize {
+		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
+	}
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(q))
+}
+
+// MeetingListPartial renders the create-meeting form and the paginated meetings table.
+// It is used both inside CommitteePageTemplate and as the sole response body for
+// HTMX mutation requests (create/delete/activate meeting).
+templ MeetingListPartial(input MeetingListPartialInput) {
+	<div id="meeting-list-container">
+		if input.FormError != "" {
+			<p class="error">{ input.FormError }</p>
+		}
+		<h3>Create New Meeting</h3>
+		<form
+			hx-post={ input.CommitteeCreateMeetingPostStr() }
+			hx-target="#meeting-list-container"
+			hx-swap="outerHTML"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+		>
+			<div>
+				<label for="name">Name:</label>
+				<input type="text" id="name" name="name" required/>
+			</div>
+			<div>
+				<label for="description">Description:</label>
+				<textarea id="description" name="description"></textarea>
+			</div>
+			<div>
+				<label>
+					<input type="checkbox" name="signup_open" value="true"/>
+					Open for signup
+				</label>
+			</div>
+			<button type="submit">Create Meeting</button>
+		</form>
+		if len(input.Meetings) == 0 {
+			<p>No meetings yet.</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+						<th>Signup Open</th>
+						<th>Active</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, m := range input.Meetings {
+						<tr>
+							<td>{ m.Name }</td>
+							<td>{ m.Description }</td>
+							<td>
+								if m.SignupOpen {
+									Yes
+								} else {
+									No
+								}
+							</td>
+							<td>
+								if m.IsActive {
+									Yes
+								} else {
+									No
+								}
+							</td>
+							<td>
+								<a href={ input.MeetingViewGet(&m) }>View</a>
+								<a href={ input.MeetingManageGet(&m) }>Manage</a>
+								if !m.IsActive {
+									<form
+										hx-post={ input.MeetingActivatePostStr(&m) }
+										hx-target="#meeting-list-container"
+										hx-swap="outerHTML"
+										style="display: inline;"
+									>
+										<button type="submit">Set Active</button>
+									</form>
+								}
+								<form
+									hx-post={ input.MeetingDeletePostStr(&m) }
+									hx-target="#meeting-list-container"
+									hx-swap="outerHTML"
+									hx-confirm="Delete this meeting?"
+									style="display: inline;"
+								>
+									<button type="submit">Delete</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+			@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(input.Pagination.PrevPage), input.PageURL(input.Pagination.NextPage))
+		}
+	</div>
+}
+
 templ CommitteePageTemplate(input CommitteePageInput) {
 	<!DOCTYPE html>
 	<html>
@@ -35,6 +198,7 @@ templ CommitteePageTemplate(input CommitteePageInput) {
 		<title>{ input.CommitteeName } - Conference Tool</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body>
 		<header>
@@ -49,58 +213,12 @@ templ CommitteePageTemplate(input CommitteePageInput) {
 			if input.Role == "chairperson" {
 				<section>
 					<h2>Meetings</h2>
-
-					if input.FormError != "" {
-						<p class="error">{ input.FormError }</p>
-					}
-
-					<h3>Create New Meeting</h3>
-					<form method="POST" action={ input.CommitteeCreateMeetingPost() }>
-						<div>
-							<label for="name">Name:</label>
-							<input type="text" id="name" name="name" required/>
-						</div>
-						<div>
-							<label for="description">Description:</label>
-							<textarea id="description" name="description"></textarea>
-						</div>
-						<div>
-							<label>
-								<input type="checkbox" name="signup_open" value="true"/>
-								Open for signup
-							</label>
-						</div>
-						<button type="submit">Create Meeting</button>
-					</form>
-
-					if len(input.Meetings) == 0 {
-						<p>No meetings yet.</p>
-					} else {
-						<table>
-							<thead>
-								<tr>
-									<th>Name</th>
-									<th>Description</th>
-									<th>Signup Open</th>
-								</tr>
-							</thead>
-							<tbody>
-								for _, m := range input.Meetings {
-									<tr>
-										<td>{ m.Name }</td>
-										<td>{ m.Description }</td>
-										<td>
-											if m.SignupOpen {
-												Yes
-											} else {
-												No
-											}
-										</td>
-									</tr>
-								}
-							</tbody>
-						</table>
-					}
+					@MeetingListPartial(MeetingListPartialInput{
+						CommitteeSlug: input.CommitteeSlug,
+						Meetings:      input.Meetings,
+						Pagination:    input.Pagination,
+						FormError:     input.FormError,
+					})
 				</section>
 			}
 		</main>

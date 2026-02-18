@@ -77,6 +77,11 @@ tasks:
       - go tool cover -html=coverage.out -o coverage.html
       - echo "Coverage report generated at coverage.html"
 
+  test:e2e:
+    desc: Run browser-based end-to-end tests (requires Playwright browsers installed)
+    cmds:
+      - go test -v -tags=e2e -timeout=120s ./e2e/...
+
   test:watch:
     desc: Run tests in watch mode
     cmds:
@@ -184,6 +189,16 @@ tasks:
       - task: vet
       - task: lint
       - task: test
+
+  playwright:install:
+    desc: Install Playwright browser binaries (run once per machine)
+    cmds:
+      - go tool github.com/playwright-community/playwright-go/cmd/playwright install --with-deps chromium
+
+  playwright:cli:
+    desc: "Run the Playwright CLI with arbitrary arguments (usage: task playwright:cli -- <args>)"
+    cmds:
+      - go tool github.com/playwright-community/playwright-go/cmd/playwright {{.CLI_ARGS}}
 
   setup:
     desc: Initial project setup

@@ -44,17 +44,23 @@ type Repository interface {
 	DeleteExpiredSessions(ctx context.Context, before time.Time) error
 
 	// Meetings
-	ListMeetingsForCommittee(ctx context.Context, slug string) ([]*model.Meeting, error)
+	GetMeetingByID(ctx context.Context, id int64) (*model.Meeting, error)
+	ListMeetingsForCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.Meeting, error)
+	CountMeetingsForCommittee(ctx context.Context, slug string) (int64, error)
 	CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error
+	DeleteMeeting(ctx context.Context, id int64) error
+	SetActiveMeeting(ctx context.Context, slug string, meetingID int64) error
 
 	// Admin - Committee management
-	ListAllCommittees(ctx context.Context) ([]*model.Committee, error)
+	ListAllCommittees(ctx context.Context, limit, offset int) ([]*model.Committee, error)
+	CountAllCommittees(ctx context.Context) (int64, error)
 	CreateCommitteeWithSlug(ctx context.Context, name, slug string) error
 	DeleteCommitteeBySlug(ctx context.Context, slug string) error
 	GetCommitteeIDBySlug(ctx context.Context, slug string) (int64, error)
 
 	// Admin - User management
-	ListUsersInCommittee(ctx context.Context, slug string) ([]*model.User, error)
+	ListUsersInCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.User, error)
+	CountUsersInCommittee(ctx context.Context, slug string) (int64, error)
 	CreateUser(ctx context.Context, committeeID int64, username, passwordHash, fullName string, quoted bool, role string) error
 	DeleteUserByID(ctx context.Context, id int64) error
 }

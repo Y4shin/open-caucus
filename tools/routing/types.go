@@ -21,12 +21,13 @@ type Route struct {
 
 // RouteMethod represents a specific HTTP verb handler for a route
 type RouteMethod struct {
-	Verb       string     `yaml:"verb"`
-	Handler    string     `yaml:"handler"`
-	Template   Template   `yaml:"template"`
-	Middleware []string   `yaml:"middleware,omitempty"`
-	SSE        bool       `yaml:"sse,omitempty"`
-	Events     []SSEEvent `yaml:"events,omitempty"` // List of SSE events (required if SSE=true)
+	Verb        string     `yaml:"verb"`
+	Handler     string     `yaml:"handler"`
+	Template    Template   `yaml:"template"`
+	Middleware  []string   `yaml:"middleware,omitempty"`
+	SSE         bool       `yaml:"sse,omitempty"`
+	Events      []SSEEvent `yaml:"events,omitempty"`  // List of SSE events (required if SSE=true)
+	QueryParams []string   `yaml:"query_params,omitempty"` // Optional query parameter names
 }
 
 // Template specifies which templ template to use

@@ -1,0 +1,19 @@
+package templates
+
+import "strconv"
+
+templ PaginationBar(current, total int, hasPrev, hasNext bool, prevURL, nextURL templ.SafeURL) {
+	<nav class="pagination">
+		if hasPrev {
+			<a href={ prevURL }>← Previous</a>
+		} else {
+			<span class="pagination-disabled">← Previous</span>
+		}
+		<span class="pagination-info">Page { strconv.Itoa(current) } of { strconv.Itoa(total) }</span>
+		if hasNext {
+			<a href={ nextURL }>Next →</a>
+		} else {
+			<span class="pagination-disabled">Next →</span>
+		}
+	</nav>
+}

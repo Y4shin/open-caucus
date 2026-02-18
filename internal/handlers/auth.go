@@ -6,11 +6,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
@@ -101,19 +103,61 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 
 // CommitteePage shows the committee dashboard
 func (h *Handler) CommitteePage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.CommitteePageInput, *routes.ResponseMeta, error) {
-	input, err := h.buildCommitteePageInput(ctx, params.Slug, "")
+	page, pageSize := parsePaginationParams(r)
+	input, err := h.buildCommitteePageInput(ctx, params.Slug, "", page, pageSize)
 	if err != nil {
 		return nil, nil, err
 	}
 	return input, nil, nil
 }
 
-// CommitteeCreateMeeting handles meeting creation for chairpersons
-func (h *Handler) CommitteeCreateMeeting(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.CommitteePageInput, *routes.ResponseMeta, error) {
+// buildMeetingListPartialInput builds the MeetingListPartialInput for a committee.
+// It always uses page 1 so the updated list is immediately visible after a mutation.
+func (h *Handler) buildMeetingListPartialInput(ctx context.Context, slug, formError string) (*templates.MeetingListPartialInput, error) {
+	committee, err := h.Repository.GetCommitteeBySlug(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load committee: %w", err)
+	}
+
+	total, err := h.Repository.CountMeetingsForCommittee(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count meetings: %w", err)
+	}
+
+	p := pagination.New(1, pagination.DefaultPageSize, total)
+
+	meetings, err := h.Repository.ListMeetingsForCommittee(ctx, slug, p.PageSize, p.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load meetings: %w", err)
+	}
+
+	items := make([]templates.MeetingItem, len(meetings))
+	for i, m := range meetings {
+		isActive := committee.CurrentMeetingID != nil && *committee.CurrentMeetingID == m.ID
+		items[i] = templates.MeetingItem{
+			ID:          m.ID,
+			IDString:    strconv.FormatInt(m.ID, 10),
+			Name:        m.Name,
+			Description: m.Description,
+			SignupOpen:  m.SignupOpen,
+			IsActive:    isActive,
+		}
+	}
+
+	return &templates.MeetingListPartialInput{
+		CommitteeSlug: slug,
+		Meetings:      items,
+		Pagination:    p,
+		FormError:     formError,
+	}, nil
+}
+
+// CommitteeCreateMeeting handles meeting creation for chairpersons and returns the updated meeting list partial.
+func (h *Handler) CommitteeCreateMeeting(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingListPartialInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 
 	if err := r.ParseForm(); err != nil {
-		input, loadErr := h.buildCommitteePageInput(ctx, slug, "Invalid form submission")
+		input, loadErr := h.buildMeetingListPartialInput(ctx, slug, "Invalid form submission")
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
@@ -125,7 +169,7 @@ func (h *Handler) CommitteeCreateMeeting(ctx context.Context, r *http.Request, p
 	signupOpen := r.FormValue("signup_open") == "true"
 
 	if name == "" {
-		input, loadErr := h.buildCommitteePageInput(ctx, slug, "Meeting name is required")
+		input, loadErr := h.buildMeetingListPartialInput(ctx, slug, "Meeting name is required")
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
@@ -146,12 +190,15 @@ func (h *Handler) CommitteeCreateMeeting(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to create meeting: %w", err)
 	}
 
-	meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, fmt.Sprintf("/committee/%s", slug))
-	return nil, meta, nil
+	input, err := h.buildMeetingListPartialInput(ctx, slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
 }
 
 // buildCommitteePageInput loads all data needed to render the committee dashboard
-func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError string) (*templates.CommitteePageInput, error) {
+func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError string, page, pageSize int) (*templates.CommitteePageInput, error) {
 	committee, err := h.Repository.GetCommitteeBySlug(ctx, slug)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load committee: %w", err)
@@ -177,21 +224,120 @@ func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError s
 	}
 
 	if role == "chairperson" {
-		meetings, err := h.Repository.ListMeetingsForCommittee(ctx, slug)
+		total, err := h.Repository.CountMeetingsForCommittee(ctx, slug)
+		if err != nil {
+			return nil, fmt.Errorf("failed to count meetings: %w", err)
+		}
+
+		p := pagination.New(page, pageSize, total)
+		input.Pagination = p
+
+		meetings, err := h.Repository.ListMeetingsForCommittee(ctx, slug, p.PageSize, p.Offset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load meetings: %w", err)
 		}
 		for _, m := range meetings {
+			isActive := committee.CurrentMeetingID != nil && *committee.CurrentMeetingID == m.ID
 			input.Meetings = append(input.Meetings, templates.MeetingItem{
 				ID:          m.ID,
+				IDString:    strconv.FormatInt(m.ID, 10),
 				Name:        m.Name,
 				Description: m.Description,
 				SignupOpen:  m.SignupOpen,
+				IsActive:    isActive,
 			})
 		}
 	}
 
 	return input, nil
+}
+
+// CommitteeMeetingView shows the meeting view page
+func (h *Handler) CommitteeMeetingView(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingViewInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	committee, err := h.Repository.GetCommitteeBySlug(ctx, params.Slug)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load committee: %w", err)
+	}
+
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+
+	return &templates.MeetingViewInput{
+		CommitteeName: committee.Name,
+		CommitteeSlug: committee.Slug,
+		MeetingName:   meeting.Name,
+		MeetingID:     meeting.ID,
+		IDString:      params.MeetingId,
+	}, nil, nil
+}
+
+// CommitteeMeetingManage shows the meeting management page
+func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingManageInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	committee, err := h.Repository.GetCommitteeBySlug(ctx, params.Slug)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load committee: %w", err)
+	}
+
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+
+	return &templates.MeetingManageInput{
+		CommitteeName: committee.Name,
+		CommitteeSlug: committee.Slug,
+		MeetingName:   meeting.Name,
+		MeetingID:     meeting.ID,
+		IDString:      params.MeetingId,
+	}, nil, nil
+}
+
+// CommitteeDeleteMeeting deletes a meeting and returns the updated meeting list partial.
+func (h *Handler) CommitteeDeleteMeeting(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	if err := h.Repository.DeleteMeeting(ctx, meetingID); err != nil {
+		return nil, nil, fmt.Errorf("failed to delete meeting: %w", err)
+	}
+
+	input, err := h.buildMeetingListPartialInput(ctx, params.Slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
+
+// CommitteeActivateMeeting sets a meeting as active and returns the updated meeting list partial.
+func (h *Handler) CommitteeActivateMeeting(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	if err := h.Repository.SetActiveMeeting(ctx, params.Slug, meetingID); err != nil {
+		return nil, nil, fmt.Errorf("failed to set active meeting: %w", err)
+	}
+
+	input, err := h.buildMeetingListPartialInput(ctx, params.Slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
 }
 
 func generateSecret() (string, error) {

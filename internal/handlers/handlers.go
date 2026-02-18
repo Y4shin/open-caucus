@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
+	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
@@ -64,4 +67,17 @@ type Handler struct {
 
 func NewHandler(b broker.Broker) *Handler {
 	return &Handler{Broker: b}
+}
+
+// parsePaginationParams reads ?page and ?page_size from the request, applying sensible defaults.
+func parsePaginationParams(r *http.Request) (page, pageSize int) {
+	page, _ = strconv.Atoi(r.URL.Query().Get("page"))
+	if page < 1 {
+		page = 1
+	}
+	pageSize, _ = strconv.Atoi(r.URL.Query().Get("page_size"))
+	if pageSize < 1 {
+		pageSize = pagination.DefaultPageSize
+	}
+	return page, pageSize
 }

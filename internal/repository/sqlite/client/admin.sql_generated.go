@@ -9,6 +9,30 @@ import (
 	"context"
 )
 
+const countAllCommittees = `-- name: CountAllCommittees :one
+SELECT COUNT(*) FROM committees
+`
+
+func (q *Queries) CountAllCommittees(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllCommittees)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countUsersInCommittee = `-- name: CountUsersInCommittee :one
+SELECT COUNT(*) FROM users u
+JOIN committees c ON u.committee_id = c.id
+WHERE c.slug = ?
+`
+
+func (q *Queries) CountUsersInCommittee(ctx context.Context, slug string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsersInCommittee, slug)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCommitteeWithSlug = `-- name: CreateCommitteeWithSlug :one
 INSERT INTO committees (name, slug, created_at, updated_at)
 VALUES (?, ?, datetime('now'), datetime('now'))
@@ -106,12 +130,17 @@ func (q *Queries) GetCommitteeIDBySlug(ctx context.Context, slug string) (int64,
 
 const listAllCommittees = `-- name: ListAllCommittees :many
 
-SELECT id, name, slug, created_at, updated_at, current_meeting_id FROM committees ORDER BY name ASC
+SELECT id, name, slug, created_at, updated_at, current_meeting_id FROM committees ORDER BY name ASC LIMIT ? OFFSET ?
 `
 
+type ListAllCommitteesParams struct {
+	Limit  int64
+	Offset int64
+}
+
 // Committee Management
-func (q *Queries) ListAllCommittees(ctx context.Context) ([]Committee, error) {
-	rows, err := q.db.QueryContext(ctx, listAllCommittees)
+func (q *Queries) ListAllCommittees(ctx context.Context, arg ListAllCommitteesParams) ([]Committee, error) {
+	rows, err := q.db.QueryContext(ctx, listAllCommittees, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +174,18 @@ const listUsersInCommittee = `-- name: ListUsersInCommittee :many
 SELECT u.id, u.committee_id, u.username, u.password_hash, u.full_name, u.role, u.created_at, u.updated_at, u.quoted FROM users u
 JOIN committees c ON u.committee_id = c.id
 WHERE c.slug = ?
-ORDER BY u.username ASC
+ORDER BY u.username ASC LIMIT ? OFFSET ?
 `
 
+type ListUsersInCommitteeParams struct {
+	Slug   string
+	Limit  int64
+	Offset int64
+}
+
 // User Management
-func (q *Queries) ListUsersInCommittee(ctx context.Context, slug string) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, listUsersInCommittee, slug)
+func (q *Queries) ListUsersInCommittee(ctx context.Context, arg ListUsersInCommitteeParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUsersInCommittee, arg.Slug, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

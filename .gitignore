@@ -26,9 +26,6 @@ vendor/
 conference-tool
 *.bin
 
-# Generated code - DO NOT COMMIT
-*_templ.go
-routes_gen.go
 
 # Compiled route-codegen tool
 /tools/routing/cmd/route-codegen/route-codegen

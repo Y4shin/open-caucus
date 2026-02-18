@@ -3,8 +3,9 @@ package routing
 import "strings"
 
 type BuilderRouteVerb struct {
-	Verb    string
-	Handler string
+	Verb        string
+	Handler     string
+	QueryParams []string
 }
 
 type BuilderRoute struct {
@@ -15,13 +16,14 @@ type BuilderRoute struct {
 }
 
 type RouteGroup struct {
-	Params         []string
+	Params          []string
 	ConstructorArgs string
-	Routes         []BuilderRoute
+	Routes          []BuilderRoute
 }
 
 type RouteBuilders struct {
-	Groups []RouteGroup
+	Groups         []RouteGroup
+	HasQueryParams bool
 }
 
 const routeBuilders string = `// Type-safe route builders
@@ -42,6 +44,28 @@ const routeGroup string = `
 func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}() string {
 	return "{{ $path }}"
 }
+{{- if .QueryParams }}
+
+type {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams struct {
+{{- range .QueryParams }}
+	{{ . | toPascalCase }} string
+{{- end }}
+}
+
+func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(q {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams) string {
+	path := "{{ $path }}"
+	var qparts []string
+{{- range .QueryParams }}
+	if q.{{ . | toPascalCase }} != "" {
+		qparts = append(qparts, "{{ . }}="+url.QueryEscape(q.{{ . | toPascalCase }}))
+	}
+{{- end }}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- else }}
@@ -68,6 +92,28 @@ func New{{ $structName }}({{ $constructorArgs }}) *{{ $structName }} {
 func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}() string {
 	return "{{ $pathReturn }}"
 }
+{{- if .QueryParams }}
+
+type {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams struct {
+{{- range .QueryParams }}
+	{{ . | toPascalCase }} string
+{{- end }}
+}
+
+func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(q {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams) string {
+	path := r.{{ .Handler }}{{ .Verb | lower | capitalize }}()
+	var qparts []string
+{{- range .QueryParams }}
+	if q.{{ . | toPascalCase }} != "" {
+		qparts = append(qparts, "{{ . }}="+url.QueryEscape(q.{{ . | toPascalCase }}))
+	}
+{{- end }}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -75,6 +121,7 @@ func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}() str
 
 func GetRouteBuilders(config *RouteConfig) RouteBuilders {
 	groups := make(map[string]*RouteGroup)
+	hasQueryParams := false
 
 	for _, route := range config.Routes {
 		params := ExtractPathParams(route.Path)
@@ -112,9 +159,13 @@ func GetRouteBuilders(config *RouteConfig) RouteBuilders {
 			StructName: pathToStructName(route.Path) + "Route",
 		}
 		for _, method := range route.Methods {
+			if len(method.QueryParams) > 0 {
+				hasQueryParams = true
+			}
 			routeRes.Verbs = append(routeRes.Verbs, BuilderRouteVerb{
-				Verb:    method.Verb,
-				Handler: method.Handler,
+				Verb:        method.Verb,
+				Handler:     method.Handler,
+				QueryParams: method.QueryParams,
 			})
 		}
 		groups[key].Routes = append(groups[key].Routes, routeRes)
@@ -126,5 +177,5 @@ func GetRouteBuilders(config *RouteConfig) RouteBuilders {
 		result = append(result, *group)
 	}
 
-	return RouteBuilders{Groups: result}
+	return RouteBuilders{Groups: result, HasQueryParams: hasQueryParams}
 }

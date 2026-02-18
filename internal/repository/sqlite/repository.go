@@ -374,9 +374,12 @@ func sessionFromClient(s *client.Session) (*model.Session, error) {
 
 // Admin - Committee management
 
-// ListAllCommittees retrieves all committees
-func (r *Repository) ListAllCommittees(ctx context.Context) ([]*model.Committee, error) {
-	committees, err := r.Queries.ListAllCommittees(ctx)
+// ListAllCommittees retrieves a page of committees
+func (r *Repository) ListAllCommittees(ctx context.Context, limit, offset int) ([]*model.Committee, error) {
+	committees, err := r.Queries.ListAllCommittees(ctx, client.ListAllCommitteesParams{
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list all committees: %w", err)
 	}
@@ -386,6 +389,15 @@ func (r *Repository) ListAllCommittees(ctx context.Context) ([]*model.Committee,
 		result[i] = committeeFromClient(&committees[i])
 	}
 	return result, nil
+}
+
+// CountAllCommittees returns the total number of committees
+func (r *Repository) CountAllCommittees(ctx context.Context) (int64, error) {
+	count, err := r.Queries.CountAllCommittees(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count all committees: %w", err)
+	}
+	return count, nil
 }
 
 // CreateCommitteeWithSlug creates a new committee with a given slug
@@ -423,9 +435,13 @@ func (r *Repository) GetCommitteeIDBySlug(ctx context.Context, slug string) (int
 
 // Admin - User management
 
-// ListUsersInCommittee retrieves all users in a committee
-func (r *Repository) ListUsersInCommittee(ctx context.Context, slug string) ([]*model.User, error) {
-	users, err := r.Queries.ListUsersInCommittee(ctx, slug)
+// ListUsersInCommittee retrieves a page of users in a committee
+func (r *Repository) ListUsersInCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.User, error) {
+	users, err := r.Queries.ListUsersInCommittee(ctx, client.ListUsersInCommitteeParams{
+		Slug:   slug,
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list users in committee: %w", err)
 	}
@@ -435,6 +451,15 @@ func (r *Repository) ListUsersInCommittee(ctx context.Context, slug string) ([]*
 		result[i] = userFromClient(&users[i])
 	}
 	return result, nil
+}
+
+// CountUsersInCommittee returns the total number of users in a committee
+func (r *Repository) CountUsersInCommittee(ctx context.Context, slug string) (int64, error) {
+	count, err := r.Queries.CountUsersInCommittee(ctx, slug)
+	if err != nil {
+		return 0, fmt.Errorf("count users in committee: %w", err)
+	}
+	return count, nil
 }
 
 // CreateUser creates a new user
@@ -462,9 +487,13 @@ func (r *Repository) DeleteUserByID(ctx context.Context, id int64) error {
 	return nil
 }
 
-// ListMeetingsForCommittee retrieves all meetings for a committee by slug
-func (r *Repository) ListMeetingsForCommittee(ctx context.Context, slug string) ([]*model.Meeting, error) {
-	meetings, err := r.Queries.ListMeetingsForCommittee(ctx, slug)
+// ListMeetingsForCommittee retrieves a page of meetings for a committee by slug
+func (r *Repository) ListMeetingsForCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.Meeting, error) {
+	meetings, err := r.Queries.ListMeetingsForCommittee(ctx, client.ListMeetingsForCommitteeParams{
+		Slug:   slug,
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list meetings: %w", err)
 	}
@@ -473,6 +502,15 @@ func (r *Repository) ListMeetingsForCommittee(ctx context.Context, slug string) 
 		result[i] = meetingFromClient(&meetings[i])
 	}
 	return result, nil
+}
+
+// CountMeetingsForCommittee returns the total number of meetings for a committee
+func (r *Repository) CountMeetingsForCommittee(ctx context.Context, slug string) (int64, error) {
+	count, err := r.Queries.CountMeetingsForCommittee(ctx, slug)
+	if err != nil {
+		return 0, fmt.Errorf("count meetings: %w", err)
+	}
+	return count, nil
 }
 
 // CreateMeeting creates a new meeting for a committee
@@ -486,6 +524,38 @@ func (r *Repository) CreateMeeting(ctx context.Context, committeeID int64, name,
 	})
 	if err != nil {
 		return fmt.Errorf("create meeting: %w", err)
+	}
+	return nil
+}
+
+// GetMeetingByID retrieves a meeting by its ID
+func (r *Repository) GetMeetingByID(ctx context.Context, id int64) (*model.Meeting, error) {
+	m, err := r.Queries.GetMeetingByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("meeting not found")
+		}
+		return nil, fmt.Errorf("get meeting: %w", err)
+	}
+	return meetingFromClient(&m), nil
+}
+
+// DeleteMeeting removes a meeting by ID
+func (r *Repository) DeleteMeeting(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteMeeting(ctx, id); err != nil {
+		return fmt.Errorf("delete meeting: %w", err)
+	}
+	return nil
+}
+
+// SetActiveMeeting sets a meeting as the current active meeting for a committee
+func (r *Repository) SetActiveMeeting(ctx context.Context, slug string, meetingID int64) error {
+	err := r.Queries.SetActiveMeeting(ctx, client.SetActiveMeetingParams{
+		CurrentMeetingID: sql.NullInt64{Int64: meetingID, Valid: true},
+		Slug:             slug,
+	})
+	if err != nil {
+		return fmt.Errorf("set active meeting: %w", err)
 	}
 	return nil
 }

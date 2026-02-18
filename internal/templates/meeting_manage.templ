@@ -1,0 +1,40 @@
+package templates
+
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingManageInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	MeetingID     int64
+	IDString      string
+}
+
+func (i *MeetingManageInput) CommitteeDashboardGet() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGet())
+}
+
+templ MeetingManageTemplate(input MeetingManageInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Manage: { input.MeetingName } - { input.CommitteeName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>Manage: { input.MeetingName }</h1>
+			<nav>
+				<a href={ input.CommitteeDashboardGet() }>← Back to Dashboard</a>
+			</nav>
+		</header>
+
+		<main>
+			<p>Meeting management coming soon.</p>
+		</main>
+	</body>
+	</html>
+}
