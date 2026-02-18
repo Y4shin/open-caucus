@@ -12,9 +12,9 @@ import (
 
 const createSession = `-- name: CreateSession :exec
 INSERT INTO sessions (
-    session_id, session_type, user_id, committee_slug,
-    attendee_id, meeting_id, expires_at
-) VALUES (?, ?, ?, ?, ?, ?, ?)
+    session_id, session_type, user_id, committee_slug, username, role, quoted,
+    attendee_id, meeting_id, full_name, is_chair, expires_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateSessionParams struct {
@@ -22,8 +22,13 @@ type CreateSessionParams struct {
 	SessionType   string
 	UserID        sql.NullInt64
 	CommitteeSlug sql.NullString
+	Username      sql.NullString
+	Role          sql.NullString
+	Quoted        sql.NullInt64
 	AttendeeID    sql.NullInt64
 	MeetingID     sql.NullInt64
+	FullName      sql.NullString
+	IsChair       sql.NullInt64
 	ExpiresAt     string
 }
 
@@ -33,8 +38,13 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 		arg.SessionType,
 		arg.UserID,
 		arg.CommitteeSlug,
+		arg.Username,
+		arg.Role,
+		arg.Quoted,
 		arg.AttendeeID,
 		arg.MeetingID,
+		arg.FullName,
+		arg.IsChair,
 		arg.ExpiresAt,
 	)
 	return err
@@ -59,7 +69,7 @@ func (q *Queries) DeleteSession(ctx context.Context, sessionID string) error {
 }
 
 const getSession = `-- name: GetSession :one
-SELECT session_id, session_type, user_id, committee_slug, attendee_id, meeting_id, created_at, expires_at FROM sessions WHERE session_id = ?
+SELECT session_id, session_type, user_id, committee_slug, attendee_id, meeting_id, created_at, expires_at, username, role, full_name, is_chair, quoted FROM sessions WHERE session_id = ?
 `
 
 func (q *Queries) GetSession(ctx context.Context, sessionID string) (Session, error) {
@@ -74,6 +84,11 @@ func (q *Queries) GetSession(ctx context.Context, sessionID string) (Session, er
 		&i.MeetingID,
 		&i.CreatedAt,
 		&i.ExpiresAt,
+		&i.Username,
+		&i.Role,
+		&i.FullName,
+		&i.IsChair,
+		&i.Quoted,
 	)
 	return i, err
 }

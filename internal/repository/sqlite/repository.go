@@ -194,7 +194,8 @@ func (r *Repository) GetUserByID(ctx context.Context, id int64) (*model.User, er
 // CreateSession stores a new session in the database
 func (r *Repository) CreateSession(ctx context.Context, session *model.Session) error {
 	var userID, attendeeID, meetingID sql.NullInt64
-	var committeeSlug sql.NullString
+	var isChair, quoted sql.NullInt64
+	var committeeSlug, username, role, fullName sql.NullString
 
 	if session.UserID != nil {
 		userID = sql.NullInt64{Int64: *session.UserID, Valid: true}
@@ -202,11 +203,34 @@ func (r *Repository) CreateSession(ctx context.Context, session *model.Session) 
 	if session.CommitteeSlug != nil {
 		committeeSlug = sql.NullString{String: *session.CommitteeSlug, Valid: true}
 	}
+	if session.Username != nil {
+		username = sql.NullString{String: *session.Username, Valid: true}
+	}
+	if session.Role != nil {
+		role = sql.NullString{String: *session.Role, Valid: true}
+	}
 	if session.AttendeeID != nil {
 		attendeeID = sql.NullInt64{Int64: *session.AttendeeID, Valid: true}
 	}
 	if session.MeetingID != nil {
 		meetingID = sql.NullInt64{Int64: *session.MeetingID, Valid: true}
+	}
+	if session.FullName != nil {
+		fullName = sql.NullString{String: *session.FullName, Valid: true}
+	}
+	if session.IsChair != nil {
+		v := int64(0)
+		if *session.IsChair {
+			v = 1
+		}
+		isChair = sql.NullInt64{Int64: v, Valid: true}
+	}
+	if session.Quoted != nil {
+		v := int64(0)
+		if *session.Quoted {
+			v = 1
+		}
+		quoted = sql.NullInt64{Int64: v, Valid: true}
 	}
 
 	err := r.Queries.CreateSession(ctx, client.CreateSessionParams{
@@ -214,8 +238,13 @@ func (r *Repository) CreateSession(ctx context.Context, session *model.Session) 
 		SessionType:   string(session.SessionType),
 		UserID:        userID,
 		CommitteeSlug: committeeSlug,
+		Username:      username,
+		Role:          role,
+		Quoted:        quoted,
 		AttendeeID:    attendeeID,
 		MeetingID:     meetingID,
+		FullName:      fullName,
+		IsChair:       isChair,
 		ExpiresAt:     session.ExpiresAt.Format("2006-01-02T15:04:05.999Z"),
 	})
 	if err != nil {
@@ -316,17 +345,28 @@ func sessionFromClient(s *client.Session) (*model.Session, error) {
 	if s.CommitteeSlug.Valid {
 		session.CommitteeSlug = &s.CommitteeSlug.String
 	}
+	if s.Username.Valid {
+		session.Username = &s.Username.String
+	}
+	if s.Role.Valid {
+		session.Role = &s.Role.String
+	}
+	if s.Quoted.Valid {
+		v := s.Quoted.Int64 != 0
+		session.Quoted = &v
+	}
 	if s.AttendeeID.Valid {
 		session.AttendeeID = &s.AttendeeID.Int64
 	}
 	if s.MeetingID.Valid {
 		session.MeetingID = &s.MeetingID.Int64
 	}
-
-	// For user sessions, fetch additional user data
-	if session.IsUserSession() && session.UserID != nil {
-		// Note: This would require a join query in production
-		// For now, these fields will be populated by the session manager
+	if s.FullName.Valid {
+		session.FullName = &s.FullName.String
+	}
+	if s.IsChair.Valid {
+		v := s.IsChair.Int64 != 0
+		session.IsChair = &v
 	}
 
 	return session, nil
@@ -420,4 +460,43 @@ func (r *Repository) DeleteUserByID(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete user: %w", err)
 	}
 	return nil
+}
+
+// ListMeetingsForCommittee retrieves all meetings for a committee by slug
+func (r *Repository) ListMeetingsForCommittee(ctx context.Context, slug string) ([]*model.Meeting, error) {
+	meetings, err := r.Queries.ListMeetingsForCommittee(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("list meetings: %w", err)
+	}
+	result := make([]*model.Meeting, len(meetings))
+	for i := range meetings {
+		result[i] = meetingFromClient(&meetings[i])
+	}
+	return result, nil
+}
+
+// CreateMeeting creates a new meeting for a committee
+func (r *Repository) CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error {
+	err := r.Queries.CreateMeeting(ctx, client.CreateMeetingParams{
+		CommitteeID: committeeID,
+		Name:        name,
+		Description: description,
+		Secret:      secret,
+		SignupOpen:  signupOpen,
+	})
+	if err != nil {
+		return fmt.Errorf("create meeting: %w", err)
+	}
+	return nil
+}
+
+func meetingFromClient(m *client.Meeting) *model.Meeting {
+	createdAt, _ := time.Parse(time.RFC3339, m.CreatedAt)
+	return &model.Meeting{
+		ID:          m.ID,
+		Name:        m.Name,
+		Description: m.Description,
+		SignupOpen:  m.SignupOpen,
+		CreatedAt:   createdAt,
+	}
 }

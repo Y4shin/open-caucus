@@ -6,5 +6,5 @@ pre_cmd = ["go generate ./..."]
 cmd = "go build -o ./tmp/main.exe ."
 bin = "tmp/main.exe"
 args_bin = ["serve"]
-include_file = ["**/*.go"]
+include_file = ["**/*.go", "**/*.templ"]
 exclude_regex = ["_test\\.go", "_generated\\.go", "_gen\\.go", "_templ\\.go"]

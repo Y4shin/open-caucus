@@ -15,7 +15,7 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 	}
 
 	// ApplicationConfig has 5 fields
-	expectedCount := 5
+	expectedCount := 7
 	if len(fields) != expectedCount {
 		t.Errorf("Expected %d fields, got %d", expectedCount, len(fields))
 	}
@@ -32,6 +32,8 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 		"PORT",
 		"HOST",
 		"ADMIN_KEY",
+		"SESSION_SECRET",
+		"SESSION_EXPIRATION",
 	}
 
 	for _, envVar := range requiredEnvVars {

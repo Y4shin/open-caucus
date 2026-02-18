@@ -1,9 +1,17 @@
 package templates
 
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
 type LoginPageInput struct {
 	Error     string
 	Committee string // Pre-fill on error
 	Username  string // Pre-fill on error
+}
+
+func (i *LoginPageInput) LoginSubmitPost() templ.SafeURL {
+	return templ.URL(paths.Route.LoginSubmitPost())
 }
 
 templ LoginPageTemplate(input LoginPageInput) {
@@ -21,7 +29,7 @@ templ LoginPageTemplate(input LoginPageInput) {
 			<div class="error">{ input.Error }</div>
 		}
 
-		<form method="POST" action="/login">
+		<form method="POST" action={ input.LoginSubmitPost() }>
 			<div>
 				<label for="committee">Committee:</label>
 				<input type="text" id="committee" name="committee"

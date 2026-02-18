@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -15,7 +17,7 @@ import (
 )
 
 // LoginPage displays the login form
-func (h *Handler) LoginPage(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
+func (h *Handler) LoginPage(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
 	// Check if already logged in
 	if sessionData, ok := session.GetSession(ctx); ok && !sessionData.IsExpired() {
 		// Already authenticated - redirect to their committee page
@@ -30,7 +32,7 @@ func (h *Handler) LoginPage(ctx context.Context, w http.ResponseWriter, r *http.
 }
 
 // LoginSubmit processes login credentials
-func (h *Handler) LoginSubmit(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
+func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
 	// Parse form
 	if err := r.ParseForm(); err != nil {
 		return &templates.LoginPageInput{
@@ -78,6 +80,7 @@ func (h *Handler) LoginSubmit(ctx context.Context, w http.ResponseWriter, r *htt
 		CommitteeSlug: &committeeSlug,
 		Username:      &user.Username,
 		Role:          &user.Role,
+		Quoted:        &user.Quoted,
 		ExpiresAt:     time.Now().Add(24 * time.Hour),
 	}
 
@@ -97,19 +100,63 @@ func (h *Handler) LoginSubmit(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 // CommitteePage shows the committee dashboard
-func (h *Handler) CommitteePage(ctx context.Context, w http.ResponseWriter, r *http.Request, params routes.RouteParams) (*templates.CommitteePageInput, *routes.ResponseMeta, error) {
-	// Note: Auth middleware guarantees session exists
-	// Note: committee_access middleware guarantees slug matches session
+func (h *Handler) CommitteePage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.CommitteePageInput, *routes.ResponseMeta, error) {
+	input, err := h.buildCommitteePageInput(ctx, params.Slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
 
+// CommitteeCreateMeeting handles meeting creation for chairpersons
+func (h *Handler) CommitteeCreateMeeting(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.CommitteePageInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 
-	// Load committee data
-	committee, err := h.Repository.GetCommitteeBySlug(ctx, slug)
+	if err := r.ParseForm(); err != nil {
+		input, loadErr := h.buildCommitteePageInput(ctx, slug, "Invalid form submission")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	name := strings.TrimSpace(r.FormValue("name"))
+	description := strings.TrimSpace(r.FormValue("description"))
+	signupOpen := r.FormValue("signup_open") == "true"
+
+	if name == "" {
+		input, loadErr := h.buildCommitteePageInput(ctx, slug, "Meeting name is required")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	committeeID, err := h.Repository.GetCommitteeIDBySlug(ctx, slug)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load committee: %w", err)
 	}
 
-	// Get session for user info
+	secret, err := generateSecret()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to generate meeting secret: %w", err)
+	}
+
+	if err := h.Repository.CreateMeeting(ctx, committeeID, name, description, secret, signupOpen); err != nil {
+		return nil, nil, fmt.Errorf("failed to create meeting: %w", err)
+	}
+
+	meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, fmt.Sprintf("/committee/%s", slug))
+	return nil, meta, nil
+}
+
+// buildCommitteePageInput loads all data needed to render the committee dashboard
+func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError string) (*templates.CommitteePageInput, error) {
+	committee, err := h.Repository.GetCommitteeBySlug(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load committee: %w", err)
+	}
+
 	sessionData, _ := session.GetSession(ctx)
 
 	username := ""
@@ -121,16 +168,42 @@ func (h *Handler) CommitteePage(ctx context.Context, w http.ResponseWriter, r *h
 		role = *sessionData.Role
 	}
 
-	return &templates.CommitteePageInput{
+	input := &templates.CommitteePageInput{
 		CommitteeName: committee.Name,
 		CommitteeSlug: committee.Slug,
 		Username:      username,
 		Role:          role,
-	}, nil, nil
+		FormError:     formError,
+	}
+
+	if role == "chairperson" {
+		meetings, err := h.Repository.ListMeetingsForCommittee(ctx, slug)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load meetings: %w", err)
+		}
+		for _, m := range meetings {
+			input.Meetings = append(input.Meetings, templates.MeetingItem{
+				ID:          m.ID,
+				Name:        m.Name,
+				Description: m.Description,
+				SignupOpen:  m.SignupOpen,
+			})
+		}
+	}
+
+	return input, nil
+}
+
+func generateSecret() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // LogoutSubmit clears session and redirects to login
-func (h *Handler) LogoutSubmit(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
+func (h *Handler) LogoutSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
 	// Get session ID from cookie and destroy it
 	if cookie, err := r.Cookie("session_id"); err == nil {
 		_ = h.SessionManager.DestroySession(ctx, cookie.Value)

@@ -152,6 +152,20 @@ routes:
           type: CommitteePageTemplate
           input_type: CommitteePageInput
 
+  # Create Meeting
+  - path: /committee/{slug}/meeting/create
+    methods:
+      - verb: POST
+        handler: CommitteeCreateMeeting
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: CommitteePageTemplate
+          input_type: CommitteePageInput
+
   # User Logout
   - path: /logout
     methods:

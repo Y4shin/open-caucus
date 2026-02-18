@@ -92,6 +92,11 @@ type Session struct {
 	MeetingID     sql.NullInt64
 	CreatedAt     string
 	ExpiresAt     string
+	Username      sql.NullString
+	Role          sql.NullString
+	FullName      sql.NullString
+	IsChair       sql.NullInt64
+	Quoted        sql.NullInt64
 }
 
 type SpeakersList struct {

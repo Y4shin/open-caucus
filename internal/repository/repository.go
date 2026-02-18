@@ -43,6 +43,10 @@ type Repository interface {
 	DeleteSession(ctx context.Context, sessionID string) error
 	DeleteExpiredSessions(ctx context.Context, before time.Time) error
 
+	// Meetings
+	ListMeetingsForCommittee(ctx context.Context, slug string) ([]*model.Meeting, error)
+	CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error
+
 	// Admin - Committee management
 	ListAllCommittees(ctx context.Context) ([]*model.Committee, error)
 	CreateCommitteeWithSlug(ctx context.Context, name, slug string) error

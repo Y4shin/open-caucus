@@ -18,7 +18,7 @@ import (
 var slugRegex = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 // AdminLogin shows the admin login page
-func (h *Handler) AdminLogin(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminLogin(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
 	// Check if already logged in
 	if session.IsAdminAuthenticated(ctx) {
 		meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/admin")
@@ -29,7 +29,7 @@ func (h *Handler) AdminLogin(ctx context.Context, w http.ResponseWriter, r *http
 }
 
 // AdminLoginSubmit processes admin login
-func (h *Handler) AdminLoginSubmit(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
 	// Parse form
 	if err := r.ParseForm(); err != nil {
 		return &templates.AdminLoginInput{
@@ -59,7 +59,7 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, w http.ResponseWriter, r
 }
 
 // AdminLogout logs out the admin
-func (h *Handler) AdminLogout(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminLogout(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
 	// Clear admin cookie
 	clearCookie := h.AdminSessionManager.ClearAdminCookie()
 
@@ -72,7 +72,7 @@ func (h *Handler) AdminLogout(ctx context.Context, w http.ResponseWriter, r *htt
 }
 
 // AdminDashboard shows the admin dashboard with committee list
-func (h *Handler) AdminDashboard(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.AdminDashboardInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminDashboard(ctx context.Context, r *http.Request) (*templates.AdminDashboardInput, *routes.ResponseMeta, error) {
 	// List all committees
 	committees, err := h.Repository.ListAllCommittees(ctx)
 	if err != nil {
@@ -94,7 +94,7 @@ func (h *Handler) AdminDashboard(ctx context.Context, w http.ResponseWriter, r *
 }
 
 // AdminCreateCommittee creates a new committee
-func (h *Handler) AdminCreateCommittee(ctx context.Context, w http.ResponseWriter, r *http.Request) (*templates.CommitteeListPartialInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminCreateCommittee(ctx context.Context, r *http.Request) (*templates.CommitteeListPartialInput, *routes.ResponseMeta, error) {
 	// Parse form
 	if err := r.ParseForm(); err != nil {
 		committees, _ := h.Repository.ListAllCommittees(ctx)
@@ -163,7 +163,7 @@ func (h *Handler) AdminCreateCommittee(ctx context.Context, w http.ResponseWrite
 }
 
 // AdminDeleteCommittee deletes a committee
-func (h *Handler) AdminDeleteCommittee(ctx context.Context, w http.ResponseWriter, r *http.Request, params routes.RouteParams) (*templates.AdminDashboardInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminDeleteCommittee(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AdminDashboardInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 
 	// Delete committee
@@ -177,7 +177,7 @@ func (h *Handler) AdminDeleteCommittee(ctx context.Context, w http.ResponseWrite
 }
 
 // AdminCommitteeUsers shows users in a committee
-func (h *Handler) AdminCommitteeUsers(ctx context.Context, w http.ResponseWriter, r *http.Request, params routes.RouteParams) (*templates.AdminCommitteeUsersInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminCommitteeUsers(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AdminCommitteeUsersInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 
 	// Get committee
@@ -213,12 +213,12 @@ func (h *Handler) AdminCommitteeUsers(ctx context.Context, w http.ResponseWriter
 }
 
 // AdminCreateUser creates a new user in a committee
-func (h *Handler) AdminCreateUser(ctx context.Context, w http.ResponseWriter, r *http.Request, params routes.RouteParams) (*templates.AdminCommitteeUsersInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminCreateUser(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AdminCommitteeUsersInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 
 	// Parse form
 	if err := r.ParseForm(); err != nil {
-		return h.AdminCommitteeUsers(ctx, w, r, params)
+		return h.AdminCommitteeUsers(ctx, r, params)
 	}
 
 	username := strings.TrimSpace(r.FormValue("username"))
@@ -277,7 +277,7 @@ func (h *Handler) AdminCreateUser(ctx context.Context, w http.ResponseWriter, r 
 }
 
 // AdminDeleteUser deletes a user
-func (h *Handler) AdminDeleteUser(ctx context.Context, w http.ResponseWriter, r *http.Request, params routes.RouteParams) (*templates.AdminCommitteeUsersInput, *routes.ResponseMeta, error) {
+func (h *Handler) AdminDeleteUser(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AdminCommitteeUsersInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 	userIDStr := params.UserId
 

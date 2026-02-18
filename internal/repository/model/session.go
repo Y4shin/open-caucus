@@ -20,6 +20,7 @@ type Session struct {
 	CommitteeSlug *string
 	Username      *string
 	Role          *string
+	Quoted        *bool
 
 	// For attendee sessions
 	AttendeeID *int64

@@ -1,10 +1,31 @@
 package templates
 
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingItem struct {
+	ID          int64
+	Name        string
+	Description string
+	SignupOpen  bool
+}
+
 type CommitteePageInput struct {
 	CommitteeName string
 	CommitteeSlug string
 	Username      string
 	Role          string
+	Meetings      []MeetingItem
+	FormError     string
+}
+
+func (i *CommitteePageInput) LogoutSubmitPost() templ.SafeURL {
+	return templ.URL(paths.Route.LogoutSubmitPost())
+}
+
+func (i *CommitteePageInput) CommitteeCreateMeetingPost() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost())
 }
 
 templ CommitteePageTemplate(input CommitteePageInput) {
@@ -24,11 +45,68 @@ templ CommitteePageTemplate(input CommitteePageInput) {
 		<main>
 			<h2>Committee Dashboard</h2>
 			<p>Welcome to the committee management system.</p>
-			<!-- TODO: Add committee functionality -->
+
+			if input.Role == "chairperson" {
+				<section>
+					<h2>Meetings</h2>
+
+					if input.FormError != "" {
+						<p class="error">{ input.FormError }</p>
+					}
+
+					<h3>Create New Meeting</h3>
+					<form method="POST" action={ input.CommitteeCreateMeetingPost() }>
+						<div>
+							<label for="name">Name:</label>
+							<input type="text" id="name" name="name" required/>
+						</div>
+						<div>
+							<label for="description">Description:</label>
+							<textarea id="description" name="description"></textarea>
+						</div>
+						<div>
+							<label>
+								<input type="checkbox" name="signup_open" value="true"/>
+								Open for signup
+							</label>
+						</div>
+						<button type="submit">Create Meeting</button>
+					</form>
+
+					if len(input.Meetings) == 0 {
+						<p>No meetings yet.</p>
+					} else {
+						<table>
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Description</th>
+									<th>Signup Open</th>
+								</tr>
+							</thead>
+							<tbody>
+								for _, m := range input.Meetings {
+									<tr>
+										<td>{ m.Name }</td>
+										<td>{ m.Description }</td>
+										<td>
+											if m.SignupOpen {
+												Yes
+											} else {
+												No
+											}
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</section>
+			}
 		</main>
 
 		<footer>
-			<form method="POST" action="/logout">
+			<form method="POST" action={ input.LogoutSubmitPost() }>
 				<button type="submit">Logout</button>
 			</form>
 		</footer>

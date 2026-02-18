@@ -1,7 +1,15 @@
 package templates
 
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
 type AdminLoginInput struct {
 	Error string
+}
+
+func (i *AdminLoginInput) AdminLoginSubmitPost() templ.SafeURL {
+	return templ.URL(paths.Route.AdminLoginSubmitPost())
 }
 
 templ AdminLoginTemplate(input AdminLoginInput) {
@@ -19,7 +27,7 @@ templ AdminLoginTemplate(input AdminLoginInput) {
 			<div class="error">{ input.Error }</div>
 		}
 
-		<form method="POST" action="/admin/login">
+		<form method="POST" action={ input.AdminLoginSubmitPost() }>
 			<div>
 				<label for="admin_key">Admin Key:</label>
 				<input type="password" id="admin_key" name="admin_key" required autofocus/>

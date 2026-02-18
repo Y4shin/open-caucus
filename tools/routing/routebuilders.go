@@ -15,8 +15,9 @@ type BuilderRoute struct {
 }
 
 type RouteGroup struct {
-	Params []string
-	Routes []BuilderRoute
+	Params         []string
+	ConstructorArgs string
+	Routes         []BuilderRoute
 }
 
 type RouteBuilders struct {
@@ -45,6 +46,7 @@ func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}() string {
 {{- end }}
 {{- else }}
 {{- $params := .Params }}
+{{- $constructorArgs := .ConstructorArgs }}
 {{- range .Routes }}
 type {{ .StructName }} struct {
 	{{- range $params }}
@@ -53,13 +55,18 @@ type {{ .StructName }} struct {
 }
 {{- $structName := .StructName }}
 {{- $pathReturn := .PathReturn }}
+
+func New{{ $structName }}({{ $constructorArgs }}) *{{ $structName }} {
+	return &{{ $structName }}{
+		{{- range $params }}
+		{{ . }}: {{ . | lower }},
+		{{- end }}
+	}
+}
 {{- range .Verbs }}
+
 func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}() string {
 	return "{{ $pathReturn }}"
-}
-
-func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}URL() templ.SafeURL {
-	return templ.URL(r.{{ .Handler }}{{ .Verb | lower | capitalize }}())
 }
 {{- end }}
 {{- end }}
@@ -78,13 +85,25 @@ func GetRouteBuilders(config *RouteConfig) RouteBuilders {
 		}
 
 		if groups[key] == nil {
+			pascalParams := make([]string, len(params))
+			for i, p := range params {
+				pascalParams[i] = ToPascalCase(p)
+			}
+
+			// Build constructor args like "slug string, userId string"
+			var args []string
+			for _, p := range params {
+				args = append(args, strings.ToLower(ToPascalCase(p))+" string")
+			}
+
 			groups[key] = &RouteGroup{
-				Params: params,
+				Params:          pascalParams,
+				ConstructorArgs: strings.Join(args, ", "),
 			}
 		}
 		pathReturn := route.Path
 		for _, param := range params {
-			pathReturn = strings.Replace(pathReturn, "{"+param+"}", "\" + r."+param+" + \"", 1)
+			pathReturn = strings.Replace(pathReturn, "{"+param+"}", "\" + r."+ToPascalCase(param)+" + \"", 1)
 		}
 		pathReturn = strings.Replace(pathReturn, " + \"\"", "", -1)
 		routeRes := BuilderRoute{

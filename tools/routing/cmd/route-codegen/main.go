@@ -4,43 +4,77 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/Y4shin/conference-tool/tools/routing"
 )
 
 func main() {
 	var (
-		configFile  = flag.String("config", "routes.yaml", "Path to the routes configuration YAML file")
-		outputFile  = flag.String("output", "routes_gen.go", "Path to the generated output file")
-		packageName = flag.String("package", "routes", "Package name for the generated code")
+		configFile      = flag.String("config", "routes.yaml", "Path to the routes configuration YAML file")
+		outputFile      = flag.String("output", "routes_gen.go", "Path to the generated routes output file")
+		packageName     = flag.String("package", "routes", "Package name for the generated routes code")
+		pathsOutputFile = flag.String("paths-output", "", "Path to the generated paths output file (if empty, paths are not generated separately)")
+		pathsPackage    = flag.String("paths-package", "paths", "Package name for the generated paths code")
+		staticDir       = flag.String("static-dir", "", "Path to static assets directory to embed (auto-detected as 'static/' next to output file if not specified)")
 	)
 
 	flag.Parse()
 
-	if err := run(*configFile, *outputFile, *packageName); err != nil {
+	if err := run(*configFile, *outputFile, *packageName, *pathsOutputFile, *pathsPackage, *staticDir); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
-
-	fmt.Printf("Successfully generated %s from %s\n", *outputFile, *configFile)
 }
 
-func run(configFile, outputFile, packageName string) error {
+func run(configFile, outputFile, packageName, pathsOutputFile, pathsPackage, staticDirFlag string) error {
 	// Parse the configuration
 	config, err := routing.ParseConfig(configFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse config: %w", err)
 	}
 
-	// Generate the code
-	code, err := routing.Generate(config, packageName)
-	if err != nil {
-		return fmt.Errorf("failed to generate code: %w", err)
+	// Resolve static directory
+	staticDir := staticDirFlag
+	if staticDir == "" {
+		staticDir = filepath.Join(filepath.Dir(outputFile), "static")
 	}
 
-	// Write to output file
+	// Scan for static files (returns nil, nil when directory doesn't exist)
+	staticFiles, err := routing.ScanStaticDir(staticDir)
+	if err != nil {
+		return fmt.Errorf("failed to scan static directory %q: %w", staticDir, err)
+	}
+
+	// Generate the routes code
+	code, err := routing.Generate(config, packageName, staticFiles)
+	if err != nil {
+		return fmt.Errorf("failed to generate routes code: %w", err)
+	}
+
+	// Write routes output file
 	if err := os.WriteFile(outputFile, []byte(code), 0644); err != nil {
-		return fmt.Errorf("failed to write output file: %w", err)
+		return fmt.Errorf("failed to write routes output file: %w", err)
+	}
+	fmt.Printf("Successfully generated %s from %s\n", outputFile, configFile)
+
+	// Generate paths if output specified
+	if pathsOutputFile != "" {
+		pathsCode, err := routing.GeneratePaths(config, pathsPackage, staticFiles)
+		if err != nil {
+			return fmt.Errorf("failed to generate paths code: %w", err)
+		}
+
+		// Ensure paths directory exists
+		pathsDir := filepath.Dir(pathsOutputFile)
+		if err := os.MkdirAll(pathsDir, 0755); err != nil {
+			return fmt.Errorf("failed to create paths directory: %w", err)
+		}
+
+		if err := os.WriteFile(pathsOutputFile, []byte(pathsCode), 0644); err != nil {
+			return fmt.Errorf("failed to write paths output file: %w", err)
+		}
+		fmt.Printf("Successfully generated %s from %s\n", pathsOutputFile, configFile)
 	}
 
 	return nil

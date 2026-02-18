@@ -2,7 +2,7 @@
   "mcpServers": {
     "gopls": {
       "type": "stdio",
-      "command": "mcp-gopls",
+      "command": "mcp-gopls.exe",
       "args": [
         "--workspace",
         "./src",

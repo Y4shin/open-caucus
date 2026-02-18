@@ -1,5 +1,9 @@
 package templates
 
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
 type AdminDashboardInput struct {
 	Committees []CommitteeItem
 	Error      string
@@ -10,9 +14,25 @@ type CommitteeItem struct {
 	Name string
 }
 
+func (c *CommitteeItem) ManageUsersGet() templ.SafeURL {
+	return templ.URL(paths.NewAdminCommitteeSlugRoute(c.Slug).AdminCommitteeUsersGet())
+}
+
+func (c *CommitteeItem) DeletePost() templ.SafeURL {
+	return templ.URL(paths.NewAdminCommitteeSlugDeleteRoute(c.Slug).AdminDeleteCommitteePost())
+}
+
 type CommitteeListPartialInput struct {
 	Committees []CommitteeItem
 	Error      string
+}
+
+func (i *AdminDashboardInput) AdminLogoutPost() templ.SafeURL {
+	return templ.URL(paths.Route.AdminLogoutPost())
+}
+
+func (i *AdminDashboardInput) AdminCreateCommitteePost() string {
+	return paths.Route.AdminCreateCommitteePost()
 }
 
 // CommitteeListPartial renders just the committee list (for HTMX updates)
@@ -39,9 +59,9 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 								<td>{ committee.Name }</td>
 								<td>{ committee.Slug }</td>
 								<td>
-									<a href={ templ.URL("/admin/committee/" + committee.Slug) }>Manage Users</a>
+									<a href={ committee.ManageUsersGet() }>Manage Users</a>
 									|
-									<form method="POST" action={ templ.URL("/admin/committee/" + committee.Slug + "/delete") } style="display: inline;">
+									<form method="POST" action={ committee.DeletePost() } style="display: inline;">
 										<button type="submit" onclick="return confirm('Are you sure you want to delete this committee?');">Delete</button>
 									</form>
 								</td>
@@ -61,12 +81,12 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 		<title>Admin Dashboard</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body>
 		<header>
 			<h1>Admin Dashboard</h1>
-			<form method="POST" action="/admin/logout">
+			<form method="POST" action={ input.AdminLogoutPost() }>
 				<button type="submit">Logout</button>
 			</form>
 		</header>
@@ -78,7 +98,7 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 				<h3>Add New Committee</h3>
 				<form
 					id="create-committee-form"
-					hx-post="/admin/committee/create"
+					hx-post={ input.AdminCreateCommitteePost() }
 					hx-target="#committee-list-container"
 					hx-swap="outerHTML"
 					hx-on::after-request="if(event.detail.successful) this.reset()"

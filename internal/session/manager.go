@@ -50,6 +50,7 @@ func (m *Manager) CreateSession(ctx context.Context, data *SessionData) (string,
 		modelSession.CommitteeSlug = data.CommitteeSlug
 		modelSession.Username = data.Username
 		modelSession.Role = data.Role
+		modelSession.Quoted = data.Quoted
 	} else {
 		modelSession.AttendeeID = data.AttendeeID
 		modelSession.MeetingID = data.MeetingID
@@ -161,6 +162,7 @@ func sessionDataFromModel(s *model.Session) *SessionData {
 		CommitteeSlug: s.CommitteeSlug,
 		Username:      s.Username,
 		Role:          s.Role,
+		Quoted:        s.Quoted,
 		AttendeeID:    s.AttendeeID,
 		MeetingID:     s.MeetingID,
 		FullName:      s.FullName,

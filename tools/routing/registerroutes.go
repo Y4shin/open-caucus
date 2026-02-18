@@ -17,6 +17,7 @@ type RegisterRoute struct {
 type RegisterRoutes struct {
 	MiddlewareGroups []MiddlewareGroup
 	Routes           []RegisterRoute
+	HasStaticFiles   bool
 }
 
 const registerRoutes string = `// RegisterRoutes installs all routes into the HTTP server
@@ -39,6 +40,10 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	{{ range .Routes }}
 	{{ template "RegisterRoute" . }}
 	{{- end }}
+	{{- if .HasStaticFiles }}
+
+	rt.mux.Handle("GET /static/", http.FileServer(http.FS(staticFS)))
+	{{- end }}
 
 	return rt.mux
 }`
@@ -56,7 +61,7 @@ const registerRoute string = `
 	))
 `
 
-func GetRegisterRoutes(config *RouteConfig) RegisterRoutes {
+func GetRegisterRoutes(config *RouteConfig, staticFiles []StaticFileInfo) RegisterRoutes {
 
 	sortedGroups := make([]MiddlewareGroup, len(config.MiddlewareGroups))
 	copy(sortedGroups, config.MiddlewareGroups)
@@ -65,6 +70,7 @@ func GetRegisterRoutes(config *RouteConfig) RegisterRoutes {
 	})
 	res := RegisterRoutes{
 		MiddlewareGroups: sortedGroups,
+		HasStaticFiles:   len(staticFiles) > 0,
 	}
 	for _, route := range config.Routes {
 		for _, method := range route.Methods {

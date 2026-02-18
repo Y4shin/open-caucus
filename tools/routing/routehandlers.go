@@ -74,7 +74,7 @@ const routeHandler string = `func (rt *Router) handle{{ .Name }}(w http.Response
 		return
 	}
 	
-	// Set cookies and headers\n")
+	// Set cookies and headers
 	if meta != nil {
 		for _, cookie := range meta.Cookies {
 			http.SetCookie(w, cookie)
