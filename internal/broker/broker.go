@@ -19,6 +19,9 @@ type Broker interface {
 	// Shutdown gracefully closes all client channels and stops the broker.
 	Shutdown()
 
+	// Publish broadcasts an SSEEvent to all connected subscribers.
+	Publish(evt SSEEvent)
+
 	// Increment atomically increments the counter and broadcasts the new value.
 	Increment()
 

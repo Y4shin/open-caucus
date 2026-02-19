@@ -49,9 +49,13 @@ const routeHandler string = `func (rt *Router) handle{{ .Name }}(w http.Response
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, \"streaming not supported\", http.StatusInternalServerError)
+		http.Error(w, "streaming not supported", http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
 
 	for {
 	select {
@@ -103,7 +107,7 @@ const routeSSEEvent string = `
 			case {{ .TypeName }}:
 				var buf bytes.Buffer
 				{{ .TemplateFunc }}(e.Data).Render(r.Context(), &buf)
-				fmt.Fprintf(w, "event: {{ .Name }}\ndata: %s\n\n", buf.String())
+				fmt.Fprintf(w, "event: {{ .Name }}\ndata: %s\n\n", strings.ReplaceAll(buf.String(), "\n", ""))
 				flusher.Flush()
 `
 

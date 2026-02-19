@@ -99,16 +99,18 @@ func (i *AgendaPointListPartialInput) AgendaPointActivatePostStr(ap *AgendaPoint
 
 // SpeakerItem holds display data for one speakers-list row.
 type SpeakerItem struct {
-	ID           int64
-	IDString     string
-	AttendeeName string
-	Type         string // "regular" or "ropm"
-	Status       string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
-	IsWaiting    bool
-	IsSpeaking   bool
-	GenderQuoted bool
-	FirstSpeaker bool
-	Priority     bool
+	ID            int64
+	IDString      string
+	AttendeeID    int64 // ID of the attendee (for highlighting own row in attendee view)
+	AttendeeName  string
+	Type          string // "regular" or "ropm"
+	Status        string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
+	IsWaiting     bool
+	IsSpeaking    bool
+	GenderQuoted  bool
+	FirstSpeaker  bool
+	Priority      bool
+	OrderPosition int64 // computed queue position (meaningful for WAITING)
 }
 
 type SpeakersListPartialInput struct {
@@ -278,7 +280,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(input.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 243, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 245, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -296,7 +298,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeCreatePostStr())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 247, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 249, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -324,7 +326,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 273, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 275, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -367,7 +369,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeToggleChairPostStr(&a))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 290, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 292, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -395,7 +397,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeDeletePostStr(&a))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 302, Col: 50}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 304, Col: 50}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
@@ -462,7 +464,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(input.ToggleSignupOpenPostStr())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 330, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 332, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -502,7 +504,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 					var templ_7745c5c3_Var9 string
 					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 349, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 351, Col: 27}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
@@ -522,7 +524,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(input.SetProtocolWriterPostStr())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 355, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 357, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -540,7 +542,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 362, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 364, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -553,7 +555,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 362, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 364, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -571,7 +573,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(input.SetMeetingQuotationPostStr())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 371, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 373, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -636,7 +638,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 					var templ_7745c5c3_Var14 string
 					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 400, Col: 27}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 402, Col: 27}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 					if templ_7745c5c3_Err != nil {
@@ -656,7 +658,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(input.SetMeetingModeratorPostStr())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 406, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 408, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -684,7 +686,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 413, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 415, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -707,7 +709,7 @@ func MeetingSettingsPartial(input MeetingSettingsPartialInput) templ.Component {
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 413, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 415, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
@@ -759,7 +761,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(input.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 425, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 427, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -777,7 +779,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointCreatePostStr())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 429, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 431, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -805,7 +807,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(ap.Position, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 455, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 457, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -818,7 +820,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(ap.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 456, Col: 21}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 458, Col: 21}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -851,7 +853,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var23 string
 					templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointActivatePostStr(&ap))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 467, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 469, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 					if templ_7745c5c3_Err != nil {
@@ -869,7 +871,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointDeletePostStr(&ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 476, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 478, Col: 54}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -926,7 +928,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var26 string
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(input.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 496, Col: 33}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 498, Col: 33}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -950,7 +952,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var27 string
 			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointQuotationPostStr())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 503, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 505, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 			if templ_7745c5c3_Err != nil {
@@ -1053,7 +1055,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointModeratorPostStr())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 541, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 543, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -1081,7 +1083,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 548, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 550, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -1104,7 +1106,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 548, Col: 116}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 550, Col: 116}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -1122,7 +1124,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var31 string
 			templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerAddPostStr())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 555, Col: 39}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 557, Col: 39}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 			if templ_7745c5c3_Err != nil {
@@ -1140,7 +1142,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var32 string
 				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 565, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 567, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 				if templ_7745c5c3_Err != nil {
@@ -1153,7 +1155,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var33 string
 				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 565, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 567, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
@@ -1186,7 +1188,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 					var templ_7745c5c3_Var34 string
 					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(s.AttendeeName)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 595, Col: 28}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 597, Col: 28}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {
@@ -1199,7 +1201,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 					var templ_7745c5c3_Var35 string
 					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(s.Type)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 596, Col: 20}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 598, Col: 20}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 					if templ_7745c5c3_Err != nil {
@@ -1212,7 +1214,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 					var templ_7745c5c3_Var36 string
 					templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(s.Status)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 597, Col: 22}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 599, Col: 22}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 					if templ_7745c5c3_Err != nil {
@@ -1250,7 +1252,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 						var templ_7745c5c3_Var37 string
 						templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerTogglePriorityPostStr(&s))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 611, Col: 59}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 613, Col: 59}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 						if templ_7745c5c3_Err != nil {
@@ -1284,7 +1286,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 						var templ_7745c5c3_Var38 string
 						templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerStartPostStr(&s))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 625, Col: 50}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 627, Col: 50}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 						if templ_7745c5c3_Err != nil {
@@ -1303,7 +1305,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 						var templ_7745c5c3_Var39 string
 						templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerEndPostStr(&s))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 635, Col: 48}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 637, Col: 48}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 						if templ_7745c5c3_Err != nil {
@@ -1322,7 +1324,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 						var templ_7745c5c3_Var40 string
 						templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerWithdrawPostStr(&s))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 645, Col: 53}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 647, Col: 53}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 						if templ_7745c5c3_Err != nil {
@@ -1340,7 +1342,7 @@ func SpeakersListPartial(input SpeakersListPartialInput) templ.Component {
 					var templ_7745c5c3_Var41 string
 					templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerRemovePostStr(&s))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 654, Col: 50}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 656, Col: 50}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 					if templ_7745c5c3_Err != nil {
@@ -1393,7 +1395,7 @@ func MeetingManageTemplate(input MeetingManageInput) templ.Component {
 		var templ_7745c5c3_Var43 string
 		templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(input.MeetingName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 676, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 678, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 		if templ_7745c5c3_Err != nil {
@@ -1406,7 +1408,7 @@ func MeetingManageTemplate(input MeetingManageInput) templ.Component {
 		var templ_7745c5c3_Var44 string
 		templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(input.CommitteeName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 676, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 678, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 		if templ_7745c5c3_Err != nil {
@@ -1419,7 +1421,7 @@ func MeetingManageTemplate(input MeetingManageInput) templ.Component {
 		var templ_7745c5c3_Var45 string
 		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(paths.Route.HtmxMinJs())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 679, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 681, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
@@ -1432,7 +1434,7 @@ func MeetingManageTemplate(input MeetingManageInput) templ.Component {
 		var templ_7745c5c3_Var46 string
 		templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(input.MeetingName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 683, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 685, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 		if templ_7745c5c3_Err != nil {
@@ -1445,7 +1447,7 @@ func MeetingManageTemplate(input MeetingManageInput) templ.Component {
 		var templ_7745c5c3_Var47 templ.SafeURL
 		templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinURLErrs(input.CommitteeDashboardGet())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 685, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 687, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 		if templ_7745c5c3_Err != nil {

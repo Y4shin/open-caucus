@@ -48,16 +48,18 @@ func buildSpeakerItems(entries []*model.SpeakerEntry) []templates.SpeakerItem {
 	items := make([]templates.SpeakerItem, len(entries))
 	for i, e := range entries {
 		items[i] = templates.SpeakerItem{
-			ID:           e.ID,
-			IDString:     strconv.FormatInt(e.ID, 10),
-			AttendeeName: e.AttendeeName,
-			Type:         e.Type,
-			Status:       e.Status,
-			IsWaiting:    e.Status == "WAITING",
-			IsSpeaking:   e.Status == "SPEAKING",
-			GenderQuoted: e.GenderQuoted,
-			FirstSpeaker: e.FirstSpeaker,
-			Priority:     e.Priority,
+			ID:            e.ID,
+			IDString:      strconv.FormatInt(e.ID, 10),
+			AttendeeID:    e.AttendeeID,
+			AttendeeName:  e.AttendeeName,
+			Type:          e.Type,
+			Status:        e.Status,
+			IsWaiting:     e.Status == "WAITING",
+			IsSpeaking:    e.Status == "SPEAKING",
+			GenderQuoted:  e.GenderQuoted,
+			FirstSpeaker:  e.FirstSpeaker,
+			Priority:      e.Priority,
+			OrderPosition: e.OrderPosition,
 		}
 	}
 	return items
@@ -357,6 +359,7 @@ func (h *Handler) ManageSpeakerAdd(ctx context.Context, r *http.Request, params 
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, apID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -381,6 +384,7 @@ func (h *Handler) ManageSpeakerRemove(ctx context.Context, r *http.Request, para
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -405,6 +409,7 @@ func (h *Handler) ManageSpeakerStart(ctx context.Context, r *http.Request, param
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -429,6 +434,7 @@ func (h *Handler) ManageSpeakerEnd(ctx context.Context, r *http.Request, params 
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -453,6 +459,7 @@ func (h *Handler) ManageSpeakerWithdraw(ctx context.Context, r *http.Request, pa
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }

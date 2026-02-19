@@ -260,6 +260,16 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 	}
 	isChair := sd.IsChair != nil && *sd.IsChair
 
+	var attendeeID int64
+	if sd.AttendeeID != nil {
+		attendeeID = *sd.AttendeeID
+	}
+
+	speakersInput, err := h.loadAttendeeSpeakersPartial(ctx, meeting.ID, attendeeID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return &templates.MeetingLiveInput{
 		CommitteeName: committee.Name,
 		CommitteeSlug: committee.Slug,
@@ -267,6 +277,7 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		IDString:      params.MeetingId,
 		FullName:      fullName,
 		IsChair:       isChair,
+		Speakers:      *speakersInput,
 	}, nil, nil
 }
 

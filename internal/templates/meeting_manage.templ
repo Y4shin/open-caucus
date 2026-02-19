@@ -91,16 +91,18 @@ func (i *AgendaPointListPartialInput) AgendaPointActivatePostStr(ap *AgendaPoint
 
 // SpeakerItem holds display data for one speakers-list row.
 type SpeakerItem struct {
-	ID           int64
-	IDString     string
-	AttendeeName string
-	Type         string // "regular" or "ropm"
-	Status       string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
-	IsWaiting    bool
-	IsSpeaking   bool
-	GenderQuoted bool
-	FirstSpeaker bool
-	Priority     bool
+	ID            int64
+	IDString      string
+	AttendeeID    int64  // ID of the attendee (for highlighting own row in attendee view)
+	AttendeeName  string
+	Type          string // "regular" or "ropm"
+	Status        string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
+	IsWaiting     bool
+	IsSpeaking    bool
+	GenderQuoted  bool
+	FirstSpeaker  bool
+	Priority      bool
+	OrderPosition int64 // computed queue position (meaningful for WAITING)
 }
 
 type SpeakersListPartialInput struct {

@@ -644,6 +644,20 @@ routes:
           type: AttendeeLoginTemplate
           input_type: AttendeeLoginInput
 
+  # Attendee Speakers Stream (SSE — live speaker list updates)
+  - path: /committee/{slug}/meeting/{meeting_id}/speakers/stream
+    methods:
+      - verb: GET
+        sse: true
+        handler: AttendeeSpeakersStream
+        middleware: [attendee_session, attendee_required]
+        events:
+          - name: SpeakersUpdated
+            template:
+              package: github.com/Y4shin/conference-tool/internal/templates
+              type: AttendeeSpeakersListPartial
+              input_type: AttendeeSpeakersListPartialInput
+
   # Meeting Live Page
   - path: /committee/{slug}/meeting/{meeting_id}/live
     methods:

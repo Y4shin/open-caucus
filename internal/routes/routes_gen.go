@@ -3,8 +3,10 @@
 package routes
 
 import (
+	"bytes"
 	"context"
 	"embed"
+	"fmt"
 	templates "github.com/Y4shin/conference-tool/internal/templates"
 	"net/http"
 	"strings"
@@ -25,6 +27,18 @@ type RouteParams struct {
 	SpeakerId     string
 	UserId        string
 }
+
+// AttendeeSpeakersStreamEvent is the union type for all AttendeeSpeakersStream SSE events
+type AttendeeSpeakersStreamEvent interface {
+	IsAttendeeSpeakersStreamEvent()
+}
+
+// SpeakersUpdatedEvent represents a SpeakersUpdated event
+type SpeakersUpdatedEvent struct {
+	Data templates.AttendeeSpeakersListPartialInput
+}
+
+func (e SpeakersUpdatedEvent) IsAttendeeSpeakersStreamEvent() {}
 
 // Handler interface with all route methods
 type Handler interface {
@@ -76,6 +90,7 @@ type Handler interface {
 	MeetingGuestSignup(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingGuestSuccessInput, *ResponseMeta, error)
 	AttendeeLoginPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeLoginInput, *ResponseMeta, error)
 	AttendeeLoginSubmit(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeLoginInput, *ResponseMeta, error)
+	AttendeeSpeakersStream(ctx context.Context, r *http.Request, params RouteParams) (<-chan AttendeeSpeakersStreamEvent, error)
 	MeetingLivePage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingLiveInput, *ResponseMeta, error)
 	LogoutSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
 }
@@ -460,6 +475,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee-login", groups),
 		[]string{"session"},
 		false,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/speakers/stream", rt.wrapMiddleware(
+		rt.handleAttendeeSpeakersStream,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speakers/stream", groups),
+		[]string{"attendee_session", "attendee_required"},
+		true,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/live", rt.wrapMiddleware(
@@ -1881,6 +1903,48 @@ func (rt *Router) handleAttendeeLoginSubmit(w http.ResponseWriter, r *http.Reque
 	}
 
 	templates.AttendeeLoginTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleAttendeeSpeakersStream(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	eventChan, err := rt.handler.AttendeeSpeakersStream(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case evt, ok := <-eventChan:
+			if !ok {
+				return
+			}
+			switch e := evt.(type) {
+
+			case SpeakersUpdatedEvent:
+				var buf bytes.Buffer
+				templates.AttendeeSpeakersListPartial(e.Data).Render(r.Context(), &buf)
+				fmt.Fprintf(w, "event: speakers-updated\ndata: %s\n\n", strings.ReplaceAll(buf.String(), "\n", ""))
+				flusher.Flush()
+
+			}
+		}
+	}
 }
 func (rt *Router) handleMeetingLivePage(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{

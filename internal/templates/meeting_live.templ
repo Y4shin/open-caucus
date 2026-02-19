@@ -1,8 +1,85 @@
 package templates
 
 import (
+	"strconv"
+
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
 )
+
+// AttendeeSpeakersListPartialInput holds the data for the attendee-facing speakers list.
+type AttendeeSpeakersListPartialInput struct {
+	Speakers          []SpeakerItem
+	CurrentAttendeeID int64
+	AgendaTitle       string
+	HasActiveAP       bool
+}
+
+func (i *AttendeeSpeakersListPartialInput) rowClass(s SpeakerItem) string {
+	speaking := s.IsSpeaking
+	mine := s.AttendeeID == i.CurrentAttendeeID
+	switch {
+	case speaking && mine:
+		return "speaking my-turn"
+	case speaking:
+		return "speaking"
+	case mine:
+		return "my-turn"
+	default:
+		return ""
+	}
+}
+
+// AttendeeSpeakersListPartial renders the inner content of the attendee speakers list.
+// It is used both for the initial page render and as SSE event data.
+templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
+	if !input.HasActiveAP {
+		<p>No agenda point is currently active.</p>
+	} else {
+		<h3>{ input.AgendaTitle }</h3>
+		if len(input.Speakers) == 0 {
+			<p>No speakers in the queue yet.</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Q</th>
+						<th>1st</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, s := range input.Speakers {
+						if s.IsSpeaking || s.IsWaiting {
+							<tr class={ input.rowClass(s) }>
+								<td>
+									if s.IsSpeaking {
+										▶
+									} else {
+										{ strconv.FormatInt(s.OrderPosition, 10) }
+									}
+								</td>
+								<td>{ s.AttendeeName }</td>
+								<td>{ s.Type }</td>
+								<td>
+									if s.GenderQuoted {
+										Q
+									}
+								</td>
+								<td>
+									if s.FirstSpeaker {
+										1st
+									}
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
 
 type MeetingLiveInput struct {
 	CommitteeName string
@@ -11,10 +88,15 @@ type MeetingLiveInput struct {
 	IDString      string
 	FullName      string
 	IsChair       bool
+	Speakers      AttendeeSpeakersListPartialInput
 }
 
 func (i *MeetingLiveInput) AttendeeLoginGet() templ.SafeURL {
 	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginPageGet())
+}
+
+func (i *MeetingLiveInput) SSEStreamURL() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdSpeakersStreamRoute(i.CommitteeSlug, i.IDString).AttendeeSpeakersStreamGet())
 }
 
 templ MeetingLiveTemplate(input MeetingLiveInput) {
@@ -24,6 +106,8 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 		<title>{ input.MeetingName } - Live</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src={ paths.Route.HtmxMinJs() }></script>
+		<script src={ paths.Route.HtmxExtSseMinJs() }></script>
 	</head>
 	<body>
 		<header>
@@ -37,7 +121,14 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 					(Chair)
 				}
 			</p>
-			<p>Live meeting view coming soon.</p>
+			<section>
+				<h2>Speakers List</h2>
+				<div hx-ext="sse" sse-connect={ string(input.SSEStreamURL()) }>
+					<div id="attendee-speakers-list" sse-swap="speakers-updated">
+						@AttendeeSpeakersListPartial(input.Speakers)
+					</div>
+				</div>
+			</section>
 		</main>
 	</body>
 	</html>

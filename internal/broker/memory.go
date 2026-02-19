@@ -47,6 +47,10 @@ func (b *MemoryBroker) Shutdown() {
 	close(b.shutdown)
 }
 
+func (b *MemoryBroker) Publish(evt SSEEvent) {
+	b.broadcast(evt)
+}
+
 func (b *MemoryBroker) Increment() {
 	b.mu.Lock()
 	b.counter++

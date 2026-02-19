@@ -31,6 +31,7 @@ func (h *Handler) ManageSpeakerTogglePriority(ctx context.Context, r *http.Reque
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -64,6 +65,7 @@ func (h *Handler) ManageMeetingSetQuotation(ctx context.Context, r *http.Request
 		if err := h.Repository.RecomputeSpeakerOrder(ctx, *meeting.CurrentAgendaPointID); err != nil {
 			return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 		}
+		h.publishSpeakersUpdated()
 	}
 
 	partial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
@@ -137,6 +139,7 @@ func (h *Handler) ManageAgendaPointSetQuotation(ctx context.Context, r *http.Req
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, apID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
+	h.publishSpeakersUpdated()
 
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
