@@ -38,6 +38,11 @@ func New(dbPath string) (*Repository, error) {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
 
+	// SQLite supports only one writer at a time. Limiting to one open connection
+	// also ensures :memory: databases share a single connection across all callers.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
 	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("enable foreign keys: %w", err)
@@ -560,13 +565,567 @@ func (r *Repository) SetActiveMeeting(ctx context.Context, slug string, meetingI
 	return nil
 }
 
+// SetMeetingSignupOpen updates the signup_open flag for a meeting
+func (r *Repository) SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error {
+	err := r.Queries.SetMeetingSignupOpen(ctx, client.SetMeetingSignupOpenParams{
+		SignupOpen: open,
+		ID:         id,
+	})
+	if err != nil {
+		return fmt.Errorf("set meeting signup_open: %w", err)
+	}
+	return nil
+}
+
+// CreateAttendee creates a new attendee row for a meeting
+func (r *Repository) CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string) (*model.Attendee, error) {
+	var uid sql.NullInt64
+	if userID != nil {
+		uid = sql.NullInt64{Int64: *userID, Valid: true}
+	}
+	a, err := r.Queries.CreateAttendee(ctx, client.CreateAttendeeParams{
+		MeetingID: meetingID,
+		UserID:    uid,
+		FullName:  fullName,
+		Secret:    secret,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create attendee: %w", err)
+	}
+	return attendeeFromClient(&a), nil
+}
+
+// GetAttendeeByUserIDAndMeetingID retrieves an attendee by their user ID and meeting ID
+func (r *Repository) GetAttendeeByUserIDAndMeetingID(ctx context.Context, userID, meetingID int64) (*model.Attendee, error) {
+	a, err := r.Queries.GetAttendeeByUserIDAndMeetingID(ctx, client.GetAttendeeByUserIDAndMeetingIDParams{
+		UserID:    sql.NullInt64{Int64: userID, Valid: true},
+		MeetingID: meetingID,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("attendee not found")
+		}
+		return nil, fmt.Errorf("get attendee: %w", err)
+	}
+	return attendeeFromClient(&a), nil
+}
+
+// GetAttendeeByID retrieves an attendee by their ID
+func (r *Repository) GetAttendeeByID(ctx context.Context, id int64) (*model.Attendee, error) {
+	a, err := r.Queries.GetAttendeeByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("attendee not found")
+		}
+		return nil, fmt.Errorf("get attendee: %w", err)
+	}
+	return attendeeFromClient(&a), nil
+}
+
+// GetAttendeeByMeetingIDAndSecret retrieves an attendee by meeting ID and their secret (for login)
+func (r *Repository) GetAttendeeByMeetingIDAndSecret(ctx context.Context, meetingID int64, secret string) (*model.Attendee, error) {
+	a, err := r.Queries.GetAttendeeByMeetingIDAndSecret(ctx, client.GetAttendeeByMeetingIDAndSecretParams{
+		MeetingID: meetingID,
+		Secret:    secret,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("attendee not found")
+		}
+		return nil, fmt.Errorf("get attendee by secret: %w", err)
+	}
+	return attendeeFromClient(&a), nil
+}
+
+// ListAttendeesForMeeting returns all attendees for a meeting ordered by creation time
+func (r *Repository) ListAttendeesForMeeting(ctx context.Context, meetingID int64) ([]*model.Attendee, error) {
+	rows, err := r.Queries.ListAttendeesForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("list attendees: %w", err)
+	}
+	result := make([]*model.Attendee, len(rows))
+	for i := range rows {
+		result[i] = attendeeFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// DeleteAttendee removes an attendee by ID
+func (r *Repository) DeleteAttendee(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteAttendee(ctx, id); err != nil {
+		return fmt.Errorf("delete attendee: %w", err)
+	}
+	return nil
+}
+
+// SetAttendeeIsChair updates the is_chair flag for an attendee
+func (r *Repository) SetAttendeeIsChair(ctx context.Context, id int64, isChair bool) error {
+	err := r.Queries.SetAttendeeIsChair(ctx, client.SetAttendeeIsChairParams{
+		IsChair: isChair,
+		ID:      id,
+	})
+	if err != nil {
+		return fmt.Errorf("set attendee is_chair: %w", err)
+	}
+	return nil
+}
+
+func attendeeFromClient(a *client.Attendee) *model.Attendee {
+	createdAt, _ := time.Parse(time.RFC3339, a.CreatedAt)
+	var userID *int64
+	if a.UserID.Valid {
+		userID = &a.UserID.Int64
+	}
+	return &model.Attendee{
+		ID:        a.ID,
+		MeetingID: a.MeetingID,
+		UserID:    userID,
+		FullName:  a.FullName,
+		Secret:    a.Secret,
+		IsChair:   a.IsChair,
+		Quoted:    a.Quoted,
+		CreatedAt: createdAt,
+	}
+}
+
 func meetingFromClient(m *client.Meeting) *model.Meeting {
 	createdAt, _ := time.Parse(time.RFC3339, m.CreatedAt)
+	var currentAgendaPointID *int64
+	if m.CurrentAgendaPointID.Valid {
+		currentAgendaPointID = &m.CurrentAgendaPointID.Int64
+	}
+	var protocolWriterID *int64
+	if m.ProtocolWriterID.Valid {
+		protocolWriterID = &m.ProtocolWriterID.Int64
+	}
 	return &model.Meeting{
-		ID:          m.ID,
-		Name:        m.Name,
-		Description: m.Description,
-		SignupOpen:  m.SignupOpen,
+		ID:                   m.ID,
+		Name:                 m.Name,
+		Description:          m.Description,
+		SignupOpen:           m.SignupOpen,
+		CurrentAgendaPointID: currentAgendaPointID,
+		ProtocolWriterID:     protocolWriterID,
+		CreatedAt:            createdAt,
+	}
+}
+
+func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
+	var currentSpeakerID *int64
+	if ap.CurrentSpeakerID.Valid {
+		currentSpeakerID = &ap.CurrentSpeakerID.Int64
+	}
+	return &model.AgendaPoint{
+		ID:               ap.ID,
+		MeetingID:        ap.MeetingID,
+		Position:         ap.Position,
+		Title:            ap.Title,
+		Protocol:         ap.Protocol,
+		CurrentSpeakerID: currentSpeakerID,
+	}
+}
+
+// CreateAgendaPoint creates a new top-level agenda point for a meeting.
+func (r *Repository) CreateAgendaPoint(ctx context.Context, meetingID int64, title string) (*model.AgendaPoint, error) {
+	posRaw, err := r.Queries.GetMaxAgendaPointPosition(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("get max position: %w", err)
+	}
+	var pos int64
+	switch v := posRaw.(type) {
+	case int64:
+		pos = v + 1
+	case float64:
+		pos = int64(v) + 1
+	default:
+		pos = 1
+	}
+	ap, err := r.Queries.CreateAgendaPoint(ctx, client.CreateAgendaPointParams{
+		MeetingID: meetingID,
+		Position:  pos,
+		Title:     title,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create agenda point: %w", err)
+	}
+	return agendaPointFromClient(&ap), nil
+}
+
+// ListAgendaPointsForMeeting returns all top-level agenda points for a meeting.
+func (r *Repository) ListAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error) {
+	rows, err := r.Queries.ListAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("list agenda points: %w", err)
+	}
+	result := make([]*model.AgendaPoint, len(rows))
+	for i := range rows {
+		result[i] = agendaPointFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// GetAgendaPointByID retrieves an agenda point by ID.
+func (r *Repository) GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error) {
+	ap, err := r.Queries.GetAgendaPointByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("agenda point not found")
+		}
+		return nil, fmt.Errorf("get agenda point: %w", err)
+	}
+	return agendaPointFromClient(&ap), nil
+}
+
+// DeleteAgendaPoint removes an agenda point by ID.
+func (r *Repository) DeleteAgendaPoint(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteAgendaPoint(ctx, id); err != nil {
+		return fmt.Errorf("delete agenda point: %w", err)
+	}
+	return nil
+}
+
+// SetCurrentAgendaPoint sets the active agenda point for a meeting (nil clears it).
+func (r *Repository) SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error {
+	var apID sql.NullInt64
+	if agendaPointID != nil {
+		apID = sql.NullInt64{Int64: *agendaPointID, Valid: true}
+	}
+	if err := r.Queries.SetCurrentAgendaPoint(ctx, client.SetCurrentAgendaPointParams{
+		CurrentAgendaPointID: apID,
+		ID:                   meetingID,
+	}); err != nil {
+		return fmt.Errorf("set current agenda point: %w", err)
+	}
+	return nil
+}
+
+// AddSpeaker adds an attendee to the speakers list for an agenda point.
+func (r *Repository) AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string) (*model.SpeakerEntry, error) {
+	row, err := r.Queries.AddSpeaker(ctx, client.AddSpeakerParams{
+		AgendaPointID: agendaPointID,
+		AttendeeID:    attendeeID,
+		Type:          speakerType,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("add speaker: %w", err)
+	}
+	return &model.SpeakerEntry{
+		ID:            row.ID,
+		AgendaPointID: row.AgendaPointID,
+		AttendeeID:    row.AttendeeID,
+		Type:          row.Type,
+		Status:        row.Status,
+	}, nil
+}
+
+// ListSpeakersForAgendaPoint returns all speakers for an agenda point.
+func (r *Repository) ListSpeakersForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.SpeakerEntry, error) {
+	rows, err := r.Queries.ListSpeakersForAgendaPoint(ctx, agendaPointID)
+	if err != nil {
+		return nil, fmt.Errorf("list speakers: %w", err)
+	}
+	result := make([]*model.SpeakerEntry, len(rows))
+	for i, row := range rows {
+		result[i] = &model.SpeakerEntry{
+			ID:            row.ID,
+			AgendaPointID: row.AgendaPointID,
+			AttendeeID:    row.AttendeeID,
+			AttendeeName:  row.AttendeeFullName,
+			Type:          row.Type,
+			Status:        row.Status,
+		}
+	}
+	return result, nil
+}
+
+// GetSpeakerEntryByID retrieves a speaker entry by ID.
+func (r *Repository) GetSpeakerEntryByID(ctx context.Context, id int64) (*model.SpeakerEntry, error) {
+	row, err := r.Queries.GetSpeakerEntryByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("speaker entry not found")
+		}
+		return nil, fmt.Errorf("get speaker entry: %w", err)
+	}
+	return &model.SpeakerEntry{
+		ID:            row.ID,
+		AgendaPointID: row.AgendaPointID,
+		AttendeeID:    row.AttendeeID,
+		Type:          row.Type,
+		Status:        row.Status,
+	}, nil
+}
+
+// DeleteSpeaker removes a speaker entry.
+func (r *Repository) DeleteSpeaker(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteSpeaker(ctx, id); err != nil {
+		return fmt.Errorf("delete speaker: %w", err)
+	}
+	return nil
+}
+
+// SetSpeakerSpeaking transitions a speaker entry to SPEAKING and records start time.
+// It also sets the agenda point's current_speaker_id.
+func (r *Repository) SetSpeakerSpeaking(ctx context.Context, id, agendaPointID int64) error {
+	if err := r.Queries.SetSpeakerSpeaking(ctx, id); err != nil {
+		return fmt.Errorf("set speaker speaking: %w", err)
+	}
+	if err := r.Queries.SetCurrentSpeaker(ctx, client.SetCurrentSpeakerParams{
+		CurrentSpeakerID: sql.NullInt64{Int64: id, Valid: true},
+		ID:               agendaPointID,
+	}); err != nil {
+		return fmt.Errorf("set current speaker: %w", err)
+	}
+	return nil
+}
+
+// SetSpeakerDone transitions a speaker entry to DONE and clears the agenda point's current speaker.
+func (r *Repository) SetSpeakerDone(ctx context.Context, id int64) error {
+	// Look up the entry to find the agenda_point_id for clearing current_speaker_id.
+	entry, err := r.Queries.GetSpeakerEntryByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("get speaker entry for done: %w", err)
+	}
+	if err := r.Queries.SetSpeakerDone(ctx, client.SetSpeakerDoneParams{
+		Duration: sql.NullString{String: "0s", Valid: true},
+		ID:       id,
+	}); err != nil {
+		return fmt.Errorf("set speaker done: %w", err)
+	}
+	if err := r.Queries.SetCurrentSpeaker(ctx, client.SetCurrentSpeakerParams{
+		CurrentSpeakerID: sql.NullInt64{},
+		ID:               entry.AgendaPointID,
+	}); err != nil {
+		return fmt.Errorf("clear current speaker: %w", err)
+	}
+	return nil
+}
+
+// SetSpeakerWithdrawn transitions a speaker entry to WITHDRAWN.
+func (r *Repository) SetSpeakerWithdrawn(ctx context.Context, id int64) error {
+	if err := r.Queries.SetSpeakerWithdrawn(ctx, id); err != nil {
+		return fmt.Errorf("set speaker withdrawn: %w", err)
+	}
+	return nil
+}
+
+// SetProtocolWriter sets or clears the protocol_writer_id for a meeting.
+func (r *Repository) SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error {
+	var aid sql.NullInt64
+	if attendeeID != nil {
+		aid = sql.NullInt64{Int64: *attendeeID, Valid: true}
+	}
+	if err := r.Queries.SetMeetingProtocolWriter(ctx, client.SetMeetingProtocolWriterParams{
+		ProtocolWriterID: aid,
+		ID:               meetingID,
+	}); err != nil {
+		return fmt.Errorf("set protocol writer: %w", err)
+	}
+	return nil
+}
+
+// UpdateAgendaPointProtocol saves the protocol text for an agenda point.
+func (r *Repository) UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error {
+	if err := r.Queries.UpdateAgendaPointProtocol(ctx, client.UpdateAgendaPointProtocolParams{
+		Protocol: protocol,
+		ID:       agendaPointID,
+	}); err != nil {
+		return fmt.Errorf("update agenda point protocol: %w", err)
+	}
+	return nil
+}
+
+// CreateAttachment links a blob to an agenda point and returns the created record.
+func (r *Repository) CreateAttachment(ctx context.Context, agendaPointID, blobID int64, label *string) (*model.AgendaAttachment, error) {
+	var nullLabel sql.NullString
+	if label != nil {
+		nullLabel = sql.NullString{String: *label, Valid: true}
+	}
+	a, err := r.Queries.CreateAgendaAttachment(ctx, client.CreateAgendaAttachmentParams{
+		AgendaPointID: agendaPointID,
+		BlobID:        blobID,
+		Label:         nullLabel,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create attachment: %w", err)
+	}
+	return attachmentFromClient(&a), nil
+}
+
+// GetAttachmentByID retrieves an agenda_attachment record by its primary key.
+func (r *Repository) GetAttachmentByID(ctx context.Context, id int64) (*model.AgendaAttachment, error) {
+	a, err := r.Queries.GetAgendaAttachmentByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("attachment not found")
+		}
+		return nil, fmt.Errorf("get attachment: %w", err)
+	}
+	return attachmentFromClient(&a), nil
+}
+
+// ListAttachmentsForAgendaPoint returns all attachments for an agenda point ordered by creation time.
+func (r *Repository) ListAttachmentsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.AgendaAttachment, error) {
+	rows, err := r.Queries.ListAttachmentsForAgendaPoint(ctx, agendaPointID)
+	if err != nil {
+		return nil, fmt.Errorf("list attachments: %w", err)
+	}
+	result := make([]*model.AgendaAttachment, len(rows))
+	for i := range rows {
+		result[i] = attachmentFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// DeleteAttachment removes an agenda_attachment record by ID.
+func (r *Repository) DeleteAttachment(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteAgendaAttachment(ctx, id); err != nil {
+		return fmt.Errorf("delete attachment: %w", err)
+	}
+	return nil
+}
+
+func attachmentFromClient(a *client.AgendaAttachment) *model.AgendaAttachment {
+	createdAt, _ := time.Parse(time.RFC3339, a.CreatedAt)
+	att := &model.AgendaAttachment{
+		ID:            a.ID,
+		AgendaPointID: a.AgendaPointID,
+		BlobID:        a.BlobID,
+		CreatedAt:     createdAt,
+	}
+	if a.Label.Valid {
+		att.Label = &a.Label.String
+	}
+	return att
+}
+
+// CreateBlob inserts a binary_blob metadata row and returns the created record.
+func (r *Repository) CreateBlob(ctx context.Context, filename, contentType string, sizeBytes int64, storagePath string) (*model.BinaryBlob, error) {
+	b, err := r.Queries.CreateBinaryBlob(ctx, client.CreateBinaryBlobParams{
+		Filename:    filename,
+		ContentType: contentType,
+		SizeBytes:   sizeBytes,
+		StoragePath: storagePath,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create blob: %w", err)
+	}
+	return blobFromClient(&b), nil
+}
+
+// GetBlobByID retrieves a binary_blob record by its primary key.
+func (r *Repository) GetBlobByID(ctx context.Context, id int64) (*model.BinaryBlob, error) {
+	b, err := r.Queries.GetBinaryBlobByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("blob not found")
+		}
+		return nil, fmt.Errorf("get blob: %w", err)
+	}
+	return blobFromClient(&b), nil
+}
+
+// DeleteBlob removes a binary_blob record by ID.
+func (r *Repository) DeleteBlob(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteBinaryBlob(ctx, id); err != nil {
+		return fmt.Errorf("delete blob: %w", err)
+	}
+	return nil
+}
+
+func blobFromClient(b *client.BinaryBlob) *model.BinaryBlob {
+	createdAt, _ := time.Parse(time.RFC3339, b.CreatedAt)
+	return &model.BinaryBlob{
+		ID:          b.ID,
+		Filename:    b.Filename,
+		ContentType: b.ContentType,
+		SizeBytes:   b.SizeBytes,
+		StoragePath: b.StoragePath,
 		CreatedAt:   createdAt,
 	}
+}
+
+// CreateMotion inserts a motion row linked to an agenda point and a blob.
+func (r *Repository) CreateMotion(ctx context.Context, agendaPointID, blobID int64, title string) (*model.Motion, error) {
+	m, err := r.Queries.CreateMotion(ctx, client.CreateMotionParams{
+		AgendaPointID: agendaPointID,
+		BlobID:        blobID,
+		Title:         title,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create motion: %w", err)
+	}
+	return motionFromClient(&m), nil
+}
+
+// GetMotionByID retrieves a motion by its primary key.
+func (r *Repository) GetMotionByID(ctx context.Context, id int64) (*model.Motion, error) {
+	m, err := r.Queries.GetMotionByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("motion not found")
+		}
+		return nil, fmt.Errorf("get motion: %w", err)
+	}
+	return motionFromClient(&m), nil
+}
+
+// ListMotionsForAgendaPoint returns all motions for an agenda point ordered by creation time.
+func (r *Repository) ListMotionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.Motion, error) {
+	rows, err := r.Queries.ListMotionsForAgendaPoint(ctx, agendaPointID)
+	if err != nil {
+		return nil, fmt.Errorf("list motions: %w", err)
+	}
+	result := make([]*model.Motion, len(rows))
+	for i := range rows {
+		result[i] = motionFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// DeleteMotion removes a motion by ID.
+func (r *Repository) DeleteMotion(ctx context.Context, id int64) error {
+	if err := r.Queries.DeleteMotion(ctx, id); err != nil {
+		return fmt.Errorf("delete motion: %w", err)
+	}
+	return nil
+}
+
+// SetMotionVotes records the vote tally for a motion.
+func (r *Repository) SetMotionVotes(ctx context.Context, id, votesFor, votesAgainst, votesAbstained, votesEligible int64) error {
+	if err := r.Queries.SetMotionVotes(ctx, client.SetMotionVotesParams{
+		ID:             id,
+		VotesFor:       sql.NullInt64{Int64: votesFor, Valid: true},
+		VotesAgainst:   sql.NullInt64{Int64: votesAgainst, Valid: true},
+		VotesAbstained: sql.NullInt64{Int64: votesAbstained, Valid: true},
+		VotesEligible:  sql.NullInt64{Int64: votesEligible, Valid: true},
+	}); err != nil {
+		return fmt.Errorf("set motion votes: %w", err)
+	}
+	return nil
+}
+
+func motionFromClient(m *client.Motion) *model.Motion {
+	createdAt, _ := time.Parse(time.RFC3339, m.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, m.UpdatedAt)
+	motion := &model.Motion{
+		ID:            m.ID,
+		AgendaPointID: m.AgendaPointID,
+		BlobID:        m.BlobID,
+		Title:         m.Title,
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+	if m.VotesFor.Valid {
+		motion.VotesFor = &m.VotesFor.Int64
+	}
+	if m.VotesAgainst.Valid {
+		motion.VotesAgainst = &m.VotesAgainst.Int64
+	}
+	if m.VotesAbstained.Valid {
+		motion.VotesAbstained = &m.VotesAbstained.Int64
+	}
+	if m.VotesEligible.Valid {
+		motion.VotesEligible = &m.VotesEligible.Int64
+	}
+	return motion
 }

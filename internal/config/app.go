@@ -17,4 +17,6 @@ type ApplicationConfig struct {
 	SessionSecret     string `mapstructure:"session_secret" env:"SESSION_SECRET" default:"change-this-to-a-random-32-character-string" env_doc:"Secret key for signing session cookies (must be 32+ chars)" env_default:"change-this-to-a-random-32-character-string"`
 	SessionExpiration int    `mapstructure:"session_expiration" env:"SESSION_EXPIRATION" default:"86400" env_doc:"Session expiration in seconds" env_default:"86400"`
 
+	// Storage
+	StorageDir string `mapstructure:"storage_dir" env:"STORAGE_DIR" default:"./uploads" env_doc:"Directory for uploaded binary blobs" env_default:"./uploads"`
 }

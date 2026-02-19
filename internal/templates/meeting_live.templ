@@ -1,0 +1,44 @@
+package templates
+
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingLiveInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	IDString      string
+	FullName      string
+	IsChair       bool
+}
+
+func (i *MeetingLiveInput) AttendeeLoginGet() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginPageGet())
+}
+
+templ MeetingLiveTemplate(input MeetingLiveInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>{ input.MeetingName } - Live</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>{ input.MeetingName }</h1>
+			<h2>{ input.CommitteeName }</h2>
+		</header>
+		<main>
+			<p>
+				Logged in as: <strong>{ input.FullName }</strong>
+				if input.IsChair {
+					(Chair)
+				}
+			</p>
+			<p>Live meeting view coming soon.</p>
+		</main>
+	</body>
+	</html>
+}

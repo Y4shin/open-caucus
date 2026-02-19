@@ -2,9 +2,9 @@ package routing
 
 // RouteConfig represents the entire YAML configuration
 type RouteConfig struct {
-	Version          string             `yaml:"version"`
-	MiddlewareGroups []MiddlewareGroup  `yaml:"middleware_groups"`
-	Routes           []Route            `yaml:"routes"`
+	Version          string            `yaml:"version"`
+	MiddlewareGroups []MiddlewareGroup `yaml:"middleware_groups"`
+	Routes           []Route           `yaml:"routes"`
 }
 
 // MiddlewareGroup defines middleware applied to path prefixes
@@ -26,7 +26,8 @@ type RouteMethod struct {
 	Template    Template   `yaml:"template"`
 	Middleware  []string   `yaml:"middleware,omitempty"`
 	SSE         bool       `yaml:"sse,omitempty"`
-	Events      []SSEEvent `yaml:"events,omitempty"`  // List of SSE events (required if SSE=true)
+	Raw         bool       `yaml:"raw,omitempty"`          // Raw handlers write directly to ResponseWriter; mutually exclusive with SSE
+	Events      []SSEEvent `yaml:"events,omitempty"`       // List of SSE events (required if SSE=true)
 	QueryParams []string   `yaml:"query_params,omitempty"` // Optional query parameter names
 }
 

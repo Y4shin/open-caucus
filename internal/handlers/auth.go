@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/pagination"
+	"github.com/Y4shin/conference-tool/internal/repository/model"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
@@ -295,12 +296,54 @@ func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
 	}
 
+	attendees, err := h.Repository.ListAttendeesForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load attendees: %w", err)
+	}
+
+	agendaPoints, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load agenda points: %w", err)
+	}
+
+	var speakers []*model.SpeakerEntry
+	if meeting.CurrentAgendaPointID != nil {
+		speakers, err = h.Repository.ListSpeakersForAgendaPoint(ctx, *meeting.CurrentAgendaPointID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to load speakers: %w", err)
+		}
+	}
+
+	agendaPointMotions := make([]templates.MotionListPartialInput, 0, len(agendaPoints))
+	agendaPointAttachments := make([]templates.AttachmentListPartialInput, 0, len(agendaPoints))
+	for _, ap := range agendaPoints {
+		motionPartial, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, ap)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to load motions: %w", err)
+		}
+		agendaPointMotions = append(agendaPointMotions, *motionPartial)
+
+		attachmentPartial, err := h.loadAttachmentListPartial(ctx, params.Slug, params.MeetingId, ap)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to load attachments: %w", err)
+		}
+		agendaPointAttachments = append(agendaPointAttachments, *attachmentPartial)
+	}
+
 	return &templates.MeetingManageInput{
-		CommitteeName: committee.Name,
-		CommitteeSlug: committee.Slug,
-		MeetingName:   meeting.Name,
-		MeetingID:     meeting.ID,
-		IDString:      params.MeetingId,
+		CommitteeName:          committee.Name,
+		CommitteeSlug:          committee.Slug,
+		MeetingName:            meeting.Name,
+		MeetingID:              meeting.ID,
+		IDString:               params.MeetingId,
+		Attendees:              buildAttendeeItems(attendees),
+		SignupOpen:             meeting.SignupOpen,
+		ProtocolWriterID:       meeting.ProtocolWriterID,
+		AgendaPoints:           buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
+		CurrentAgendaPointID:   meeting.CurrentAgendaPointID,
+		Speakers:               buildSpeakerItems(speakers),
+		AgendaPointMotions:     agendaPointMotions,
+		AgendaPointAttachments: agendaPointAttachments,
 	}, nil, nil
 }
 

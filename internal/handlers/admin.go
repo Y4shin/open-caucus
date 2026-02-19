@@ -14,12 +14,15 @@ import (
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
+
+	playwright "github.com/playwright-community/playwright-go"
 )
 
 var slugRegex = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 // AdminLogin shows the admin login page
 func (h *Handler) AdminLogin(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
+	playwright.Run()
 	// Check if already logged in
 	if session.IsAdminAuthenticated(ctx) {
 		meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/admin")

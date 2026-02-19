@@ -4,7 +4,8 @@
       "Bash(task generate:db:*)",
       "Bash(task generate:templates:*)",
       "Bash(task generate:routes:*)",
-      "Bash(task generate:*)"
+      "Bash(task generate:*)",
+      "Bash(grep:*)"
     ]
   }
 }

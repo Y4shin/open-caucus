@@ -68,6 +68,10 @@ func validateConfig(config *RouteConfig) error {
 				return fmt.Errorf("route[%d].method[%d]: handler is required", i, j)
 			}
 
+			if method.SSE && method.Raw {
+				return fmt.Errorf("route[%d].method[%d]: sse and raw are mutually exclusive", i, j)
+			}
+
 			if method.SSE {
 				// SSE routes must have events defined
 				if len(method.Events) == 0 {
@@ -98,8 +102,10 @@ func validateConfig(config *RouteConfig) error {
 						return fmt.Errorf("route[%d].method[%d].event[%d]: template input_type is required", i, j, k)
 					}
 				}
+			} else if method.Raw {
+				// Raw routes write directly to ResponseWriter — no template needed
 			} else {
-				// Non-SSE routes require template configuration
+				// Standard template routes require template configuration
 				if method.Template.Package == "" {
 					return fmt.Errorf("route[%d].method[%d]: template package is required", i, j)
 				}

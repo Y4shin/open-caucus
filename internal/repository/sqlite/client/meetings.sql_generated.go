@@ -136,3 +136,31 @@ func (q *Queries) SetActiveMeeting(ctx context.Context, arg SetActiveMeetingPara
 	_, err := q.db.ExecContext(ctx, setActiveMeeting, arg.CurrentMeetingID, arg.Slug)
 	return err
 }
+
+const setMeetingProtocolWriter = `-- name: SetMeetingProtocolWriter :exec
+UPDATE meetings SET protocol_writer_id = ? WHERE id = ?
+`
+
+type SetMeetingProtocolWriterParams struct {
+	ProtocolWriterID sql.NullInt64
+	ID               int64
+}
+
+func (q *Queries) SetMeetingProtocolWriter(ctx context.Context, arg SetMeetingProtocolWriterParams) error {
+	_, err := q.db.ExecContext(ctx, setMeetingProtocolWriter, arg.ProtocolWriterID, arg.ID)
+	return err
+}
+
+const setMeetingSignupOpen = `-- name: SetMeetingSignupOpen :exec
+UPDATE meetings SET signup_open = ? WHERE id = ?
+`
+
+type SetMeetingSignupOpenParams struct {
+	SignupOpen bool
+	ID         int64
+}
+
+func (q *Queries) SetMeetingSignupOpen(ctx context.Context, arg SetMeetingSignupOpenParams) error {
+	_, err := q.db.ExecContext(ctx, setMeetingSignupOpen, arg.SignupOpen, arg.ID)
+	return err
+}

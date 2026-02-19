@@ -1,0 +1,47 @@
+package templates
+
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type AttendeeLoginInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	IDString      string
+	Error         string
+}
+
+func (i *AttendeeLoginInput) LoginSubmitPost() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginSubmitPost())
+}
+
+templ AttendeeLoginTemplate(input AttendeeLoginInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Attendee Login - { input.MeetingName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>{ input.MeetingName }</h1>
+			<h2>{ input.CommitteeName }</h2>
+		</header>
+		<main>
+			<h3>Enter Your Access Code</h3>
+			if input.Error != "" {
+				<p class="error">{ input.Error }</p>
+			}
+			<form method="POST" action={ input.LoginSubmitPost() }>
+				<div>
+					<label for="secret">Access Code:</label>
+					<input type="text" id="secret" name="secret" required autocomplete="off"/>
+				</div>
+				<button type="submit">Enter Meeting</button>
+			</form>
+		</main>
+	</body>
+	</html>
+}

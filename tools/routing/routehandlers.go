@@ -16,6 +16,7 @@ type RouteSSEEvent struct {
 type RouteHandler struct {
 	Name         string
 	IsSSE        bool
+	IsRaw        bool
 	Params       []RouteParam
 	SSEEvents    []RouteSSEEvent
 	TemplateFunc string
@@ -64,8 +65,12 @@ const routeHandler string = `func (rt *Router) handle{{ .Name }}(w http.Response
 			{{- range .SSEEvents }}
 			{{ template "RouteSSEEvent" . }}
 			{{- end }}
-			}	
+			}
 		}
+	}
+	{{- else if .IsRaw }}
+	if err := rt.handler.{{ .Name }}(w, r{{ if .Params }}, params{{ end }}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	{{- else }}
 	input, meta, err := rt.handler.{{ .Name }}(r.Context(), r{{ if .Params }}, params{{ end }})
@@ -73,7 +78,7 @@ const routeHandler string = `func (rt *Router) handle{{ .Name }}(w http.Response
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Set cookies and headers
 	if meta != nil {
 		for _, cookie := range meta.Cookies {
@@ -89,7 +94,7 @@ const routeHandler string = `func (rt *Router) handle{{ .Name }}(w http.Response
 		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
 		return
 	}
-	
+
 	{{ .TemplateFunc }}(*input).Render(r.Context(), w)
 	{{- end }}
 }`
@@ -110,6 +115,7 @@ func GetRouteHandlers(config *RouteConfig) RouteHandlers {
 			routeRes := RouteHandler{
 				Name:  method.Handler,
 				IsSSE: method.SSE,
+				IsRaw: method.Raw,
 			}
 			for _, param := range ExtractPathParams(route.Path) {
 				routeRes.Params = append(routeRes.Params, RouteParam{Name: ToPascalCase(param), Slug: param})
@@ -130,7 +136,7 @@ func GetRouteHandlers(config *RouteConfig) RouteHandlers {
 					}
 					routeRes.SSEEvents = append(routeRes.SSEEvents, eventRes)
 				}
-			} else {
+			} else if !method.Raw {
 				templateAlias := getTemplateAlias(method.Template.Package, extraImports)
 				routeRes.TemplateFunc = fmt.Sprintf("%s.%s", templateAlias, method.Template.Type)
 			}

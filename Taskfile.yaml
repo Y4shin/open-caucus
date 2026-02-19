@@ -20,11 +20,13 @@ tasks:
 
   run:
     desc: Run the application directly
+    deps: [generate]
     cmds:
       - go run {{.MAIN_PATH}} serve
 
   build:
     desc: Build the application
+    deps: [generate]
     cmds:
       - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PATH}}
 
@@ -194,6 +196,11 @@ tasks:
     desc: Install Playwright browser binaries (run once per machine)
     cmds:
       - go tool github.com/playwright-community/playwright-go/cmd/playwright install --with-deps chromium
+
+  playwright:install-nix:
+    desc: Install Playwright browser binaries (run once per machine)
+    cmds:
+      - go tool github.com/playwright-community/playwright-go/cmd/playwright install
 
   playwright:cli:
     desc: "Run the Playwright CLI with arbitrary arguments (usage: task playwright:cli -- <args>)"

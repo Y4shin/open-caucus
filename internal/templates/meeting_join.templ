@@ -1,0 +1,114 @@
+package templates
+
+import (
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingJoinInput struct {
+	CommitteeName   string
+	CommitteeSlug   string
+	MeetingName     string
+	MeetingID       int64
+	IDString        string
+	SignupOpen      bool
+	IsLoggedIn      bool
+	AlreadySignedUp bool
+	Error           string
+}
+
+type MeetingGuestSuccessInput struct {
+	CommitteeName  string
+	CommitteeSlug  string
+	MeetingName    string
+	IDString       string
+	AttendeeSecret string
+	Error          string
+}
+
+func (i *MeetingJoinInput) JoinSubmitPost() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdJoinRoute(i.CommitteeSlug, i.IDString).MeetingJoinSubmitPost())
+}
+
+func (i *MeetingJoinInput) GuestSignupPost() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdGuestRoute(i.CommitteeSlug, i.IDString).MeetingGuestSignupPost())
+}
+
+func (i *MeetingJoinInput) MeetingLiveGet() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdLiveRoute(i.CommitteeSlug, i.IDString).MeetingLivePageGet())
+}
+
+func (i *MeetingGuestSuccessInput) AttendeeLoginGet() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginPageGet())
+}
+
+templ MeetingJoinTemplate(input MeetingJoinInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Join: { input.MeetingName } - { input.CommitteeName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>{ input.MeetingName }</h1>
+			<h2>{ input.CommitteeName }</h2>
+		</header>
+		<main>
+			if input.Error != "" {
+				<p class="error">{ input.Error }</p>
+			}
+			if input.AlreadySignedUp {
+				<p>You are already signed up for this meeting.</p>
+				<form method="POST" action={ input.JoinSubmitPost() }>
+					<button type="submit">Enter Meeting</button>
+				</form>
+			} else if input.IsLoggedIn {
+				<h3>Sign Up for This Meeting</h3>
+				<p>You are logged in as a committee member.</p>
+				<form method="POST" action={ input.JoinSubmitPost() }>
+					<button type="submit">Sign Up</button>
+				</form>
+			} else if input.SignupOpen {
+				<h3>Guest Sign Up</h3>
+				<form method="POST" action={ input.GuestSignupPost() }>
+					<div>
+						<label for="full_name">Your Name:</label>
+						<input type="text" id="full_name" name="full_name" required/>
+					</div>
+					<button type="submit">Sign Up as Guest</button>
+				</form>
+			} else {
+				<p>Guest signup is currently closed.</p>
+			}
+		</main>
+	</body>
+	</html>
+}
+
+templ MeetingGuestSuccessTemplate(input MeetingGuestSuccessInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Signed Up - { input.MeetingName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	</head>
+	<body>
+		<header>
+			<h1>{ input.MeetingName }</h1>
+			<h2>{ input.CommitteeName }</h2>
+		</header>
+		<main>
+			if input.Error != "" {
+				<p class="error">{ input.Error }</p>
+			} else {
+				<h3>You're signed up!</h3>
+				<p>Your access code: <strong>{ input.AttendeeSecret }</strong></p>
+				<p>Keep this code safe — you will need it to log in to the live meeting page.</p>
+				<p><a href={ input.AttendeeLoginGet() }>Go to login →</a></p>
+			}
+		</main>
+	</body>
+	</html>
+}

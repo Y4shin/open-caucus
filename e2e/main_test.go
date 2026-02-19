@@ -11,6 +11,7 @@ import (
 )
 
 var pw *playwright.Playwright
+var pwErr error = nil
 
 func TestMain(m *testing.M) {
 	// Try to start the Playwright driver. On failure pw stays nil and each
@@ -19,7 +20,7 @@ func TestMain(m *testing.M) {
 	var err error
 	pw, err = playwright.Run()
 	if err != nil {
-		log.Printf("playwright driver not available (%v) — tests will be skipped", err)
+		pwErr = err
 	}
 
 	code := m.Run()

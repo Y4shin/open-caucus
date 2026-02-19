@@ -6,6 +6,7 @@ import (
 
 type HandlerInterfaceMethod struct {
 	IsSSE              bool
+	IsRaw              bool
 	Name               string
 	HasParams          bool
 	EventInterfaceName string
@@ -23,11 +24,13 @@ type Handler interface {
 {{- end }}
 }`
 
-const handlerInterfaceMethod string = `{{ .Name }}(ctx context.Context
+const handlerInterfaceMethod string = `{{ .Name }}(
 {{- if .IsSSE -}}
-, r *http.Request{{ if .HasParams }}, params RouteParams{{ end }}) (<-chan {{ .EventInterfaceName }}, error)
+ctx context.Context, r *http.Request{{ if .HasParams }}, params RouteParams{{ end }}) (<-chan {{ .EventInterfaceName }}, error)
+{{- else if .IsRaw -}}
+w http.ResponseWriter, r *http.Request{{ if .HasParams }}, params RouteParams{{ end }}) error
 {{- else -}}
-, r *http.Request{{ if .HasParams }}, params RouteParams{{ end }}) (*{{ .InputType }}, *ResponseMeta, error)
+ctx context.Context, r *http.Request{{ if .HasParams }}, params RouteParams{{ end }}) (*{{ .InputType }}, *ResponseMeta, error)
 {{- end -}}
 `
 
@@ -40,12 +43,13 @@ func GetHandlerInterface(config *RouteConfig) HandlerInterface {
 			methodRes := HandlerInterfaceMethod{
 				HasParams: len(ExtractPathParams(route.Path)) > 0,
 				IsSSE:     method.SSE,
+				IsRaw:     method.Raw,
 				Name:      method.Handler,
 			}
 
 			if method.SSE {
 				methodRes.EventInterfaceName = getEventInterfaceName(&method)
-			} else {
+			} else if !method.Raw {
 				templateAlias := getTemplateAlias(method.Template.Package, extraImports)
 				methodRes.InputType = fmt.Sprintf("%s.%s", templateAlias, method.Template.InputType)
 			}

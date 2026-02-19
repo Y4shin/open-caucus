@@ -12,6 +12,7 @@ import (
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/conference-tool/internal/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -36,6 +37,12 @@ var serveCmd = &cobra.Command{
 			return fmt.Errorf("failed to run migrations: %w", err)
 		}
 
+		// Initialize file storage
+		store, err := storage.NewDirStorage(cfg.Application.StorageDir)
+		if err != nil {
+			return fmt.Errorf("failed to create storage: %w", err)
+		}
+
 		// Initialize broker
 		b := broker.NewMemoryBroker()
 		defer b.Shutdown()
@@ -49,10 +56,11 @@ var serveCmd = &cobra.Command{
 		// Initialize middleware registry with session managers
 		mw := middleware.NewRegistry(sessionManager, adminSessionManager)
 
-		// Initialize handlers with repository, broker, and session managers
+		// Initialize handlers with repository, broker, storage, and session managers
 		handler := &handlers.Handler{
 			Broker:              b,
 			Repository:          repo,
+			Storage:             store,
 			SessionManager:      sessionManager,
 			AdminSessionManager: adminSessionManager,
 			AdminKey:            cfg.Application.AdminKey,

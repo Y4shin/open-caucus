@@ -3,13 +3,32 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    #nixpkgs-playwright.url = "github:nixos/nixpkgs?rev=e462a75ad44682b4e8df740e33fca4f048e8aa11";
     flake-utils.url = "github:numtide/flake-utils";
+    playwright.url = "github:pietdevries94/playwright-web-flake/1.52.0";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      # nixpkgs-playwright,
+      flake-utils,
+      playwright,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        overlays = [
+          (final: prev: {
+            inherit (playwright.packages.${system}) playwright-test playwright-driver;
+          })
+        ];
+        pkgs = import nixpkgs {
+          inherit system overlays;
+        };
+        # pkgs = nixpkgs.legacyPackages.${system};
+        # pkgs-playwright = nixpkgs-playwright.legacyPackages.${system};
         go = pkgs.go_1_25;
 
         # Build mcp-gopls from source
@@ -58,24 +77,40 @@
           };
         };
 
-      in {
+      in
+      {
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            # Go toolchain
-            go
-            gopls
-            gotools
-            golangci-lint
+          buildInputs = (
+            with pkgs;
+            [
+              # Go toolchain
+              go
+              gopls
+              gotools
+              golangci-lint
 
-            # Task runner
-            go-task
+              # Task runner
+              go-task
 
-            # MCP servers for AI assistance
-            mcp-gopls
-            mcp-taskfile-server
-          ];
+              # Playwright driver
+              playwright-driver.browsers
+              playwright-driver
+              nodejs
 
+              # MCP servers for AI assistance
+              mcp-gopls
+              mcp-taskfile-server
+            ]
+          );
+
+          #export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
+          #export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"
           shellHook = ''
+            export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+            export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+            export PLAYWRIGHT_DRIVER_PATH="${pkgs.playwright-driver}"
+            export PLAYWRIGHT_NODEJS_PATH="${pkgs.nodejs}/bin/node"
+            export 
             echo "🚀 conference-tool development environment"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo ""
@@ -88,6 +123,8 @@
             echo "Quick start:"
             echo "  task run         # Run locally"
             echo ""
+            echo "Playwright Driver:   ${pkgs.playwright-driver}"
+            echo "Playwright Browsers: ${pkgs.playwright-driver.browsers}"
           '';
         };
       }

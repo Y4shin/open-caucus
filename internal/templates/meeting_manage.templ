@@ -1,19 +1,482 @@
 package templates
 
 import (
+	"strconv"
+
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
 )
 
-type MeetingManageInput struct {
-	CommitteeName string
+type AttendeeItem struct {
+	ID       int64
+	IDString string
+	FullName string
+	IsChair  bool
+	IsGuest  bool
+}
+
+type AttendeeListPartialInput struct {
 	CommitteeSlug string
-	MeetingName   string
-	MeetingID     int64
-	IDString      string
+	IDString      string // meeting ID
+	Attendees     []AttendeeItem
+	Error         string
+}
+
+func (i *AttendeeListPartialInput) AttendeeCreatePostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeCreateRoute(i.CommitteeSlug, i.IDString).ManageAttendeeCreatePost()
+}
+
+func (i *AttendeeListPartialInput) AttendeeDeletePostStr(a *AttendeeItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdDeleteRoute(i.CommitteeSlug, i.IDString, a.IDString).ManageAttendeeDeletePost()
+}
+
+func (i *AttendeeListPartialInput) AttendeeToggleChairPostStr(a *AttendeeItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute(i.CommitteeSlug, i.IDString, a.IDString).ManageAttendeeToggleChairPost()
+}
+
+type MeetingSettingsPartialInput struct {
+	CommitteeSlug    string
+	IDString         string // meeting ID
+	SignupOpen       bool
+	ProtocolWriterID *int64
+	Attendees        []AttendeeItem
+}
+
+func (i *MeetingSettingsPartialInput) ToggleSignupOpenPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSignupOpenRoute(i.CommitteeSlug, i.IDString).ManageToggleSignupOpenPost()
+}
+
+func (i *MeetingSettingsPartialInput) SetProtocolWriterPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdProtocolWriterRoute(i.CommitteeSlug, i.IDString).ManageSetProtocolWriterPost()
+}
+
+// AgendaPointItem holds display data for one agenda point row.
+type AgendaPointItem struct {
+	ID       int64
+	IDString string
+	Position int64
+	Title    string
+	IsActive bool
+}
+
+type AgendaPointListPartialInput struct {
+	CommitteeSlug        string
+	IDString             string // meeting ID
+	AgendaPoints         []AgendaPointItem
+	CurrentAgendaPointID *int64
+	Error                string
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointCreatePostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointCreateRoute(i.CommitteeSlug, i.IDString).ManageAgendaPointCreatePost()
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointDeletePostStr(ap *AgendaPointItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointDeletePost()
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointActivatePostStr(ap *AgendaPointItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdActivateRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageActivateAgendaPointPost()
+}
+
+// SpeakerItem holds display data for one speakers-list row.
+type SpeakerItem struct {
+	ID           int64
+	IDString     string
+	AttendeeName string
+	Type         string // "regular" or "ropm"
+	Status       string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
+	IsWaiting    bool
+	IsSpeaking   bool
+}
+
+type SpeakersListPartialInput struct {
+	CommitteeSlug        string
+	IDString             string // meeting ID
+	CurrentAgendaPointID *int64
+	Speakers             []SpeakerItem
+	Attendees            []AttendeeItem // for the add-speaker form dropdown
+	Error                string
+}
+
+func (i *SpeakersListPartialInput) SpeakerAddPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerAddRoute(i.CommitteeSlug, i.IDString).ManageSpeakerAddPost()
+}
+
+func (i *SpeakersListPartialInput) SpeakerRemovePostStr(s *SpeakerItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute(i.CommitteeSlug, i.IDString, s.IDString).ManageSpeakerRemovePost()
+}
+
+func (i *SpeakersListPartialInput) SpeakerStartPostStr(s *SpeakerItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute(i.CommitteeSlug, i.IDString, s.IDString).ManageSpeakerStartPost()
+}
+
+func (i *SpeakersListPartialInput) SpeakerEndPostStr(s *SpeakerItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute(i.CommitteeSlug, i.IDString, s.IDString).ManageSpeakerEndPost()
+}
+
+func (i *SpeakersListPartialInput) SpeakerWithdrawPostStr(s *SpeakerItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute(i.CommitteeSlug, i.IDString, s.IDString).ManageSpeakerWithdrawPost()
+}
+
+type MeetingManageInput struct {
+	CommitteeName          string
+	CommitteeSlug          string
+	MeetingName            string
+	MeetingID              int64
+	IDString               string
+	Attendees              []AttendeeItem
+	SignupOpen             bool
+	ProtocolWriterID       *int64
+	AgendaPoints           []AgendaPointItem
+	CurrentAgendaPointID   *int64
+	Speakers               []SpeakerItem
+	AgendaPointMotions     []MotionListPartialInput
+	AgendaPointAttachments []AttachmentListPartialInput
+	Error                  string
 }
 
 func (i *MeetingManageInput) CommitteeDashboardGet() templ.SafeURL {
 	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGet())
+}
+
+func (i *MeetingManageInput) attendeeListInput() AttendeeListPartialInput {
+	return AttendeeListPartialInput{
+		CommitteeSlug: i.CommitteeSlug,
+		IDString:      i.IDString,
+		Attendees:     i.Attendees,
+	}
+}
+
+func (i *MeetingManageInput) settingsInput() MeetingSettingsPartialInput {
+	return MeetingSettingsPartialInput{
+		CommitteeSlug:    i.CommitteeSlug,
+		IDString:         i.IDString,
+		SignupOpen:       i.SignupOpen,
+		ProtocolWriterID: i.ProtocolWriterID,
+		Attendees:        i.Attendees,
+	}
+}
+
+func (i *MeetingManageInput) agendaPointListInput() AgendaPointListPartialInput {
+	return AgendaPointListPartialInput{
+		CommitteeSlug:        i.CommitteeSlug,
+		IDString:             i.IDString,
+		AgendaPoints:         i.AgendaPoints,
+		CurrentAgendaPointID: i.CurrentAgendaPointID,
+	}
+}
+
+func (i *MeetingManageInput) speakersListInput() SpeakersListPartialInput {
+	return SpeakersListPartialInput{
+		CommitteeSlug:        i.CommitteeSlug,
+		IDString:             i.IDString,
+		CurrentAgendaPointID: i.CurrentAgendaPointID,
+		Speakers:             i.Speakers,
+		Attendees:            i.Attendees,
+	}
+}
+
+templ AttendeeListPartial(input AttendeeListPartialInput) {
+	<div id="attendee-list-container">
+		if input.Error != "" {
+			<p class="error">{ input.Error }</p>
+		}
+		<h3>Add Guest</h3>
+		<form
+			hx-post={ input.AttendeeCreatePostStr() }
+			hx-target="#attendee-list-container"
+			hx-swap="outerHTML"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+		>
+			<div>
+				<label for="full_name">Name:</label>
+				<input type="text" id="full_name" name="full_name" required/>
+			</div>
+			<button type="submit">Add Guest</button>
+		</form>
+		if len(input.Attendees) == 0 {
+			<p>No attendees yet.</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Chair</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, a := range input.Attendees {
+						<tr>
+							<td>{ a.FullName }</td>
+							<td>
+								if a.IsGuest {
+									Guest
+								} else {
+									Member
+								}
+							</td>
+							<td>
+								if a.IsChair {
+									Yes
+								} else {
+									No
+								}
+							</td>
+							<td>
+								<form
+									hx-post={ input.AttendeeToggleChairPostStr(&a) }
+									hx-target="#attendee-list-container"
+									hx-swap="outerHTML"
+									style="display: inline;"
+								>
+									if a.IsChair {
+										<button type="submit">Demote</button>
+									} else {
+										<button type="submit">Make Chair</button>
+									}
+								</form>
+								<form
+									hx-post={ input.AttendeeDeletePostStr(&a) }
+									hx-target="#attendee-list-container"
+									hx-swap="outerHTML"
+									hx-confirm="Remove this attendee?"
+									style="display: inline;"
+								>
+									<button type="submit">Remove</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	</div>
+}
+
+templ MeetingSettingsPartial(input MeetingSettingsPartialInput) {
+	<div id="meeting-settings-container">
+		<p>
+			Guest signup:
+			if input.SignupOpen {
+				<strong>Open</strong>
+			} else {
+				<strong>Closed</strong>
+			}
+		</p>
+		<form
+			hx-post={ input.ToggleSignupOpenPostStr() }
+			hx-target="#meeting-settings-container"
+			hx-swap="outerHTML"
+			style="display: inline;"
+		>
+			if input.SignupOpen {
+				<button type="submit">Close Signup</button>
+			} else {
+				<button type="submit">Open Signup</button>
+			}
+		</form>
+		<div>
+			<p>
+				Protocol writer:
+				if input.ProtocolWriterID == nil {
+					<strong>None</strong>
+				} else {
+					for _, a := range input.Attendees {
+						if a.ID == *input.ProtocolWriterID {
+							<strong>{ a.FullName }</strong>
+						}
+					}
+				}
+			</p>
+			<form
+				hx-post={ input.SetProtocolWriterPostStr() }
+				hx-target="#meeting-settings-container"
+				hx-swap="outerHTML"
+			>
+				<select name="attendee_id">
+					<option value="">-- none --</option>
+					for _, a := range input.Attendees {
+						<option value={ a.IDString }>{ a.FullName }</option>
+					}
+				</select>
+				<button type="submit">Assign Protocol Writer</button>
+			</form>
+		</div>
+	</div>
+}
+
+templ AgendaPointListPartial(input AgendaPointListPartialInput) {
+	<div id="agenda-point-list-container">
+		if input.Error != "" {
+			<p class="error">{ input.Error }</p>
+		}
+		<h3>Add Agenda Point</h3>
+		<form
+			hx-post={ input.AgendaPointCreatePostStr() }
+			hx-target="#agenda-point-list-container"
+			hx-swap="outerHTML"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+		>
+			<div>
+				<label for="ap_title">Title:</label>
+				<input type="text" id="ap_title" name="title" required/>
+			</div>
+			<button type="submit">Add Agenda Point</button>
+		</form>
+		if len(input.AgendaPoints) == 0 {
+			<p>No agenda points yet.</p>
+		} else {
+			<table>
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Title</th>
+						<th>Active</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, ap := range input.AgendaPoints {
+						<tr>
+							<td>{ strconv.FormatInt(ap.Position, 10) }</td>
+							<td>{ ap.Title }</td>
+							<td>
+								if ap.IsActive {
+									Yes
+								} else {
+									No
+								}
+							</td>
+							<td>
+								if !ap.IsActive {
+									<form
+										hx-post={ input.AgendaPointActivatePostStr(&ap) }
+										hx-target="#agenda-point-list-container"
+										hx-swap="outerHTML"
+										style="display: inline;"
+									>
+										<button type="submit">Activate</button>
+									</form>
+								}
+								<form
+									hx-post={ input.AgendaPointDeletePostStr(&ap) }
+									hx-target="#agenda-point-list-container"
+									hx-swap="outerHTML"
+									hx-confirm="Delete this agenda point?"
+									style="display: inline;"
+								>
+									<button type="submit">Delete</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	</div>
+}
+
+templ SpeakersListPartial(input SpeakersListPartialInput) {
+	<div id="speakers-list-container">
+		if input.Error != "" {
+			<p class="error">{ input.Error }</p>
+		}
+		if input.CurrentAgendaPointID == nil {
+			<p>No active agenda point. Activate one above to manage the speakers list.</p>
+		} else {
+			<h3>Add Speaker</h3>
+			<form
+				hx-post={ input.SpeakerAddPostStr() }
+				hx-target="#speakers-list-container"
+				hx-swap="outerHTML"
+				hx-on::after-request="if(event.detail.successful) this.reset()"
+			>
+				<div>
+					<label for="speaker_attendee_id">Attendee:</label>
+					<select id="speaker_attendee_id" name="attendee_id" required>
+						<option value="">-- select --</option>
+						for _, a := range input.Attendees {
+							<option value={ a.IDString }>{ a.FullName }</option>
+						}
+					</select>
+				</div>
+				<div>
+					<label for="speaker_type">Type:</label>
+					<select id="speaker_type" name="type" required>
+						<option value="regular">Regular</option>
+						<option value="ropm">RoPM</option>
+					</select>
+				</div>
+				<button type="submit">Add Speaker</button>
+			</form>
+			if len(input.Speakers) == 0 {
+				<p>No speakers in the queue.</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Type</th>
+							<th>Status</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, s := range input.Speakers {
+							<tr>
+								<td>{ s.AttendeeName }</td>
+								<td>{ s.Type }</td>
+								<td>{ s.Status }</td>
+								<td>
+									if s.IsWaiting {
+										<form
+											hx-post={ input.SpeakerStartPostStr(&s) }
+											hx-target="#speakers-list-container"
+											hx-swap="outerHTML"
+											style="display: inline;"
+										>
+											<button type="submit">Start</button>
+										</form>
+									}
+									if s.IsSpeaking {
+										<form
+											hx-post={ input.SpeakerEndPostStr(&s) }
+											hx-target="#speakers-list-container"
+											hx-swap="outerHTML"
+											style="display: inline;"
+										>
+											<button type="submit">End</button>
+										</form>
+									}
+									if s.IsWaiting {
+										<form
+											hx-post={ input.SpeakerWithdrawPostStr(&s) }
+											hx-target="#speakers-list-container"
+											hx-swap="outerHTML"
+											style="display: inline;"
+										>
+											<button type="submit">Withdraw</button>
+										</form>
+									}
+									<form
+										hx-post={ input.SpeakerRemovePostStr(&s) }
+										hx-target="#speakers-list-container"
+										hx-swap="outerHTML"
+										hx-confirm="Remove this speaker?"
+										style="display: inline;"
+									>
+										<button type="submit">Remove</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		}
+	</div>
 }
 
 templ MeetingManageTemplate(input MeetingManageInput) {
@@ -23,6 +486,7 @@ templ MeetingManageTemplate(input MeetingManageInput) {
 		<title>Manage: { input.MeetingName } - { input.CommitteeName }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body>
 		<header>
@@ -31,10 +495,48 @@ templ MeetingManageTemplate(input MeetingManageInput) {
 				<a href={ input.CommitteeDashboardGet() }>← Back to Dashboard</a>
 			</nav>
 		</header>
-
 		<main>
-			<p>Meeting management coming soon.</p>
+			<section>
+				<h2>Meeting Settings</h2>
+				@MeetingSettingsPartial(input.settingsInput())
+			</section>
+			<section>
+				<h2>Agenda Points</h2>
+				@AgendaPointListPartial(input.agendaPointListInput())
+			</section>
+			<section>
+				<h2>Attachments</h2>
+				if len(input.AgendaPointAttachments) == 0 {
+					<p>No agenda points yet. Add agenda points above to manage attachments.</p>
+				} else {
+					for _, a := range input.AgendaPointAttachments {
+						@AttachmentListPartial(a)
+					}
+				}
+			</section>
+			<section>
+				<h2>Motions</h2>
+				if len(input.AgendaPointMotions) == 0 {
+					<p>No agenda points yet. Add agenda points above to manage motions.</p>
+				} else {
+					for _, m := range input.AgendaPointMotions {
+						@MotionListPartial(m)
+					}
+				}
+			</section>
+			<section>
+				<h2>Speakers List</h2>
+				@SpeakersListPartial(input.speakersListInput())
+			</section>
+			<section>
+				<h2>Attendees</h2>
+				@AttendeeListPartial(input.attendeeListInput())
+			</section>
 		</main>
 	</body>
 	</html>
+}
+
+func attendeeItemIDString(id int64) string {
+	return strconv.FormatInt(id, 10)
 }

@@ -2,10 +2,10 @@
   "mcpServers": {
     "gopls": {
       "type": "stdio",
-      "command": "mcp-gopls.exe",
+      "command": "mcp-gopls",
       "args": [
         "--workspace",
-        "./src",
+        ".",
         "--log-level",
         "info"
       ],

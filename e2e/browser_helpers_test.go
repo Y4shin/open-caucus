@@ -3,6 +3,7 @@
 package e2e_test
 
 import (
+	"fmt"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
@@ -16,7 +17,7 @@ func newPage(t *testing.T) playwright.Page {
 	t.Helper()
 
 	if pw == nil {
-		t.Skip("playwright driver not installed — run 'task playwright:install'")
+		t.Skip(fmt.Sprintf("playwright driver not installed — run 'task playwright:install'\n%s", pwErr))
 	}
 
 	browser, err := pw.Chromium.Launch()

@@ -10,11 +10,13 @@ import (
 	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/conference-tool/internal/storage"
 )
 
 type HandlerBuilder struct {
 	broker     broker.Broker
 	repository repository.Repository
+	storage    storage.Service
 }
 
 func (b *HandlerBuilder) WithBroker(broker broker.Broker) *HandlerBuilder {
@@ -39,6 +41,17 @@ func (b *HandlerBuilder) WithRepository(repository repository.Repository) *Handl
 	return b
 }
 
+func (b *HandlerBuilder) WithStorage(svc storage.Service) *HandlerBuilder {
+	if b.storage != nil {
+		panic("trying to set multiple storage services")
+	}
+	if svc == nil {
+		panic("cannot set nil storage service")
+	}
+	b.storage = svc
+	return b
+}
+
 func (b *HandlerBuilder) Build() *Handler {
 	missing := []string{}
 	if b.broker == nil {
@@ -47,6 +60,9 @@ func (b *HandlerBuilder) Build() *Handler {
 	if b.repository == nil {
 		missing = append(missing, "repository")
 	}
+	if b.storage == nil {
+		missing = append(missing, "storage")
+	}
 	if len(missing) > 0 {
 		missingStr := strings.Join(missing, ", ")
 		panic(fmt.Sprintf("cannot build Handler with missing %s", missingStr))
@@ -54,12 +70,14 @@ func (b *HandlerBuilder) Build() *Handler {
 	return &Handler{
 		Broker:     b.broker,
 		Repository: b.repository,
+		Storage:    b.storage,
 	}
 }
 
 type Handler struct {
 	Broker              broker.Broker
 	Repository          repository.Repository
+	Storage             storage.Service
 	SessionManager      *session.Manager
 	AdminSessionManager *session.AdminSessionManager
 	AdminKey            string

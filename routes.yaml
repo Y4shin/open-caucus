@@ -203,6 +203,295 @@ routes:
           type: MeetingManageTemplate
           input_type: MeetingManageInput
 
+  # Toggle Signup Open
+  - path: /committee/{slug}/meeting/{meeting_id}/signup-open
+    methods:
+      - verb: POST
+        handler: ManageToggleSignupOpen
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingSettingsPartial
+          input_type: MeetingSettingsPartialInput
+
+  # Set Protocol Writer
+  - path: /committee/{slug}/meeting/{meeting_id}/protocol-writer
+    methods:
+      - verb: POST
+        handler: ManageSetProtocolWriter
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingSettingsPartial
+          input_type: MeetingSettingsPartialInput
+
+  # Protocol Page (attendee: protocol writer only)
+  - path: /committee/{slug}/meeting/{meeting_id}/protocol
+    methods:
+      - verb: GET
+        handler: MeetingProtocolPage
+        middleware:
+          - attendee_session
+          - attendee_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingProtocolTemplate
+          input_type: MeetingProtocolInput
+
+  # Save Protocol Text for an Agenda Point
+  - path: /committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}
+    methods:
+      - verb: POST
+        handler: ProtocolSaveAgendaPoint
+        middleware:
+          - attendee_session
+          - attendee_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: ProtocolAgendaPointPartial
+          input_type: ProtocolAgendaPointPartialInput
+
+  # Motion Create (upload document + title for an agenda point)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create
+    methods:
+      - verb: POST
+        handler: ManageMotionCreate
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MotionListPartial
+          input_type: MotionListPartialInput
+
+  # Motion Delete
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete
+    methods:
+      - verb: POST
+        handler: ManageMotionDelete
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MotionListPartial
+          input_type: MotionListPartialInput
+
+  # Motion Record Vote
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/vote
+    methods:
+      - verb: POST
+        handler: ManageMotionRecordVote
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MotionItemPartial
+          input_type: MotionItemPartialInput
+
+  # Blob Download (serves the raw file)
+  - path: /committee/{slug}/meeting/{meeting_id}/blob/{blob_id}
+    methods:
+      - verb: GET
+        handler: ServeBlobDownload
+        middleware:
+          - session
+          - auth
+          - committee_access
+        raw: true
+
+  # Attachment Create (upload a file and link it to an agenda point)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/create
+    methods:
+      - verb: POST
+        handler: ManageAttachmentCreate
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttachmentListPartial
+          input_type: AttachmentListPartialInput
+
+  # Attachment Delete (remove an attachment and its blob)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/delete
+    methods:
+      - verb: POST
+        handler: ManageAttachmentDelete
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttachmentListPartial
+          input_type: AttachmentListPartialInput
+
+  # Attendee Create (add guest manually from manage page)
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee/create
+    methods:
+      - verb: POST
+        handler: ManageAttendeeCreate
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeListPartial
+          input_type: AttendeeListPartialInput
+
+  # Attendee Delete
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/delete
+    methods:
+      - verb: POST
+        handler: ManageAttendeeDelete
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeListPartial
+          input_type: AttendeeListPartialInput
+
+  # Attendee Toggle Chair
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair
+    methods:
+      - verb: POST
+        handler: ManageAttendeeToggleChair
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeListPartial
+          input_type: AttendeeListPartialInput
+
+  # Agenda Point Create
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/create
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointCreate
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Point Delete
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/delete
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointDelete
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Point Activate
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/activate
+    methods:
+      - verb: POST
+        handler: ManageActivateAgendaPoint
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Speaker Add
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/add
+    methods:
+      - verb: POST
+        handler: ManageSpeakerAdd
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
+  # Speaker Remove
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove
+    methods:
+      - verb: POST
+        handler: ManageSpeakerRemove
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
+  # Speaker Start
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/start
+    methods:
+      - verb: POST
+        handler: ManageSpeakerStart
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
+  # Speaker End
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/end
+    methods:
+      - verb: POST
+        handler: ManageSpeakerEnd
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
+  # Speaker Withdraw
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/withdraw
+    methods:
+      - verb: POST
+        handler: ManageSpeakerWithdraw
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
   # Delete Meeting
   - path: /committee/{slug}/meeting/{meeting_id}/delete
     methods:
@@ -230,6 +519,73 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingListPartial
           input_type: MeetingListPartialInput
+
+  # Meeting Join Page
+  - path: /committee/{slug}/meeting/{meeting_id}/join
+    methods:
+      - verb: GET
+        handler: MeetingJoinPage
+        middleware:
+          - session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingJoinTemplate
+          input_type: MeetingJoinInput
+
+      - verb: POST
+        handler: MeetingJoinSubmit
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingJoinTemplate
+          input_type: MeetingJoinInput
+
+  # Meeting Guest Signup
+  - path: /committee/{slug}/meeting/{meeting_id}/guest
+    methods:
+      - verb: POST
+        handler: MeetingGuestSignup
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingGuestSuccessTemplate
+          input_type: MeetingGuestSuccessInput
+
+  # Attendee Login (access code entry for guests)
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee-login
+    methods:
+      - verb: GET
+        handler: AttendeeLoginPage
+        middleware:
+          - session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeLoginTemplate
+          input_type: AttendeeLoginInput
+
+      - verb: POST
+        handler: AttendeeLoginSubmit
+        middleware:
+          - session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeLoginTemplate
+          input_type: AttendeeLoginInput
+
+  # Meeting Live Page
+  - path: /committee/{slug}/meeting/{meeting_id}/live
+    methods:
+      - verb: GET
+        handler: MeetingLivePage
+        middleware:
+          - attendee_session
+          - attendee_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingLiveTemplate
+          input_type: MeetingLiveInput
 
   # User Logout
   - path: /logout

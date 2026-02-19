@@ -1,0 +1,103 @@
+package templates
+
+import (
+	"strconv"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+// ProtocolAgendaPointItem holds display data for one agenda point on the protocol page.
+type ProtocolAgendaPointItem struct {
+	ID       int64
+	IDString string
+	Position int64
+	Title    string
+	Protocol string
+}
+
+// ProtocolAgendaPointPartialInput is returned after saving protocol text for one point.
+type ProtocolAgendaPointPartialInput struct {
+	CommitteeSlug string
+	IDString      string // meeting ID
+	AgendaPoint   ProtocolAgendaPointItem
+	Saved         bool
+	Error         string
+}
+
+func (i *ProtocolAgendaPointPartialInput) SavePostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute(
+		i.CommitteeSlug, i.IDString, i.AgendaPoint.IDString,
+	).ProtocolSaveAgendaPointPost()
+}
+
+// MeetingProtocolInput is the full-page input for the protocol writer page.
+type MeetingProtocolInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	IDString      string // meeting ID
+	AgendaPoints  []ProtocolAgendaPointItem
+}
+
+func (i *MeetingProtocolInput) ManageURL() templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet())
+}
+
+func (i *MeetingProtocolInput) agendaPointPartialInput(ap ProtocolAgendaPointItem) ProtocolAgendaPointPartialInput {
+	return ProtocolAgendaPointPartialInput{
+		CommitteeSlug: i.CommitteeSlug,
+		IDString:      i.IDString,
+		AgendaPoint:   ap,
+	}
+}
+
+templ ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) {
+	<div id={ "ap-protocol-" + input.AgendaPoint.IDString }>
+		if input.Error != "" {
+			<p class="error">{ input.Error }</p>
+		}
+		if input.Saved {
+			<p><em>Saved.</em></p>
+		}
+		<form
+			hx-post={ input.SavePostStr() }
+			hx-target={ "#ap-protocol-" + input.AgendaPoint.IDString }
+			hx-swap="outerHTML"
+		>
+			<textarea name="protocol" rows="6" style="width: 100%;">{ input.AgendaPoint.Protocol }</textarea>
+			<button type="submit">Save</button>
+		</form>
+	</div>
+}
+
+templ MeetingProtocolTemplate(input MeetingProtocolInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Protocol: { input.MeetingName } - { input.CommitteeName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script src={ paths.Route.HtmxMinJs() }></script>
+	</head>
+	<body>
+		<header>
+			<h1>Protocol: { input.MeetingName }</h1>
+			<nav>
+				<a href={ input.ManageURL() }>← Back to Manage</a>
+			</nav>
+		</header>
+		<main>
+			if len(input.AgendaPoints) == 0 {
+				<p>No agenda points yet.</p>
+			} else {
+				for _, ap := range input.AgendaPoints {
+					<section>
+						<h2>{ strconv.FormatInt(ap.Position, 10) }. { ap.Title }</h2>
+						@ProtocolAgendaPointPartial(input.agendaPointPartialInput(ap))
+					</section>
+				}
+			}
+		</main>
+	</body>
+	</html>
+}

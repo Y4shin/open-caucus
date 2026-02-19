@@ -1,0 +1,97 @@
+package templates
+
+import "github.com/Y4shin/conference-tool/internal/routes/paths"
+
+// AttachmentItem holds display data for a single agenda attachment.
+type AttachmentItem struct {
+	ID           int64
+	IDString     string
+	BlobID       int64
+	BlobIDString string
+	Label        string // empty string when no label set
+	Filename     string
+}
+
+// AttachmentListPartialInput is the input for the per-agenda-point attachment list.
+type AttachmentListPartialInput struct {
+	CommitteeSlug    string
+	MeetingIDString  string
+	AgendaPointIDStr string
+	AgendaPointTitle string
+	Attachments      []AttachmentItem
+	Error            string
+}
+
+func (i *AttachmentListPartialInput) containerID() string {
+	return "attachment-list-ap-" + i.AgendaPointIDStr
+}
+
+func (i *AttachmentListPartialInput) AttachmentCreatePostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute(
+		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr,
+	).ManageAttachmentCreatePost()
+}
+
+func (i *AttachmentListPartialInput) attachmentDeletePostStr(a *AttachmentItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute(
+		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, a.IDString,
+	).ManageAttachmentDeletePost()
+}
+
+func (i *AttachmentListPartialInput) blobDownloadGetStr(a *AttachmentItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(
+		i.CommitteeSlug, i.MeetingIDString, a.BlobIDString,
+	).ServeBlobDownloadGet()
+}
+
+templ AttachmentListPartial(input AttachmentListPartialInput) {
+	<div id={ input.containerID() }>
+		<h4>{ input.AgendaPointTitle } — Attachments</h4>
+		if input.Error != "" {
+			<p class="error">{ input.Error }</p>
+		}
+		<form
+			hx-post={ input.AttachmentCreatePostStr() }
+			hx-target={ "#" + input.containerID() }
+			hx-swap="outerHTML"
+			hx-encoding="multipart/form-data"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+		>
+			<div>
+				<label for={ "attachment-label-" + input.AgendaPointIDStr }>Label (optional):</label>
+				<input type="text" id={ "attachment-label-" + input.AgendaPointIDStr } name="label"/>
+			</div>
+			<div>
+				<label for={ "attachment-file-" + input.AgendaPointIDStr }>File:</label>
+				<input type="file" id={ "attachment-file-" + input.AgendaPointIDStr } name="file" required/>
+			</div>
+			<button type="submit">Upload Attachment</button>
+		</form>
+		if len(input.Attachments) == 0 {
+			<p>No attachments for this agenda point.</p>
+		} else {
+			<ul>
+				for _, a := range input.Attachments {
+					<li id={ "attachment-item-" + a.IDString }>
+						<a href={ templ.URL(input.blobDownloadGetStr(&a)) }>
+							if a.Label != "" {
+								{ a.Label } ({ a.Filename })
+							} else {
+								{ a.Filename }
+							}
+						</a>
+						<form
+							hx-post={ input.attachmentDeletePostStr(&a) }
+							hx-target={ "#" + input.containerID() }
+							hx-swap="outerHTML"
+							hx-confirm="Delete this attachment?"
+							style="display: inline;"
+						>
+							<button type="submit">Delete</button>
+						</form>
+					</li>
+				}
+			</ul>
+		}
+	</div>
+}

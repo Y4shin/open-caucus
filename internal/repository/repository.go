@@ -43,6 +43,15 @@ type Repository interface {
 	DeleteSession(ctx context.Context, sessionID string) error
 	DeleteExpiredSessions(ctx context.Context, before time.Time) error
 
+	// Attendees
+	CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string) (*model.Attendee, error)
+	GetAttendeeByUserIDAndMeetingID(ctx context.Context, userID, meetingID int64) (*model.Attendee, error)
+	GetAttendeeByID(ctx context.Context, id int64) (*model.Attendee, error)
+	GetAttendeeByMeetingIDAndSecret(ctx context.Context, meetingID int64, secret string) (*model.Attendee, error)
+	ListAttendeesForMeeting(ctx context.Context, meetingID int64) ([]*model.Attendee, error)
+	DeleteAttendee(ctx context.Context, id int64) error
+	SetAttendeeIsChair(ctx context.Context, id int64, isChair bool) error
+
 	// Meetings
 	GetMeetingByID(ctx context.Context, id int64) (*model.Meeting, error)
 	ListMeetingsForCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.Meeting, error)
@@ -50,6 +59,43 @@ type Repository interface {
 	CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error
 	DeleteMeeting(ctx context.Context, id int64) error
 	SetActiveMeeting(ctx context.Context, slug string, meetingID int64) error
+	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
+	SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error
+
+	// Binary blobs
+	CreateBlob(ctx context.Context, filename, contentType string, sizeBytes int64, storagePath string) (*model.BinaryBlob, error)
+	GetBlobByID(ctx context.Context, id int64) (*model.BinaryBlob, error)
+	DeleteBlob(ctx context.Context, id int64) error
+
+	// Agenda attachments
+	CreateAttachment(ctx context.Context, agendaPointID, blobID int64, label *string) (*model.AgendaAttachment, error)
+	GetAttachmentByID(ctx context.Context, id int64) (*model.AgendaAttachment, error)
+	ListAttachmentsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.AgendaAttachment, error)
+	DeleteAttachment(ctx context.Context, id int64) error
+
+	// Motions
+	CreateMotion(ctx context.Context, agendaPointID, blobID int64, title string) (*model.Motion, error)
+	GetMotionByID(ctx context.Context, id int64) (*model.Motion, error)
+	ListMotionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.Motion, error)
+	DeleteMotion(ctx context.Context, id int64) error
+	SetMotionVotes(ctx context.Context, id, votesFor, votesAgainst, votesAbstained, votesEligible int64) error
+
+	// Agenda points
+	CreateAgendaPoint(ctx context.Context, meetingID int64, title string) (*model.AgendaPoint, error)
+	ListAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error)
+	GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error)
+	DeleteAgendaPoint(ctx context.Context, id int64) error
+	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error
+	UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error
+
+	// Speakers list
+	AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string) (*model.SpeakerEntry, error)
+	ListSpeakersForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.SpeakerEntry, error)
+	GetSpeakerEntryByID(ctx context.Context, id int64) (*model.SpeakerEntry, error)
+	DeleteSpeaker(ctx context.Context, id int64) error
+	SetSpeakerSpeaking(ctx context.Context, id, agendaPointID int64) error
+	SetSpeakerDone(ctx context.Context, id int64) error
+	SetSpeakerWithdrawn(ctx context.Context, id int64) error
 
 	// Admin - Committee management
 	ListAllCommittees(ctx context.Context, limit, offset int) ([]*model.Committee, error)
