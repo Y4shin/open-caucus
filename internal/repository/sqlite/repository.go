@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -699,14 +700,38 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 		protocolWriterID = &m.ProtocolWriterID.Int64
 	}
 	return &model.Meeting{
-		ID:                   m.ID,
-		Name:                 m.Name,
-		Description:          m.Description,
-		SignupOpen:           m.SignupOpen,
-		CurrentAgendaPointID: currentAgendaPointID,
-		ProtocolWriterID:     protocolWriterID,
-		CreatedAt:            createdAt,
+		ID:                           m.ID,
+		Name:                         m.Name,
+		Description:                  m.Description,
+		SignupOpen:                   m.SignupOpen,
+		CurrentAgendaPointID:         currentAgendaPointID,
+		ProtocolWriterID:             protocolWriterID,
+		GenderQuotationEnabled:       m.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled: m.FirstSpeakerQuotationEnabled,
+		ModeratorID:                  nullInt64ToPtr(m.ModeratorID),
+		CreatedAt:                    createdAt,
 	}
+}
+
+func nullInt64ToPtr(n sql.NullInt64) *int64 {
+	if !n.Valid {
+		return nil
+	}
+	return &n.Int64
+}
+
+func nullBoolToPtr(n sql.NullBool) *bool {
+	if !n.Valid {
+		return nil
+	}
+	return &n.Bool
+}
+
+func ptrToNullBool(p *bool) sql.NullBool {
+	if p == nil {
+		return sql.NullBool{}
+	}
+	return sql.NullBool{Bool: *p, Valid: true}
 }
 
 func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
@@ -715,12 +740,15 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 		currentSpeakerID = &ap.CurrentSpeakerID.Int64
 	}
 	return &model.AgendaPoint{
-		ID:               ap.ID,
-		MeetingID:        ap.MeetingID,
-		Position:         ap.Position,
-		Title:            ap.Title,
-		Protocol:         ap.Protocol,
-		CurrentSpeakerID: currentSpeakerID,
+		ID:                           ap.ID,
+		MeetingID:                    ap.MeetingID,
+		Position:                     ap.Position,
+		Title:                        ap.Title,
+		Protocol:                     ap.Protocol,
+		CurrentSpeakerID:             currentSpeakerID,
+		GenderQuotationEnabled:       nullBoolToPtr(ap.GenderQuotationEnabled),
+		FirstSpeakerQuotationEnabled: nullBoolToPtr(ap.FirstSpeakerQuotationEnabled),
+		ModeratorID:                  nullInt64ToPtr(ap.ModeratorID),
 	}
 }
 
@@ -799,22 +827,34 @@ func (r *Repository) SetCurrentAgendaPoint(ctx context.Context, meetingID int64,
 }
 
 // AddSpeaker adds an attendee to the speakers list for an agenda point.
-func (r *Repository) AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string) (*model.SpeakerEntry, error) {
+func (r *Repository) AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string, genderQuoted, firstSpeaker bool) (*model.SpeakerEntry, error) {
 	row, err := r.Queries.AddSpeaker(ctx, client.AddSpeakerParams{
 		AgendaPointID: agendaPointID,
 		AttendeeID:    attendeeID,
 		Type:          speakerType,
+		GenderQuoted:  genderQuoted,
+		FirstSpeaker:  firstSpeaker,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("add speaker: %w", err)
 	}
+	return speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, "", row.Type, row.Status, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition), nil
+}
+
+// speakerFromRow constructs a model.SpeakerEntry from individual column values.
+func speakerFromRow(id, agendaPointID, attendeeID int64, attendeeName, typ, status string, genderQuoted, firstSpeaker, priority bool, orderPosition int64) *model.SpeakerEntry {
 	return &model.SpeakerEntry{
-		ID:            row.ID,
-		AgendaPointID: row.AgendaPointID,
-		AttendeeID:    row.AttendeeID,
-		Type:          row.Type,
-		Status:        row.Status,
-	}, nil
+		ID:            id,
+		AgendaPointID: agendaPointID,
+		AttendeeID:    attendeeID,
+		AttendeeName:  attendeeName,
+		Type:          typ,
+		Status:        status,
+		GenderQuoted:  genderQuoted,
+		FirstSpeaker:  firstSpeaker,
+		Priority:      priority,
+		OrderPosition: orderPosition,
+	}
 }
 
 // ListSpeakersForAgendaPoint returns all speakers for an agenda point.
@@ -825,14 +865,7 @@ func (r *Repository) ListSpeakersForAgendaPoint(ctx context.Context, agendaPoint
 	}
 	result := make([]*model.SpeakerEntry, len(rows))
 	for i, row := range rows {
-		result[i] = &model.SpeakerEntry{
-			ID:            row.ID,
-			AgendaPointID: row.AgendaPointID,
-			AttendeeID:    row.AttendeeID,
-			AttendeeName:  row.AttendeeFullName,
-			Type:          row.Type,
-			Status:        row.Status,
-		}
+		result[i] = speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, row.AttendeeFullName, row.Type, row.Status, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition)
 	}
 	return result, nil
 }
@@ -846,13 +879,7 @@ func (r *Repository) GetSpeakerEntryByID(ctx context.Context, id int64) (*model.
 		}
 		return nil, fmt.Errorf("get speaker entry: %w", err)
 	}
-	return &model.SpeakerEntry{
-		ID:            row.ID,
-		AgendaPointID: row.AgendaPointID,
-		AttendeeID:    row.AttendeeID,
-		Type:          row.Type,
-		Status:        row.Status,
-	}, nil
+	return speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, "", row.Type, row.Status, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition), nil
 }
 
 // DeleteSpeaker removes a speaker entry.
@@ -904,6 +931,136 @@ func (r *Repository) SetSpeakerDone(ctx context.Context, id int64) error {
 func (r *Repository) SetSpeakerWithdrawn(ctx context.Context, id int64) error {
 	if err := r.Queries.SetSpeakerWithdrawn(ctx, id); err != nil {
 		return fmt.Errorf("set speaker withdrawn: %w", err)
+	}
+	return nil
+}
+
+// HasAttendeeSpokenOnAgendaPoint returns true if the attendee has any SPEAKING or DONE entry for the agenda point.
+func (r *Repository) HasAttendeeSpokenOnAgendaPoint(ctx context.Context, agendaPointID, attendeeID int64) (bool, error) {
+	v, err := r.Queries.HasAttendeeSpokenOnAgendaPoint(ctx, client.HasAttendeeSpokenOnAgendaPointParams{
+		AgendaPointID: agendaPointID,
+		AttendeeID:    attendeeID,
+	})
+	if err != nil {
+		return false, fmt.Errorf("has attendee spoken: %w", err)
+	}
+	return v != 0, nil
+}
+
+// SetSpeakerPriority toggles the manual priority flag on a speakers-list entry.
+func (r *Repository) SetSpeakerPriority(ctx context.Context, id int64, priority bool) error {
+	if err := r.Queries.SetSpeakerPriority(ctx, client.SetSpeakerPriorityParams{
+		ID:       id,
+		Priority: priority,
+	}); err != nil {
+		return fmt.Errorf("set speaker priority: %w", err)
+	}
+	return nil
+}
+
+// RecomputeSpeakerOrder recomputes and persists order_position for all WAITING speakers on an agenda point.
+// Sort key: priority DESC, gender_quoted DESC, first_speaker DESC, requested_at ASC.
+func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID int64) error {
+	rows, err := r.Queries.GetWaitingSpeakersForAgendaPoint(ctx, agendaPointID)
+	if err != nil {
+		return fmt.Errorf("recompute speaker order fetch: %w", err)
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		a, b := rows[i], rows[j]
+		if a.Priority != b.Priority {
+			return a.Priority
+		}
+		if a.GenderQuoted != b.GenderQuoted {
+			return a.GenderQuoted
+		}
+		if a.FirstSpeaker != b.FirstSpeaker {
+			return a.FirstSpeaker
+		}
+		return a.RequestedAt < b.RequestedAt
+	})
+
+	for i, row := range rows {
+		if err := r.Queries.SetSpeakerOrderPosition(ctx, client.SetSpeakerOrderPositionParams{
+			ID:            row.ID,
+			OrderPosition: int64(i + 1),
+		}); err != nil {
+			return fmt.Errorf("recompute speaker order set position: %w", err)
+		}
+	}
+	return nil
+}
+
+// SetMeetingGenderQuotation updates the gender_quotation_enabled flag for a meeting.
+func (r *Repository) SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error {
+	if err := r.Queries.SetMeetingGenderQuotation(ctx, client.SetMeetingGenderQuotationParams{
+		ID:                     id,
+		GenderQuotationEnabled: enabled,
+	}); err != nil {
+		return fmt.Errorf("set meeting gender quotation: %w", err)
+	}
+	return nil
+}
+
+// SetMeetingFirstSpeakerQuotation updates the first_speaker_quotation_enabled flag for a meeting.
+func (r *Repository) SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error {
+	if err := r.Queries.SetMeetingFirstSpeakerQuotation(ctx, client.SetMeetingFirstSpeakerQuotationParams{
+		ID:                           id,
+		FirstSpeakerQuotationEnabled: enabled,
+	}); err != nil {
+		return fmt.Errorf("set meeting first speaker quotation: %w", err)
+	}
+	return nil
+}
+
+// SetMeetingModerator sets or clears the moderator_id for a meeting.
+func (r *Repository) SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error {
+	var mid sql.NullInt64
+	if moderatorID != nil {
+		mid = sql.NullInt64{Int64: *moderatorID, Valid: true}
+	}
+	if err := r.Queries.SetMeetingModerator(ctx, client.SetMeetingModeratorParams{
+		ID:          id,
+		ModeratorID: mid,
+	}); err != nil {
+		return fmt.Errorf("set meeting moderator: %w", err)
+	}
+	return nil
+}
+
+// SetAgendaPointGenderQuotation sets the gender_quotation_enabled override for an agenda point (nil clears it).
+func (r *Repository) SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error {
+	if err := r.Queries.SetAgendaPointGenderQuotation(ctx, client.SetAgendaPointGenderQuotationParams{
+		ID:                     id,
+		GenderQuotationEnabled: ptrToNullBool(enabled),
+	}); err != nil {
+		return fmt.Errorf("set agenda point gender quotation: %w", err)
+	}
+	return nil
+}
+
+// SetAgendaPointFirstSpeakerQuotation sets the first_speaker_quotation_enabled override for an agenda point (nil clears it).
+func (r *Repository) SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error {
+	if err := r.Queries.SetAgendaPointFirstSpeakerQuotation(ctx, client.SetAgendaPointFirstSpeakerQuotationParams{
+		ID:                           id,
+		FirstSpeakerQuotationEnabled: ptrToNullBool(enabled),
+	}); err != nil {
+		return fmt.Errorf("set agenda point first speaker quotation: %w", err)
+	}
+	return nil
+}
+
+// SetAgendaPointModerator sets or clears the moderator_id for an agenda point.
+func (r *Repository) SetAgendaPointModerator(ctx context.Context, id int64, moderatorID *int64) error {
+	var mid sql.NullInt64
+	if moderatorID != nil {
+		mid = sql.NullInt64{Int64: *moderatorID, Valid: true}
+	}
+	if err := r.Queries.SetAgendaPointModerator(ctx, client.SetAgendaPointModeratorParams{
+		ID:          id,
+		ModeratorID: mid,
+	}); err != nil {
+		return fmt.Errorf("set agenda point moderator: %w", err)
 	}
 	return nil
 }

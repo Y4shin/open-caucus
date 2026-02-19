@@ -56,7 +56,7 @@ func (q *Queries) DeleteMeeting(ctx context.Context, id int64) error {
 }
 
 const getMeetingByID = `-- name: GetMeetingByID :one
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id FROM meetings WHERE id = ?
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings WHERE id = ?
 `
 
 func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error) {
@@ -73,12 +73,15 @@ func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error)
 		&i.UpdatedAt,
 		&i.CurrentAgendaPointID,
 		&i.ProtocolWriterID,
+		&i.GenderQuotationEnabled,
+		&i.FirstSpeakerQuotationEnabled,
+		&i.ModeratorID,
 	)
 	return i, err
 }
 
 const listMeetingsForCommittee = `-- name: ListMeetingsForCommittee :many
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id FROM meetings
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings
 WHERE committee_id = (SELECT id FROM committees WHERE slug = ?)
 ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
@@ -109,6 +112,9 @@ func (q *Queries) ListMeetingsForCommittee(ctx context.Context, arg ListMeetings
 			&i.UpdatedAt,
 			&i.CurrentAgendaPointID,
 			&i.ProtocolWriterID,
+			&i.GenderQuotationEnabled,
+			&i.FirstSpeakerQuotationEnabled,
+			&i.ModeratorID,
 		); err != nil {
 			return nil, err
 		}
@@ -134,6 +140,48 @@ type SetActiveMeetingParams struct {
 
 func (q *Queries) SetActiveMeeting(ctx context.Context, arg SetActiveMeetingParams) error {
 	_, err := q.db.ExecContext(ctx, setActiveMeeting, arg.CurrentMeetingID, arg.Slug)
+	return err
+}
+
+const setMeetingFirstSpeakerQuotation = `-- name: SetMeetingFirstSpeakerQuotation :exec
+UPDATE meetings SET first_speaker_quotation_enabled = ? WHERE id = ?
+`
+
+type SetMeetingFirstSpeakerQuotationParams struct {
+	FirstSpeakerQuotationEnabled bool
+	ID                           int64
+}
+
+func (q *Queries) SetMeetingFirstSpeakerQuotation(ctx context.Context, arg SetMeetingFirstSpeakerQuotationParams) error {
+	_, err := q.db.ExecContext(ctx, setMeetingFirstSpeakerQuotation, arg.FirstSpeakerQuotationEnabled, arg.ID)
+	return err
+}
+
+const setMeetingGenderQuotation = `-- name: SetMeetingGenderQuotation :exec
+UPDATE meetings SET gender_quotation_enabled = ? WHERE id = ?
+`
+
+type SetMeetingGenderQuotationParams struct {
+	GenderQuotationEnabled bool
+	ID                     int64
+}
+
+func (q *Queries) SetMeetingGenderQuotation(ctx context.Context, arg SetMeetingGenderQuotationParams) error {
+	_, err := q.db.ExecContext(ctx, setMeetingGenderQuotation, arg.GenderQuotationEnabled, arg.ID)
+	return err
+}
+
+const setMeetingModerator = `-- name: SetMeetingModerator :exec
+UPDATE meetings SET moderator_id = ? WHERE id = ?
+`
+
+type SetMeetingModeratorParams struct {
+	ModeratorID sql.NullInt64
+	ID          int64
+}
+
+func (q *Queries) SetMeetingModerator(ctx context.Context, arg SetMeetingModeratorParams) error {
+	_, err := q.db.ExecContext(ctx, setMeetingModerator, arg.ModeratorID, arg.ID)
 	return err
 }
 

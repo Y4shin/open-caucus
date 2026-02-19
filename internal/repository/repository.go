@@ -61,6 +61,9 @@ type Repository interface {
 	SetActiveMeeting(ctx context.Context, slug string, meetingID int64) error
 	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
 	SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error
+	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error
+	SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error
+	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
 
 	// Binary blobs
 	CreateBlob(ctx context.Context, filename, contentType string, sizeBytes int64, storagePath string) (*model.BinaryBlob, error)
@@ -87,15 +90,21 @@ type Repository interface {
 	DeleteAgendaPoint(ctx context.Context, id int64) error
 	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error
 	UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error
+	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error
+	SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error
+	SetAgendaPointModerator(ctx context.Context, id int64, moderatorID *int64) error
 
 	// Speakers list
-	AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string) (*model.SpeakerEntry, error)
+	AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string, genderQuoted, firstSpeaker bool) (*model.SpeakerEntry, error)
 	ListSpeakersForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.SpeakerEntry, error)
 	GetSpeakerEntryByID(ctx context.Context, id int64) (*model.SpeakerEntry, error)
 	DeleteSpeaker(ctx context.Context, id int64) error
 	SetSpeakerSpeaking(ctx context.Context, id, agendaPointID int64) error
 	SetSpeakerDone(ctx context.Context, id int64) error
 	SetSpeakerWithdrawn(ctx context.Context, id int64) error
+	HasAttendeeSpokenOnAgendaPoint(ctx context.Context, agendaPointID, attendeeID int64) (bool, error)
+	SetSpeakerPriority(ctx context.Context, id int64, priority bool) error
+	RecomputeSpeakerOrder(ctx context.Context, agendaPointID int64) error
 
 	// Admin - Committee management
 	ListAllCommittees(ctx context.Context, limit, offset int) ([]*model.Committee, error)

@@ -8,4 +8,8 @@ type SpeakerEntry struct {
 	AttendeeName  string
 	Type          string // "regular" or "ropm"
 	Status        string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
+	GenderQuoted  bool   // snapshot: was gender quotation applied at request time?
+	FirstSpeaker  bool   // snapshot: was this the attendee's first time on this agenda point?
+	Priority      bool   // manually promoted by chairperson
+	OrderPosition int64  // computed ordering index (meaningful only for WAITING)
 }

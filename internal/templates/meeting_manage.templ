@@ -34,11 +34,14 @@ func (i *AttendeeListPartialInput) AttendeeToggleChairPostStr(a *AttendeeItem) s
 }
 
 type MeetingSettingsPartialInput struct {
-	CommitteeSlug    string
-	IDString         string // meeting ID
-	SignupOpen       bool
-	ProtocolWriterID *int64
-	Attendees        []AttendeeItem
+	CommitteeSlug                string
+	IDString                     string // meeting ID
+	SignupOpen                   bool
+	ProtocolWriterID             *int64
+	GenderQuotationEnabled       bool
+	FirstSpeakerQuotationEnabled bool
+	ModeratorID                  *int64
+	Attendees                    []AttendeeItem
 }
 
 func (i *MeetingSettingsPartialInput) ToggleSignupOpenPostStr() string {
@@ -47,6 +50,14 @@ func (i *MeetingSettingsPartialInput) ToggleSignupOpenPostStr() string {
 
 func (i *MeetingSettingsPartialInput) SetProtocolWriterPostStr() string {
 	return paths.NewCommitteeSlugMeetingMeetingIdProtocolWriterRoute(i.CommitteeSlug, i.IDString).ManageSetProtocolWriterPost()
+}
+
+func (i *MeetingSettingsPartialInput) SetMeetingQuotationPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdQuotationRoute(i.CommitteeSlug, i.IDString).ManageMeetingSetQuotationPost()
+}
+
+func (i *MeetingSettingsPartialInput) SetMeetingModeratorPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdModeratorRoute(i.CommitteeSlug, i.IDString).ManageMeetingSetModeratorPost()
 }
 
 // AgendaPointItem holds display data for one agenda point row.
@@ -87,15 +98,30 @@ type SpeakerItem struct {
 	Status       string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
 	IsWaiting    bool
 	IsSpeaking   bool
+	GenderQuoted bool
+	FirstSpeaker bool
+	Priority     bool
 }
 
 type SpeakersListPartialInput struct {
-	CommitteeSlug        string
-	IDString             string // meeting ID
-	CurrentAgendaPointID *int64
-	Speakers             []SpeakerItem
-	Attendees            []AttendeeItem // for the add-speaker form dropdown
-	Error                string
+	CommitteeSlug                   string
+	IDString                        string // meeting ID
+	CurrentAgendaPointID            *int64
+	AgendaPointIDString             string // string form of active AP ID
+	Speakers                        []SpeakerItem
+	Attendees                       []AttendeeItem // for the add-speaker form dropdown
+	// Meeting-level quotation settings
+	GenderQuotationEnabled          bool
+	FirstSpeakerQuotationEnabled    bool
+	// Agenda-point-level overrides (nil = inherit from meeting)
+	AgendaPointGenderQuotation      *bool
+	AgendaPointFirstSpeakerQuotation *bool
+	// Resolved effective settings for the active agenda point
+	EffectiveGenderQuotation        bool
+	EffectiveFirstSpeakerQuotation  bool
+	// Effective moderator ID for the active agenda point
+	ModeratorID                     *int64
+	Error                           string
 }
 
 func (i *SpeakersListPartialInput) SpeakerAddPostStr() string {
@@ -118,6 +144,18 @@ func (i *SpeakersListPartialInput) SpeakerWithdrawPostStr(s *SpeakerItem) string
 	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute(i.CommitteeSlug, i.IDString, s.IDString).ManageSpeakerWithdrawPost()
 }
 
+func (i *SpeakersListPartialInput) SpeakerTogglePriorityPostStr(s *SpeakerItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute(i.CommitteeSlug, i.IDString, s.IDString).ManageSpeakerTogglePriorityPost()
+}
+
+func (i *SpeakersListPartialInput) AgendaPointQuotationPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute(i.CommitteeSlug, i.IDString, i.AgendaPointIDString).ManageAgendaPointSetQuotationPost()
+}
+
+func (i *SpeakersListPartialInput) AgendaPointModeratorPostStr() string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute(i.CommitteeSlug, i.IDString, i.AgendaPointIDString).ManageAgendaPointSetModeratorPost()
+}
+
 type MeetingManageInput struct {
 	CommitteeName          string
 	CommitteeSlug          string
@@ -127,12 +165,24 @@ type MeetingManageInput struct {
 	Attendees              []AttendeeItem
 	SignupOpen             bool
 	ProtocolWriterID       *int64
-	AgendaPoints           []AgendaPointItem
-	CurrentAgendaPointID   *int64
-	Speakers               []SpeakerItem
-	AgendaPointMotions     []MotionListPartialInput
-	AgendaPointAttachments []AttachmentListPartialInput
-	Error                  string
+	// Meeting-level quotation settings
+	GenderQuotationEnabled          bool
+	FirstSpeakerQuotationEnabled    bool
+	ModeratorID                     *int64
+	AgendaPoints                    []AgendaPointItem
+	CurrentAgendaPointID            *int64
+	// Active agenda point settings (if any AP is active)
+	AgendaPointIDString             string
+	AgendaPointGenderQuotation      *bool
+	AgendaPointFirstSpeakerQuotation *bool
+	AgendaPointModeratorID          *int64
+	// Resolved effective settings for the active AP
+	EffectiveGenderQuotation        bool
+	EffectiveFirstSpeakerQuotation  bool
+	Speakers                        []SpeakerItem
+	AgendaPointMotions              []MotionListPartialInput
+	AgendaPointAttachments          []AttachmentListPartialInput
+	Error                           string
 }
 
 func (i *MeetingManageInput) CommitteeDashboardGet() templ.SafeURL {
@@ -149,11 +199,14 @@ func (i *MeetingManageInput) attendeeListInput() AttendeeListPartialInput {
 
 func (i *MeetingManageInput) settingsInput() MeetingSettingsPartialInput {
 	return MeetingSettingsPartialInput{
-		CommitteeSlug:    i.CommitteeSlug,
-		IDString:         i.IDString,
-		SignupOpen:       i.SignupOpen,
-		ProtocolWriterID: i.ProtocolWriterID,
-		Attendees:        i.Attendees,
+		CommitteeSlug:                i.CommitteeSlug,
+		IDString:                     i.IDString,
+		SignupOpen:                   i.SignupOpen,
+		ProtocolWriterID:             i.ProtocolWriterID,
+		GenderQuotationEnabled:       i.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled: i.FirstSpeakerQuotationEnabled,
+		ModeratorID:                  i.ModeratorID,
+		Attendees:                    i.Attendees,
 	}
 }
 
@@ -168,11 +221,19 @@ func (i *MeetingManageInput) agendaPointListInput() AgendaPointListPartialInput 
 
 func (i *MeetingManageInput) speakersListInput() SpeakersListPartialInput {
 	return SpeakersListPartialInput{
-		CommitteeSlug:        i.CommitteeSlug,
-		IDString:             i.IDString,
-		CurrentAgendaPointID: i.CurrentAgendaPointID,
-		Speakers:             i.Speakers,
-		Attendees:            i.Attendees,
+		CommitteeSlug:                    i.CommitteeSlug,
+		IDString:                         i.IDString,
+		CurrentAgendaPointID:             i.CurrentAgendaPointID,
+		AgendaPointIDString:              i.AgendaPointIDString,
+		GenderQuotationEnabled:           i.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled:     i.FirstSpeakerQuotationEnabled,
+		AgendaPointGenderQuotation:       i.AgendaPointGenderQuotation,
+		AgendaPointFirstSpeakerQuotation: i.AgendaPointFirstSpeakerQuotation,
+		EffectiveGenderQuotation:         i.EffectiveGenderQuotation,
+		EffectiveFirstSpeakerQuotation:   i.EffectiveFirstSpeakerQuotation,
+		ModeratorID:                      i.AgendaPointModeratorID,
+		Speakers:                         i.Speakers,
+		Attendees:                        i.Attendees,
 	}
 }
 
@@ -295,13 +356,64 @@ templ MeetingSettingsPartial(input MeetingSettingsPartialInput) {
 				hx-target="#meeting-settings-container"
 				hx-swap="outerHTML"
 			>
-				<select name="attendee_id">
+				<select id="protocol_writer_attendee_id" name="attendee_id">
 					<option value="">-- none --</option>
 					for _, a := range input.Attendees {
 						<option value={ a.IDString }>{ a.FullName }</option>
 					}
 				</select>
 				<button type="submit">Assign Protocol Writer</button>
+			</form>
+		</div>
+		<div>
+			<h3>Quotation Settings</h3>
+			<form
+				hx-post={ input.SetMeetingQuotationPostStr() }
+				hx-target="#meeting-settings-container"
+				hx-swap="outerHTML"
+			>
+				<div>
+					<label for="gender_quotation_enabled">Gender quotation:</label>
+					<select id="gender_quotation_enabled" name="gender_quotation_enabled">
+						<option value="true" selected?={ input.GenderQuotationEnabled }>Enabled</option>
+						<option value="false" selected?={ !input.GenderQuotationEnabled }>Disabled</option>
+					</select>
+				</div>
+				<div>
+					<label for="first_speaker_quotation_enabled">First-speaker bonus:</label>
+					<select id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled">
+						<option value="true" selected?={ input.FirstSpeakerQuotationEnabled }>Enabled</option>
+						<option value="false" selected?={ !input.FirstSpeakerQuotationEnabled }>Disabled</option>
+					</select>
+				</div>
+				<button type="submit">Apply</button>
+			</form>
+		</div>
+		<div>
+			<p>
+				Moderator:
+				if input.ModeratorID == nil {
+					<strong>None</strong>
+				} else {
+					for _, a := range input.Attendees {
+						if a.ID == *input.ModeratorID {
+							<strong>{ a.FullName }</strong>
+						}
+					}
+				}
+			</p>
+			<form
+				hx-post={ input.SetMeetingModeratorPostStr() }
+				hx-target="#meeting-settings-container"
+				hx-swap="outerHTML"
+			>
+				<select id="meeting_moderator_attendee_id" name="attendee_id">
+					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
+					for _, a := range input.Attendees {
+						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
+					}
+				</select>
+				<button type="submit">Set Moderator</button>
 			</form>
 		</div>
 	</div>
@@ -386,6 +498,58 @@ templ SpeakersListPartial(input SpeakersListPartialInput) {
 		if input.CurrentAgendaPointID == nil {
 			<p>No active agenda point. Activate one above to manage the speakers list.</p>
 		} else {
+			<h3>Quotation Settings</h3>
+			<form
+				hx-post={ input.AgendaPointQuotationPostStr() }
+				hx-target="#speakers-list-container"
+				hx-swap="outerHTML"
+			>
+				<div>
+					<label for="ap_gender_quotation">Gender quotation:</label>
+					<select id="ap_gender_quotation" name="gender_quotation_enabled">
+						<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
+						<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
+						<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
+					</select>
+				</div>
+				<div>
+					<label for="ap_first_speaker">First-speaker bonus:</label>
+					<select id="ap_first_speaker" name="first_speaker_quotation_enabled">
+						<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
+						<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
+						<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
+					</select>
+				</div>
+				<button type="submit">Apply</button>
+			</form>
+			<p>
+				Effective: gender quotation
+				if input.EffectiveGenderQuotation {
+					<strong>on</strong>
+				} else {
+					<strong>off</strong>
+				}
+				, first-speaker bonus
+				if input.EffectiveFirstSpeakerQuotation {
+					<strong>on</strong>
+				} else {
+					<strong>off</strong>
+				}
+			</p>
+			<h3>Agenda Point Moderator</h3>
+			<form
+				hx-post={ input.AgendaPointModeratorPostStr() }
+				hx-target="#speakers-list-container"
+				hx-swap="outerHTML"
+			>
+				<select name="attendee_id">
+					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
+					for _, a := range input.Attendees {
+						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
+					}
+				</select>
+				<button type="submit">Set Moderator</button>
+			</form>
 			<h3>Add Speaker</h3>
 			<form
 				hx-post={ input.SpeakerAddPostStr() }
@@ -420,6 +584,8 @@ templ SpeakersListPartial(input SpeakersListPartialInput) {
 							<th>Name</th>
 							<th>Type</th>
 							<th>Status</th>
+							<th>Q</th>
+							<th>1st</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -430,6 +596,30 @@ templ SpeakersListPartial(input SpeakersListPartialInput) {
 								<td>{ s.Type }</td>
 								<td>{ s.Status }</td>
 								<td>
+									if s.GenderQuoted {
+										Q
+									}
+								</td>
+								<td>
+									if s.FirstSpeaker {
+										1st
+									}
+								</td>
+								<td>
+									if s.IsWaiting {
+										<form
+											hx-post={ input.SpeakerTogglePriorityPostStr(&s) }
+											hx-target="#speakers-list-container"
+											hx-swap="outerHTML"
+											style="display: inline;"
+										>
+											if s.Priority {
+												<button type="submit" title="Remove priority">★</button>
+											} else {
+												<button type="submit" title="Give priority">☆</button>
+											}
+										</form>
+									}
 									if s.IsWaiting {
 										<form
 											hx-post={ input.SpeakerStartPostStr(&s) }

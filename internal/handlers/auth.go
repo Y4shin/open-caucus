@@ -307,10 +307,36 @@ func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, p
 	}
 
 	var speakers []*model.SpeakerEntry
+
+	// Compute effective quotation settings for the active agenda point.
+	effectiveGender := meeting.GenderQuotationEnabled
+	effectiveFirstSpeaker := meeting.FirstSpeakerQuotationEnabled
+	var apGenderQuotation *bool
+	var apFirstSpeakerQuotation *bool
+	var apModeratorID *int64
+	apIDStr := ""
+
 	if meeting.CurrentAgendaPointID != nil {
+		apIDStr = strconv.FormatInt(*meeting.CurrentAgendaPointID, 10)
 		speakers, err = h.Repository.ListSpeakersForAgendaPoint(ctx, *meeting.CurrentAgendaPointID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to load speakers: %w", err)
+		}
+		activeAP, err := h.Repository.GetAgendaPointByID(ctx, *meeting.CurrentAgendaPointID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to load active agenda point: %w", err)
+		}
+		apGenderQuotation = activeAP.GenderQuotationEnabled
+		apFirstSpeakerQuotation = activeAP.FirstSpeakerQuotationEnabled
+		apModeratorID = activeAP.ModeratorID
+		if activeAP.GenderQuotationEnabled != nil {
+			effectiveGender = *activeAP.GenderQuotationEnabled
+		}
+		if activeAP.FirstSpeakerQuotationEnabled != nil {
+			effectiveFirstSpeaker = *activeAP.FirstSpeakerQuotationEnabled
+		}
+		if apModeratorID == nil {
+			apModeratorID = meeting.ModeratorID
 		}
 	}
 
@@ -331,19 +357,28 @@ func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, p
 	}
 
 	return &templates.MeetingManageInput{
-		CommitteeName:          committee.Name,
-		CommitteeSlug:          committee.Slug,
-		MeetingName:            meeting.Name,
-		MeetingID:              meeting.ID,
-		IDString:               params.MeetingId,
-		Attendees:              buildAttendeeItems(attendees),
-		SignupOpen:             meeting.SignupOpen,
-		ProtocolWriterID:       meeting.ProtocolWriterID,
-		AgendaPoints:           buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
-		CurrentAgendaPointID:   meeting.CurrentAgendaPointID,
-		Speakers:               buildSpeakerItems(speakers),
-		AgendaPointMotions:     agendaPointMotions,
-		AgendaPointAttachments: agendaPointAttachments,
+		CommitteeName:                   committee.Name,
+		CommitteeSlug:                   committee.Slug,
+		MeetingName:                     meeting.Name,
+		MeetingID:                       meeting.ID,
+		IDString:                        params.MeetingId,
+		Attendees:                       buildAttendeeItems(attendees),
+		SignupOpen:                      meeting.SignupOpen,
+		ProtocolWriterID:                meeting.ProtocolWriterID,
+		GenderQuotationEnabled:          meeting.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled:    meeting.FirstSpeakerQuotationEnabled,
+		ModeratorID:                     meeting.ModeratorID,
+		AgendaPoints:                    buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
+		CurrentAgendaPointID:            meeting.CurrentAgendaPointID,
+		AgendaPointIDString:             apIDStr,
+		AgendaPointGenderQuotation:      apGenderQuotation,
+		AgendaPointFirstSpeakerQuotation: apFirstSpeakerQuotation,
+		AgendaPointModeratorID:          apModeratorID,
+		EffectiveGenderQuotation:        effectiveGender,
+		EffectiveFirstSpeakerQuotation:  effectiveFirstSpeaker,
+		Speakers:                        buildSpeakerItems(speakers),
+		AgendaPointMotions:              agendaPointMotions,
+		AgendaPointAttachments:          agendaPointAttachments,
 	}, nil, nil
 }
 

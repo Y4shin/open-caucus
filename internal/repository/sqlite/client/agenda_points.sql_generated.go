@@ -13,7 +13,8 @@ import (
 const createAgendaPoint = `-- name: CreateAgendaPoint :one
 INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, NULL, ?, ?)
-RETURNING id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id
+RETURNING id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+          gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id
 `
 
 type CreateAgendaPointParams struct {
@@ -35,6 +36,9 @@ func (q *Queries) CreateAgendaPoint(ctx context.Context, arg CreateAgendaPointPa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentSpeakerID,
+		&i.GenderQuotationEnabled,
+		&i.FirstSpeakerQuotationEnabled,
+		&i.ModeratorID,
 	)
 	return i, err
 }
@@ -49,7 +53,8 @@ func (q *Queries) DeleteAgendaPoint(ctx context.Context, id int64) error {
 }
 
 const getAgendaPointByID = `-- name: GetAgendaPointByID :one
-SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id
+SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+       gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id
 FROM agenda_points WHERE id = ?
 `
 
@@ -66,6 +71,9 @@ func (q *Queries) GetAgendaPointByID(ctx context.Context, id int64) (AgendaPoint
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentSpeakerID,
+		&i.GenderQuotationEnabled,
+		&i.FirstSpeakerQuotationEnabled,
+		&i.ModeratorID,
 	)
 	return i, err
 }
@@ -83,7 +91,8 @@ func (q *Queries) GetMaxAgendaPointPosition(ctx context.Context, meetingID int64
 }
 
 const listAgendaPointsForMeeting = `-- name: ListAgendaPointsForMeeting :many
-SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id
+SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+       gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NULL
 ORDER BY position ASC
@@ -108,6 +117,9 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CurrentSpeakerID,
+			&i.GenderQuotationEnabled,
+			&i.FirstSpeakerQuotationEnabled,
+			&i.ModeratorID,
 		); err != nil {
 			return nil, err
 		}
@@ -120,6 +132,48 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 		return nil, err
 	}
 	return items, nil
+}
+
+const setAgendaPointFirstSpeakerQuotation = `-- name: SetAgendaPointFirstSpeakerQuotation :exec
+UPDATE agenda_points SET first_speaker_quotation_enabled = ? WHERE id = ?
+`
+
+type SetAgendaPointFirstSpeakerQuotationParams struct {
+	FirstSpeakerQuotationEnabled sql.NullBool
+	ID                           int64
+}
+
+func (q *Queries) SetAgendaPointFirstSpeakerQuotation(ctx context.Context, arg SetAgendaPointFirstSpeakerQuotationParams) error {
+	_, err := q.db.ExecContext(ctx, setAgendaPointFirstSpeakerQuotation, arg.FirstSpeakerQuotationEnabled, arg.ID)
+	return err
+}
+
+const setAgendaPointGenderQuotation = `-- name: SetAgendaPointGenderQuotation :exec
+UPDATE agenda_points SET gender_quotation_enabled = ? WHERE id = ?
+`
+
+type SetAgendaPointGenderQuotationParams struct {
+	GenderQuotationEnabled sql.NullBool
+	ID                     int64
+}
+
+func (q *Queries) SetAgendaPointGenderQuotation(ctx context.Context, arg SetAgendaPointGenderQuotationParams) error {
+	_, err := q.db.ExecContext(ctx, setAgendaPointGenderQuotation, arg.GenderQuotationEnabled, arg.ID)
+	return err
+}
+
+const setAgendaPointModerator = `-- name: SetAgendaPointModerator :exec
+UPDATE agenda_points SET moderator_id = ? WHERE id = ?
+`
+
+type SetAgendaPointModeratorParams struct {
+	ModeratorID sql.NullInt64
+	ID          int64
+}
+
+func (q *Queries) SetAgendaPointModerator(ctx context.Context, arg SetAgendaPointModeratorParams) error {
+	_, err := q.db.ExecContext(ctx, setAgendaPointModerator, arg.ModeratorID, arg.ID)
+	return err
 }
 
 const setCurrentAgendaPoint = `-- name: SetCurrentAgendaPoint :exec

@@ -25,3 +25,12 @@ UPDATE meetings SET signup_open = ? WHERE id = ?;
 
 -- name: SetMeetingProtocolWriter :exec
 UPDATE meetings SET protocol_writer_id = ? WHERE id = ?;
+
+-- name: SetMeetingGenderQuotation :exec
+UPDATE meetings SET gender_quotation_enabled = ? WHERE id = ?;
+
+-- name: SetMeetingFirstSpeakerQuotation :exec
+UPDATE meetings SET first_speaker_quotation_enabled = ? WHERE id = ?;
+
+-- name: SetMeetingModerator :exec
+UPDATE meetings SET moderator_id = ? WHERE id = ?;

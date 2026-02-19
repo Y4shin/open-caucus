@@ -55,6 +55,9 @@ func buildSpeakerItems(entries []*model.SpeakerEntry) []templates.SpeakerItem {
 			Status:       e.Status,
 			IsWaiting:    e.Status == "WAITING",
 			IsSpeaking:   e.Status == "SPEAKING",
+			GenderQuoted: e.GenderQuoted,
+			FirstSpeaker: e.FirstSpeaker,
+			Priority:     e.Priority,
 		}
 	}
 	return items
@@ -182,18 +185,54 @@ func (h *Handler) loadSpeakersListPartial(ctx context.Context, slug, meetingIDSt
 		return nil, fmt.Errorf("failed to load attendees: %w", err)
 	}
 	var speakers []*model.SpeakerEntry
+
+	// Compute effective quotation settings; defaults to meeting level.
+	effectiveGender := meeting.GenderQuotationEnabled
+	effectiveFirstSpeaker := meeting.FirstSpeakerQuotationEnabled
+	var apGenderQuotation *bool
+	var apFirstSpeakerQuotation *bool
+	var apModeratorID *int64
+	apIDStr := ""
+
 	if meeting.CurrentAgendaPointID != nil {
+		apIDStr = strconv.FormatInt(*meeting.CurrentAgendaPointID, 10)
 		speakers, err = h.Repository.ListSpeakersForAgendaPoint(ctx, *meeting.CurrentAgendaPointID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load speakers: %w", err)
 		}
+		ap, err := h.Repository.GetAgendaPointByID(ctx, *meeting.CurrentAgendaPointID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load agenda point: %w", err)
+		}
+		apGenderQuotation = ap.GenderQuotationEnabled
+		apFirstSpeakerQuotation = ap.FirstSpeakerQuotationEnabled
+		apModeratorID = ap.ModeratorID
+		if ap.GenderQuotationEnabled != nil {
+			effectiveGender = *ap.GenderQuotationEnabled
+		}
+		if ap.FirstSpeakerQuotationEnabled != nil {
+			effectiveFirstSpeaker = *ap.FirstSpeakerQuotationEnabled
+		}
+		// Effective moderator: AP overrides meeting.
+		if ap.ModeratorID == nil {
+			apModeratorID = meeting.ModeratorID
+		}
 	}
+
 	return &templates.SpeakersListPartialInput{
-		CommitteeSlug:        slug,
-		IDString:             meetingIDStr,
-		CurrentAgendaPointID: meeting.CurrentAgendaPointID,
-		Speakers:             buildSpeakerItems(speakers),
-		Attendees:            buildAttendeeItems(attendees),
+		CommitteeSlug:                    slug,
+		IDString:                         meetingIDStr,
+		CurrentAgendaPointID:             meeting.CurrentAgendaPointID,
+		AgendaPointIDString:              apIDStr,
+		GenderQuotationEnabled:           meeting.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled:     meeting.FirstSpeakerQuotationEnabled,
+		AgendaPointGenderQuotation:       apGenderQuotation,
+		AgendaPointFirstSpeakerQuotation: apFirstSpeakerQuotation,
+		EffectiveGenderQuotation:         effectiveGender,
+		EffectiveFirstSpeakerQuotation:   effectiveFirstSpeaker,
+		ModeratorID:                      apModeratorID,
+		Speakers:                         buildSpeakerItems(speakers),
+		Attendees:                        buildAttendeeItems(attendees),
 	}, nil
 }
 
@@ -285,8 +324,38 @@ func (h *Handler) ManageSpeakerAdd(ctx context.Context, r *http.Request, params 
 	if speakerType != "regular" && speakerType != "ropm" {
 		return nil, nil, fmt.Errorf("invalid speaker type")
 	}
-	if _, err := h.Repository.AddSpeaker(ctx, *meeting.CurrentAgendaPointID, attendeeID, speakerType); err != nil {
+
+	apID := *meeting.CurrentAgendaPointID
+
+	// Resolve effective gender quotation setting: agenda point overrides meeting.
+	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load agenda point: %w", err)
+	}
+	effectiveGenderQuotation := meeting.GenderQuotationEnabled
+	if ap.GenderQuotationEnabled != nil {
+		effectiveGenderQuotation = *ap.GenderQuotationEnabled
+	}
+
+	// Load the attendee to determine their quoted status.
+	attendee, err := h.Repository.GetAttendeeByID(ctx, attendeeID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load attendee: %w", err)
+	}
+	genderQuoted := attendee.Quoted && effectiveGenderQuotation
+
+	// Determine first-speaker status.
+	hasSpoken, err := h.Repository.HasAttendeeSpokenOnAgendaPoint(ctx, apID, attendeeID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to check first speaker: %w", err)
+	}
+	firstSpeaker := !hasSpoken
+
+	if _, err := h.Repository.AddSpeaker(ctx, apID, attendeeID, speakerType, genderQuoted, firstSpeaker); err != nil {
 		return nil, nil, fmt.Errorf("failed to add speaker: %w", err)
+	}
+	if err := h.Repository.RecomputeSpeakerOrder(ctx, apID); err != nil {
+		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
@@ -302,8 +371,15 @@ func (h *Handler) ManageSpeakerRemove(ctx context.Context, r *http.Request, para
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid speaker ID")
 	}
+	entry, err := h.Repository.GetSpeakerEntryByID(ctx, speakerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load speaker entry: %w", err)
+	}
 	if err := h.Repository.DeleteSpeaker(ctx, speakerID); err != nil {
 		return nil, nil, fmt.Errorf("failed to remove speaker: %w", err)
+	}
+	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
+		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
@@ -326,6 +402,9 @@ func (h *Handler) ManageSpeakerStart(ctx context.Context, r *http.Request, param
 	if err := h.Repository.SetSpeakerSpeaking(ctx, speakerID, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to start speech: %w", err)
 	}
+	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
+		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
+	}
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -340,8 +419,15 @@ func (h *Handler) ManageSpeakerEnd(ctx context.Context, r *http.Request, params 
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid speaker ID")
 	}
+	entry, err := h.Repository.GetSpeakerEntryByID(ctx, speakerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load speaker entry: %w", err)
+	}
 	if err := h.Repository.SetSpeakerDone(ctx, speakerID); err != nil {
 		return nil, nil, fmt.Errorf("failed to end speech: %w", err)
+	}
+	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
+		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
@@ -357,8 +443,15 @@ func (h *Handler) ManageSpeakerWithdraw(ctx context.Context, r *http.Request, pa
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid speaker ID")
 	}
+	entry, err := h.Repository.GetSpeakerEntryByID(ctx, speakerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load speaker entry: %w", err)
+	}
 	if err := h.Repository.SetSpeakerWithdrawn(ctx, speakerID); err != nil {
 		return nil, nil, fmt.Errorf("failed to withdraw speaker: %w", err)
+	}
+	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
+		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
@@ -375,11 +468,14 @@ func (h *Handler) loadMeetingSettingsPartial(ctx context.Context, slug, meetingI
 		return nil, fmt.Errorf("failed to load attendees: %w", err)
 	}
 	return &templates.MeetingSettingsPartialInput{
-		CommitteeSlug:    slug,
-		IDString:         meetingIDStr,
-		SignupOpen:       meeting.SignupOpen,
-		ProtocolWriterID: meeting.ProtocolWriterID,
-		Attendees:        buildAttendeeItems(attendees),
+		CommitteeSlug:                slug,
+		IDString:                     meetingIDStr,
+		SignupOpen:                   meeting.SignupOpen,
+		ProtocolWriterID:             meeting.ProtocolWriterID,
+		GenderQuotationEnabled:       meeting.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled: meeting.FirstSpeakerQuotationEnabled,
+		ModeratorID:                  meeting.ModeratorID,
+		Attendees:                    buildAttendeeItems(attendees),
 	}, nil
 }
 

@@ -15,7 +15,7 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 	}
 
 	// ApplicationConfig has 5 fields
-	expectedCount := 7
+	expectedCount := 8
 	if len(fields) != expectedCount {
 		t.Errorf("Expected %d fields, got %d", expectedCount, len(fields))
 	}

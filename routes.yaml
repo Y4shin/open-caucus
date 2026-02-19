@@ -492,6 +492,76 @@ routes:
           type: SpeakersListPartial
           input_type: SpeakersListPartialInput
 
+  # Speaker Toggle Priority
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/priority
+    methods:
+      - verb: POST
+        handler: ManageSpeakerTogglePriority
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
+  # Meeting Quotation Settings
+  - path: /committee/{slug}/meeting/{meeting_id}/quotation
+    methods:
+      - verb: POST
+        handler: ManageMeetingSetQuotation
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingSettingsPartial
+          input_type: MeetingSettingsPartialInput
+
+  # Meeting Moderator
+  - path: /committee/{slug}/meeting/{meeting_id}/moderator
+    methods:
+      - verb: POST
+        handler: ManageMeetingSetModerator
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingSettingsPartial
+          input_type: MeetingSettingsPartialInput
+
+  # Agenda Point Quotation Override
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/quotation
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointSetQuotation
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
+  # Agenda Point Moderator
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/moderator
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointSetModerator
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListPartial
+          input_type: SpeakersListPartialInput
+
   # Delete Meeting
   - path: /committee/{slug}/meeting/{meeting_id}/delete
     methods:

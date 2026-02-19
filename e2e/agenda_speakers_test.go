@@ -33,7 +33,7 @@ func (ts *testServer) seedSpeaker(t *testing.T, apIDStr, attendeeIDStr string) s
 	var apid, aid int64
 	fmt.Sscanf(apIDStr, "%d", &apid)
 	fmt.Sscanf(attendeeIDStr, "%d", &aid)
-	entry, err := ts.repo.AddSpeaker(context.Background(), apid, aid, "regular")
+	entry, err := ts.repo.AddSpeaker(context.Background(), apid, aid, "regular", false, false)
 	if err != nil {
 		t.Fatalf("seed speaker: %v", err)
 	}
@@ -204,7 +204,7 @@ func TestSpeakersList_AddSpeaker(t *testing.T) {
 
 	urlBefore := page.URL()
 
-	if _, err := page.Locator("#speakers-list-container select[name=attendee_id]").SelectOption(playwright.SelectOptionValues{
+	if _, err := page.Locator("#speaker_attendee_id").SelectOption(playwright.SelectOptionValues{
 		Labels: playwright.StringSlice("Alice Member"),
 	}); err != nil {
 		t.Fatalf("select attendee: %v", err)

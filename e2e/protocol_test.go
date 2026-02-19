@@ -43,7 +43,7 @@ func TestManagePage_AssignProtocolWriter(t *testing.T) {
 
 	urlBefore := page.URL()
 
-	if _, err := page.Locator("#meeting-settings-container select[name=attendee_id]").SelectOption(playwright.SelectOptionValues{
+	if _, err := page.Locator("#protocol_writer_attendee_id").SelectOption(playwright.SelectOptionValues{
 		Labels: playwright.StringSlice("Alice Member"),
 	}); err != nil {
 		t.Fatalf("select attendee: %v", err)

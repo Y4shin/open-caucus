@@ -64,6 +64,11 @@ type Handler interface {
 	ManageSpeakerStart(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerEnd(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerWithdraw(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
+	ManageSpeakerTogglePriority(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
+	ManageMeetingSetQuotation(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
+	ManageMeetingSetModerator(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
+	ManageAgendaPointSetQuotation(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
+	ManageAgendaPointSetModerator(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	CommitteeDeleteMeeting(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingListPartialInput, *ResponseMeta, error)
 	CommitteeActivateMeeting(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingListPartialInput, *ResponseMeta, error)
 	MeetingJoinPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingJoinInput, *ResponseMeta, error)
@@ -369,6 +374,41 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/withdraw", rt.wrapMiddleware(
 		rt.handleManageSpeakerWithdraw,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/withdraw", groups),
+		[]string{"session", "auth", "committee_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/priority", rt.wrapMiddleware(
+		rt.handleManageSpeakerTogglePriority,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/priority", groups),
+		[]string{"session", "auth", "committee_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/quotation", rt.wrapMiddleware(
+		rt.handleManageMeetingSetQuotation,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/quotation", groups),
+		[]string{"session", "auth", "committee_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/moderator", rt.wrapMiddleware(
+		rt.handleManageMeetingSetModerator,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/moderator", groups),
+		[]string{"session", "auth", "committee_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/quotation", rt.wrapMiddleware(
+		rt.handleManageAgendaPointSetQuotation,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/quotation", groups),
+		[]string{"session", "auth", "committee_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/moderator", rt.wrapMiddleware(
+		rt.handleManageAgendaPointSetModerator,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/moderator", groups),
 		[]string{"session", "auth", "committee_access"},
 		false,
 	))
@@ -1456,6 +1496,159 @@ func (rt *Router) handleManageSpeakerWithdraw(w http.ResponseWriter, r *http.Req
 	}
 
 	input, meta, err := rt.handler.ManageSpeakerWithdraw(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.SpeakersListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageSpeakerTogglePriority(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		SpeakerId: r.PathValue("speaker_id"),
+	}
+
+	input, meta, err := rt.handler.ManageSpeakerTogglePriority(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.SpeakersListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageMeetingSetQuotation(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageMeetingSetQuotation(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.MeetingSettingsPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageMeetingSetModerator(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageMeetingSetModerator(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.MeetingSettingsPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointSetQuotation(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointSetQuotation(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.SpeakersListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointSetModerator(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointSetModerator(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

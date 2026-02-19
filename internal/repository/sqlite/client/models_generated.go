@@ -17,15 +17,18 @@ type AgendaAttachment struct {
 }
 
 type AgendaPoint struct {
-	ID               int64
-	MeetingID        int64
-	ParentID         sql.NullInt64
-	Position         int64
-	Title            string
-	Protocol         string
-	CreatedAt        string
-	UpdatedAt        string
-	CurrentSpeakerID sql.NullInt64
+	ID                           int64
+	MeetingID                    int64
+	ParentID                     sql.NullInt64
+	Position                     int64
+	Title                        string
+	Protocol                     string
+	CreatedAt                    string
+	UpdatedAt                    string
+	CurrentSpeakerID             sql.NullInt64
+	GenderQuotationEnabled       sql.NullBool
+	FirstSpeakerQuotationEnabled sql.NullBool
+	ModeratorID                  sql.NullInt64
 }
 
 type Attendee struct {
@@ -58,16 +61,19 @@ type Committee struct {
 }
 
 type Meeting struct {
-	ID                   int64
-	CommitteeID          int64
-	Name                 string
-	Description          string
-	Secret               string
-	SignupOpen           bool
-	CreatedAt            string
-	UpdatedAt            string
-	CurrentAgendaPointID sql.NullInt64
-	ProtocolWriterID     sql.NullInt64
+	ID                           int64
+	CommitteeID                  int64
+	Name                         string
+	Description                  string
+	Secret                       string
+	SignupOpen                   bool
+	CreatedAt                    string
+	UpdatedAt                    string
+	CurrentAgendaPointID         sql.NullInt64
+	ProtocolWriterID             sql.NullInt64
+	GenderQuotationEnabled       bool
+	FirstSpeakerQuotationEnabled bool
+	ModeratorID                  sql.NullInt64
 }
 
 type Motion struct {
@@ -108,6 +114,10 @@ type SpeakersList struct {
 	RequestedAt   string
 	StartOfSpeech sql.NullString
 	Duration      sql.NullString
+	GenderQuoted  bool
+	FirstSpeaker  bool
+	Priority      bool
+	OrderPosition int64
 }
 
 type User struct {

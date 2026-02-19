@@ -11,19 +11,29 @@ import (
 )
 
 const addSpeaker = `-- name: AddSpeaker :one
-INSERT INTO speakers_list (agenda_point_id, attendee_id, type)
-VALUES (?, ?, ?)
-RETURNING id, agenda_point_id, attendee_id, type, status, requested_at, start_of_speech, duration
+INSERT INTO speakers_list (agenda_point_id, attendee_id, type, gender_quoted, first_speaker)
+VALUES (?, ?, ?, ?, ?)
+RETURNING id, agenda_point_id, attendee_id, type, status,
+          requested_at, start_of_speech, duration,
+          gender_quoted, first_speaker, priority, order_position
 `
 
 type AddSpeakerParams struct {
 	AgendaPointID int64
 	AttendeeID    int64
 	Type          string
+	GenderQuoted  bool
+	FirstSpeaker  bool
 }
 
 func (q *Queries) AddSpeaker(ctx context.Context, arg AddSpeakerParams) (SpeakersList, error) {
-	row := q.db.QueryRowContext(ctx, addSpeaker, arg.AgendaPointID, arg.AttendeeID, arg.Type)
+	row := q.db.QueryRowContext(ctx, addSpeaker,
+		arg.AgendaPointID,
+		arg.AttendeeID,
+		arg.Type,
+		arg.GenderQuoted,
+		arg.FirstSpeaker,
+	)
 	var i SpeakersList
 	err := row.Scan(
 		&i.ID,
@@ -34,6 +44,10 @@ func (q *Queries) AddSpeaker(ctx context.Context, arg AddSpeakerParams) (Speaker
 		&i.RequestedAt,
 		&i.StartOfSpeech,
 		&i.Duration,
+		&i.GenderQuoted,
+		&i.FirstSpeaker,
+		&i.Priority,
+		&i.OrderPosition,
 	)
 	return i, err
 }
@@ -48,7 +62,9 @@ func (q *Queries) DeleteSpeaker(ctx context.Context, id int64) error {
 }
 
 const getSpeakerEntryByID = `-- name: GetSpeakerEntryByID :one
-SELECT id, agenda_point_id, attendee_id, type, status, requested_at, start_of_speech, duration
+SELECT id, agenda_point_id, attendee_id, type, status,
+       requested_at, start_of_speech, duration,
+       gender_quoted, first_speaker, priority, order_position
 FROM speakers_list WHERE id = ?
 `
 
@@ -64,18 +80,94 @@ func (q *Queries) GetSpeakerEntryByID(ctx context.Context, id int64) (SpeakersLi
 		&i.RequestedAt,
 		&i.StartOfSpeech,
 		&i.Duration,
+		&i.GenderQuoted,
+		&i.FirstSpeaker,
+		&i.Priority,
+		&i.OrderPosition,
 	)
 	return i, err
+}
+
+const getWaitingSpeakersForAgendaPoint = `-- name: GetWaitingSpeakersForAgendaPoint :many
+SELECT id, agenda_point_id, attendee_id, type, status,
+       requested_at, start_of_speech, duration,
+       gender_quoted, first_speaker, priority, order_position
+FROM speakers_list
+WHERE agenda_point_id = ? AND status = 'WAITING'
+ORDER BY order_position ASC
+`
+
+func (q *Queries) GetWaitingSpeakersForAgendaPoint(ctx context.Context, agendaPointID int64) ([]SpeakersList, error) {
+	rows, err := q.db.QueryContext(ctx, getWaitingSpeakersForAgendaPoint, agendaPointID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SpeakersList
+	for rows.Next() {
+		var i SpeakersList
+		if err := rows.Scan(
+			&i.ID,
+			&i.AgendaPointID,
+			&i.AttendeeID,
+			&i.Type,
+			&i.Status,
+			&i.RequestedAt,
+			&i.StartOfSpeech,
+			&i.Duration,
+			&i.GenderQuoted,
+			&i.FirstSpeaker,
+			&i.Priority,
+			&i.OrderPosition,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const hasAttendeeSpokenOnAgendaPoint = `-- name: HasAttendeeSpokenOnAgendaPoint :one
+SELECT EXISTS(
+    SELECT 1 FROM speakers_list
+    WHERE agenda_point_id = ? AND attendee_id = ? AND status IN ('SPEAKING', 'DONE')
+)
+`
+
+type HasAttendeeSpokenOnAgendaPointParams struct {
+	AgendaPointID int64
+	AttendeeID    int64
+}
+
+func (q *Queries) HasAttendeeSpokenOnAgendaPoint(ctx context.Context, arg HasAttendeeSpokenOnAgendaPointParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, hasAttendeeSpokenOnAgendaPoint, arg.AgendaPointID, arg.AttendeeID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const listSpeakersForAgendaPoint = `-- name: ListSpeakersForAgendaPoint :many
 SELECT sl.id, sl.agenda_point_id, sl.attendee_id, sl.type, sl.status,
        sl.requested_at, sl.start_of_speech, sl.duration,
+       sl.gender_quoted, sl.first_speaker, sl.priority, sl.order_position,
        a.full_name AS attendee_full_name
 FROM speakers_list sl
 JOIN attendees a ON a.id = sl.attendee_id
 WHERE sl.agenda_point_id = ?
-ORDER BY sl.requested_at ASC
+ORDER BY
+    CASE sl.status
+        WHEN 'SPEAKING' THEN 0
+        WHEN 'WAITING'  THEN sl.order_position + 1
+        WHEN 'DONE'     THEN 1000000
+        ELSE                 1000001
+    END ASC,
+    sl.requested_at ASC
 `
 
 type ListSpeakersForAgendaPointRow struct {
@@ -87,6 +179,10 @@ type ListSpeakersForAgendaPointRow struct {
 	RequestedAt      string
 	StartOfSpeech    sql.NullString
 	Duration         sql.NullString
+	GenderQuoted     bool
+	FirstSpeaker     bool
+	Priority         bool
+	OrderPosition    int64
 	AttendeeFullName string
 }
 
@@ -108,6 +204,10 @@ func (q *Queries) ListSpeakersForAgendaPoint(ctx context.Context, agendaPointID 
 			&i.RequestedAt,
 			&i.StartOfSpeech,
 			&i.Duration,
+			&i.GenderQuoted,
+			&i.FirstSpeaker,
+			&i.Priority,
+			&i.OrderPosition,
 			&i.AttendeeFullName,
 		); err != nil {
 			return nil, err
@@ -134,6 +234,34 @@ type SetSpeakerDoneParams struct {
 
 func (q *Queries) SetSpeakerDone(ctx context.Context, arg SetSpeakerDoneParams) error {
 	_, err := q.db.ExecContext(ctx, setSpeakerDone, arg.Duration, arg.ID)
+	return err
+}
+
+const setSpeakerOrderPosition = `-- name: SetSpeakerOrderPosition :exec
+UPDATE speakers_list SET order_position = ? WHERE id = ?
+`
+
+type SetSpeakerOrderPositionParams struct {
+	OrderPosition int64
+	ID            int64
+}
+
+func (q *Queries) SetSpeakerOrderPosition(ctx context.Context, arg SetSpeakerOrderPositionParams) error {
+	_, err := q.db.ExecContext(ctx, setSpeakerOrderPosition, arg.OrderPosition, arg.ID)
+	return err
+}
+
+const setSpeakerPriority = `-- name: SetSpeakerPriority :exec
+UPDATE speakers_list SET priority = ? WHERE id = ?
+`
+
+type SetSpeakerPriorityParams struct {
+	Priority bool
+	ID       int64
+}
+
+func (q *Queries) SetSpeakerPriority(ctx context.Context, arg SetSpeakerPriorityParams) error {
+	_, err := q.db.ExecContext(ctx, setSpeakerPriority, arg.Priority, arg.ID)
 	return err
 }
 
