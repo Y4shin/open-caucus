@@ -4,6 +4,7 @@ package model
 type AgendaPoint struct {
 	ID                           int64
 	MeetingID                    int64
+	ParentID                     *int64
 	Position                     int64
 	Title                        string
 	Protocol                     string

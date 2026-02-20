@@ -8,10 +8,11 @@ import (
 	"testing"
 
 	"github.com/Y4shin/conference-tool/internal/repository/model"
+	playwright "github.com/playwright-community/playwright-go"
 )
 
 func liveURL(baseURL, slug, meetingID string) string {
-	return fmt.Sprintf("%s/committee/%s/meeting/%s/live", baseURL, slug, meetingID)
+	return fmt.Sprintf("%s/committee/%s/meeting/%s", baseURL, slug, meetingID)
 }
 
 func attendeeLoginURL(baseURL, slug, meetingID string) string {
@@ -81,7 +82,7 @@ func TestAttendeeLogin_InvalidSecret(t *testing.T) {
 		t.Fatalf("click submit: %v", err)
 	}
 
-	if err := page.Locator("p.error:has-text('Invalid')").WaitFor(); err != nil {
+	if err := page.Locator("p:has-text('Invalid access code')").WaitFor(); err != nil {
 		t.Fatalf("expected error message for invalid code: %v", err)
 	}
 	if page.URL() != urlBefore {
@@ -116,8 +117,8 @@ func TestMeetingJoinSubmit_CreatesAttendeeSession(t *testing.T) {
 	}
 }
 
-// TestLivePage_RequiresAttendeeSession verifies that /live redirects unauthenticated
-// visitors (no attendee session) with a 403.
+// TestLivePage_RequiresAttendeeSession verifies that /live redirects
+// unauthenticated visitors (no session) to the login page.
 func TestLivePage_RequiresAttendeeSession(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -125,12 +126,11 @@ func TestLivePage_RequiresAttendeeSession(t *testing.T) {
 	meetingID := ts.getMeetingID(t, "test-committee", "Closed Meeting")
 
 	page := newPage(t)
-	resp, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
+	if _, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto /live: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Errorf("expected 403 for unauthenticated /live, got %d", resp.Status())
+	if err := page.WaitForURL(ts.URL + "/"); err != nil {
+		t.Fatalf("expected redirect to login page for unauthenticated /live: %v", err)
 	}
 }
 
@@ -164,5 +164,119 @@ func TestAttendeeLoginPage_RedirectsIfAlreadyLoggedIn(t *testing.T) {
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live on second visit to login page: %v", err)
+	}
+}
+
+// TestGuestLive_LogoutButton verifies that guests can logout from the live page.
+func TestGuestLive_LogoutButton(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+	ts.seedAttendee(t, "test-committee", "Open Meeting", "Eve Guest", "secret-logout")
+
+	page := newPage(t)
+	if _, err := page.Goto(attendeeLoginURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto attendee-login: %v", err)
+	}
+	if err := page.Locator("input[name=secret]").Fill("secret-logout"); err != nil {
+		t.Fatalf("fill secret: %v", err)
+	}
+	if err := page.Locator("button[type=submit]").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after login: %v", err)
+	}
+
+	if err := page.Locator("button:has-text('Logout')").Click(); err != nil {
+		t.Fatalf("click logout on live page: %v", err)
+	}
+	if err := page.WaitForURL(ts.URL + "/"); err != nil {
+		t.Fatalf("expected redirect to login page after logout: %v", err)
+	}
+
+	resp, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID))
+	if err != nil {
+		t.Fatalf("goto /live after logout: %v", err)
+	}
+	if err := page.WaitForURL(ts.URL + "/"); err != nil {
+		t.Fatalf("expected redirect to login page for /live after logout: %v", err)
+	}
+	if resp.Status() != 200 {
+		t.Fatalf("expected final login page response status 200 after redirect, got %d", resp.Status())
+	}
+}
+
+// TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage verifies that
+// chair attendees can navigate from /live to /manage.
+func TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+	attendee := ts.seedAttendee(t, "test-committee", "Open Meeting", "Chair Guest", "secret-chair")
+	ts.setAttendeeChair(t, attendee.ID, true)
+
+	page := newPage(t)
+	if _, err := page.Goto(attendeeLoginURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto attendee-login: %v", err)
+	}
+	if err := page.Locator("input[name=secret]").Fill("secret-chair"); err != nil {
+		t.Fatalf("fill secret: %v", err)
+	}
+	if err := page.Locator("button[type=submit]").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after login: %v", err)
+	}
+
+	if err := page.Locator("a:has-text('Manage')").WaitFor(); err != nil {
+		t.Fatalf("expected manage button for chair attendee: %v", err)
+	}
+	if err := page.Locator("a:has-text('Manage')").Click(); err != nil {
+		t.Fatalf("click manage button: %v", err)
+	}
+	if err := page.WaitForURL(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected navigation to /manage for chair attendee: %v", err)
+	}
+}
+
+// TestManagePage_AttendeeNonChair_Forbidden verifies non-chair attendees
+// cannot open the manage page directly.
+func TestManagePage_AttendeeNonChair_Forbidden(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+	ts.seedAttendee(t, "test-committee", "Open Meeting", "Nonchair Guest", "secret-nonchair")
+
+	page := newPage(t)
+	if _, err := page.Goto(attendeeLoginURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto attendee-login: %v", err)
+	}
+	if err := page.Locator("input[name=secret]").Fill("secret-nonchair"); err != nil {
+		t.Fatalf("fill secret: %v", err)
+	}
+	if err := page.Locator("button[type=submit]").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after login: %v", err)
+	}
+
+	if err := page.Locator("a:has-text('Manage')").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(1200),
+	}); err == nil {
+		t.Fatalf("did not expect manage button for non-chair attendee")
+	}
+
+	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
+	if err != nil {
+		t.Fatalf("goto /manage as non-chair attendee: %v", err)
+	}
+	if resp.Status() != 403 {
+		t.Fatalf("expected 403 for /manage as non-chair attendee, got %d", resp.Status())
 	}
 }

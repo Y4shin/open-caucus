@@ -1,0 +1,18 @@
+package templates
+
+import "github.com/invopop/ctxi18n/i18n"
+
+templ LanguageSwitcher() {
+	<div class={ LanguageSwitcherWrap() }>
+		<span>{ i18n.T(ctx, "language_switcher.label") }</span>
+		<form id="lang-switch-en" method="POST" action="/locale" class={ InlineForm() }>
+			<input type="hidden" name="lang" value="en"/>
+		</form>
+		<a href="#lang-switch-en" class={ LanguageSwitcherLink() } onclick="document.getElementById('lang-switch-en').submit(); return false;">{ i18n.T(ctx, "language_switcher.en_button") }</a>
+		<form id="lang-switch-de" method="POST" action="/locale" class={ InlineForm() }>
+			<input type="hidden" name="lang" value="de"/>
+		</form>
+		<a href="#lang-switch-de" class={ LanguageSwitcherLink() } onclick="document.getElementById('lang-switch-de').submit(); return false;">{ i18n.T(ctx, "language_switcher.de_button") }</a>
+	</div>
+}
+

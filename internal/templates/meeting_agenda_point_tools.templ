@@ -1,0 +1,56 @@
+package templates
+
+import (
+	"context"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingAgendaPointToolsInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	MeetingIDStr  string
+	AgendaPointIDStr string
+	AgendaPointTitle string
+	Attachments AttachmentListPartialInput
+	Motions     MotionListPartialInput
+}
+
+func (i *MeetingAgendaPointToolsInput) ManagePageGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.MeetingIDStr).CommitteeMeetingManageGet(ctx, ""))
+}
+
+templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Agenda Tools: { input.AgendaPointTitle }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
+		<script src={ paths.Route.HtmxMinJs() }></script>
+	</head>
+	<body class={ AppShell() }>
+		<header class={ PageHeader() }>
+			<h1>{ input.MeetingName }</h1>
+			<h2>Agenda Point Tools: { input.AgendaPointTitle }</h2>
+			<nav>
+				<a href={ input.ManagePageGet(ctx) }>← Back to Manage</a>
+			</nav>
+		</header>
+		<main class={ PageMain() }>
+			<div class={ ManageGrid() }>
+				<section class={ Panel() }>
+					<h2>Attachments</h2>
+					@AttachmentListPartial(input.Attachments)
+				</section>
+				<section class={ Panel() }>
+					<h2>Motions</h2>
+					@MotionListPartial(input.Motions)
+				</section>
+			</div>
+		</main>
+	</body>
+	</html>
+}

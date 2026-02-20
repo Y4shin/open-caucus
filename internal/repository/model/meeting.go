@@ -7,6 +7,7 @@ type Meeting struct {
 	ID                           int64
 	Name                         string
 	Description                  string
+	Secret                       string
 	SignupOpen                   bool
 	CurrentAgendaPointID         *int64
 	ProtocolWriterID             *int64

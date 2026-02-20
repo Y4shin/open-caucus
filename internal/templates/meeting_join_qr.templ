@@ -1,0 +1,52 @@
+package templates
+
+import (
+	"context"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingJoinQRInput struct {
+	CommitteeName  string
+	CommitteeSlug  string
+	MeetingName    string
+	IDString       string
+	JoinURL        string
+	QRCodeDataURL  string
+}
+
+func (i *MeetingJoinQRInput) MeetingManageGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+}
+
+func (i *MeetingJoinQRInput) QRCodeSrc() templ.SafeURL {
+	return templ.SafeURL(i.QRCodeDataURL)
+}
+
+templ MeetingJoinQRTemplate(input MeetingJoinQRInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Guest Join QR: { input.MeetingName } - { input.CommitteeName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
+	</head>
+	<body class={ AppShell() }>
+		<header class={ PageHeader() }>
+			<h1>Guest Join QR</h1>
+			<h2>{ input.MeetingName } - { input.CommitteeName }</h2>
+			<nav>
+				<a href={ input.MeetingManageGet(ctx) }>← Back to Manage</a>
+			</nav>
+		</header>
+		<main class={ PageMain() }>
+			<p>Guests can scan this QR code to open the join page with the meeting secret prefilled.</p>
+			<p><a href={ templ.URL(input.JoinURL) }>{ input.JoinURL }</a></p>
+			<img id="join-qr-code" src={ input.QRCodeSrc() } alt="Guest Join QR Code"/>
+		</main>
+	</body>
+	</html>
+}
+
+

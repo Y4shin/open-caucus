@@ -94,6 +94,7 @@ func (h *Handler) ManageMeetingSetModerator(ctx context.Context, r *http.Request
 	if err := h.Repository.SetMeetingModerator(ctx, meetingID, attendeeID); err != nil {
 		return nil, nil, fmt.Errorf("failed to set meeting moderator: %w", err)
 	}
+	h.publishSpeakersUpdated()
 
 	partial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
@@ -171,6 +172,7 @@ func (h *Handler) ManageAgendaPointSetModerator(ctx context.Context, r *http.Req
 	if err := h.Repository.SetAgendaPointModerator(ctx, apID, attendeeID); err != nil {
 		return nil, nil, fmt.Errorf("failed to set agenda point moderator: %w", err)
 	}
+	h.publishSpeakersUpdated()
 
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err

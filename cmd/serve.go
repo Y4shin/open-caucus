@@ -8,11 +8,14 @@ import (
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/handlers"
+	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
+	"github.com/Y4shin/conference-tool/internal/templates"
+	"github.com/a-h/templ"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +57,7 @@ var serveCmd = &cobra.Command{
 		adminSessionManager := session.NewAdminSessionManager([]byte(cfg.Application.SessionSecret))
 
 		// Initialize middleware registry with session managers
-		mw := middleware.NewRegistry(sessionManager, adminSessionManager)
+		mw := middleware.NewRegistry(sessionManager, adminSessionManager, repo)
 
 		// Initialize handlers with repository, broker, storage, and session managers
 		handler := &handlers.Handler{
@@ -70,10 +73,47 @@ var serveCmd = &cobra.Command{
 		router := routes.NewRouter(handler, mw)
 		mux := router.RegisterRoutes()
 
+		// Load translations (must happen before any request is served).
+		if err := locale.LoadTranslations(); err != nil {
+			return fmt.Errorf("failed to load translations: %w", err)
+		}
+
+		// Compose app routes and locale switcher in a top-level mux.
+		appMux := http.NewServeMux()
+		appMux.Handle("/", mux)
+
+		// Locale switcher: POST /locale sets the "locale" cookie and redirects.
+		appMux.HandleFunc("POST /locale", func(w http.ResponseWriter, r *http.Request) {
+			lang := r.FormValue("lang")
+			supported := map[string]bool{"en": true, "de": true}
+			if !supported[lang] {
+				http.Error(w, "unsupported locale", http.StatusBadRequest)
+				return
+			}
+			http.SetCookie(w, &http.Cookie{
+				Name:     "locale",
+				Value:    lang,
+				Path:     "/",
+				MaxAge:   365 * 24 * 60 * 60,
+				SameSite: http.SameSiteLaxMode,
+			})
+			ref := r.Header.Get("Referer")
+			if ref == "" {
+				ref = "/"
+			}
+			http.Redirect(w, r, ref, http.StatusSeeOther)
+		})
+
+		handlerWithLocale := locale.NewMiddleware(appMux, locale.Config{
+			Default:   "en",
+			Supported: []string{"en", "de"},
+		})
+		handlerWithCSS := templ.NewCSSMiddleware(handlerWithLocale, templates.GlobalCSSClasses()...)
+
 		addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
 		log.Printf("Starting server on %s", addr)
 
-		return http.ListenAndServe(addr, mux)
+		return http.ListenAndServe(addr, handlerWithCSS)
 	},
 }
 

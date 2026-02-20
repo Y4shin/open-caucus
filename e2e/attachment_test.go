@@ -8,8 +8,8 @@ import (
 	playwright "github.com/playwright-community/playwright-go"
 )
 
-// TestAttachments_NoAgendaPoints_ShowsPlaceholder verifies that the Attachments
-// section shows a helpful placeholder when there are no agenda points yet.
+// TestAttachments_NoAgendaPoints_NotShownOnManage verifies attachments are no
+// longer rendered on the main manage page.
 func TestAttachments_NoAgendaPoints_ShowsPlaceholder(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -24,12 +24,10 @@ func TestAttachments_NoAgendaPoints_ShowsPlaceholder(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := page.Locator("h2:has-text('Attachments')").WaitFor(); err != nil {
-		t.Fatalf("expected Attachments section heading: %v", err)
-	}
-
-	if err := page.Locator("p:has-text('Add agenda points above to manage attachments')").WaitFor(); err != nil {
-		t.Fatalf("expected placeholder when no agenda points: %v", err)
+	if err := page.Locator("h2:has-text('Attachments')").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(1500),
+	}); err == nil {
+		t.Fatalf("did not expect Attachments section on main manage page")
 	}
 }
 
@@ -41,13 +39,13 @@ func TestAttachments_ShowsFormPerAgendaPoint(t *testing.T) {
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
 	ts.seedMeeting(t, "test-committee", "Spring Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Spring Meeting")
-	ts.seedAgendaPoint(t, "test-committee", "Spring Meeting", "Budget")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Spring Meeting", "Budget")
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("h4:has-text('Budget — Attachments')").WaitFor(); err != nil {
@@ -74,8 +72,8 @@ func TestAttachments_UploadAttachment_AppearsInList(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("h4:has-text('Budget — Attachments')").WaitFor(); err != nil {
@@ -122,8 +120,8 @@ func TestAttachments_UploadWithoutLabel_ShowsFilename(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("h4:has-text('Budget — Attachments')").WaitFor(); err != nil {
@@ -160,8 +158,8 @@ func TestAttachments_DeleteAttachment_RemovesFromList(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("a:has-text('Budget Proposal')").WaitFor(); err != nil {

@@ -4,11 +4,16 @@ package e2e_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
 func joinURL(baseURL, slug, meetingID string) string {
 	return fmt.Sprintf("%s/committee/%s/meeting/%s/join", baseURL, slug, meetingID)
+}
+
+func manageJoinQRURL(baseURL, slug, meetingID string) string {
+	return fmt.Sprintf("%s/committee/%s/meeting/%s/manage/join-qr", baseURL, slug, meetingID)
 }
 
 // TestJoinPage_RegisteredUserSeesSignupButton verifies that a logged-in committee
@@ -57,6 +62,9 @@ func TestJoinPage_GuestSeesFormWhenSignupOpen(t *testing.T) {
 	if err := page.Locator("input[name=full_name]").WaitFor(); err != nil {
 		t.Fatalf("expected guest signup form when signup_open: %v", err)
 	}
+	if err := page.Locator("input[name=meeting_secret]").WaitFor(); err != nil {
+		t.Fatalf("expected meeting secret field when no prefilled secret exists: %v", err)
+	}
 	if err := page.Locator("button:has-text('Sign Up as Guest')").WaitFor(); err != nil {
 		t.Fatalf("expected guest sign-up button: %v", err)
 	}
@@ -88,8 +96,8 @@ func TestJoinPage_GuestSeesClosedMessageWhenSignupClosed(t *testing.T) {
 	}
 }
 
-// TestGuestSignup_Success verifies that a guest can submit their name and receive
-// an access code on the success page.
+// TestGuestSignup_Success verifies that a guest can submit their name and is
+// redirected directly to the live page with an attendee session.
 func TestGuestSignup_Success(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -104,15 +112,15 @@ func TestGuestSignup_Success(t *testing.T) {
 	if err := page.Locator("input[name=full_name]").Fill("Bob Guest"); err != nil {
 		t.Fatalf("fill name: %v", err)
 	}
+	if err := page.Locator("input[name=meeting_secret]").Fill("test-meeting-secret"); err != nil {
+		t.Fatalf("fill meeting secret: %v", err)
+	}
 	if err := page.Locator("button:has-text('Sign Up as Guest')").Click(); err != nil {
 		t.Fatalf("click submit: %v", err)
 	}
 
-	if err := page.Locator("h3:has-text('You\\'re signed up!')").WaitFor(); err != nil {
-		t.Fatalf("expected success message: %v", err)
-	}
-	if err := page.Locator("strong").WaitFor(); err != nil {
-		t.Fatalf("expected access code element: %v", err)
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after guest signup: %v", err)
 	}
 }
 
@@ -178,5 +186,126 @@ func TestMeetingJoinSubmit_Idempotent(t *testing.T) {
 	}
 	if err := page2.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live on second visit: %v", err)
+	}
+}
+
+func TestGuestSignup_InvalidMeetingSecret(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+
+	page := newPage(t)
+	if _, err := page.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto join page: %v", err)
+	}
+
+	if err := page.Locator("input[name=full_name]").Fill("Bob Guest"); err != nil {
+		t.Fatalf("fill name: %v", err)
+	}
+	if err := page.Locator("input[name=meeting_secret]").Fill("wrong-secret"); err != nil {
+		t.Fatalf("fill meeting secret: %v", err)
+	}
+	if err := page.Locator("button:has-text('Sign Up as Guest')").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+
+	if err := page.Locator("p:has-text('Invalid meeting secret')").WaitFor(); err != nil {
+		t.Fatalf("expected invalid meeting secret error: %v", err)
+	}
+}
+
+func TestGuestSignup_PrefilledMeetingSecretFromQuery(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+
+	page := newPage(t)
+	urlWithSecret := joinURL(ts.URL, "test-committee", meetingID) + "?meeting_secret=test-meeting-secret"
+	if _, err := page.Goto(urlWithSecret); err != nil {
+		t.Fatalf("goto join page with prefilled secret: %v", err)
+	}
+
+	visibleSecretInput, err := page.Locator("#meeting_secret").IsVisible()
+	if err != nil {
+		t.Fatalf("check visible meeting secret input: %v", err)
+	}
+	if visibleSecretInput {
+		t.Fatalf("expected meeting secret input to be hidden when prefilled via query")
+	}
+
+	if err := page.Locator("input[name=full_name]").Fill("Bob Guest"); err != nil {
+		t.Fatalf("fill name: %v", err)
+	}
+	if err := page.Locator("button:has-text('Sign Up as Guest')").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after guest signup: %v", err)
+	}
+}
+
+// TestGuestSignup_PublishesManageSSE verifies that guest self-signup from the
+// join page publishes attendee-change events consumed by the manage page.
+func TestGuestSignup_PublishesManageSSE(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+
+	managePage := newPage(t)
+	userLogin(t, managePage, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := managePage.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	guestPage := newPage(t)
+	if _, err := guestPage.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto join page: %v", err)
+	}
+	if err := guestPage.Locator("input[name=full_name]").Fill("Guest Via Join"); err != nil {
+		t.Fatalf("fill name: %v", err)
+	}
+	if err := guestPage.Locator("input[name=meeting_secret]").Fill("test-meeting-secret"); err != nil {
+		t.Fatalf("fill meeting secret: %v", err)
+	}
+	if err := guestPage.Locator("button:has-text('Sign Up as Guest')").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+	if err := guestPage.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after guest signup: %v", err)
+	}
+
+	if err := managePage.Locator("#attendee-list-container td:has-text('Guest Via Join')").WaitFor(); err != nil {
+		t.Fatalf("expected attendee propagated to manage page via SSE: %v", err)
+	}
+}
+
+func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Alice Chair", "chairperson")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageJoinQRURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage join qr page: %v", err)
+	}
+
+	if err := page.Locator("#join-qr-code").WaitFor(); err != nil {
+		t.Fatalf("expected QR image: %v", err)
+	}
+
+	href, err := page.Locator("main a").First().GetAttribute("href")
+	if err != nil {
+		t.Fatalf("read join URL href: %v", err)
+	}
+	if !strings.Contains(href, "meeting_secret=test-meeting-secret") {
+		t.Fatalf("expected join URL with meeting_secret query param, got: %v", href)
 	}
 }

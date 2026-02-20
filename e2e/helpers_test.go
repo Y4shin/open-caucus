@@ -5,21 +5,25 @@ package e2e_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/a-h/templ"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/handlers"
+	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
+	"github.com/Y4shin/conference-tool/internal/templates"
 )
 
 const (
@@ -49,7 +53,7 @@ func newTestServer(t *testing.T) *testServer {
 	secret := []byte(testSecret)
 	sessionMgr := session.NewManager(repo, secret)
 	adminMgr := session.NewAdminSessionManager(secret)
-	mw := middleware.NewRegistry(sessionMgr, adminMgr)
+	mw := middleware.NewRegistry(sessionMgr, adminMgr, repo)
 	b := broker.NewMemoryBroker()
 	store := storage.NewMemStorage()
 
@@ -62,8 +66,19 @@ func newTestServer(t *testing.T) *testServer {
 		AdminKey:            testAdminKey,
 	}
 
+	if err := locale.LoadTranslations(); err != nil {
+		t.Fatalf("load translations: %v", err)
+	}
+
 	mux := routes.NewRouter(h, mw).RegisterRoutes()
-	ts := httptest.NewServer(mux)
+	appMux := http.NewServeMux()
+	appMux.Handle("/", mux)
+	handler := locale.NewMiddleware(appMux, locale.Config{
+		Default:   "en",
+		Supported: []string{"en"},
+	})
+	handler = templ.NewCSSMiddleware(handler, templates.GlobalCSSClasses()...)
+	ts := httptest.NewServer(handler)
 
 	t.Cleanup(func() {
 		ts.Close()
@@ -193,4 +208,12 @@ func (ts *testServer) getMeetingID(t *testing.T, slug, name string) string {
 	}
 	t.Fatalf("meeting %q not found in committee %q", name, slug)
 	return ""
+}
+
+// setAttendeeChair updates the attendee's chair flag.
+func (ts *testServer) setAttendeeChair(t *testing.T, attendeeID int64, isChair bool) {
+	t.Helper()
+	if err := ts.repo.SetAttendeeIsChair(context.Background(), attendeeID, isChair); err != nil {
+		t.Fatalf("set attendee %d chair=%v: %v", attendeeID, isChair, err)
+	}
 }

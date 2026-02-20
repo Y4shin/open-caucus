@@ -74,7 +74,7 @@ func TestAttendee_SpeakersListUpdates_ViaSSE(t *testing.T) {
 	}
 
 	// Attendee page: SSE should deliver the update; Alice's row must appear.
-	if err := attendeePage.Locator("#attendee-speakers-list td:has-text('Alice Speaker')").WaitFor(); err != nil {
+	if err := attendeePage.Locator("#attendee-speakers-list [data-testid='live-speaker-name']:has-text('Alice Speaker')").WaitFor(); err != nil {
 		t.Fatalf("attendee page: expected Alice Speaker via SSE update: %v", err)
 	}
 
@@ -101,7 +101,7 @@ func TestAttendee_SeesOwnPositionHighlighted(t *testing.T) {
 	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-alice")
 
 	// Alice's row should be present and carry the "my-turn" highlight class.
-	if err := page.Locator("#attendee-speakers-list tr.my-turn:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := page.Locator("#attendee-speakers-list [data-testid='live-speaker-item'].my-turn:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected Alice's row to have 'my-turn' class: %v", err)
 	}
 }
@@ -128,17 +128,92 @@ func TestAttendee_QuotedBadgeVisible(t *testing.T) {
 	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-bob")
 
 	// Bob's row must be visible.
-	if err := page.Locator("#attendee-speakers-list td:has-text('Bob Quoted')").WaitFor(); err != nil {
+	if err := page.Locator("#attendee-speakers-list [data-testid='live-speaker-name']:has-text('Bob Quoted')").WaitFor(); err != nil {
 		t.Fatalf("expected Bob's row in speakers list: %v", err)
 	}
 
 	// The row must contain the "Q" quoted badge.
-	bobRow := page.Locator("#attendee-speakers-list tr:has-text('Bob Quoted')")
+	bobRow := page.Locator("#attendee-speakers-list [data-testid='live-speaker-item']:has-text('Bob Quoted')")
 	rowText, err := bobRow.TextContent()
 	if err != nil {
 		t.Fatalf("get Bob's row text: %v", err)
 	}
 	if !strings.Contains(rowText, "Q") {
 		t.Errorf("expected 'Q' badge in Bob's row, got: %q", rowText)
+	}
+}
+
+// TestAttendeeLive_SelfAddButtons verifies attendees can add themselves to the
+// speakers queue via the live-page quick actions for regular and ropm.
+func TestAttendeeLive_SelfAddButtons(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeeting(t, "test-committee", "Live Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Live Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Live Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Live Meeting", apID)
+	ts.seedAttendee(t, "test-committee", "Live Meeting", "Alice Speaker", "secret-alice")
+
+	page := newPage(t)
+	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-alice")
+
+	if err := page.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
+		t.Fatalf("click add self regular: %v", err)
+	}
+	if err := page.Locator("#attendee-speakers-list [data-testid='live-speaker-name']:has-text('Alice Speaker')").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(3000),
+	}); err != nil {
+		text, _ := page.Locator("#attendee-speakers-list").TextContent()
+		t.Fatalf("expected regular self-added speaker row: %v; speakers list text: %q", err, text)
+	}
+
+	if err := page.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
+		t.Fatalf("click duplicate add self regular: %v", err)
+	}
+	if err := page.Locator("#attendee-speakers-list p:has-text('already have a non-done regular')").WaitFor(); err != nil {
+		t.Fatalf("expected duplicate regular error: %v", err)
+	}
+
+	if err := page.Locator("[data-testid='live-add-self-ropm']").Click(); err != nil {
+		t.Fatalf("click add self ropm: %v", err)
+	}
+	if err := page.Locator("#attendee-speakers-list [data-testid='live-speaker-item']:has-text('Alice Speaker'):has-text('ROPM')").WaitFor(); err != nil {
+		t.Fatalf("expected ropm self-added speaker row: %v", err)
+	}
+}
+
+// TestAttendeeLive_ModeratorBadgeUpdatesViaSSE verifies that setting the
+// active moderator from manage updates the attendee live badge via SSE.
+func TestAttendeeLive_ModeratorBadgeUpdatesViaSSE(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Live Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Live Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Live Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Live Meeting", apID)
+	ts.seedAttendee(t, "test-committee", "Live Meeting", "Alice Speaker", "secret-alice")
+
+	attendeePage := newPage(t)
+	attendeeLoginHelper(t, attendeePage, ts.URL, "test-committee", meetingID, "secret-alice")
+
+	chairPage := newPage(t)
+	userLogin(t, chairPage, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := chairPage.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	if _, err := chairPage.Locator("#speakers-list-container form").Filter(playwright.LocatorFilterOptions{
+		Has: chairPage.Locator("button:has-text('Set Moderator')"),
+	}).Locator("select[name=attendee_id]").SelectOption(playwright.SelectOptionValues{
+		Labels: playwright.StringSlice("Alice Speaker"),
+	}); err != nil {
+		t.Fatalf("select moderator attendee: %v", err)
+	}
+	if err := chairPage.Locator("#speakers-list-container button:has-text('Set Moderator')").Click(); err != nil {
+		t.Fatalf("click set moderator: %v", err)
+	}
+
+	if err := attendeePage.Locator("#attendee-speakers-list [data-testid='live-moderator-badge']:has-text('Alice Speaker')").WaitFor(); err != nil {
+		t.Fatalf("expected live moderator badge update via SSE: %v", err)
 	}
 }

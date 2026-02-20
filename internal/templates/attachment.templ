@@ -1,6 +1,11 @@
 package templates
 
-import "github.com/Y4shin/conference-tool/internal/routes/paths"
+import (
+	"context"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
+)
 
 // AttachmentItem holds display data for a single agenda attachment.
 type AttachmentItem struct {
@@ -26,54 +31,54 @@ func (i *AttachmentListPartialInput) containerID() string {
 	return "attachment-list-ap-" + i.AgendaPointIDStr
 }
 
-func (i *AttachmentListPartialInput) AttachmentCreatePostStr() string {
+func (i *AttachmentListPartialInput) AttachmentCreatePostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr,
-	).ManageAttachmentCreatePost()
+	).ManageAttachmentCreatePost(ctx, "")
 }
 
-func (i *AttachmentListPartialInput) attachmentDeletePostStr(a *AttachmentItem) string {
+func (i *AttachmentListPartialInput) attachmentDeletePostStr(ctx context.Context, a *AttachmentItem) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, a.IDString,
-	).ManageAttachmentDeletePost()
+	).ManageAttachmentDeletePost(ctx, "")
 }
 
-func (i *AttachmentListPartialInput) blobDownloadGetStr(a *AttachmentItem) string {
+func (i *AttachmentListPartialInput) blobDownloadGetStr(ctx context.Context, a *AttachmentItem) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(
 		i.CommitteeSlug, i.MeetingIDString, a.BlobIDString,
-	).ServeBlobDownloadGet()
+	).ServeBlobDownloadGet(ctx, "")
 }
 
 templ AttachmentListPartial(input AttachmentListPartialInput) {
 	<div id={ input.containerID() }>
-		<h4>{ input.AgendaPointTitle } — Attachments</h4>
+		<h4>{ input.AgendaPointTitle } — { i18n.T(ctx, "attachment.heading") }</h4>
 		if input.Error != "" {
-			<p class="error">{ input.Error }</p>
+			<p class={ ErrorText() }>{ input.Error }</p>
 		}
 		<form
-			hx-post={ input.AttachmentCreatePostStr() }
+			hx-post={ input.AttachmentCreatePostStr(ctx) }
 			hx-target={ "#" + input.containerID() }
 			hx-swap="outerHTML"
 			hx-encoding="multipart/form-data"
 			hx-on::after-request="if(event.detail.successful) this.reset()"
 		>
 			<div>
-				<label for={ "attachment-label-" + input.AgendaPointIDStr }>Label (optional):</label>
+				<label for={ "attachment-label-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "attachment.label_label") }</label>
 				<input type="text" id={ "attachment-label-" + input.AgendaPointIDStr } name="label"/>
 			</div>
 			<div>
-				<label for={ "attachment-file-" + input.AgendaPointIDStr }>File:</label>
+				<label for={ "attachment-file-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "attachment.file_label") }</label>
 				<input type="file" id={ "attachment-file-" + input.AgendaPointIDStr } name="file" required/>
 			</div>
-			<button type="submit">Upload Attachment</button>
+			<button type="submit">{ i18n.T(ctx, "attachment.upload_button") }</button>
 		</form>
 		if len(input.Attachments) == 0 {
-			<p>No attachments for this agenda point.</p>
+			<p>{ i18n.T(ctx, "attachment.empty_state") }</p>
 		} else {
 			<ul>
 				for _, a := range input.Attachments {
 					<li id={ "attachment-item-" + a.IDString }>
-						<a href={ templ.URL(input.blobDownloadGetStr(&a)) }>
+						<a href={ templ.URL(input.blobDownloadGetStr(ctx, &a)) }>
 							if a.Label != "" {
 								{ a.Label } ({ a.Filename })
 							} else {
@@ -81,13 +86,13 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 							}
 						</a>
 						<form
-							hx-post={ input.attachmentDeletePostStr(&a) }
+							hx-post={ input.attachmentDeletePostStr(ctx, &a) }
 							hx-target={ "#" + input.containerID() }
 							hx-swap="outerHTML"
-							hx-confirm="Delete this attachment?"
-							style="display: inline;"
+							hx-confirm={ i18n.T(ctx, "attachment.delete_confirm") }
+							class={ InlineForm() }
 						>
-							<button type="submit">Delete</button>
+							<button type="submit">{ i18n.T(ctx, "attachment.delete_button") }</button>
 						</form>
 					</li>
 				}
@@ -95,3 +100,4 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 		}
 	</div>
 }
+

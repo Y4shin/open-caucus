@@ -1,0 +1,53 @@
+package templates
+
+import (
+	"context"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type MeetingAttendeeRecoveryInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	MeetingIDStr  string
+	AttendeeName  string
+	LoginURL      string
+	QRCodeDataURL string
+}
+
+func (i *MeetingAttendeeRecoveryInput) MeetingManageGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.MeetingIDStr).CommitteeMeetingManageGet(ctx, ""))
+}
+
+func (i *MeetingAttendeeRecoveryInput) QRCodeSrc() templ.SafeURL {
+	return templ.SafeURL(i.QRCodeDataURL)
+}
+
+templ MeetingAttendeeRecoveryTemplate(input MeetingAttendeeRecoveryInput) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Guest Recovery Link: { input.AttendeeName }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
+	</head>
+	<body class={ AppShell() }>
+		<header class={ PageHeader() }>
+			<h1>Guest Recovery Link</h1>
+			<h2>{ input.AttendeeName } - { input.MeetingName }</h2>
+			<nav>
+				<a href={ input.MeetingManageGet(ctx) }>← Back to Manage</a>
+			</nav>
+		</header>
+		<main class={ PageMain() }>
+			<p>Share this link with the guest to let them log back in directly.</p>
+			<p><a id="attendee-recovery-link" href={ templ.URL(input.LoginURL) }>{ input.LoginURL }</a></p>
+			<img id="attendee-recovery-qr" src={ input.QRCodeSrc() } alt="Guest Recovery QR Code"/>
+		</main>
+	</body>
+	</html>
+}
+
+

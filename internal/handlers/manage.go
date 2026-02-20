@@ -7,8 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/repository/model"
 	"github.com/Y4shin/conference-tool/internal/routes"
+	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
 )
 
@@ -35,12 +37,31 @@ func buildAgendaPointItems(aps []*model.AgendaPoint, currentID *int64) []templat
 		items[i] = templates.AgendaPointItem{
 			ID:       ap.ID,
 			IDString: strconv.FormatInt(ap.ID, 10),
+			ParentID: ap.ParentID,
 			Position: ap.Position,
 			Title:    ap.Title,
 			IsActive: isActive,
 		}
 	}
 	return items
+}
+
+func flattenAgendaPoints(topLevel, children []*model.AgendaPoint) []*model.AgendaPoint {
+	childrenByParent := make(map[int64][]*model.AgendaPoint, len(topLevel))
+	for _, child := range children {
+		if child.ParentID == nil {
+			continue
+		}
+		parentID := *child.ParentID
+		childrenByParent[parentID] = append(childrenByParent[parentID], child)
+	}
+
+	flattened := make([]*model.AgendaPoint, 0, len(topLevel)+len(children))
+	for _, top := range topLevel {
+		flattened = append(flattened, top)
+		flattened = append(flattened, childrenByParent[top.ID]...)
+	}
+	return flattened
 }
 
 // buildSpeakerItems converts model speaker entries to template items.
@@ -79,8 +100,43 @@ func (h *Handler) loadAttendeeListPartial(ctx context.Context, slug, meetingIDSt
 	}, nil
 }
 
+func (h *Handler) loadManageAttendeeDependentPartial(ctx context.Context, slug, meetingIDStr string, meetingID int64) (*templates.ManageAttendeeDependentPartialInput, error) {
+	settingsPartial, err := h.loadMeetingSettingsPartial(ctx, slug, meetingIDStr, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	speakersPartial, err := h.loadSpeakersListPartial(ctx, slug, meetingIDStr, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	attendeePartial, err := h.loadAttendeeListPartial(ctx, slug, meetingIDStr, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return &templates.ManageAttendeeDependentPartialInput{
+		MeetingSettings: *settingsPartial,
+		SpeakersList:    *speakersPartial,
+		AttendeeList:    *attendeePartial,
+	}, nil
+}
+
+func parseClientIDFromForm(r *http.Request) string {
+	_ = r.ParseForm()
+	return strings.TrimSpace(r.FormValue("client_id"))
+}
+
+func (h *Handler) publishMeetingAttendeesChanged(meetingID int64, originClientID string) {
+	mid := meetingID
+	h.Broker.Publish(broker.SSEEvent{
+		Event:          "meeting-attendees-changed",
+		Data:           []byte("{}"),
+		MeetingID:      &mid,
+		OriginClientID: originClientID,
+	})
+}
+
 // ManageAttendeeCreate adds a guest attendee on behalf of the chairperson.
-func (h *Handler) ManageAttendeeCreate(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AttendeeListPartialInput, *routes.ResponseMeta, error) {
+func (h *Handler) ManageAttendeeCreate(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ManageAttendeeDependentPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid meeting ID")
@@ -89,14 +145,15 @@ func (h *Handler) ManageAttendeeCreate(ctx context.Context, r *http.Request, par
 	if err := r.ParseForm(); err != nil {
 		return nil, nil, fmt.Errorf("failed to parse form: %w", err)
 	}
+	clientID := strings.TrimSpace(r.FormValue("client_id"))
 
 	fullName := strings.TrimSpace(r.FormValue("full_name"))
 	if fullName == "" {
-		partial, loadErr := h.loadAttendeeListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+		partial, loadErr := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
-		partial.Error = "Name is required."
+		partial.AttendeeList.Error = "Name is required."
 		return partial, nil, nil
 	}
 
@@ -108,13 +165,59 @@ func (h *Handler) ManageAttendeeCreate(ctx context.Context, r *http.Request, par
 	if _, err := h.Repository.CreateAttendee(ctx, meetingID, nil, fullName, secret); err != nil {
 		return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
 	}
+	h.publishMeetingAttendeesChanged(meetingID, clientID)
 
-	partial, err := h.loadAttendeeListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	return partial, nil, err
+}
+
+// ManageAttendeeSelfSignup signs up the currently logged-in user as attendee.
+// Idempotent: if already signed up, returns the current attendee list unchanged.
+func (h *Handler) ManageAttendeeSelfSignup(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ManageAttendeeDependentPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	sessionData, ok := session.GetSession(ctx)
+	if !ok || !sessionData.IsUserSession() || sessionData.IsExpired() || sessionData.UserID == nil {
+		return nil, nil, fmt.Errorf("user session is required")
+	}
+	userID := *sessionData.UserID
+	clientID := parseClientIDFromForm(r)
+	changed := false
+
+	_, err = h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, userID, meetingID)
+	if err != nil {
+		if !strings.Contains(err.Error(), "attendee not found") {
+			return nil, nil, fmt.Errorf("failed to load attendee: %w", err)
+		}
+
+		user, err := h.Repository.GetUserByID(ctx, userID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to load user: %w", err)
+		}
+
+		secret, err := generateSecret()
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to generate attendee secret: %w", err)
+		}
+
+		if _, err := h.Repository.CreateAttendee(ctx, meetingID, &userID, user.FullName, secret); err != nil {
+			return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
+		}
+		changed = true
+	}
+	if changed {
+		h.publishMeetingAttendeesChanged(meetingID, clientID)
+	}
+
+	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
 
 // ManageAttendeeDelete removes an attendee from the meeting.
-func (h *Handler) ManageAttendeeDelete(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AttendeeListPartialInput, *routes.ResponseMeta, error) {
+func (h *Handler) ManageAttendeeDelete(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ManageAttendeeDependentPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid meeting ID")
@@ -124,17 +227,19 @@ func (h *Handler) ManageAttendeeDelete(ctx context.Context, r *http.Request, par
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid attendee ID")
 	}
+	clientID := parseClientIDFromForm(r)
 
 	if err := h.Repository.DeleteAttendee(ctx, attendeeID); err != nil {
 		return nil, nil, fmt.Errorf("failed to delete attendee: %w", err)
 	}
+	h.publishMeetingAttendeesChanged(meetingID, clientID)
 
-	partial, err := h.loadAttendeeListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
 
 // ManageAttendeeToggleChair flips the is_chair flag for an attendee.
-func (h *Handler) ManageAttendeeToggleChair(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AttendeeListPartialInput, *routes.ResponseMeta, error) {
+func (h *Handler) ManageAttendeeToggleChair(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ManageAttendeeDependentPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid meeting ID")
@@ -144,6 +249,7 @@ func (h *Handler) ManageAttendeeToggleChair(ctx context.Context, r *http.Request
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid attendee ID")
 	}
+	clientID := parseClientIDFromForm(r)
 
 	attendee, err := h.Repository.GetAttendeeByID(ctx, attendeeID)
 	if err != nil {
@@ -153,8 +259,9 @@ func (h *Handler) ManageAttendeeToggleChair(ctx context.Context, r *http.Request
 	if err := h.Repository.SetAttendeeIsChair(ctx, attendeeID, !attendee.IsChair); err != nil {
 		return nil, nil, fmt.Errorf("failed to update attendee: %w", err)
 	}
+	h.publishMeetingAttendeesChanged(meetingID, clientID)
 
-	partial, err := h.loadAttendeeListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
 
@@ -164,14 +271,20 @@ func (h *Handler) loadAgendaPointListPartial(ctx context.Context, slug, meetingI
 	if err != nil {
 		return nil, fmt.Errorf("failed to load meeting: %w", err)
 	}
-	aps, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
+	topLevel, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load agenda points: %w", err)
 	}
+	children, err := h.Repository.ListSubAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load sub-agenda points: %w", err)
+	}
+	aps := flattenAgendaPoints(topLevel, children)
 	return &templates.AgendaPointListPartialInput{
 		CommitteeSlug:        slug,
 		IDString:             meetingIDStr,
 		AgendaPoints:         buildAgendaPointItems(aps, meeting.CurrentAgendaPointID),
+		ParentOptions:        buildAgendaPointItems(topLevel, nil),
 		CurrentAgendaPointID: meeting.CurrentAgendaPointID,
 	}, nil
 }
@@ -256,8 +369,20 @@ func (h *Handler) ManageAgendaPointCreate(ctx context.Context, r *http.Request, 
 		partial.Error = "Title is required."
 		return partial, nil, nil
 	}
-	if _, err := h.Repository.CreateAgendaPoint(ctx, meetingID, title); err != nil {
-		return nil, nil, fmt.Errorf("failed to create agenda point: %w", err)
+
+	parentIDRaw := strings.TrimSpace(r.FormValue("parent_id"))
+	if parentIDRaw == "" {
+		if _, err := h.Repository.CreateAgendaPoint(ctx, meetingID, title); err != nil {
+			return nil, nil, fmt.Errorf("failed to create agenda point: %w", err)
+		}
+	} else {
+		parentID, err := strconv.ParseInt(parentIDRaw, 10, 64)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid parent agenda point ID")
+		}
+		if _, err := h.Repository.CreateSubAgendaPoint(ctx, meetingID, parentID, title); err != nil {
+			return nil, nil, fmt.Errorf("failed to create sub-agenda point: %w", err)
+		}
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
@@ -328,6 +453,22 @@ func (h *Handler) ManageSpeakerAdd(ctx context.Context, r *http.Request, params 
 	}
 
 	apID := *meeting.CurrentAgendaPointID
+
+	// Enforce at most one non-DONE entry per attendee+type on the active agenda point.
+	existingEntries, err := h.Repository.ListSpeakersForAgendaPoint(ctx, apID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load speakers: %w", err)
+	}
+	for _, e := range existingEntries {
+		if e.AttendeeID == attendeeID && e.Type == speakerType && e.Status != "DONE" {
+			partial, loadErr := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+			if loadErr != nil {
+				return nil, nil, loadErr
+			}
+			partial.Error = fmt.Sprintf("Attendee already has a non-done %s entry.", speakerType)
+			return partial, nil, nil
+		}
+	}
 
 	// Resolve effective gender quotation setting: agenda point overrides meeting.
 	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
@@ -532,5 +673,25 @@ func (h *Handler) ManageSetProtocolWriter(ctx context.Context, r *http.Request, 
 	}
 
 	partial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	return partial, nil, err
+}
+
+// ManageMeetingSettingsPartial refreshes the meeting settings partial.
+func (h *Handler) ManageMeetingSettingsPartial(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingSettingsPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+	partial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	return partial, nil, err
+}
+
+// ManageSpeakersListPartial refreshes the speakers list partial.
+func (h *Handler) ManageSpeakersListPartial(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.SpeakersListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }

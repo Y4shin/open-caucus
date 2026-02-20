@@ -1,7 +1,10 @@
 package templates
 
 import (
+	"context"
+
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type AttendeeLoginInput struct {
@@ -12,36 +15,40 @@ type AttendeeLoginInput struct {
 	Error         string
 }
 
-func (i *AttendeeLoginInput) LoginSubmitPost() templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginSubmitPost())
+func (i *AttendeeLoginInput) LoginSubmitPost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginSubmitPost(ctx, ""))
 }
 
 templ AttendeeLoginTemplate(input AttendeeLoginInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>Attendee Login - { input.MeetingName }</title>
+		<title>{ i18n.T(ctx, "attendee_login.page_title", input.MeetingName) }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 	</head>
-	<body>
-		<header>
+	<body class={ AppShell() }>
+		@LanguageSwitcher()
+		<header class={ PageHeader() }>
 			<h1>{ input.MeetingName }</h1>
 			<h2>{ input.CommitteeName }</h2>
 		</header>
-		<main>
-			<h3>Enter Your Access Code</h3>
+		<main class={ PageMain() }>
+			<h3>{ i18n.T(ctx, "attendee_login.heading") }</h3>
 			if input.Error != "" {
-				<p class="error">{ input.Error }</p>
+				<p class={ ErrorText() }>{ input.Error }</p>
 			}
-			<form method="POST" action={ input.LoginSubmitPost() }>
+			<form method="POST" action={ input.LoginSubmitPost(ctx) }>
 				<div>
-					<label for="secret">Access Code:</label>
+					<label for="secret">{ i18n.T(ctx, "attendee_login.secret_label") }</label>
 					<input type="text" id="secret" name="secret" required autocomplete="off"/>
 				</div>
-				<button type="submit">Enter Meeting</button>
+				<button type="submit">{ i18n.T(ctx, "attendee_login.button") }</button>
 			</form>
 		</main>
 	</body>
 	</html>
 }
+
+

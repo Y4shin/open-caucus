@@ -179,15 +179,13 @@ routes:
   - path: /committee/{slug}/meeting/{meeting_id}
     methods:
       - verb: GET
-        handler: CommitteeMeetingView
+        handler: MeetingLivePage
         middleware:
           - session
-          - auth
-          - committee_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingViewTemplate
-          input_type: MeetingViewInput
+          type: MeetingLiveTemplate
+          input_type: MeetingLiveInput
 
   # Meeting Manage
   - path: /committee/{slug}/meeting/{meeting_id}/manage
@@ -198,10 +196,46 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingManageTemplate
           input_type: MeetingManageInput
+
+  # Meeting Manage Join QR
+  - path: /committee/{slug}/meeting/{meeting_id}/manage/join-qr
+    methods:
+      - verb: GET
+        handler: CommitteeMeetingManageJoinQR
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingJoinQRTemplate
+          input_type: MeetingJoinQRInput
+
+  # Meeting Manage Stream (SSE — attendee-related manage updates)
+  - path: /committee/{slug}/meeting/{meeting_id}/manage/stream
+    methods:
+      - verb: GET
+        sse: true
+        handler: ManageStream
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        query_params:
+          - client_id
+        events:
+          - name: ManageAttendeeListUpdated
+            template:
+              package: github.com/Y4shin/conference-tool/internal/templates
+              type: ManageAttendeeDependentPartial
+              input_type: ManageAttendeeDependentPartialInput
 
   # Toggle Signup Open
   - path: /committee/{slug}/meeting/{meeting_id}/signup-open
@@ -212,10 +246,41 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
           input_type: MeetingSettingsPartialInput
+
+  # Meeting Settings Partial (refresh helper)
+  - path: /committee/{slug}/meeting/{meeting_id}/settings/partial
+    methods:
+      - verb: GET
+        handler: ManageMeetingSettingsPartial
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingSettingsSSEPartial
+          input_type: MeetingSettingsPartialInput
+
+  # Speakers List Partial (refresh helper)
+  - path: /committee/{slug}/meeting/{meeting_id}/speakers/partial
+    methods:
+      - verb: GET
+        handler: ManageSpeakersListPartial
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakersListSSEPartial
+          input_type: SpeakersListPartialInput
 
   # Set Protocol Writer
   - path: /committee/{slug}/meeting/{meeting_id}/protocol-writer
@@ -226,6 +291,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
@@ -266,6 +332,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MotionListPartial
@@ -280,6 +347,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MotionListPartial
@@ -294,6 +362,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MotionItemPartial
@@ -308,6 +377,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         raw: true
 
   # Attachment Create (upload a file and link it to an agenda point)
@@ -319,6 +389,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttachmentListPartial
@@ -333,6 +404,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttachmentListPartial
@@ -347,10 +419,26 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: AttendeeListPartial
-          input_type: AttendeeListPartialInput
+          type: ManageAttendeeDependentPartial
+          input_type: ManageAttendeeDependentPartialInput
+
+  # Attendee Self Signup (chairperson signs up themselves from manage page)
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee/self-signup
+    methods:
+      - verb: POST
+        handler: ManageAttendeeSelfSignup
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: ManageAttendeeDependentPartial
+          input_type: ManageAttendeeDependentPartialInput
 
   # Attendee Delete
   - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/delete
@@ -361,10 +449,11 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: AttendeeListPartial
-          input_type: AttendeeListPartialInput
+          type: ManageAttendeeDependentPartial
+          input_type: ManageAttendeeDependentPartialInput
 
   # Attendee Toggle Chair
   - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair
@@ -375,10 +464,26 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: AttendeeListPartial
-          input_type: AttendeeListPartialInput
+          type: ManageAttendeeDependentPartial
+          input_type: ManageAttendeeDependentPartialInput
+
+  # Attendee Recovery Link + QR (chairperson tool for guests)
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/recovery
+    methods:
+      - verb: GET
+        handler: ManageAttendeeRecoveryPage
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingAttendeeRecoveryTemplate
+          input_type: MeetingAttendeeRecoveryInput
 
   # Agenda Point Create
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/create
@@ -389,6 +494,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AgendaPointListPartial
@@ -403,6 +509,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AgendaPointListPartial
@@ -417,10 +524,26 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AgendaPointListPartial
           input_type: AgendaPointListPartialInput
+
+  # Agenda Point Tools Page (attachments + motions)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools
+    methods:
+      - verb: GET
+        handler: ManageAgendaPointToolsPage
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingAgendaPointToolsTemplate
+          input_type: MeetingAgendaPointToolsInput
 
   # Speaker Add
   - path: /committee/{slug}/meeting/{meeting_id}/speaker/add
@@ -431,6 +554,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -445,6 +569,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -459,6 +584,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -473,6 +599,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -487,6 +614,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -501,6 +629,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -515,6 +644,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
@@ -529,6 +659,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
@@ -543,6 +674,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -557,6 +689,7 @@ routes:
           - session
           - auth
           - committee_access
+          - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -650,7 +783,8 @@ routes:
       - verb: GET
         sse: true
         handler: AttendeeSpeakersStream
-        middleware: [attendee_session, attendee_required]
+        middleware:
+          - session
         events:
           - name: SpeakersUpdated
             template:
@@ -658,14 +792,25 @@ routes:
               type: AttendeeSpeakersListPartial
               input_type: AttendeeSpeakersListPartialInput
 
+  # Attendee Speaker Self Add (live page quick actions)
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/self-add
+    methods:
+      - verb: POST
+        handler: AttendeeSpeakerSelfAdd
+        middleware:
+          - session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeSpeakersListPartial
+          input_type: AttendeeSpeakersListPartialInput
+
   # Meeting Live Page
   - path: /committee/{slug}/meeting/{meeting_id}/live
     methods:
       - verb: GET
-        handler: MeetingLivePage
+        handler: MeetingLiveLegacyRedirect
         middleware:
-          - attendee_session
-          - attendee_required
+          - session
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingLiveTemplate

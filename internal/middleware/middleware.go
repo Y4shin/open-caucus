@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
@@ -11,13 +12,15 @@ import (
 type Registry struct {
 	SessionManager      *session.Manager
 	AdminSessionManager *session.AdminSessionManager
+	Repository          repository.Repository
 }
 
 // NewRegistry creates a new middleware registry
-func NewRegistry(sessionManager *session.Manager, adminSessionManager *session.AdminSessionManager) *Registry {
+func NewRegistry(sessionManager *session.Manager, adminSessionManager *session.AdminSessionManager, repo repository.Repository) *Registry {
 	return &Registry{
 		SessionManager:      sessionManager,
 		AdminSessionManager: adminSessionManager,
+		Repository:          repo,
 	}
 }
 
@@ -30,6 +33,8 @@ func (r *Registry) Get(name string) func(http.Handler) http.Handler {
 		return r.authRequired
 	case "committee_access":
 		return r.committeeAccess
+	case "manage_access":
+		return r.manageAccess
 	case "admin_session":
 		return r.adminSession
 	case "admin_required":

@@ -703,6 +703,7 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 		ID:                           m.ID,
 		Name:                         m.Name,
 		Description:                  m.Description,
+		Secret:                       m.Secret,
 		SignupOpen:                   m.SignupOpen,
 		CurrentAgendaPointID:         currentAgendaPointID,
 		ProtocolWriterID:             protocolWriterID,
@@ -739,9 +740,14 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 	if ap.CurrentSpeakerID.Valid {
 		currentSpeakerID = &ap.CurrentSpeakerID.Int64
 	}
+	var parentID *int64
+	if ap.ParentID.Valid {
+		parentID = &ap.ParentID.Int64
+	}
 	return &model.AgendaPoint{
 		ID:                           ap.ID,
 		MeetingID:                    ap.MeetingID,
+		ParentID:                     parentID,
 		Position:                     ap.Position,
 		Title:                        ap.Title,
 		Protocol:                     ap.Protocol,
@@ -778,11 +784,54 @@ func (r *Repository) CreateAgendaPoint(ctx context.Context, meetingID int64, tit
 	return agendaPointFromClient(&ap), nil
 }
 
+// CreateSubAgendaPoint creates a new child agenda point for a parent agenda point.
+func (r *Repository) CreateSubAgendaPoint(ctx context.Context, meetingID, parentID int64, title string) (*model.AgendaPoint, error) {
+	posRaw, err := r.Queries.GetMaxSubAgendaPointPosition(ctx, client.GetMaxSubAgendaPointPositionParams{
+		MeetingID: meetingID,
+		ParentID:  sql.NullInt64{Int64: parentID, Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get max sub-agenda position: %w", err)
+	}
+	var pos int64
+	switch v := posRaw.(type) {
+	case int64:
+		pos = v + 1
+	case float64:
+		pos = int64(v) + 1
+	default:
+		pos = 1
+	}
+	ap, err := r.Queries.CreateSubAgendaPoint(ctx, client.CreateSubAgendaPointParams{
+		MeetingID: meetingID,
+		ParentID:  sql.NullInt64{Int64: parentID, Valid: true},
+		Position:  pos,
+		Title:     title,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create sub-agenda point: %w", err)
+	}
+	return agendaPointFromClient(&ap), nil
+}
+
 // ListAgendaPointsForMeeting returns all top-level agenda points for a meeting.
 func (r *Repository) ListAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error) {
 	rows, err := r.Queries.ListAgendaPointsForMeeting(ctx, meetingID)
 	if err != nil {
 		return nil, fmt.Errorf("list agenda points: %w", err)
+	}
+	result := make([]*model.AgendaPoint, len(rows))
+	for i := range rows {
+		result[i] = agendaPointFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// ListSubAgendaPointsForMeeting returns all child agenda points for a meeting.
+func (r *Repository) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error) {
+	rows, err := r.Queries.ListSubAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("list sub-agenda points: %w", err)
 	}
 	result := make([]*model.AgendaPoint, len(rows))
 	for i := range rows {

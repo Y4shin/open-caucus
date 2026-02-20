@@ -1,7 +1,10 @@
 package templates
 
 import (
+	"context"
+
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type LoginPageInput struct {
@@ -10,45 +13,49 @@ type LoginPageInput struct {
 	Username  string // Pre-fill on error
 }
 
-func (i *LoginPageInput) LoginSubmitPost() templ.SafeURL {
-	return templ.URL(paths.Route.LoginSubmitPost())
+func (i *LoginPageInput) LoginSubmitPost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.Route.LoginSubmitPost(ctx, ""))
 }
 
 templ LoginPageTemplate(input LoginPageInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>Login - Conference Tool</title>
+		<title>{ i18n.T(ctx, "login.page_title") }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 	</head>
-	<body>
-		<h1>Conference Tool Login</h1>
+	<body class={ AppShell() }>
+		@LanguageSwitcher()
+		<h1>{ i18n.T(ctx, "login.title") }</h1>
 
 		if input.Error != "" {
-			<div class="error">{ input.Error }</div>
+			<div class={ ErrorText() }>{ input.Error }</div>
 		}
 
-		<form method="POST" action={ input.LoginSubmitPost() }>
+		<form method="POST" action={ input.LoginSubmitPost(ctx) }>
 			<div>
-				<label for="committee">Committee:</label>
+				<label for="committee">{ i18n.T(ctx, "login.committee_label") }</label>
 				<input type="text" id="committee" name="committee"
 				       value={ input.Committee } required/>
 			</div>
 
 			<div>
-				<label for="username">Username:</label>
+				<label for="username">{ i18n.T(ctx, "login.username_label") }</label>
 				<input type="text" id="username" name="username"
 				       value={ input.Username } required/>
 			</div>
 
 			<div>
-				<label for="password">Password:</label>
+				<label for="password">{ i18n.T(ctx, "login.password_label") }</label>
 				<input type="password" id="password" name="password" required/>
 			</div>
 
-			<button type="submit">Login</button>
+			<button type="submit">{ i18n.T(ctx, "login.button") }</button>
 		</form>
 	</body>
 	</html>
 }
+
+

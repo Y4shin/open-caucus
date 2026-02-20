@@ -1,9 +1,11 @@
 package templates
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 // MotionItem holds display data for a single motion.
@@ -39,10 +41,10 @@ func (i *MotionListPartialInput) containerID() string {
 	return "motion-list-ap-" + i.AgendaPointIDStr
 }
 
-func (i *MotionListPartialInput) MotionCreatePostStr() string {
+func (i *MotionListPartialInput) MotionCreatePostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr,
-	).ManageMotionCreatePost()
+	).ManageMotionCreatePost(ctx, "")
 }
 
 func (i *MotionListPartialInput) motionItemInput(m *MotionItem) MotionItemPartialInput {
@@ -71,90 +73,90 @@ func (i *MotionItemPartialInput) motionListContainerID() string {
 	return "motion-list-ap-" + i.AgendaPointIDStr
 }
 
-func (i *MotionItemPartialInput) MotionDeletePostStr() string {
+func (i *MotionItemPartialInput) MotionDeletePostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdDeleteRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, i.Motion.IDString,
-	).ManageMotionDeletePost()
+	).ManageMotionDeletePost(ctx, "")
 }
 
-func (i *MotionItemPartialInput) MotionVotePostStr() string {
+func (i *MotionItemPartialInput) MotionVotePostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdVoteRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, i.Motion.IDString,
-	).ManageMotionRecordVotePost()
+	).ManageMotionRecordVotePost(ctx, "")
 }
 
-func (i *MotionItemPartialInput) BlobDownloadGetStr() string {
+func (i *MotionItemPartialInput) BlobDownloadGetStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.Motion.BlobIDString,
-	).ServeBlobDownloadGet()
+	).ServeBlobDownloadGet(ctx, "")
 }
 
 templ MotionItemPartial(input MotionItemPartialInput) {
 	<div id={ input.containerID() }>
 		<strong>{ input.Motion.Title }</strong>
 		{ " " }
-		<a href={ templ.URL(input.BlobDownloadGetStr()) }>{ input.Motion.Filename }</a>
+		<a href={ templ.URL(input.BlobDownloadGetStr(ctx)) }>{ input.Motion.Filename }</a>
 		if input.Error != "" {
-			<p class="error">{ input.Error }</p>
+			<p class={ ErrorText() }>{ input.Error }</p>
 		}
 		if input.Motion.HasVotes() {
 			<p>
-				For: { strconv.FormatInt(*input.Motion.VotesFor, 10) } |
-				Against: { strconv.FormatInt(*input.Motion.VotesAgainst, 10) } |
-				Abstained: { strconv.FormatInt(*input.Motion.VotesAbstained, 10) } |
-				Eligible: { strconv.FormatInt(*input.Motion.VotesEligible, 10) }
+				{ i18n.T(ctx, "motion.vote_for_label") } { strconv.FormatInt(*input.Motion.VotesFor, 10) } |
+				{ i18n.T(ctx, "motion.vote_against_label") } { strconv.FormatInt(*input.Motion.VotesAgainst, 10) } |
+				{ i18n.T(ctx, "motion.vote_abstained_label") } { strconv.FormatInt(*input.Motion.VotesAbstained, 10) } |
+				{ i18n.T(ctx, "motion.vote_eligible_label") } { strconv.FormatInt(*input.Motion.VotesEligible, 10) }
 			</p>
 		} else {
 			<form
-				hx-post={ input.MotionVotePostStr() }
+				hx-post={ input.MotionVotePostStr(ctx) }
 				hx-target={ "#" + input.containerID() }
 				hx-swap="outerHTML"
-				style="display: inline;"
+				class={ InlineForm() }
 			>
-				<label>For: <input type="number" name="votes_for" min="0" required/></label>
-				<label>Against: <input type="number" name="votes_against" min="0" required/></label>
-				<label>Abstained: <input type="number" name="votes_abstained" min="0" required/></label>
-				<label>Eligible: <input type="number" name="votes_eligible" min="0" required/></label>
-				<button type="submit">Record Votes</button>
+				<label>{ i18n.T(ctx, "motion.vote_for_label") } <input type="number" name="votes_for" min="0" required/></label>
+				<label>{ i18n.T(ctx, "motion.vote_against_label") } <input type="number" name="votes_against" min="0" required/></label>
+				<label>{ i18n.T(ctx, "motion.vote_abstained_label") } <input type="number" name="votes_abstained" min="0" required/></label>
+				<label>{ i18n.T(ctx, "motion.vote_eligible_label") } <input type="number" name="votes_eligible" min="0" required/></label>
+				<button type="submit">{ i18n.T(ctx, "motion.record_vote_button") }</button>
 			</form>
 		}
 		<form
-			hx-post={ input.MotionDeletePostStr() }
+			hx-post={ input.MotionDeletePostStr(ctx) }
 			hx-target={ "#" + input.motionListContainerID() }
 			hx-swap="outerHTML"
-			hx-confirm="Delete this motion and its document?"
-			style="display: inline;"
+			hx-confirm={ i18n.T(ctx, "motion.delete_confirm") }
+			class={ InlineForm() }
 		>
-			<button type="submit">Delete</button>
+			<button type="submit">{ i18n.T(ctx, "motion.delete_button") }</button>
 		</form>
 	</div>
 }
 
 templ MotionListPartial(input MotionListPartialInput) {
 	<div id={ input.containerID() }>
-		<h4>{ input.AgendaPointTitle } — Motions</h4>
+		<h4>{ input.AgendaPointTitle } — { i18n.T(ctx, "motion.heading") }</h4>
 		if input.Error != "" {
-			<p class="error">{ input.Error }</p>
+			<p class={ ErrorText() }>{ input.Error }</p>
 		}
 		<form
-			hx-post={ input.MotionCreatePostStr() }
+			hx-post={ input.MotionCreatePostStr(ctx) }
 			hx-target={ "#" + input.containerID() }
 			hx-swap="outerHTML"
 			hx-encoding="multipart/form-data"
 			hx-on::after-request="if(event.detail.successful) this.reset()"
 		>
 			<div>
-				<label for={ "motion-title-" + input.AgendaPointIDStr }>Title:</label>
+				<label for={ "motion-title-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "motion.title_label") }</label>
 				<input type="text" id={ "motion-title-" + input.AgendaPointIDStr } name="title" required/>
 			</div>
 			<div>
-				<label for={ "motion-file-" + input.AgendaPointIDStr }>Document:</label>
+				<label for={ "motion-file-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "motion.file_label") }</label>
 				<input type="file" id={ "motion-file-" + input.AgendaPointIDStr } name="file" required/>
 			</div>
-			<button type="submit">Upload Motion</button>
+			<button type="submit">{ i18n.T(ctx, "motion.upload_button") }</button>
 		</form>
 		if len(input.Motions) == 0 {
-			<p>No motions for this agenda point.</p>
+			<p>{ i18n.T(ctx, "motion.empty_state") }</p>
 		} else {
 			for _, m := range input.Motions {
 				@MotionItemPartial(input.motionItemInput(&m))
@@ -162,3 +164,4 @@ templ MotionListPartial(input MotionListPartialInput) {
 		}
 	</div>
 }
+

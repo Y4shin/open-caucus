@@ -8,6 +8,10 @@ type SSEEvent struct {
 	Event string
 	// Data is the payload (typically HTML for htmx SSE swaps).
 	Data []byte
+	// MeetingID scopes events to a meeting when set.
+	MeetingID *int64
+	// OriginClientID identifies the originating browser tab/client.
+	OriginClientID string
 }
 
 // Broker manages SSE client subscriptions and publishes strictly typed domain events.

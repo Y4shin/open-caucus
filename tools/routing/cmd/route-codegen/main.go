@@ -17,17 +17,18 @@ func main() {
 		pathsOutputFile = flag.String("paths-output", "", "Path to the generated paths output file (if empty, paths are not generated separately)")
 		pathsPackage    = flag.String("paths-package", "paths", "Package name for the generated paths code")
 		staticDir       = flag.String("static-dir", "", "Path to static assets directory to embed (auto-detected as 'static/' next to output file if not specified)")
+		localePackage   = flag.String("locale-package", "", "Import path of the locale package (enables locale-aware path builders)")
 	)
 
 	flag.Parse()
 
-	if err := run(*configFile, *outputFile, *packageName, *pathsOutputFile, *pathsPackage, *staticDir); err != nil {
+	if err := run(*configFile, *outputFile, *packageName, *pathsOutputFile, *pathsPackage, *staticDir, *localePackage); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(configFile, outputFile, packageName, pathsOutputFile, pathsPackage, staticDirFlag string) error {
+func run(configFile, outputFile, packageName, pathsOutputFile, pathsPackage, staticDirFlag, localePackage string) error {
 	// Parse the configuration
 	config, err := routing.ParseConfig(configFile)
 	if err != nil {
@@ -60,7 +61,7 @@ func run(configFile, outputFile, packageName, pathsOutputFile, pathsPackage, sta
 
 	// Generate paths if output specified
 	if pathsOutputFile != "" {
-		pathsCode, err := routing.GeneratePaths(config, pathsPackage, staticFiles)
+		pathsCode, err := routing.GeneratePaths(config, pathsPackage, staticFiles, localePackage)
 		if err != nil {
 			return fmt.Errorf("failed to generate paths code: %w", err)
 		}

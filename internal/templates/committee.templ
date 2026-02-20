@@ -1,10 +1,12 @@
 package templates
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type MeetingItem struct {
@@ -26,36 +28,36 @@ type CommitteePageInput struct {
 	FormError     string
 }
 
-func (i *CommitteePageInput) LogoutSubmitPost() templ.SafeURL {
-	return templ.URL(paths.Route.LogoutSubmitPost())
+func (i *CommitteePageInput) LogoutSubmitPost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.Route.LogoutSubmitPost(ctx, ""))
 }
 
-func (i *CommitteePageInput) CommitteeCreateMeetingPost() templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost())
+func (i *CommitteePageInput) CommitteeCreateMeetingPost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost(ctx, ""))
 }
 
-func (i *CommitteePageInput) MeetingViewGet(m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingViewGet())
+func (i *CommitteePageInput) MeetingViewGet(ctx context.Context, m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdRoute(i.CommitteeSlug, m.IDString).MeetingLivePageGet(ctx, ""))
 }
 
-func (i *CommitteePageInput) MeetingManageGet(m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet())
+func (i *CommitteePageInput) MeetingManageGet(ctx context.Context, m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet(ctx, ""))
 }
 
-func (i *CommitteePageInput) MeetingDeletePost(m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdDeleteRoute(i.CommitteeSlug, m.IDString).CommitteeDeleteMeetingPost())
+func (i *CommitteePageInput) MeetingDeletePost(ctx context.Context, m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdDeleteRoute(i.CommitteeSlug, m.IDString).CommitteeDeleteMeetingPost(ctx, ""))
 }
 
-func (i *CommitteePageInput) MeetingActivatePost(m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost())
+func (i *CommitteePageInput) MeetingActivatePost(ctx context.Context, m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost(ctx, ""))
 }
 
-func (i *CommitteePageInput) PageURL(page int) templ.SafeURL {
+func (i *CommitteePageInput) PageURL(ctx context.Context, page int) templ.SafeURL {
 	q := paths.CommitteePageGetQueryParams{Page: strconv.Itoa(page)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
-	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(q))
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(ctx, "", q))
 }
 
 // MeetingListPartialInput is the input for the HTMX-swappable meeting list partial.
@@ -68,32 +70,32 @@ type MeetingListPartialInput struct {
 	FormError     string
 }
 
-func (i *MeetingListPartialInput) CommitteeCreateMeetingPostStr() string {
-	return paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost()
+func (i *MeetingListPartialInput) CommitteeCreateMeetingPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingCreateRoute(i.CommitteeSlug).CommitteeCreateMeetingPost(ctx, "")
 }
 
-func (i *MeetingListPartialInput) MeetingViewGet(m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingViewGet())
+func (i *MeetingListPartialInput) MeetingViewGet(ctx context.Context, m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdRoute(i.CommitteeSlug, m.IDString).MeetingLivePageGet(ctx, ""))
 }
 
-func (i *MeetingListPartialInput) MeetingManageGet(m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet())
+func (i *MeetingListPartialInput) MeetingManageGet(ctx context.Context, m *MeetingItem) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet(ctx, ""))
 }
 
-func (i *MeetingListPartialInput) MeetingDeletePostStr(m *MeetingItem) string {
-	return paths.NewCommitteeSlugMeetingMeetingIdDeleteRoute(i.CommitteeSlug, m.IDString).CommitteeDeleteMeetingPost()
+func (i *MeetingListPartialInput) MeetingDeletePostStr(ctx context.Context, m *MeetingItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdDeleteRoute(i.CommitteeSlug, m.IDString).CommitteeDeleteMeetingPost(ctx, "")
 }
 
-func (i *MeetingListPartialInput) MeetingActivatePostStr(m *MeetingItem) string {
-	return paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost()
+func (i *MeetingListPartialInput) MeetingActivatePostStr(ctx context.Context, m *MeetingItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost(ctx, "")
 }
 
-func (i *MeetingListPartialInput) PageURL(page int) templ.SafeURL {
+func (i *MeetingListPartialInput) PageURL(ctx context.Context, page int) templ.SafeURL {
 	q := paths.CommitteePageGetQueryParams{Page: strconv.Itoa(page)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
-	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(q))
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(ctx, "", q))
 }
 
 // MeetingListPartial renders the create-meeting form and the paginated meetings table.
@@ -102,42 +104,42 @@ func (i *MeetingListPartialInput) PageURL(page int) templ.SafeURL {
 templ MeetingListPartial(input MeetingListPartialInput) {
 	<div id="meeting-list-container">
 		if input.FormError != "" {
-			<p class="error">{ input.FormError }</p>
+			<p class={ ErrorText() }>{ input.FormError }</p>
 		}
-		<h3>Create New Meeting</h3>
+		<h3>{ i18n.T(ctx, "committee.create_meeting_heading") }</h3>
 		<form
-			hx-post={ input.CommitteeCreateMeetingPostStr() }
+			hx-post={ input.CommitteeCreateMeetingPostStr(ctx) }
 			hx-target="#meeting-list-container"
 			hx-swap="outerHTML"
 			hx-on::after-request="if(event.detail.successful) this.reset()"
 		>
 			<div>
-				<label for="name">Name:</label>
+				<label for="name">{ i18n.T(ctx, "committee.name_label") }</label>
 				<input type="text" id="name" name="name" required/>
 			</div>
 			<div>
-				<label for="description">Description:</label>
+				<label for="description">{ i18n.T(ctx, "committee.description_label") }</label>
 				<textarea id="description" name="description"></textarea>
 			</div>
 			<div>
 				<label>
 					<input type="checkbox" name="signup_open" value="true"/>
-					Open for signup
+					{ i18n.T(ctx, "committee.signup_label") }
 				</label>
 			</div>
-			<button type="submit">Create Meeting</button>
+			<button type="submit">{ i18n.T(ctx, "committee.create_button") }</button>
 		</form>
 		if len(input.Meetings) == 0 {
-			<p>No meetings yet.</p>
+			<p>{ i18n.T(ctx, "committee.empty_state") }</p>
 		} else {
-			<table>
+			<table class={ DataTable() }>
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Description</th>
-						<th>Signup Open</th>
-						<th>Active</th>
-						<th>Actions</th>
+						<th>{ i18n.T(ctx, "committee.col_name") }</th>
+						<th>{ i18n.T(ctx, "committee.col_description") }</th>
+						<th>{ i18n.T(ctx, "committee.col_signup") }</th>
+						<th>{ i18n.T(ctx, "committee.col_active") }</th>
+						<th>{ i18n.T(ctx, "committee.col_actions") }</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -147,46 +149,46 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 							<td>{ m.Description }</td>
 							<td>
 								if m.SignupOpen {
-									Yes
+									{ i18n.T(ctx, "common.yes") }
 								} else {
-									No
+									{ i18n.T(ctx, "common.no") }
 								}
 							</td>
 							<td>
 								if m.IsActive {
-									Yes
+									{ i18n.T(ctx, "common.yes") }
 								} else {
-									No
+									{ i18n.T(ctx, "common.no") }
 								}
 							</td>
 							<td>
-								<a href={ input.MeetingViewGet(&m) }>View</a>
-								<a href={ input.MeetingManageGet(&m) }>Manage</a>
+								<a href={ input.MeetingViewGet(ctx, &m) }>{ i18n.T(ctx, "committee.view_link") }</a>
+								<a href={ input.MeetingManageGet(ctx, &m) }>{ i18n.T(ctx, "committee.manage_link") }</a>
 								if !m.IsActive {
 									<form
-										hx-post={ input.MeetingActivatePostStr(&m) }
+										hx-post={ input.MeetingActivatePostStr(ctx, &m) }
 										hx-target="#meeting-list-container"
 										hx-swap="outerHTML"
-										style="display: inline;"
+										class={ InlineForm() }
 									>
-										<button type="submit">Set Active</button>
+										<button type="submit">{ i18n.T(ctx, "committee.activate_button") }</button>
 									</form>
 								}
 								<form
-									hx-post={ input.MeetingDeletePostStr(&m) }
+									hx-post={ input.MeetingDeletePostStr(ctx, &m) }
 									hx-target="#meeting-list-container"
 									hx-swap="outerHTML"
-									hx-confirm="Delete this meeting?"
-									style="display: inline;"
+									hx-confirm={ i18n.T(ctx, "committee.delete_confirm") }
+									class={ InlineForm() }
 								>
-									<button type="submit">Delete</button>
+									<button type="submit">{ i18n.T(ctx, "committee.delete_button") }</button>
 								</form>
 							</td>
 						</tr>
 					}
 				</tbody>
 			</table>
-			@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(input.Pagination.PrevPage), input.PageURL(input.Pagination.NextPage))
+			@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(ctx, input.Pagination.PrevPage), input.PageURL(ctx, input.Pagination.NextPage))
 		}
 	</div>
 }
@@ -195,24 +197,26 @@ templ CommitteePageTemplate(input CommitteePageInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>{ input.CommitteeName } - Conference Tool</title>
+		<title>{ i18n.T(ctx, "committee.page_title", input.CommitteeName) }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
-	<body>
-		<header>
+	<body class={ AppShell() }>
+		<header class={ PageHeader() }>
 			<h1>{ input.CommitteeName }</h1>
-			<p>Logged in as: { input.Username } ({ input.Role })</p>
+			<p>{ i18n.T(ctx, "committee.logged_in_as", input.Username, input.Role) }</p>
+			@LanguageSwitcher()
 		</header>
 
-		<main>
-			<h2>Committee Dashboard</h2>
-			<p>Welcome to the committee management system.</p>
+		<main class={ PageMain() }>
+			<h2>{ i18n.T(ctx, "committee.dashboard_heading") }</h2>
+			<p>{ i18n.T(ctx, "committee.welcome") }</p>
 
 			if input.Role == "chairperson" {
-				<section>
-					<h2>Meetings</h2>
+				<section class={ Panel() }>
+					<h2>{ i18n.T(ctx, "committee.meetings_heading") }</h2>
 					@MeetingListPartial(MeetingListPartialInput{
 						CommitteeSlug: input.CommitteeSlug,
 						Meetings:      input.Meetings,
@@ -223,11 +227,13 @@ templ CommitteePageTemplate(input CommitteePageInput) {
 			}
 		</main>
 
-		<footer>
-			<form method="POST" action={ input.LogoutSubmitPost() }>
-				<button type="submit">Logout</button>
+		<footer class={ PageFooter() }>
+			<form method="POST" action={ input.LogoutSubmitPost(ctx) }>
+				<button type="submit">{ i18n.T(ctx, "committee.logout_button") }</button>
 			</form>
 		</footer>
 	</body>
 	</html>
 }
+
+

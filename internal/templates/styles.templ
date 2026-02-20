@@ -1,0 +1,453 @@
+package templates
+
+css AppShell() {
+	font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+	background: radial-gradient(circle at 18% 0%, #112a53 0%, #0a1937 38%, #070f25 100%);
+	color: #eaf2ff;
+	margin: 0;
+	min-height: 100vh;
+}
+
+css PageHeader() {
+	background: linear-gradient(90deg, #071126 0%, #0b1e3f 52%, #102a56 100%);
+	color: #f2f8ff;
+	border-bottom: 1px solid #16355f;
+	padding: 1rem 1.25rem;
+}
+
+css PageMain() {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 1.25rem 1.25rem 1.7rem;
+}
+
+css PageFooter() {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1.25rem 1.25rem;
+}
+
+css Panel() {
+	background: linear-gradient(170deg, rgba(8, 22, 50, 0.94), rgba(5, 17, 39, 0.97));
+	border: 1px solid rgba(80, 125, 183, 0.38);
+	border-radius: 16px;
+	padding: 1rem;
+	margin-bottom: 1rem;
+	box-shadow: inset 0 1px 0 rgba(170, 217, 255, 0.06);
+}
+
+css DataTable() {
+	width: 100%;
+	border-collapse: collapse;
+	background: rgba(4, 14, 34, 0.62);
+	color: #eaf2ff;
+}
+
+css InlineForm() {
+	display: inline;
+}
+
+css LanguageSwitcherWrap() {
+	display: inline-flex;
+	gap: 0.5rem;
+	align-items: center;
+	padding: 0.3rem 0.55rem;
+	border-radius: 999px;
+	background: rgba(6, 18, 42, 0.72);
+	border: 1px solid rgba(96, 155, 232, 0.35);
+	backdrop-filter: blur(8px);
+}
+
+css LanguageSwitcherLink() {
+	color: #98d6ff;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+css FullWidthField() {
+	width: 100%;
+	max-width: 100%;
+}
+
+css ErrorText() {
+	background: rgba(135, 21, 42, 0.28);
+	border: 1px solid rgba(246, 112, 143, 0.52);
+	border-radius: 8px;
+	color: #ffd2de;
+	padding: 0.55rem 0.7rem;
+	margin-bottom: 0.8rem;
+}
+
+css ManageGrid() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+	gap: 1rem;
+	align-items: start;
+}
+
+css ManageGridSlice() {
+	display: contents;
+}
+
+css LiveBody() {
+	background: radial-gradient(circle at 18% 0%, #112a53 0%, #0a1937 38%, #070f25 100%);
+	color: #eaf2ff;
+	font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+	min-height: 100vh;
+}
+
+css LiveHeader() {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	background: linear-gradient(90deg, #071126 0%, #0b1e3f 52%, #102a56 100%);
+	color: #f2f8ff;
+	border-bottom: 1px solid #16355f;
+}
+
+css LiveUserBar() {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	font-size: 0.92rem;
+}
+
+css LiveLogoutButton() {
+	background: rgba(11, 172, 255, 0.18);
+	color: #dcf5ff;
+	border: 1px solid #21b3ff;
+	border-radius: 999px;
+	padding: 0.4rem 0.85rem;
+	cursor: pointer;
+}
+
+css LiveManageLink() {
+	display: inline-flex;
+	align-items: center;
+	border-radius: 999px;
+	border: 1px solid #21b3ff;
+	background: rgba(11, 172, 255, 0.12);
+	color: #dcf5ff;
+	text-decoration: none;
+	font-size: 0.85rem;
+	font-weight: 600;
+	padding: 0.38rem 0.75rem;
+}
+
+css LiveGrid() {
+	display: grid;
+	grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+	gap: 1rem;
+}
+
+css LivePanel() {
+	background: linear-gradient(170deg, rgba(8, 22, 50, 0.94), rgba(5, 17, 39, 0.97));
+	border: 1px solid rgba(80, 125, 183, 0.38);
+	border-radius: 18px;
+	color: #eaf2ff;
+	min-height: 520px;
+	box-shadow: inset 0 1px 0 rgba(170, 217, 255, 0.06);
+}
+
+css LiveAgendaList() {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+}
+
+css LiveAgendaItem() {
+	display: flex;
+	gap: 0.55rem;
+	align-items: baseline;
+	padding: 0.55rem 0.75rem;
+	background: rgba(4, 14, 34, 0.78);
+	border: 1px solid rgba(40, 87, 148, 0.48);
+	border-radius: 10px;
+}
+
+css LiveAgendaItemActive() {
+	border-color: #1bbaff;
+	box-shadow: 0 0 0 1px rgba(27, 186, 255, 0.4);
+	color: #6dd8ff;
+}
+
+css LiveAgendaSubPoint() {
+	margin-left: 1rem;
+	opacity: 0.92;
+}
+
+css LiveAgendaPosition() {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #8cb9ff;
+	min-width: 2.4rem;
+}
+
+css LiveAgendaTitle() {
+	font-size: 1.2rem;
+	line-height: 1.25;
+}
+
+css LiveActiveAgendaTitle() {
+	margin: 0 0 0.8rem;
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: #9cd9ff;
+}
+
+css LiveEmptyState() {
+	margin: 0;
+	color: #b3c7e6;
+}
+
+css LiveSpeakerTable() {
+	background: transparent;
+}
+
+css LiveSpeakerHead() {
+	text-align: left;
+	font-size: 0.82rem;
+	font-weight: 700;
+	color: #84a4d0;
+	padding: 0 0.4rem 0.45rem;
+	border-bottom: 1px solid rgba(84, 124, 183, 0.45);
+}
+
+css LiveSpeakerRow() {
+	border-bottom: 1px solid rgba(71, 103, 148, 0.28);
+}
+
+css LiveSpeakerCellName() {
+	font-size: clamp(1.25rem, 2.7vw, 3rem);
+	font-weight: 800;
+	padding: 0.55rem 0.45rem;
+	color: #edf5ff;
+}
+
+css LiveSpeakerCellMeta() {
+	font-size: 0.92rem;
+	color: #9ebce1;
+	padding: 0.55rem 0.45rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+css LiveSpeakerCellSmall() {
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: #7faee8;
+	padding: 0.55rem 0.45rem;
+	vertical-align: baseline;
+}
+
+css LiveSpeaking() {
+	background: rgba(17, 128, 197, 0.17);
+}
+
+css LiveMyTurn() {
+	outline: 1px dashed rgba(148, 223, 255, 0.4);
+}
+
+css LiveBottomBar() {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	justify-content: center;
+	padding: 0.35rem 0.5rem 0.45rem;
+	pointer-events: none;
+}
+
+css LiveLanguageDock() {
+	pointer-events: auto;
+}
+
+css LiveSpeakerList() {
+	display: flex;
+	flex-direction: column;
+	gap: 0.55rem;
+}
+
+css LiveSpeakerItem() {
+	display: flex;
+	gap: 0.7rem;
+	align-items: flex-start;
+	background: rgba(8, 22, 50, 0.64);
+	border: 1px solid rgba(74, 117, 174, 0.36);
+	border-radius: 12px;
+	padding: 0.65rem 0.75rem;
+}
+
+css LiveSpeakerOrder() {
+	min-width: 2.2rem;
+	font-size: 1rem;
+	font-weight: 700;
+	color: #9bc5ff;
+	padding-top: 0.2rem;
+}
+
+css LiveSpeakerMain() {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	flex: 1;
+}
+
+css LiveSpeakerName() {
+	font-size: clamp(1.2rem, 2.5vw, 2.9rem);
+	font-weight: 800;
+	line-height: 1.06;
+	color: #edf5ff;
+}
+
+css LiveSpeakerMetaRow() {
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+css LiveSpeakerType() {
+	font-size: 0.77rem;
+	color: #9ebce1;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+css LiveBadgeRow() {
+	display: flex;
+	gap: 0.35rem;
+	flex-wrap: wrap;
+}
+
+css LiveBadge() {
+	display: inline-flex;
+	align-items: center;
+	font-size: 0.7rem;
+	font-weight: 700;
+	padding: 0.15rem 0.45rem;
+	border-radius: 999px;
+	border: 1px solid rgba(146, 183, 229, 0.45);
+	color: #d4e8ff;
+	background: rgba(18, 37, 70, 0.75);
+}
+
+css LiveBadgeROPM() {
+	border-color: rgba(79, 214, 255, 0.8);
+	color: #7de7ff;
+}
+
+css LiveBadgeQuoted() {
+	border-color: rgba(216, 164, 255, 0.85);
+	color: #efcfff;
+}
+
+css LiveBadgeFirst() {
+	border-color: rgba(153, 255, 197, 0.85);
+	color: #b7ffd7;
+}
+
+css LiveBadgePriority() {
+	border-color: rgba(255, 205, 112, 0.88);
+	color: #ffdea1;
+}
+
+css LiveBadgeModerator() {
+	border-color: rgba(111, 215, 255, 0.9);
+	color: #c5f1ff;
+}
+
+css LiveSpeakersHeaderRow() {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+css LiveSelfAddRow() {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	margin-top: 0.8rem;
+}
+
+css LiveSelfAddButton() {
+	background: rgba(11, 172, 255, 0.16);
+	color: #ddf6ff;
+	border: 1px solid rgba(84, 214, 255, 0.7);
+	border-radius: 10px;
+	padding: 0.38rem 0.72rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+templ GlobalStylesheetLink() {
+	<link rel="stylesheet" href="/styles/templ.css"/>
+}
+
+func GlobalCSSClasses() []templ.CSSClass {
+	return []templ.CSSClass{
+		AppShell(),
+		PageHeader(),
+		PageMain(),
+		PageFooter(),
+		Panel(),
+		DataTable(),
+		InlineForm(),
+		LanguageSwitcherWrap(),
+		LanguageSwitcherLink(),
+		FullWidthField(),
+		ErrorText(),
+		ManageGrid(),
+		ManageGridSlice(),
+		LiveBody(),
+		LiveHeader(),
+		LiveUserBar(),
+		LiveLogoutButton(),
+		LiveManageLink(),
+		LiveGrid(),
+		LivePanel(),
+		LiveAgendaList(),
+		LiveAgendaItem(),
+		LiveAgendaItemActive(),
+		LiveAgendaSubPoint(),
+		LiveAgendaPosition(),
+		LiveAgendaTitle(),
+		LiveActiveAgendaTitle(),
+		LiveEmptyState(),
+		LiveSpeakerTable(),
+		LiveSpeakerHead(),
+		LiveSpeakerRow(),
+		LiveSpeakerCellName(),
+		LiveSpeakerCellMeta(),
+		LiveSpeakerCellSmall(),
+		LiveSpeaking(),
+		LiveMyTurn(),
+		LiveBottomBar(),
+		LiveLanguageDock(),
+		LiveSpeakerList(),
+		LiveSpeakerItem(),
+		LiveSpeakerOrder(),
+		LiveSpeakerMain(),
+		LiveSpeakerName(),
+		LiveSpeakerMetaRow(),
+		LiveSpeakerType(),
+		LiveBadgeRow(),
+		LiveBadge(),
+		LiveBadgeROPM(),
+		LiveBadgeQuoted(),
+		LiveBadgeFirst(),
+		LiveBadgePriority(),
+		LiveBadgeModerator(),
+		LiveSpeakersHeaderRow(),
+		LiveSelfAddRow(),
+		LiveSelfAddButton(),
+	}
+}
+

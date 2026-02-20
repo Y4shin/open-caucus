@@ -1,10 +1,12 @@
 package templates
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type AdminDashboardInput struct {
@@ -18,16 +20,16 @@ type CommitteeItem struct {
 	Name string
 }
 
-func (c *CommitteeItem) ManageUsersGet() templ.SafeURL {
-	return templ.URL(paths.NewAdminCommitteeSlugRoute(c.Slug).AdminCommitteeUsersGet())
+func (c *CommitteeItem) ManageUsersGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewAdminCommitteeSlugRoute(c.Slug).AdminCommitteeUsersGet(ctx, ""))
 }
 
-func (c *CommitteeItem) DeletePost() templ.SafeURL {
-	return templ.URL(paths.NewAdminCommitteeSlugDeleteRoute(c.Slug).AdminDeleteCommitteePost())
+func (c *CommitteeItem) DeletePost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewAdminCommitteeSlugDeleteRoute(c.Slug).AdminDeleteCommitteePost(ctx, ""))
 }
 
-func (c *CommitteeItem) DeletePostStr() string {
-	return paths.NewAdminCommitteeSlugDeleteRoute(c.Slug).AdminDeleteCommitteePost()
+func (c *CommitteeItem) DeletePostStr(ctx context.Context) string {
+	return paths.NewAdminCommitteeSlugDeleteRoute(c.Slug).AdminDeleteCommitteePost(ctx, "")
 }
 
 type CommitteeListPartialInput struct {
@@ -35,38 +37,38 @@ type CommitteeListPartialInput struct {
 	Error      string
 }
 
-func (i *AdminDashboardInput) PageURL(page int) templ.SafeURL {
+func (i *AdminDashboardInput) PageURL(ctx context.Context, page int) templ.SafeURL {
 	q := paths.AdminDashboardGetQueryParams{Page: strconv.Itoa(page)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
-	return templ.URL(paths.Route.AdminDashboardGetWithQuery(q))
+	return templ.URL(paths.Route.AdminDashboardGetWithQuery(ctx, "", q))
 }
 
-func (i *AdminDashboardInput) AdminLogoutPost() templ.SafeURL {
-	return templ.URL(paths.Route.AdminLogoutPost())
+func (i *AdminDashboardInput) AdminLogoutPost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.Route.AdminLogoutPost(ctx, ""))
 }
 
-func (i *AdminDashboardInput) AdminCreateCommitteePost() string {
-	return paths.Route.AdminCreateCommitteePost()
+func (i *AdminDashboardInput) AdminCreateCommitteePost(ctx context.Context) string {
+	return paths.Route.AdminCreateCommitteePost(ctx, "")
 }
 
 // CommitteeListPartial renders just the committee list (for HTMX updates)
 templ CommitteeListPartial(input CommitteeListPartialInput) {
 	<div id="committee-list-container">
 		if input.Error != "" {
-			<div class="error" id="committee-error">{ input.Error }</div>
+			<div class={ ErrorText() } id="committee-error">{ input.Error }</div>
 		}
 		<div id="committee-list">
 			if len(input.Committees) == 0 {
-				<p>No committees yet.</p>
+				<p>{ i18n.T(ctx, "admin_dashboard.empty_state") }</p>
 			} else {
-				<table>
+				<table class={ DataTable() }>
 					<thead>
 						<tr>
-							<th>Name</th>
-							<th>Slug</th>
-							<th>Actions</th>
+							<th>{ i18n.T(ctx, "admin_dashboard.col_name") }</th>
+							<th>{ i18n.T(ctx, "admin_dashboard.col_slug") }</th>
+							<th>{ i18n.T(ctx, "admin_dashboard.col_actions") }</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -75,16 +77,16 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 								<td>{ committee.Name }</td>
 								<td>{ committee.Slug }</td>
 								<td>
-									<a href={ committee.ManageUsersGet() }>Manage Users</a>
+									<a href={ committee.ManageUsersGet(ctx) }>{ i18n.T(ctx, "admin_dashboard.manage_users_link") }</a>
 									|
 									<form
-										hx-post={ committee.DeletePostStr() }
+										hx-post={ committee.DeletePostStr(ctx) }
 										hx-target="#committee-list-container"
 										hx-swap="outerHTML"
-										hx-confirm="Are you sure you want to delete this committee?"
-										style="display: inline;"
+										hx-confirm={ i18n.T(ctx, "admin_dashboard.delete_confirm") }
+										class={ InlineForm() }
 									>
-										<button type="submit">Delete</button>
+										<button type="submit">{ i18n.T(ctx, "admin_dashboard.delete_button") }</button>
 									</form>
 								</td>
 							</tr>
@@ -100,50 +102,54 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>Admin Dashboard</title>
+		<title>{ i18n.T(ctx, "admin_dashboard.title") }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
-	<body>
-		<header>
-			<h1>Admin Dashboard</h1>
-			<form method="POST" action={ input.AdminLogoutPost() }>
-				<button type="submit">Logout</button>
+	<body class={ AppShell() }>
+		<header class={ PageHeader() }>
+			<h1>{ i18n.T(ctx, "admin_dashboard.title") }</h1>
+			@LanguageSwitcher()
+			<form method="POST" action={ input.AdminLogoutPost(ctx) }>
+				<button type="submit">{ i18n.T(ctx, "admin_dashboard.logout_button") }</button>
 			</form>
 		</header>
 
-		<main>
-			<h2>Committees</h2>
+		<main class={ PageMain() }>
+			<h2>{ i18n.T(ctx, "admin_dashboard.committees_heading") }</h2>
 
-			<section>
-				<h3>Add New Committee</h3>
+			<section class={ Panel() }>
+				<h3>{ i18n.T(ctx, "admin_dashboard.add_committee_heading") }</h3>
 				<form
 					id="create-committee-form"
-					hx-post={ input.AdminCreateCommitteePost() }
+					hx-post={ input.AdminCreateCommitteePost(ctx) }
 					hx-target="#committee-list-container"
 					hx-swap="outerHTML"
 					hx-on::after-request="if(event.detail.successful) this.reset()"
 				>
 					<div>
-						<label for="name">Committee Name:</label>
+						<label for="name">{ i18n.T(ctx, "admin_dashboard.name_label") }</label>
 						<input type="text" id="name" name="name" required/>
 					</div>
 					<div>
-						<label for="slug">Slug (URL-friendly identifier):</label>
+						<label for="slug">{ i18n.T(ctx, "admin_dashboard.slug_label") }</label>
 						<input type="text" id="slug" name="slug" required pattern="[a-z0-9\-]+"/>
-						<small>Only lowercase letters, numbers, and hyphens</small>
+						<small>{ i18n.T(ctx, "admin_dashboard.slug_help") }</small>
 					</div>
-					<button type="submit">Create Committee</button>
+					<button type="submit">{ i18n.T(ctx, "admin_dashboard.create_button") }</button>
 				</form>
 			</section>
 
-			<section>
-				<h3>Existing Committees</h3>
+			<section class={ Panel() }>
+				<h3>{ i18n.T(ctx, "admin_dashboard.existing_heading") }</h3>
 				@CommitteeListPartial(CommitteeListPartialInput{Committees: input.Committees, Error: input.Error})
-				@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(input.Pagination.PrevPage), input.PageURL(input.Pagination.NextPage))
+				@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(ctx, input.Pagination.PrevPage), input.PageURL(ctx, input.Pagination.NextPage))
 			</section>
 		</main>
 	</body>
 	</html>
 }
+
+

@@ -1,17 +1,23 @@
 package templates
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 // AttendeeSpeakersListPartialInput holds the data for the attendee-facing speakers list.
 type AttendeeSpeakersListPartialInput struct {
+	CommitteeSlug     string
+	IDString          string
 	Speakers          []SpeakerItem
 	CurrentAttendeeID int64
 	AgendaTitle       string
 	HasActiveAP       bool
+	ModeratorName     string
+	Error             string
 }
 
 func (i *AttendeeSpeakersListPartialInput) rowClass(s SpeakerItem) string {
@@ -19,11 +25,11 @@ func (i *AttendeeSpeakersListPartialInput) rowClass(s SpeakerItem) string {
 	mine := s.AttendeeID == i.CurrentAttendeeID
 	switch {
 	case speaking && mine:
-		return "speaking my-turn"
+		return "speaking my-turn LiveSpeaking LiveMyTurn"
 	case speaking:
-		return "speaking"
+		return "speaking LiveSpeaking"
 	case mine:
-		return "my-turn"
+		return "my-turn LiveMyTurn"
 	default:
 		return ""
 	}
@@ -33,52 +39,93 @@ func (i *AttendeeSpeakersListPartialInput) rowClass(s SpeakerItem) string {
 // It is used both for the initial page render and as SSE event data.
 templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 	if !input.HasActiveAP {
-		<p>No agenda point is currently active.</p>
+		<p>{ i18n.T(ctx, "meeting_live.no_active_agenda") }</p>
 	} else {
-		<h3>{ input.AgendaTitle }</h3>
-		if len(input.Speakers) == 0 {
-			<p>No speakers in the queue yet.</p>
-		} else {
-			<table>
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Q</th>
-						<th>1st</th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, s := range input.Speakers {
-						if s.IsSpeaking || s.IsWaiting {
-							<tr class={ input.rowClass(s) }>
-								<td>
-									if s.IsSpeaking {
-										▶
-									} else {
-										{ strconv.FormatInt(s.OrderPosition, 10) }
-									}
-								</td>
-								<td>{ s.AttendeeName }</td>
-								<td>{ s.Type }</td>
-								<td>
-									if s.GenderQuoted {
-										Q
-									}
-								</td>
-								<td>
-									if s.FirstSpeaker {
-										1st
-									}
-								</td>
-							</tr>
-						}
-					}
-				</tbody>
-			</table>
+		<div class={ LiveSpeakersHeaderRow() }>
+			<p class={ LiveActiveAgendaTitle() }>{ input.AgendaTitle }</p>
+			if input.ModeratorName != "" {
+				<span class={ LiveBadge(), LiveBadgeModerator() } data-testid="live-moderator-badge">
+					{ i18n.T(ctx, "meeting_live.moderator_badge", input.ModeratorName) }
+				</span>
+			}
+		</div>
+		if input.Error != "" {
+			<p class={ ErrorText() }>{ input.Error }</p>
 		}
+		if len(input.Speakers) == 0 {
+			<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
+		} else {
+			<div class={ LiveSpeakerList() }>
+				for _, s := range input.Speakers {
+					if s.IsSpeaking || s.IsWaiting {
+						<div class={ LiveSpeakerItem(), input.rowClass(s) } data-testid="live-speaker-item">
+							<div class={ LiveSpeakerOrder() }>
+								if s.IsSpeaking {
+									>
+								} else {
+									{ strconv.FormatInt(s.OrderPosition, 10) }
+								}
+							</div>
+							<div class={ LiveSpeakerMain() }>
+								<div class={ LiveSpeakerName() } data-testid="live-speaker-name">{ s.AttendeeName }</div>
+								<div class={ LiveSpeakerMetaRow() }>
+									<span class={ LiveSpeakerType() }>
+										if s.Type == "ropm" {
+											{ i18n.T(ctx, "meeting_live.badge_ropm_short") }
+										} else {
+											{ i18n.T(ctx, "meeting_live.type_regular") }
+										}
+									</span>
+									<div class={ LiveBadgeRow() }>
+										if s.Type == "ropm" {
+											<span class={ LiveBadge(), LiveBadgeROPM() }>{ i18n.T(ctx, "meeting_live.badge_ropm") }</span>
+										}
+										if s.GenderQuoted {
+											<span class={ LiveBadge(), LiveBadgeQuoted() }>{ i18n.T(ctx, "meeting_live.badge_quoted") }</span>
+										}
+										if s.FirstSpeaker {
+											<span class={ LiveBadge(), LiveBadgeFirst() }>{ i18n.T(ctx, "meeting_live.badge_first") }</span>
+										}
+										if s.Priority {
+											<span class={ LiveBadge(), LiveBadgePriority() }>{ i18n.T(ctx, "meeting_live.badge_priority") }</span>
+										}
+									</div>
+								</div>
+							</div>
+						</div>
+					}
+				}
+			</div>
+		}
+		<div class={ LiveSelfAddRow() }>
+			<form
+				hx-post={ input.SelfAddPostStr(ctx) }
+				hx-target="#attendee-speakers-list"
+				hx-swap="innerHTML"
+				class={ InlineForm() }
+			>
+				<input type="hidden" name="type" value="regular"/>
+				<button type="submit" class={ LiveSelfAddButton() } data-testid="live-add-self-regular">
+					{ i18n.T(ctx, "meeting_live.add_self_regular") }
+				</button>
+			</form>
+			<form
+				hx-post={ input.SelfAddPostStr(ctx) }
+				hx-target="#attendee-speakers-list"
+				hx-swap="innerHTML"
+				class={ InlineForm() }
+			>
+				<input type="hidden" name="type" value="ropm"/>
+				<button type="submit" class={ LiveSelfAddButton() } data-testid="live-add-self-ropm">
+					{ i18n.T(ctx, "meeting_live.add_self_ropm") }
+				</button>
+			</form>
+		</div>
 	}
+}
+
+func (i *AttendeeSpeakersListPartialInput) SelfAddPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerSelfAddRoute(i.CommitteeSlug, i.IDString).AttendeeSpeakerSelfAddPost(ctx, "")
 }
 
 type MeetingLiveInput struct {
@@ -88,48 +135,91 @@ type MeetingLiveInput struct {
 	IDString      string
 	FullName      string
 	IsChair       bool
+	CanManage     bool
+	AgendaPoints  []AgendaPointItem
 	Speakers      AttendeeSpeakersListPartialInput
 }
 
-func (i *MeetingLiveInput) AttendeeLoginGet() templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginPageGet())
+func (i *MeetingLiveInput) AttendeeLoginGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(i.CommitteeSlug, i.IDString).AttendeeLoginPageGet(ctx, ""))
 }
 
-func (i *MeetingLiveInput) SSEStreamURL() templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdSpeakersStreamRoute(i.CommitteeSlug, i.IDString).AttendeeSpeakersStreamGet())
+func (i *MeetingLiveInput) SSEStreamURL(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdSpeakersStreamRoute(i.CommitteeSlug, i.IDString).AttendeeSpeakersStreamGet(ctx, ""))
+}
+
+func (i *MeetingLiveInput) LogoutSubmitPost(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.Route.LogoutSubmitPost(ctx, ""))
+}
+
+func (i *MeetingLiveInput) ManageGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
 }
 
 templ MeetingLiveTemplate(input MeetingLiveInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>{ input.MeetingName } - Live</title>
+		<title>{ i18n.T(ctx, "meeting_live.page_title", input.MeetingName) }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 		<script src={ paths.Route.HtmxMinJs() }></script>
 		<script src={ paths.Route.HtmxExtSseMinJs() }></script>
 	</head>
-	<body>
-		<header>
-			<h1>{ input.MeetingName }</h1>
-			<h2>{ input.CommitteeName }</h2>
-		</header>
-		<main>
-			<p>
-				Logged in as: <strong>{ input.FullName }</strong>
-				if input.IsChair {
-					(Chair)
+	<body class={ AppShell(), LiveBody() }>
+		<header class={ PageHeader(), LiveHeader() }>
+			<div>
+				<h1>{ input.MeetingName }</h1>
+				<h2>{ input.CommitteeName }</h2>
+			</div>
+			<div class={ LiveUserBar() }>
+				if input.CanManage {
+					<a href={ input.ManageGet(ctx) } class={ LiveManageLink() }>{ i18n.T(ctx, "meeting_live.manage_button") }</a>
 				}
-			</p>
-			<section>
-				<h2>Speakers List</h2>
-				<div hx-ext="sse" sse-connect={ string(input.SSEStreamURL()) }>
+				<p>
+					{ i18n.T(ctx, "meeting_live.logged_in_as", input.FullName) }
+					if input.IsChair {
+						({ i18n.T(ctx, "meeting_live.chair") })
+					}
+				</p>
+				<form method="POST" action={ input.LogoutSubmitPost(ctx) }>
+					<button type="submit" class={ LiveLogoutButton() }>{ i18n.T(ctx, "meeting_live.logout_button") }</button>
+				</form>
+			</div>
+		</header>
+		<main class={ PageMain(), LiveGrid() }>
+			<section class={ Panel(), LivePanel() }>
+				<h2>{ i18n.T(ctx, "meeting_live.agenda_heading") }</h2>
+				if len(input.AgendaPoints) == 0 {
+					<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
+				} else {
+					<ul class={ LiveAgendaList() }>
+						for _, ap := range input.AgendaPoints {
+							<li class={ LiveAgendaItem(), templ.KV(LiveAgendaItemActive(), ap.IsActive), templ.KV(LiveAgendaSubPoint(), ap.ParentID != nil) }>
+								<span class={ LiveAgendaPosition() }>P{ strconv.FormatInt(ap.Position, 10) }</span>
+								<span class={ LiveAgendaTitle() }>{ ap.Title }</span>
+							</li>
+						}
+					</ul>
+				}
+			</section>
+			<section class={ Panel(), LivePanel() }>
+				<h2>{ i18n.T(ctx, "meeting_live.speakers_heading") }</h2>
+				<div hx-ext="sse" sse-connect={ string(input.SSEStreamURL(ctx)) }>
 					<div id="attendee-speakers-list" sse-swap="speakers-updated">
 						@AttendeeSpeakersListPartial(input.Speakers)
 					</div>
 				</div>
 			</section>
 		</main>
+		<footer class={ LiveBottomBar() }>
+			<div class={ LiveLanguageDock() }>
+				@LanguageSwitcher()
+			</div>
+		</footer>
 	</body>
 	</html>
 }
+
+

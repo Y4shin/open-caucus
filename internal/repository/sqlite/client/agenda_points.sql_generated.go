@@ -43,6 +43,45 @@ func (q *Queries) CreateAgendaPoint(ctx context.Context, arg CreateAgendaPointPa
 	return i, err
 }
 
+const createSubAgendaPoint = `-- name: CreateSubAgendaPoint :one
+INSERT INTO agenda_points (meeting_id, parent_id, position, title)
+VALUES (?, ?, ?, ?)
+RETURNING id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+          gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id
+`
+
+type CreateSubAgendaPointParams struct {
+	MeetingID int64
+	ParentID  sql.NullInt64
+	Position  int64
+	Title     string
+}
+
+func (q *Queries) CreateSubAgendaPoint(ctx context.Context, arg CreateSubAgendaPointParams) (AgendaPoint, error) {
+	row := q.db.QueryRowContext(ctx, createSubAgendaPoint,
+		arg.MeetingID,
+		arg.ParentID,
+		arg.Position,
+		arg.Title,
+	)
+	var i AgendaPoint
+	err := row.Scan(
+		&i.ID,
+		&i.MeetingID,
+		&i.ParentID,
+		&i.Position,
+		&i.Title,
+		&i.Protocol,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.CurrentSpeakerID,
+		&i.GenderQuotationEnabled,
+		&i.FirstSpeakerQuotationEnabled,
+		&i.ModeratorID,
+	)
+	return i, err
+}
+
 const deleteAgendaPoint = `-- name: DeleteAgendaPoint :exec
 DELETE FROM agenda_points WHERE id = ?
 `
@@ -90,6 +129,23 @@ func (q *Queries) GetMaxAgendaPointPosition(ctx context.Context, meetingID int64
 	return coalesce, err
 }
 
+const getMaxSubAgendaPointPosition = `-- name: GetMaxSubAgendaPointPosition :one
+SELECT COALESCE(MAX(position), 0) FROM agenda_points
+WHERE meeting_id = ? AND parent_id = ?
+`
+
+type GetMaxSubAgendaPointPositionParams struct {
+	MeetingID int64
+	ParentID  sql.NullInt64
+}
+
+func (q *Queries) GetMaxSubAgendaPointPosition(ctx context.Context, arg GetMaxSubAgendaPointPositionParams) (interface{}, error) {
+	row := q.db.QueryRowContext(ctx, getMaxSubAgendaPointPosition, arg.MeetingID, arg.ParentID)
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
+}
+
 const listAgendaPointsForMeeting = `-- name: ListAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id
@@ -100,6 +156,50 @@ ORDER BY position ASC
 
 func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]AgendaPoint, error) {
 	rows, err := q.db.QueryContext(ctx, listAgendaPointsForMeeting, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AgendaPoint
+	for rows.Next() {
+		var i AgendaPoint
+		if err := rows.Scan(
+			&i.ID,
+			&i.MeetingID,
+			&i.ParentID,
+			&i.Position,
+			&i.Title,
+			&i.Protocol,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CurrentSpeakerID,
+			&i.GenderQuotationEnabled,
+			&i.FirstSpeakerQuotationEnabled,
+			&i.ModeratorID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSubAgendaPointsForMeeting = `-- name: ListSubAgendaPointsForMeeting :many
+SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+       gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id
+FROM agenda_points
+WHERE meeting_id = ? AND parent_id IS NOT NULL
+ORDER BY parent_id ASC, position ASC
+`
+
+func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]AgendaPoint, error) {
+	rows, err := q.db.QueryContext(ctx, listSubAgendaPointsForMeeting, meetingID)
 	if err != nil {
 		return nil, err
 	}

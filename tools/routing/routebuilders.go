@@ -19,6 +19,8 @@ type RouteGroup struct {
 	Params          []string
 	ConstructorArgs string
 	Routes          []BuilderRoute
+	HasLocale       bool
+	LocaleAlias     string
 }
 
 type RouteBuilders struct {
@@ -37,13 +39,21 @@ var Route Routes
 `
 
 const routeGroup string = `
+{{- $hasLocale := .HasLocale }}
+{{- $localeAlias := .LocaleAlias }}
 {{- if not .Params }}
 {{- range .Routes }}
 {{- $path := .Path }}
 {{- range .Verbs }}
+{{- if $hasLocale }}
+func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}(ctx context.Context, override string) string {
+	return {{ $localeAlias }}.PathPrefix(ctx, override) + "{{ $path }}"
+}
+{{- else }}
 func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}() string {
 	return "{{ $path }}"
 }
+{{- end }}
 {{- if .QueryParams }}
 
 type {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams struct {
@@ -51,6 +61,22 @@ type {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams struct {
 	{{ . | toPascalCase }} string
 {{- end }}
 }
+{{- if $hasLocale }}
+
+func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(ctx context.Context, override string, q {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams) string {
+	path := {{ $localeAlias }}.PathPrefix(ctx, override) + "{{ $path }}"
+	var qparts []string
+{{- range .QueryParams }}
+	if q.{{ . | toPascalCase }} != "" {
+		qparts = append(qparts, "{{ . }}="+url.QueryEscape(q.{{ . | toPascalCase }}))
+	}
+{{- end }}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+{{- else }}
 
 func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(q {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams) string {
 	path := "{{ $path }}"
@@ -65,6 +91,7 @@ func (Routes) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(q {{ .Hand
 	}
 	return path
 }
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -88,10 +115,17 @@ func New{{ $structName }}({{ $constructorArgs }}) *{{ $structName }} {
 	}
 }
 {{- range .Verbs }}
+{{- if $hasLocale }}
+
+func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}(ctx context.Context, override string) string {
+	return {{ $localeAlias }}.PathPrefix(ctx, override) + "{{ $pathReturn }}"
+}
+{{- else }}
 
 func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}() string {
 	return "{{ $pathReturn }}"
 }
+{{- end }}
 {{- if .QueryParams }}
 
 type {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams struct {
@@ -99,6 +133,22 @@ type {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams struct {
 	{{ . | toPascalCase }} string
 {{- end }}
 }
+{{- if $hasLocale }}
+
+func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(ctx context.Context, override string, q {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams) string {
+	path := r.{{ .Handler }}{{ .Verb | lower | capitalize }}(ctx, override)
+	var qparts []string
+{{- range .QueryParams }}
+	if q.{{ . | toPascalCase }} != "" {
+		qparts = append(qparts, "{{ . }}="+url.QueryEscape(q.{{ . | toPascalCase }}))
+	}
+{{- end }}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+{{- else }}
 
 func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQuery(q {{ .Handler }}{{ .Verb | lower | capitalize }}QueryParams) string {
 	path := r.{{ .Handler }}{{ .Verb | lower | capitalize }}()
@@ -117,11 +167,16 @@ func (r *{{ $structName }}) {{ .Handler }}{{ .Verb | lower | capitalize }}WithQu
 {{- end }}
 {{- end }}
 {{- end }}
+{{- end }}
 `
 
-func GetRouteBuilders(config *RouteConfig) RouteBuilders {
+func GetRouteBuilders(config *RouteConfig, localePackage string) RouteBuilders {
 	groups := make(map[string]*RouteGroup)
 	hasQueryParams := false
+	localeAlias := localePackage
+	if idx := strings.LastIndex(localePackage, "/"); idx >= 0 {
+		localeAlias = localePackage[idx+1:]
+	}
 
 	for _, route := range config.Routes {
 		params := ExtractPathParams(route.Path)
@@ -146,6 +201,8 @@ func GetRouteBuilders(config *RouteConfig) RouteBuilders {
 			groups[key] = &RouteGroup{
 				Params:          pascalParams,
 				ConstructorArgs: strings.Join(args, ", "),
+				HasLocale:       localePackage != "",
+				LocaleAlias:     localeAlias,
 			}
 		}
 		pathReturn := route.Path

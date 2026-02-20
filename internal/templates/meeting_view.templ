@@ -1,7 +1,10 @@
 package templates
 
 import (
+	"context"
+
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type MeetingViewInput struct {
@@ -12,29 +15,33 @@ type MeetingViewInput struct {
 	IDString      string
 }
 
-func (i *MeetingViewInput) CommitteeDashboardGet() templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGet())
+func (i *MeetingViewInput) CommitteeDashboardGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGet(ctx, ""))
 }
 
 templ MeetingViewTemplate(input MeetingViewInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>{ input.MeetingName } - { input.CommitteeName }</title>
+		<title>{ i18n.T(ctx, "meeting_view.page_title", input.MeetingName, input.CommitteeName) }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 	</head>
-	<body>
-		<header>
+	<body class={ AppShell() }>
+		@LanguageSwitcher()
+		<header class={ PageHeader() }>
 			<h1>{ input.MeetingName }</h1>
 			<nav>
-				<a href={ input.CommitteeDashboardGet() }>← Back to Dashboard</a>
+				<a href={ input.CommitteeDashboardGet(ctx) }>{ i18n.T(ctx, "meeting_view.back_link") }</a>
 			</nav>
 		</header>
 
-		<main>
-			<p>Meeting view coming soon.</p>
+		<main class={ PageMain() }>
+			<p>{ i18n.T(ctx, "meeting_view.coming_soon") }</p>
 		</main>
 	</body>
 	</html>
 }
+
+

@@ -85,7 +85,9 @@ type Repository interface {
 
 	// Agenda points
 	CreateAgendaPoint(ctx context.Context, meetingID int64, title string) (*model.AgendaPoint, error)
+	CreateSubAgendaPoint(ctx context.Context, meetingID, parentID int64, title string) (*model.AgendaPoint, error)
 	ListAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error)
+	ListSubAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error)
 	GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error)
 	DeleteAgendaPoint(ctx context.Context, id int64) error
 	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error

@@ -4,6 +4,7 @@ package e2e_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
@@ -63,6 +64,287 @@ func TestManagePage_AddGuest(t *testing.T) {
 	}
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on add guest: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestManagePage_SelfSignup verifies that the chairperson can sign themselves
+// up as attendee from the manage page without a full page reload.
+func TestManagePage_SelfSignup(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	urlBefore := page.URL()
+
+	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up: %v", err)
+	}
+
+	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected chairperson in attendee table: %v", err)
+	}
+	if page.URL() != urlBefore {
+		t.Errorf("URL changed on self-signup: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestManagePage_SelfSignup_ThenNavigateToLive verifies that after adding
+// themselves as attendee on the manage page, a chairperson can navigate
+// directly to /live using their user session and gets auto-authenticated.
+func TestManagePage_SelfSignup_ThenNavigateToLive(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up: %v", err)
+	}
+	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected chairperson in attendee table: %v", err)
+	}
+
+	// Directly open /live with the existing user session.
+	if _, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto live page: %v", err)
+	}
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected /live to load with auto-authenticated attendee session: %v", err)
+	}
+	if err := page.Locator("p:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected attendee name on live page: %v", err)
+	}
+	if err := page.Locator("a:has-text('Manage')").WaitFor(); err != nil {
+		t.Fatalf("expected manage button for chairperson user on live page: %v", err)
+	}
+}
+
+// TestManagePage_SelfSignup_ThenAssignSelfModerator verifies that after the
+// chairperson signs themselves up as attendee, they can assign themselves as
+// meeting moderator via the settings partial.
+func TestManagePage_SelfSignup_ThenAssignSelfModerator(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	urlBefore := page.URL()
+
+	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up: %v", err)
+	}
+	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected chairperson in attendee table: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container").WaitFor(); err != nil {
+		t.Fatalf("meeting settings not visible after signup: %v", err)
+	}
+
+	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
+		Labels: playwright.StringSlice("Chair Person"),
+	}); err != nil {
+		t.Fatalf("select self as moderator: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
+		t.Fatalf("click set moderator: %v", err)
+	}
+
+	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected self as moderator: %v", err)
+	}
+	if page.URL() != urlBefore {
+		t.Errorf("URL changed on self-signup/moderator assignment: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestManagePage_SelfSignup_AssignSelfModerator_Reassign verifies that self
+// moderator assignment can be cleared and set again after self-signup.
+func TestManagePage_SelfSignup_AssignSelfModerator_Reassign(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up: %v", err)
+	}
+	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected chairperson in attendee table: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container").WaitFor(); err != nil {
+		t.Fatalf("meeting settings not visible after signup: %v", err)
+	}
+
+	// First assignment: self.
+	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
+		Labels: playwright.StringSlice("Chair Person"),
+	}); err != nil {
+		t.Fatalf("select self as moderator: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
+		t.Fatalf("click set moderator: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected self as moderator: %v", err)
+	}
+
+	// Clear moderator.
+	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
+		Values: playwright.StringSlice(""),
+	}); err != nil {
+		t.Fatalf("select none for moderator: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
+		t.Fatalf("click set moderator to clear: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('None')").WaitFor(); err != nil {
+		t.Fatalf("expected moderator to be None after clear: %v", err)
+	}
+
+	// Re-assign self.
+	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
+		Labels: playwright.StringSlice("Chair Person"),
+	}); err != nil {
+		t.Fatalf("re-select self as moderator: %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
+		t.Fatalf("click set moderator (reassign): %v", err)
+	}
+	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected self as moderator after reassign: %v", err)
+	}
+}
+
+// TestManagePage_CrossTab_AttendeeChangePropagates verifies that attendee
+// changes in one tab are reflected in another tab of the same meeting.
+func TestManagePage_CrossTab_AttendeeChangePropagates(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	pageA := newPage(t)
+	userLogin(t, pageA, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := pageA.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page A: %v", err)
+	}
+
+	pageB := newPage(t)
+	userLogin(t, pageB, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := pageB.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page B: %v", err)
+	}
+
+	if err := pageA.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up in A: %v", err)
+	}
+
+	if err := pageB.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected attendee propagated to B: %v", err)
+	}
+	if err := pageB.Locator("#meeting-settings-container").WaitFor(); err != nil {
+		t.Fatalf("meeting settings missing on B: %v", err)
+	}
+	if err := pageB.Locator("#speakers-list-container").WaitFor(); err != nil {
+		t.Fatalf("speakers list missing on B: %v", err)
+	}
+}
+
+// TestManagePage_NoSelfEcho_PerTab verifies that the initiating tab does not
+// end up with duplicate attendee rows after self-signup.
+func TestManagePage_NoSelfEcho_PerTab(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up: %v", err)
+	}
+	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected chairperson in attendee table: %v", err)
+	}
+
+	rowCount, err := page.Locator("#attendee-list-container td:has-text('Chair Person')").Count()
+	if err != nil {
+		t.Fatalf("count chairperson attendee rows: %v", err)
+	}
+	if rowCount != 1 {
+		t.Fatalf("expected exactly 1 chairperson row, got %d", rowCount)
+	}
+}
+
+// TestManagePage_MeetingIsolation_SSE verifies attendee-change events are scoped
+// to their meeting and do not update other meetings.
+func TestManagePage_MeetingIsolation_SSE(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting A", "")
+	ts.seedMeeting(t, "test-committee", "Board Meeting B", "")
+	meetingA := ts.getMeetingID(t, "test-committee", "Board Meeting A")
+	meetingB := ts.getMeetingID(t, "test-committee", "Board Meeting B")
+
+	pageA := newPage(t)
+	userLogin(t, pageA, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := pageA.Goto(manageURL(ts.URL, "test-committee", meetingA)); err != nil {
+		t.Fatalf("goto manage page A: %v", err)
+	}
+
+	pageB := newPage(t)
+	userLogin(t, pageB, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := pageB.Goto(manageURL(ts.URL, "test-committee", meetingB)); err != nil {
+		t.Fatalf("goto manage page B: %v", err)
+	}
+
+	if err := pageA.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
+		t.Fatalf("click sign yourself up in A: %v", err)
+	}
+	if err := pageA.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
+		t.Fatalf("expected attendee in A: %v", err)
+	}
+
+	if err := pageB.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(1500),
+	}); err == nil {
+		t.Fatalf("unexpected attendee propagation to different meeting")
 	}
 }
 
@@ -137,6 +419,57 @@ func TestManagePage_ToggleChair(t *testing.T) {
 	}
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on toggle chair: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestManagePage_GuestRecoveryLink verifies that each guest row provides a
+// recovery-link page with a direct login URL and QR code.
+func TestManagePage_GuestRecoveryLink(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	ts.seedAttendee(t, "test-committee", "Board Meeting", "Recoverable Guest", "secret-recoverable")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	row := page.Locator("tr:has(td:has-text('Recoverable Guest'))")
+	if err := row.WaitFor(); err != nil {
+		t.Fatalf("expected guest attendee row: %v", err)
+	}
+	if err := row.Locator("a:has-text('Recovery Link')").Click(); err != nil {
+		t.Fatalf("click recovery link button: %v", err)
+	}
+
+	if err := page.Locator("#attendee-recovery-link").WaitFor(); err != nil {
+		t.Fatalf("expected attendee recovery link on page: %v", err)
+	}
+	if err := page.Locator("#attendee-recovery-qr").WaitFor(); err != nil {
+		t.Fatalf("expected attendee recovery QR on page: %v", err)
+	}
+
+	href, err := page.Locator("#attendee-recovery-link").GetAttribute("href")
+	if err != nil {
+		t.Fatalf("get attendee recovery href: %v", err)
+	}
+	if !strings.Contains(href, "/attendee-login?secret=secret-recoverable") {
+		t.Fatalf("expected recovery href to contain attendee-login secret, got %q", href)
+	}
+
+	guestPage := newPage(t)
+	if _, err := guestPage.Goto(href); err != nil {
+		t.Fatalf("goto recovery href as guest: %v", err)
+	}
+	if err := guestPage.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected direct redirect to /live from recovery link: %v", err)
+	}
+	if err := guestPage.Locator("p:has-text('Recoverable Guest')").WaitFor(); err != nil {
+		t.Fatalf("expected guest name on live page: %v", err)
 	}
 }
 

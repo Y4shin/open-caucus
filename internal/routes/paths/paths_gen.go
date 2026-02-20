@@ -3,6 +3,8 @@
 package paths
 
 import (
+	"context"
+	"github.com/Y4shin/conference-tool/internal/locale"
 	"net/url"
 	"strings"
 )
@@ -12,98 +14,40 @@ type Routes struct{}
 
 var Route Routes
 
-type CommitteeSlugMeetingMeetingIdJoinRoute struct {
+func (Routes) AdminLogoutPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/logout"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakersPartialRoute struct {
 	Slug      string
 	MeetingId string
 }
 
-func NewCommitteeSlugMeetingMeetingIdJoinRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdJoinRoute {
-	return &CommitteeSlugMeetingMeetingIdJoinRoute{
+func NewCommitteeSlugMeetingMeetingIdSpeakersPartialRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSpeakersPartialRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakersPartialRoute{
 		Slug:      slug,
 		MeetingId: meetingid,
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdJoinRoute) MeetingJoinPageGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/join"
+func (r *CommitteeSlugMeetingMeetingIdSpeakersPartialRoute) ManageSpeakersListPartialGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speakers/partial"
 }
 
-func (r *CommitteeSlugMeetingMeetingIdJoinRoute) MeetingJoinSubmitPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/join"
-}
-
-func (Routes) AdminCreateCommitteePost() string {
-	return "/admin/committee/create"
-}
-
-type CommitteeSlugRoute struct {
-	Slug string
-}
-
-func NewCommitteeSlugRoute(slug string) *CommitteeSlugRoute {
-	return &CommitteeSlugRoute{
-		Slug: slug,
-	}
-}
-
-func (r *CommitteeSlugRoute) CommitteePageGet() string {
-	return "/committee/" + r.Slug + ""
-}
-
-type CommitteePageGetQueryParams struct {
-	Page     string
-	PageSize string
-}
-
-func (r *CommitteeSlugRoute) CommitteePageGetWithQuery(q CommitteePageGetQueryParams) string {
-	path := r.CommitteePageGet()
-	var qparts []string
-	if q.Page != "" {
-		qparts = append(qparts, "page="+url.QueryEscape(q.Page))
-	}
-	if q.PageSize != "" {
-		qparts = append(qparts, "page_size="+url.QueryEscape(q.PageSize))
-	}
-	if len(qparts) > 0 {
-		path += "?" + strings.Join(qparts, "&")
-	}
-	return path
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-	AttachmentId  string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute(slug string, meetingid string, agendapointid string, attachmentid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-		AttachmentId:  attachmentid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute) ManageAttachmentDeletePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/attachment/" + r.AttachmentId + "/delete"
-}
-
-type CommitteeSlugMeetingMeetingIdAttendeeCreateRoute struct {
+type CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute struct {
 	Slug      string
 	MeetingId string
 }
 
-func NewCommitteeSlugMeetingMeetingIdAttendeeCreateRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAttendeeCreateRoute {
-	return &CommitteeSlugMeetingMeetingIdAttendeeCreateRoute{
+func NewCommitteeSlugMeetingMeetingIdAgendaPointCreateRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute{
 		Slug:      slug,
 		MeetingId: meetingid,
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdAttendeeCreateRoute) ManageAttendeeCreatePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/create"
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute) ManageAgendaPointCreatePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/create"
 }
 
 type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdActivateRoute struct {
@@ -120,67 +64,168 @@ func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdActivateRoute(slug 
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdActivateRoute) ManageActivateAgendaPointPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/activate"
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdActivateRoute) ManageActivateAgendaPointPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/activate"
 }
 
-type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute struct {
-	Slug      string
-	MeetingId string
-	SpeakerId string
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
 }
 
-func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-		SpeakerId: speakerid,
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute) ManageSpeakerWithdrawPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/withdraw"
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute) ManageAgendaPointSetModeratorPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/moderator"
 }
 
-type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute struct {
+type CommitteeSlugMeetingMeetingIdSpeakersStreamRoute struct {
 	Slug      string
 	MeetingId string
-	SpeakerId string
 }
 
-func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute{
+func NewCommitteeSlugMeetingMeetingIdSpeakersStreamRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSpeakersStreamRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakersStreamRoute{
 		Slug:      slug,
 		MeetingId: meetingid,
-		SpeakerId: speakerid,
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute) ManageSpeakerTogglePriorityPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/priority"
+func (r *CommitteeSlugMeetingMeetingIdSpeakersStreamRoute) AttendeeSpeakersStreamGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speakers/stream"
 }
 
-type AdminCommitteeSlugRoute struct {
+func (Routes) AdminCreateCommitteePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/committee/create"
+}
+
+func (Routes) LoginPageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/"
+}
+
+type CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute {
+	return &CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute) ProtocolSaveAgendaPointPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/protocol/" + r.AgendaPointId + ""
+}
+
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute) ManageMotionCreatePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/motion/create"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerAddRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerAddRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSpeakerAddRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerAddRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerAddRoute) ManageSpeakerAddPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/add"
+}
+
+type CommitteeSlugMeetingMeetingIdGuestRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdGuestRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdGuestRoute {
+	return &CommitteeSlugMeetingMeetingIdGuestRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdGuestRoute) MeetingGuestSignupPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/guest"
+}
+
+func (Routes) LogoutSubmitPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/logout"
+}
+
+func (Routes) AdminLoginGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/login"
+}
+func (Routes) AdminLoginSubmitPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/login"
+}
+
+type AdminCommitteeSlugUserUserIdDeleteRoute struct {
+	Slug   string
+	UserId string
+}
+
+func NewAdminCommitteeSlugUserUserIdDeleteRoute(slug string, userid string) *AdminCommitteeSlugUserUserIdDeleteRoute {
+	return &AdminCommitteeSlugUserUserIdDeleteRoute{
+		Slug:   slug,
+		UserId: userid,
+	}
+}
+
+func (r *AdminCommitteeSlugUserUserIdDeleteRoute) AdminDeleteUserPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/committee/" + r.Slug + "/user/" + r.UserId + "/delete"
+}
+
+type CommitteeSlugRoute struct {
 	Slug string
 }
 
-func NewAdminCommitteeSlugRoute(slug string) *AdminCommitteeSlugRoute {
-	return &AdminCommitteeSlugRoute{
+func NewCommitteeSlugRoute(slug string) *CommitteeSlugRoute {
+	return &CommitteeSlugRoute{
 		Slug: slug,
 	}
 }
 
-func (r *AdminCommitteeSlugRoute) AdminCommitteeUsersGet() string {
-	return "/admin/committee/" + r.Slug + ""
+func (r *CommitteeSlugRoute) CommitteePageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + ""
 }
 
-type AdminCommitteeUsersGetQueryParams struct {
+type CommitteePageGetQueryParams struct {
 	Page     string
 	PageSize string
 }
 
-func (r *AdminCommitteeSlugRoute) AdminCommitteeUsersGetWithQuery(q AdminCommitteeUsersGetQueryParams) string {
-	path := r.AdminCommitteeUsersGet()
+func (r *CommitteeSlugRoute) CommitteePageGetWithQuery(ctx context.Context, override string, q CommitteePageGetQueryParams) string {
+	path := r.CommitteePageGet(ctx, override)
 	var qparts []string
 	if q.Page != "" {
 		qparts = append(qparts, "page="+url.QueryEscape(q.Page))
@@ -210,8 +255,126 @@ func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdDelet
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdDeleteRoute) ManageMotionDeletePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/motion/" + r.MotionId + "/delete"
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdDeleteRoute) ManageMotionDeletePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/motion/" + r.MotionId + "/delete"
+}
+
+type CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdRecoveryRoute struct {
+	Slug       string
+	MeetingId  string
+	AttendeeId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdRecoveryRoute(slug string, meetingid string, attendeeid string) *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdRecoveryRoute {
+	return &CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdRecoveryRoute{
+		Slug:       slug,
+		MeetingId:  meetingid,
+		AttendeeId: attendeeid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdRecoveryRoute) ManageAttendeeRecoveryPageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/" + r.AttendeeId + "/recovery"
+}
+
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdToolsRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdToolsRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdToolsRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdToolsRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdToolsRoute) ManageAgendaPointToolsPageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/tools"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute struct {
+	Slug      string
+	MeetingId string
+	SpeakerId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+		SpeakerId: speakerid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute) ManageSpeakerStartPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/start"
+}
+
+type CommitteeSlugMeetingMeetingIdQuotationRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdQuotationRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdQuotationRoute {
+	return &CommitteeSlugMeetingMeetingIdQuotationRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdQuotationRoute) ManageMeetingSetQuotationPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/quotation"
+}
+
+type CommitteeSlugMeetingMeetingIdRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdRoute {
+	return &CommitteeSlugMeetingMeetingIdRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdRoute) MeetingLivePageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + ""
+}
+
+type CommitteeSlugMeetingMeetingIdManageRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdManageRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdManageRoute {
+	return &CommitteeSlugMeetingMeetingIdManageRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdManageRoute) CommitteeMeetingManageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/manage"
+}
+
+type CommitteeSlugMeetingMeetingIdProtocolRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdProtocolRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdProtocolRoute {
+	return &CommitteeSlugMeetingMeetingIdProtocolRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdProtocolRoute) MeetingProtocolPageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/protocol"
 }
 
 type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdVoteRoute struct {
@@ -230,555 +393,8 @@ func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdVoteR
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdVoteRoute) ManageMotionRecordVotePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/motion/" + r.MotionId + "/vote"
-}
-
-type CommitteeSlugMeetingMeetingIdSpeakerAddRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdSpeakerAddRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSpeakerAddRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakerAddRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdSpeakerAddRoute) ManageSpeakerAddPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/add"
-}
-
-type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute struct {
-	Slug      string
-	MeetingId string
-	SpeakerId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-		SpeakerId: speakerid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute) ManageSpeakerEndPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/end"
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute) ManageAgendaPointSetModeratorPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/moderator"
-}
-
-func (Routes) LogoutSubmitPost() string {
-	return "/logout"
-}
-
-func (Routes) AdminLogoutPost() string {
-	return "/admin/logout"
-}
-
-func (Routes) LoginPageGet() string {
-	return "/"
-}
-
-func (Routes) LoginSubmitPost() string {
-	return "/login"
-}
-
-type CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute {
-	return &CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute) ProtocolSaveAgendaPointPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/protocol/" + r.AgendaPointId + ""
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute) ManageAttachmentCreatePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/attachment/create"
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute) ManageAgendaPointDeletePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/delete"
-}
-
-type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute struct {
-	Slug      string
-	MeetingId string
-	SpeakerId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-		SpeakerId: speakerid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute) ManageSpeakerRemovePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/remove"
-}
-
-type CommitteeSlugMeetingMeetingIdActivateRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdActivateRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdActivateRoute {
-	return &CommitteeSlugMeetingMeetingIdActivateRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdActivateRoute) CommitteeActivateMeetingPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/activate"
-}
-
-type AdminCommitteeSlugUserCreateRoute struct {
-	Slug string
-}
-
-func NewAdminCommitteeSlugUserCreateRoute(slug string) *AdminCommitteeSlugUserCreateRoute {
-	return &AdminCommitteeSlugUserCreateRoute{
-		Slug: slug,
-	}
-}
-
-func (r *AdminCommitteeSlugUserCreateRoute) AdminCreateUserPost() string {
-	return "/admin/committee/" + r.Slug + "/user/create"
-}
-
-type AdminCommitteeSlugUserUserIdDeleteRoute struct {
-	Slug   string
-	UserId string
-}
-
-func NewAdminCommitteeSlugUserUserIdDeleteRoute(slug string, userid string) *AdminCommitteeSlugUserUserIdDeleteRoute {
-	return &AdminCommitteeSlugUserUserIdDeleteRoute{
-		Slug:   slug,
-		UserId: userid,
-	}
-}
-
-func (r *AdminCommitteeSlugUserUserIdDeleteRoute) AdminDeleteUserPost() string {
-	return "/admin/committee/" + r.Slug + "/user/" + r.UserId + "/delete"
-}
-
-type CommitteeSlugMeetingCreateRoute struct {
-	Slug string
-}
-
-func NewCommitteeSlugMeetingCreateRoute(slug string) *CommitteeSlugMeetingCreateRoute {
-	return &CommitteeSlugMeetingCreateRoute{
-		Slug: slug,
-	}
-}
-
-func (r *CommitteeSlugMeetingCreateRoute) CommitteeCreateMeetingPost() string {
-	return "/committee/" + r.Slug + "/meeting/create"
-}
-
-type CommitteeSlugMeetingMeetingIdAttendeeLoginRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAttendeeLoginRoute {
-	return &CommitteeSlugMeetingMeetingIdAttendeeLoginRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAttendeeLoginRoute) AttendeeLoginPageGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee-login"
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAttendeeLoginRoute) AttendeeLoginSubmitPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee-login"
-}
-
-type CommitteeSlugMeetingMeetingIdSpeakersStreamRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdSpeakersStreamRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSpeakersStreamRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakersStreamRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdSpeakersStreamRoute) AttendeeSpeakersStreamGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speakers/stream"
-}
-
-func (Routes) AdminLoginGet() string {
-	return "/admin/login"
-}
-func (Routes) AdminLoginSubmitPost() string {
-	return "/admin/login"
-}
-
-type AdminCommitteeSlugDeleteRoute struct {
-	Slug string
-}
-
-func NewAdminCommitteeSlugDeleteRoute(slug string) *AdminCommitteeSlugDeleteRoute {
-	return &AdminCommitteeSlugDeleteRoute{
-		Slug: slug,
-	}
-}
-
-func (r *AdminCommitteeSlugDeleteRoute) AdminDeleteCommitteePost() string {
-	return "/admin/committee/" + r.Slug + "/delete"
-}
-
-type CommitteeSlugMeetingMeetingIdRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdRoute {
-	return &CommitteeSlugMeetingMeetingIdRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdRoute) CommitteeMeetingViewGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + ""
-}
-
-type CommitteeSlugMeetingMeetingIdProtocolRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdProtocolRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdProtocolRoute {
-	return &CommitteeSlugMeetingMeetingIdProtocolRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdProtocolRoute) MeetingProtocolPageGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/protocol"
-}
-
-type CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute struct {
-	Slug       string
-	MeetingId  string
-	AttendeeId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute(slug string, meetingid string, attendeeid string) *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute {
-	return &CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute{
-		Slug:       slug,
-		MeetingId:  meetingid,
-		AttendeeId: attendeeid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute) ManageAttendeeToggleChairPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/" + r.AttendeeId + "/chair"
-}
-
-type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute struct {
-	Slug      string
-	MeetingId string
-	SpeakerId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute {
-	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-		SpeakerId: speakerid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdStartRoute) ManageSpeakerStartPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/start"
-}
-
-type CommitteeSlugMeetingMeetingIdModeratorRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdModeratorRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdModeratorRoute {
-	return &CommitteeSlugMeetingMeetingIdModeratorRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdModeratorRoute) ManageMeetingSetModeratorPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/moderator"
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute) ManageAgendaPointSetQuotationPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/quotation"
-}
-
-type CommitteeSlugMeetingMeetingIdSignupOpenRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdSignupOpenRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSignupOpenRoute {
-	return &CommitteeSlugMeetingMeetingIdSignupOpenRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdSignupOpenRoute) ManageToggleSignupOpenPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/signup-open"
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointCreateRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointCreateRoute) ManageAgendaPointCreatePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/create"
-}
-
-type CommitteeSlugMeetingMeetingIdQuotationRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdQuotationRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdQuotationRoute {
-	return &CommitteeSlugMeetingMeetingIdQuotationRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdQuotationRoute) ManageMeetingSetQuotationPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/quotation"
-}
-
-type CommitteeSlugMeetingMeetingIdGuestRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdGuestRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdGuestRoute {
-	return &CommitteeSlugMeetingMeetingIdGuestRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdGuestRoute) MeetingGuestSignupPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/guest"
-}
-
-type CommitteeSlugMeetingMeetingIdDeleteRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdDeleteRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdDeleteRoute {
-	return &CommitteeSlugMeetingMeetingIdDeleteRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdDeleteRoute) CommitteeDeleteMeetingPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/delete"
-}
-
-type CommitteeSlugMeetingMeetingIdLiveRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdLiveRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdLiveRoute {
-	return &CommitteeSlugMeetingMeetingIdLiveRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdLiveRoute) MeetingLivePageGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/live"
-}
-
-func (Routes) AdminDashboardGet() string {
-	return "/admin"
-}
-
-type AdminDashboardGetQueryParams struct {
-	Page     string
-	PageSize string
-}
-
-func (Routes) AdminDashboardGetWithQuery(q AdminDashboardGetQueryParams) string {
-	path := "/admin"
-	var qparts []string
-	if q.Page != "" {
-		qparts = append(qparts, "page="+url.QueryEscape(q.Page))
-	}
-	if q.PageSize != "" {
-		qparts = append(qparts, "page_size="+url.QueryEscape(q.PageSize))
-	}
-	if len(qparts) > 0 {
-		path += "?" + strings.Join(qparts, "&")
-	}
-	return path
-}
-
-type CommitteeSlugMeetingMeetingIdManageRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdManageRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdManageRoute {
-	return &CommitteeSlugMeetingMeetingIdManageRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdManageRoute) CommitteeMeetingManageGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/manage"
-}
-
-type CommitteeSlugMeetingMeetingIdProtocolWriterRoute struct {
-	Slug      string
-	MeetingId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdProtocolWriterRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdProtocolWriterRoute {
-	return &CommitteeSlugMeetingMeetingIdProtocolWriterRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdProtocolWriterRoute) ManageSetProtocolWriterPost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/protocol-writer"
-}
-
-type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute struct {
-	Slug          string
-	MeetingId     string
-	AgendaPointId string
-}
-
-func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute {
-	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute{
-		Slug:          slug,
-		MeetingId:     meetingid,
-		AgendaPointId: agendapointid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionCreateRoute) ManageMotionCreatePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/motion/create"
-}
-
-type CommitteeSlugMeetingMeetingIdBlobBlobIdRoute struct {
-	Slug      string
-	MeetingId string
-	BlobId    string
-}
-
-func NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(slug string, meetingid string, blobid string) *CommitteeSlugMeetingMeetingIdBlobBlobIdRoute {
-	return &CommitteeSlugMeetingMeetingIdBlobBlobIdRoute{
-		Slug:      slug,
-		MeetingId: meetingid,
-		BlobId:    blobid,
-	}
-}
-
-func (r *CommitteeSlugMeetingMeetingIdBlobBlobIdRoute) ServeBlobDownloadGet() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/blob/" + r.BlobId + ""
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdVoteRoute) ManageMotionRecordVotePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/motion/" + r.MotionId + "/vote"
 }
 
 type CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdDeleteRoute struct {
@@ -795,8 +411,542 @@ func NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdDeleteRoute(slug string, 
 	}
 }
 
-func (r *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdDeleteRoute) ManageAttendeeDeletePost() string {
-	return "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/" + r.AttendeeId + "/delete"
+func (r *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdDeleteRoute) ManageAttendeeDeletePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/" + r.AttendeeId + "/delete"
+}
+
+type CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute struct {
+	Slug       string
+	MeetingId  string
+	AttendeeId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute(slug string, meetingid string, attendeeid string) *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute {
+	return &CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute{
+		Slug:       slug,
+		MeetingId:  meetingid,
+		AttendeeId: attendeeid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute) ManageAttendeeToggleChairPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/" + r.AttendeeId + "/chair"
+}
+
+type CommitteeSlugMeetingMeetingIdModeratorRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdModeratorRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdModeratorRoute {
+	return &CommitteeSlugMeetingMeetingIdModeratorRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdModeratorRoute) ManageMeetingSetModeratorPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/moderator"
+}
+
+type CommitteeSlugMeetingMeetingIdActivateRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdActivateRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdActivateRoute {
+	return &CommitteeSlugMeetingMeetingIdActivateRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdActivateRoute) CommitteeActivateMeetingPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/activate"
+}
+
+func (Routes) AdminDashboardGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin"
+}
+
+type AdminDashboardGetQueryParams struct {
+	Page     string
+	PageSize string
+}
+
+func (Routes) AdminDashboardGetWithQuery(ctx context.Context, override string, q AdminDashboardGetQueryParams) string {
+	path := locale.PathPrefix(ctx, override) + "/admin"
+	var qparts []string
+	if q.Page != "" {
+		qparts = append(qparts, "page="+url.QueryEscape(q.Page))
+	}
+	if q.PageSize != "" {
+		qparts = append(qparts, "page_size="+url.QueryEscape(q.PageSize))
+	}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+
+type AdminCommitteeSlugRoute struct {
+	Slug string
+}
+
+func NewAdminCommitteeSlugRoute(slug string) *AdminCommitteeSlugRoute {
+	return &AdminCommitteeSlugRoute{
+		Slug: slug,
+	}
+}
+
+func (r *AdminCommitteeSlugRoute) AdminCommitteeUsersGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/committee/" + r.Slug + ""
+}
+
+type AdminCommitteeUsersGetQueryParams struct {
+	Page     string
+	PageSize string
+}
+
+func (r *AdminCommitteeSlugRoute) AdminCommitteeUsersGetWithQuery(ctx context.Context, override string, q AdminCommitteeUsersGetQueryParams) string {
+	path := r.AdminCommitteeUsersGet(ctx, override)
+	var qparts []string
+	if q.Page != "" {
+		qparts = append(qparts, "page="+url.QueryEscape(q.Page))
+	}
+	if q.PageSize != "" {
+		qparts = append(qparts, "page_size="+url.QueryEscape(q.PageSize))
+	}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+
+type CommitteeSlugMeetingMeetingIdSettingsPartialRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSettingsPartialRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSettingsPartialRoute {
+	return &CommitteeSlugMeetingMeetingIdSettingsPartialRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSettingsPartialRoute) ManageMeetingSettingsPartialGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/settings/partial"
+}
+
+type CommitteeSlugMeetingMeetingIdBlobBlobIdRoute struct {
+	Slug      string
+	MeetingId string
+	BlobId    string
+}
+
+func NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(slug string, meetingid string, blobid string) *CommitteeSlugMeetingMeetingIdBlobBlobIdRoute {
+	return &CommitteeSlugMeetingMeetingIdBlobBlobIdRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+		BlobId:    blobid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdBlobBlobIdRoute) ServeBlobDownloadGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/blob/" + r.BlobId + ""
+}
+
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentCreateRoute) ManageAttachmentCreatePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/attachment/create"
+}
+
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+	AttachmentId  string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute(slug string, meetingid string, agendapointid string, attachmentid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+		AttachmentId:  attachmentid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute) ManageAttachmentDeletePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/attachment/" + r.AttachmentId + "/delete"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute struct {
+	Slug      string
+	MeetingId string
+	SpeakerId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+		SpeakerId: speakerid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdPriorityRoute) ManageSpeakerTogglePriorityPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/priority"
+}
+
+type CommitteeSlugMeetingMeetingIdJoinRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdJoinRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdJoinRoute {
+	return &CommitteeSlugMeetingMeetingIdJoinRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdJoinRoute) MeetingJoinPageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/join"
+}
+
+func (r *CommitteeSlugMeetingMeetingIdJoinRoute) MeetingJoinSubmitPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/join"
+}
+
+type AdminCommitteeSlugDeleteRoute struct {
+	Slug string
+}
+
+func NewAdminCommitteeSlugDeleteRoute(slug string) *AdminCommitteeSlugDeleteRoute {
+	return &AdminCommitteeSlugDeleteRoute{
+		Slug: slug,
+	}
+}
+
+func (r *AdminCommitteeSlugDeleteRoute) AdminDeleteCommitteePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/committee/" + r.Slug + "/delete"
+}
+
+type CommitteeSlugMeetingMeetingIdManageJoinQrRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdManageJoinQrRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdManageJoinQrRoute {
+	return &CommitteeSlugMeetingMeetingIdManageJoinQrRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdManageJoinQrRoute) CommitteeMeetingManageJoinQRGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/manage/join-qr"
+}
+
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute) ManageAgendaPointDeletePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/delete"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute struct {
+	Slug      string
+	MeetingId string
+	SpeakerId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+		SpeakerId: speakerid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdWithdrawRoute) ManageSpeakerWithdrawPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/withdraw"
+}
+
+type CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute struct {
+	Slug          string
+	MeetingId     string
+	AgendaPointId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute(slug string, meetingid string, agendapointid string) *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute {
+	return &CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute{
+		Slug:          slug,
+		MeetingId:     meetingid,
+		AgendaPointId: agendapointid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdQuotationRoute) ManageAgendaPointSetQuotationPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/agenda-point/" + r.AgendaPointId + "/quotation"
+}
+
+type CommitteeSlugMeetingMeetingIdAttendeeLoginRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAttendeeLoginRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAttendeeLoginRoute {
+	return &CommitteeSlugMeetingMeetingIdAttendeeLoginRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAttendeeLoginRoute) AttendeeLoginPageGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee-login"
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAttendeeLoginRoute) AttendeeLoginSubmitPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee-login"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerSelfAddRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerSelfAddRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSpeakerSelfAddRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerSelfAddRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerSelfAddRoute) AttendeeSpeakerSelfAddPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/self-add"
+}
+
+type CommitteeSlugMeetingMeetingIdLiveRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdLiveRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdLiveRoute {
+	return &CommitteeSlugMeetingMeetingIdLiveRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdLiveRoute) MeetingLiveLegacyRedirectGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/live"
+}
+
+type AdminCommitteeSlugUserCreateRoute struct {
+	Slug string
+}
+
+func NewAdminCommitteeSlugUserCreateRoute(slug string) *AdminCommitteeSlugUserCreateRoute {
+	return &AdminCommitteeSlugUserCreateRoute{
+		Slug: slug,
+	}
+}
+
+func (r *AdminCommitteeSlugUserCreateRoute) AdminCreateUserPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/admin/committee/" + r.Slug + "/user/create"
+}
+
+func (Routes) LoginSubmitPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/login"
+}
+
+type CommitteeSlugMeetingCreateRoute struct {
+	Slug string
+}
+
+func NewCommitteeSlugMeetingCreateRoute(slug string) *CommitteeSlugMeetingCreateRoute {
+	return &CommitteeSlugMeetingCreateRoute{
+		Slug: slug,
+	}
+}
+
+func (r *CommitteeSlugMeetingCreateRoute) CommitteeCreateMeetingPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/create"
+}
+
+type CommitteeSlugMeetingMeetingIdProtocolWriterRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdProtocolWriterRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdProtocolWriterRoute {
+	return &CommitteeSlugMeetingMeetingIdProtocolWriterRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdProtocolWriterRoute) ManageSetProtocolWriterPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/protocol-writer"
+}
+
+type CommitteeSlugMeetingMeetingIdAttendeeSelfSignupRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAttendeeSelfSignupRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAttendeeSelfSignupRoute {
+	return &CommitteeSlugMeetingMeetingIdAttendeeSelfSignupRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAttendeeSelfSignupRoute) ManageAttendeeSelfSignupPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/self-signup"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute struct {
+	Slug      string
+	MeetingId string
+	SpeakerId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+		SpeakerId: speakerid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdRemoveRoute) ManageSpeakerRemovePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/remove"
+}
+
+type CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute struct {
+	Slug      string
+	MeetingId string
+	SpeakerId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute(slug string, meetingid string, speakerid string) *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute {
+	return &CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+		SpeakerId: speakerid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSpeakerSpeakerIdEndRoute) ManageSpeakerEndPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/speaker/" + r.SpeakerId + "/end"
+}
+
+type CommitteeSlugMeetingMeetingIdManageStreamRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdManageStreamRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdManageStreamRoute {
+	return &CommitteeSlugMeetingMeetingIdManageStreamRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdManageStreamRoute) ManageStreamGet(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/manage/stream"
+}
+
+type ManageStreamGetQueryParams struct {
+	ClientId string
+}
+
+func (r *CommitteeSlugMeetingMeetingIdManageStreamRoute) ManageStreamGetWithQuery(ctx context.Context, override string, q ManageStreamGetQueryParams) string {
+	path := r.ManageStreamGet(ctx, override)
+	var qparts []string
+	if q.ClientId != "" {
+		qparts = append(qparts, "client_id="+url.QueryEscape(q.ClientId))
+	}
+	if len(qparts) > 0 {
+		path += "?" + strings.Join(qparts, "&")
+	}
+	return path
+}
+
+type CommitteeSlugMeetingMeetingIdSignupOpenRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdSignupOpenRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdSignupOpenRoute {
+	return &CommitteeSlugMeetingMeetingIdSignupOpenRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdSignupOpenRoute) ManageToggleSignupOpenPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/signup-open"
+}
+
+type CommitteeSlugMeetingMeetingIdAttendeeCreateRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdAttendeeCreateRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdAttendeeCreateRoute {
+	return &CommitteeSlugMeetingMeetingIdAttendeeCreateRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdAttendeeCreateRoute) ManageAttendeeCreatePost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/attendee/create"
+}
+
+type CommitteeSlugMeetingMeetingIdDeleteRoute struct {
+	Slug      string
+	MeetingId string
+}
+
+func NewCommitteeSlugMeetingMeetingIdDeleteRoute(slug string, meetingid string) *CommitteeSlugMeetingMeetingIdDeleteRoute {
+	return &CommitteeSlugMeetingMeetingIdDeleteRoute{
+		Slug:      slug,
+		MeetingId: meetingid,
+	}
+}
+
+func (r *CommitteeSlugMeetingMeetingIdDeleteRoute) CommitteeDeleteMeetingPost(ctx context.Context, override string) string {
+	return locale.PathPrefix(ctx, override) + "/committee/" + r.Slug + "/meeting/" + r.MeetingId + "/delete"
 }
 
 func (Routes) HtmxExtSseMinJs() string {

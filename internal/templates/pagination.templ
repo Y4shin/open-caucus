@@ -1,19 +1,24 @@
 package templates
 
-import "strconv"
+import (
+	"strconv"
+
+	"github.com/invopop/ctxi18n/i18n"
+)
 
 templ PaginationBar(current, total int, hasPrev, hasNext bool, prevURL, nextURL templ.SafeURL) {
 	<nav class="pagination">
 		if hasPrev {
-			<a href={ prevURL }>← Previous</a>
+			<a href={ prevURL }>{ i18n.T(ctx, "pagination.previous") }</a>
 		} else {
-			<span class="pagination-disabled">← Previous</span>
+			<span class="pagination-disabled">{ i18n.T(ctx, "pagination.previous") }</span>
 		}
-		<span class="pagination-info">Page { strconv.Itoa(current) } of { strconv.Itoa(total) }</span>
+		<span class="pagination-info">{ i18n.T(ctx, "pagination.page_info", strconv.Itoa(current), strconv.Itoa(total)) }</span>
 		if hasNext {
-			<a href={ nextURL }>Next →</a>
+			<a href={ nextURL }>{ i18n.T(ctx, "pagination.next") }</a>
 		} else {
-			<span class="pagination-disabled">Next →</span>
+			<span class="pagination-disabled">{ i18n.T(ctx, "pagination.next") }</span>
 		}
 	</nav>
 }
+

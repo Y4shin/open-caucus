@@ -3,12 +3,17 @@
 package e2e_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
+
+func agendaPointToolsURL(baseURL, slug, meetingID, agendaPointID string) string {
+	return fmt.Sprintf("%s/committee/%s/meeting/%s/agenda-point/%s/tools", baseURL, slug, meetingID, agendaPointID)
+}
 
 // writeTempPDF writes a minimal dummy PDF to a temp file and returns its path.
 func writeTempPDF(t *testing.T) string {
@@ -30,8 +35,8 @@ func writeTempPDF(t *testing.T) string {
 	return abs
 }
 
-// TestMotions_NoAgendaPoints_ShowsPlaceholder verifies that the Motions section
-// shows a helpful placeholder when there are no agenda points yet.
+// TestMotions_NoAgendaPoints_NotShownOnManage verifies motions are no longer
+// rendered on the main manage page.
 func TestMotions_NoAgendaPoints_ShowsPlaceholder(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -46,12 +51,10 @@ func TestMotions_NoAgendaPoints_ShowsPlaceholder(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := page.Locator("h2:has-text('Motions')").WaitFor(); err != nil {
-		t.Fatalf("expected Motions section heading: %v", err)
-	}
-
-	if err := page.Locator("p:has-text('Add agenda points above to manage motions')").WaitFor(); err != nil {
-		t.Fatalf("expected placeholder when no agenda points: %v", err)
+	if err := page.Locator("h2:has-text('Motions')").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(1500),
+	}); err == nil {
+		t.Fatalf("did not expect Motions section on main manage page")
 	}
 }
 
@@ -63,13 +66,13 @@ func TestMotions_ShowsMotionFormPerAgendaPoint(t *testing.T) {
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
 	ts.seedMeeting(t, "test-committee", "Spring Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Spring Meeting")
-	ts.seedAgendaPoint(t, "test-committee", "Spring Meeting", "Budget")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Spring Meeting", "Budget")
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("h4:has-text('Budget — Motions')").WaitFor(); err != nil {
@@ -96,8 +99,8 @@ func TestMotions_UploadMotion_AppearsInList(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("h4:has-text('Budget — Motions')").WaitFor(); err != nil {
@@ -144,8 +147,8 @@ func TestMotions_DeleteMotion_RemovesFromList(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("strong:has-text('Budget Approval')").WaitFor(); err != nil {
@@ -187,8 +190,8 @@ func TestMotions_RecordVote_ShowsTally(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
+		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
 	if err := page.Locator("input[name=votes_for]").WaitFor(); err != nil {

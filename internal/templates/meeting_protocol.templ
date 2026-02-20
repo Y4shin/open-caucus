@@ -1,9 +1,11 @@
 package templates
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 // ProtocolAgendaPointItem holds display data for one agenda point on the protocol page.
@@ -24,10 +26,10 @@ type ProtocolAgendaPointPartialInput struct {
 	Error         string
 }
 
-func (i *ProtocolAgendaPointPartialInput) SavePostStr() string {
+func (i *ProtocolAgendaPointPartialInput) SavePostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdProtocolAgendaPointIdRoute(
 		i.CommitteeSlug, i.IDString, i.AgendaPoint.IDString,
-	).ProtocolSaveAgendaPointPost()
+	).ProtocolSaveAgendaPointPost(ctx, "")
 }
 
 // MeetingProtocolInput is the full-page input for the protocol writer page.
@@ -39,8 +41,8 @@ type MeetingProtocolInput struct {
 	AgendaPoints  []ProtocolAgendaPointItem
 }
 
-func (i *MeetingProtocolInput) ManageURL() templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet())
+func (i *MeetingProtocolInput) ManageURL(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
 }
 
 func (i *MeetingProtocolInput) agendaPointPartialInput(ap ProtocolAgendaPointItem) ProtocolAgendaPointPartialInput {
@@ -54,18 +56,18 @@ func (i *MeetingProtocolInput) agendaPointPartialInput(ap ProtocolAgendaPointIte
 templ ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) {
 	<div id={ "ap-protocol-" + input.AgendaPoint.IDString }>
 		if input.Error != "" {
-			<p class="error">{ input.Error }</p>
+			<p class={ ErrorText() }>{ input.Error }</p>
 		}
 		if input.Saved {
-			<p><em>Saved.</em></p>
+			<p><em>{ i18n.T(ctx, "meeting_protocol.saved") }</em></p>
 		}
 		<form
-			hx-post={ input.SavePostStr() }
+			hx-post={ input.SavePostStr(ctx) }
 			hx-target={ "#ap-protocol-" + input.AgendaPoint.IDString }
 			hx-swap="outerHTML"
 		>
-			<textarea name="protocol" rows="6" style="width: 100%;">{ input.AgendaPoint.Protocol }</textarea>
-			<button type="submit">Save</button>
+			<textarea name="protocol" rows="6" class={ FullWidthField() }>{ input.AgendaPoint.Protocol }</textarea>
+			<button type="submit">{ i18n.T(ctx, "meeting_protocol.save_button") }</button>
 		</form>
 	</div>
 }
@@ -74,24 +76,26 @@ templ MeetingProtocolTemplate(input MeetingProtocolInput) {
 	<!DOCTYPE html>
 	<html>
 	<head>
-		<title>Protocol: { input.MeetingName } - { input.CommitteeName }</title>
+		<title>{ i18n.T(ctx, "meeting_protocol.page_title", input.MeetingName, input.CommitteeName) }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
-	<body>
-		<header>
-			<h1>Protocol: { input.MeetingName }</h1>
+	<body class={ AppShell() }>
+		@LanguageSwitcher()
+		<header class={ PageHeader() }>
+			<h1>{ i18n.T(ctx, "meeting_protocol.heading", input.MeetingName) }</h1>
 			<nav>
-				<a href={ input.ManageURL() }>← Back to Manage</a>
+				<a href={ input.ManageURL(ctx) }>{ i18n.T(ctx, "meeting_protocol.back_link") }</a>
 			</nav>
 		</header>
-		<main>
+		<main class={ PageMain() }>
 			if len(input.AgendaPoints) == 0 {
-				<p>No agenda points yet.</p>
+				<p>{ i18n.T(ctx, "meeting_protocol.empty_state") }</p>
 			} else {
 				for _, ap := range input.AgendaPoints {
-					<section>
+					<section class={ Panel() }>
 						<h2>{ strconv.FormatInt(ap.Position, 10) }. { ap.Title }</h2>
 						@ProtocolAgendaPointPartial(input.agendaPointPartialInput(ap))
 					</section>
@@ -101,3 +105,5 @@ templ MeetingProtocolTemplate(input MeetingProtocolInput) {
 	</body>
 	</html>
 }
+
+

@@ -301,10 +301,15 @@ func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to load attendees: %w", err)
 	}
 
-	agendaPoints, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
+	topLevelAgendaPoints, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load agenda points: %w", err)
 	}
+	subAgendaPoints, err := h.Repository.ListSubAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load sub-agenda points: %w", err)
+	}
+	agendaPoints := flattenAgendaPoints(topLevelAgendaPoints, subAgendaPoints)
 
 	var speakers []*model.SpeakerEntry
 
@@ -340,45 +345,27 @@ func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, p
 		}
 	}
 
-	agendaPointMotions := make([]templates.MotionListPartialInput, 0, len(agendaPoints))
-	agendaPointAttachments := make([]templates.AttachmentListPartialInput, 0, len(agendaPoints))
-	for _, ap := range agendaPoints {
-		motionPartial, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, ap)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to load motions: %w", err)
-		}
-		agendaPointMotions = append(agendaPointMotions, *motionPartial)
-
-		attachmentPartial, err := h.loadAttachmentListPartial(ctx, params.Slug, params.MeetingId, ap)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to load attachments: %w", err)
-		}
-		agendaPointAttachments = append(agendaPointAttachments, *attachmentPartial)
-	}
-
 	return &templates.MeetingManageInput{
-		CommitteeName:                   committee.Name,
-		CommitteeSlug:                   committee.Slug,
-		MeetingName:                     meeting.Name,
-		MeetingID:                       meeting.ID,
-		IDString:                        params.MeetingId,
-		Attendees:                       buildAttendeeItems(attendees),
-		SignupOpen:                      meeting.SignupOpen,
-		ProtocolWriterID:                meeting.ProtocolWriterID,
-		GenderQuotationEnabled:          meeting.GenderQuotationEnabled,
-		FirstSpeakerQuotationEnabled:    meeting.FirstSpeakerQuotationEnabled,
-		ModeratorID:                     meeting.ModeratorID,
-		AgendaPoints:                    buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
-		CurrentAgendaPointID:            meeting.CurrentAgendaPointID,
-		AgendaPointIDString:             apIDStr,
-		AgendaPointGenderQuotation:      apGenderQuotation,
+		CommitteeName:                    committee.Name,
+		CommitteeSlug:                    committee.Slug,
+		MeetingName:                      meeting.Name,
+		MeetingID:                        meeting.ID,
+		IDString:                         params.MeetingId,
+		Attendees:                        buildAttendeeItems(attendees),
+		SignupOpen:                       meeting.SignupOpen,
+		ProtocolWriterID:                 meeting.ProtocolWriterID,
+		GenderQuotationEnabled:           meeting.GenderQuotationEnabled,
+		FirstSpeakerQuotationEnabled:     meeting.FirstSpeakerQuotationEnabled,
+		ModeratorID:                      meeting.ModeratorID,
+		AgendaPoints:                     buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
+		CurrentAgendaPointID:             meeting.CurrentAgendaPointID,
+		AgendaPointIDString:              apIDStr,
+		AgendaPointGenderQuotation:       apGenderQuotation,
 		AgendaPointFirstSpeakerQuotation: apFirstSpeakerQuotation,
-		AgendaPointModeratorID:          apModeratorID,
-		EffectiveGenderQuotation:        effectiveGender,
-		EffectiveFirstSpeakerQuotation:  effectiveFirstSpeaker,
-		Speakers:                        buildSpeakerItems(speakers),
-		AgendaPointMotions:              agendaPointMotions,
-		AgendaPointAttachments:          agendaPointAttachments,
+		AgendaPointModeratorID:           apModeratorID,
+		EffectiveGenderQuotation:         effectiveGender,
+		EffectiveFirstSpeakerQuotation:   effectiveFirstSpeaker,
+		Speakers:                         buildSpeakerItems(speakers),
 	}, nil, nil
 }
 
