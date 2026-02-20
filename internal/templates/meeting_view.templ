@@ -29,19 +29,15 @@ templ MeetingViewTemplate(input MeetingViewInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<header class={ PageHeader() }>
-			<h1>{ input.MeetingName }</h1>
-			<nav>
-				<a href={ input.CommitteeDashboardGet(ctx) }>{ i18n.T(ctx, "meeting_view.back_link") }</a>
-			</nav>
-		</header>
-
-		<main class={ PageMain() }>
-			<p>{ i18n.T(ctx, "meeting_view.coming_soon") }</p>
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    input.MeetingName,
+			Subtitle: input.CommitteeName,
+			BackLink: SafeURLPtr(input.CommitteeDashboardGet(ctx)),
+		}, MeetingViewContent())
 	</body>
 	</html>
 }
 
-
+templ MeetingViewContent() {
+	<p>{ i18n.T(ctx, "meeting_view.coming_soon") }</p>
+}

@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 func AppShell() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`font-family:"Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:radial-gradient(circle at 18% 0%, #112a53 0%, #0a1937 38%, #070f25 100%);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#eaf2ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:radial-gradient(circle at 18% 0%, var(--ui-bg-shell-start) 0%, var(--ui-bg-shell-mid) 38%, var(--ui-bg-shell-end) 100%);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-primary);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`min-height:100vh;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`AppShell`, templ_7745c5c3_CSSBuilder.String())
@@ -24,9 +24,9 @@ func AppShell() templ.CSSClass {
 
 func PageHeader() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(90deg, #071126 0%, #0b1e3f 52%, #102a56 100%);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#f2f8ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid #16355f;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(90deg, var(--ui-bg-header-start) 0%, var(--ui-bg-header-mid) 52%, var(--ui-bg-header-end) 100%);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-strong);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid var(--ui-header-border);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:1rem 1.25rem;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`PageHeader`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
@@ -61,12 +61,12 @@ func PageFooter() templ.CSSClass {
 
 func Panel() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(170deg, rgba(8, 22, 50, 0.94), rgba(5, 17, 39, 0.97));`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(80, 125, 183, 0.38);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:16px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(170deg, var(--ui-panel-bg-start), var(--ui-panel-bg-end));`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-panel-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:1rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`margin-bottom:1rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:inset 0 1px 0 rgba(170, 217, 255, 0.06);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:inset 0 1px 0 var(--ui-panel-highlight);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`Panel`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -78,8 +78,8 @@ func DataTable() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`border-collapse:collapse;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(4, 14, 34, 0.62);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#eaf2ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-table-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-primary);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`DataTable`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -103,9 +103,9 @@ func LanguageSwitcherWrap() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.5rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.3rem 0.55rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:999px;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(6, 18, 42, 0.72);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(96, 155, 232, 0.35);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-switcher-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-switcher-border);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`backdrop-filter:blur(8px);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LanguageSwitcherWrap`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
@@ -116,7 +116,7 @@ func LanguageSwitcherWrap() templ.CSSClass {
 
 func LanguageSwitcherLink() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#98d6ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-switcher-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`text-decoration:none;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:600;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LanguageSwitcherLink`, templ_7745c5c3_CSSBuilder.String())
@@ -139,10 +139,10 @@ func FullWidthField() templ.CSSClass {
 
 func ErrorText() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(135, 21, 42, 0.28);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(246, 112, 143, 0.52);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:8px;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#ffd2de;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-error-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-error-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-error-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.55rem 0.7rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`margin-bottom:0.8rem;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`ErrorText`, templ_7745c5c3_CSSBuilder.String())
@@ -177,8 +177,8 @@ func ManageGridSlice() templ.CSSClass {
 
 func LiveBody() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:radial-gradient(circle at 18% 0%, #112a53 0%, #0a1937 38%, #070f25 100%);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#eaf2ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:radial-gradient(circle at 18% 0%, var(--ui-bg-shell-start) 0%, var(--ui-bg-shell-mid) 38%, var(--ui-bg-shell-end) 100%);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-primary);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-family:"Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`min-height:100vh;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBody`, templ_7745c5c3_CSSBuilder.String())
@@ -194,9 +194,9 @@ func LiveHeader() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`align-items:flex-start;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:space-between;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:1rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(90deg, #071126 0%, #0b1e3f 52%, #102a56 100%);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#f2f8ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid #16355f;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(90deg, var(--ui-bg-header-start) 0%, var(--ui-bg-header-mid) 52%, var(--ui-bg-header-end) 100%);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-strong);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid var(--ui-header-border);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveHeader`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -219,10 +219,10 @@ func LiveUserBar() templ.CSSClass {
 
 func LiveLogoutButton() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(11, 172, 255, 0.18);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#dcf5ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid #21b3ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:999px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-action-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-action-text);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-action-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.4rem 0.85rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`cursor:pointer;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveLogoutButton`, templ_7745c5c3_CSSBuilder.String())
@@ -236,10 +236,10 @@ func LiveManageLink() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:999px;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid #21b3ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(11, 172, 255, 0.12);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#dcf5ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-action-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-manage-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-action-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`text-decoration:none;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.85rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:600;`)
@@ -263,15 +263,145 @@ func LiveGrid() templ.CSSClass {
 	}
 }
 
+func LiveAgendaPanel() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaPanel`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
 func LivePanel() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(170deg, rgba(8, 22, 50, 0.94), rgba(5, 17, 39, 0.97));`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(80, 125, 183, 0.38);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:18px;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#eaf2ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(170deg, var(--ui-panel-bg-start), var(--ui-panel-bg-end));`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-panel-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-primary);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`min-height:520px;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:inset 0 1px 0 rgba(170, 217, 255, 0.06);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:inset 0 1px 0 var(--ui-panel-highlight);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LivePanel`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaAccordion() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.75rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaAccordion`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaAccordionSummary() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`list-style:none;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`cursor:pointer;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:flex-start;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:space-between;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.65rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaAccordionSummary`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaPreviewBlock() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.4rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaPreviewBlock`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaPreviewRow() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`grid-template-columns:minmax(0, 7rem) minmax(0, 1fr);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.45rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:baseline;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaPreviewRow`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaPreviewLabel() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.75rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`letter-spacing:0.05em;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`text-transform:uppercase;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaPreviewLabel`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaPreviewValue() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.98rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:600;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-primary);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaPreviewValue`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaAccordionContent() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:block;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaAccordionContent`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaAccordionIndicator() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:1.6rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:1.6rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:999px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:0 0 auto;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaAccordionIndicator`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveAgendaAccordionIcon() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`width:1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`transition:transform 150ms ease;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaAccordionIcon`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
 		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
@@ -299,9 +429,9 @@ func LiveAgendaItem() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.55rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`align-items:baseline;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.55rem 0.75rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(4, 14, 34, 0.78);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(40, 87, 148, 0.48);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:10px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-agenda-item-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-agenda-item-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaItem`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -311,9 +441,9 @@ func LiveAgendaItem() templ.CSSClass {
 
 func LiveAgendaItemActive() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-color:#1bbaff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:0 0 0 1px rgba(27, 186, 255, 0.4);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#6dd8ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-agenda-item-active-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:0 0 0 1px var(--ui-live-agenda-item-active-ring);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-agenda-item-active-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaItemActive`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -336,7 +466,7 @@ func LiveAgendaPosition() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.95rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#8cb9ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-agenda-position-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`min-width:2.4rem;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveAgendaPosition`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
@@ -361,7 +491,7 @@ func LiveActiveAgendaTitle() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`margin:0 0 0.8rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:1.35rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#9cd9ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-active-agenda-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveActiveAgendaTitle`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -372,7 +502,7 @@ func LiveActiveAgendaTitle() templ.CSSClass {
 func LiveEmptyState() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#b3c7e6;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveEmptyState`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -395,9 +525,9 @@ func LiveSpeakerHead() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`text-align:left;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.82rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#84a4d0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-head-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0 0.4rem 0.45rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid rgba(84, 124, 183, 0.45);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid var(--ui-live-speaker-head-border);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerHead`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -407,7 +537,7 @@ func LiveSpeakerHead() templ.CSSClass {
 
 func LiveSpeakerRow() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid rgba(71, 103, 148, 0.28);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid var(--ui-live-speaker-row-border);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerRow`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -420,7 +550,7 @@ func LiveSpeakerCellName() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:clamp(1.25rem, 2.7vw, 3rem);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:800;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.55rem 0.45rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#edf5ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-name-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerCellName`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -431,7 +561,7 @@ func LiveSpeakerCellName() templ.CSSClass {
 func LiveSpeakerCellMeta() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.92rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#9ebce1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-meta-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.55rem 0.45rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`text-transform:uppercase;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`letter-spacing:0.05em;`)
@@ -446,7 +576,7 @@ func LiveSpeakerCellSmall() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.9rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#7faee8;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-small-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.55rem 0.45rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`vertical-align:baseline;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerCellSmall`, templ_7745c5c3_CSSBuilder.String())
@@ -458,7 +588,7 @@ func LiveSpeakerCellSmall() templ.CSSClass {
 
 func LiveSpeaking() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(17, 128, 197, 0.17);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-speaking-bg);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeaking`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -468,7 +598,7 @@ func LiveSpeaking() templ.CSSClass {
 
 func LiveMyTurn() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`outline:1px dashed rgba(148, 223, 255, 0.4);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`outline:1px dashed var(--ui-live-myturn-outline);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveMyTurn`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -520,9 +650,9 @@ func LiveSpeakerItem() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.7rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`align-items:flex-start;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(8, 22, 50, 0.64);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(74, 117, 174, 0.36);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:12px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-speaker-item-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-speaker-item-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.65rem 0.75rem;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerItem`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
@@ -536,7 +666,7 @@ func LiveSpeakerOrder() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`min-width:2.2rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:1rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#9bc5ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-order-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding-top:0.2rem;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerOrder`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
@@ -563,7 +693,7 @@ func LiveSpeakerName() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:clamp(1.2rem, 2.5vw, 2.9rem);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:800;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`line-height:1.06;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#edf5ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-name-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerName`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -587,7 +717,7 @@ func LiveSpeakerMetaRow() templ.CSSClass {
 func LiveSpeakerType() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.77rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#9ebce1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-speaker-meta-text);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`text-transform:uppercase;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`letter-spacing:0.08em;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakerType`, templ_7745c5c3_CSSBuilder.String())
@@ -616,10 +746,10 @@ func LiveBadge() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.7rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.15rem 0.45rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:999px;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(146, 183, 229, 0.45);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#d4e8ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(18, 37, 70, 0.75);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-badge-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-text);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-badge-bg);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBadge`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -629,8 +759,8 @@ func LiveBadge() templ.CSSClass {
 
 func LiveBadgeROPM() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-color:rgba(79, 214, 255, 0.8);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#7de7ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-ropm-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-ropm-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBadgeROPM`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -640,8 +770,8 @@ func LiveBadgeROPM() templ.CSSClass {
 
 func LiveBadgeQuoted() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-color:rgba(216, 164, 255, 0.85);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#efcfff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-quoted-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-quoted-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBadgeQuoted`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -651,8 +781,8 @@ func LiveBadgeQuoted() templ.CSSClass {
 
 func LiveBadgeFirst() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-color:rgba(153, 255, 197, 0.85);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#b7ffd7;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-first-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-first-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBadgeFirst`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -662,8 +792,8 @@ func LiveBadgeFirst() templ.CSSClass {
 
 func LiveBadgePriority() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-color:rgba(255, 205, 112, 0.88);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#ffdea1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-priority-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-priority-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBadgePriority`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -673,8 +803,8 @@ func LiveBadgePriority() templ.CSSClass {
 
 func LiveBadgeModerator() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`border-color:rgba(111, 215, 255, 0.9);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#c5f1ff;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-moderator-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-moderator-text);`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveBadgeModerator`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -696,11 +826,74 @@ func LiveSpeakersHeaderRow() templ.CSSClass {
 	}
 }
 
+func LiveSpeakersPanelMeta() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-start;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.4rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0 0 0.55rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakersPanelMeta`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveSpeakersPanel() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakersPanel`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveSpeakersSSE() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakersSSE`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveSpeakersCardContent() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:100%;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakersCardContent`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveSpeakersListViewport() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`overflow-y:auto;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding-right:0.15rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSpeakersListViewport`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
 func LiveSelfAddRow() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.5rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`flex-wrap:wrap;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-wrap:nowrap;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`margin-top:0.8rem;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSelfAddRow`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
@@ -711,14 +904,399 @@ func LiveSelfAddRow() templ.CSSClass {
 
 func LiveSelfAddButton() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
-	templ_7745c5c3_CSSBuilder.WriteString(`background:rgba(11, 172, 255, 0.16);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`color:#ddf6ff;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid rgba(84, 214, 255, 0.7);`)
-	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:10px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-self-add-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-self-add-text);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-self-add-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
 	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.38rem 0.72rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:600;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`cursor:pointer;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`white-space:nowrap;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`LiveSelfAddButton`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveSelfAddTextFull() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSelfAddTextFull`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func LiveSelfAddTextShort() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:none;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`LiveSelfAddTextShort`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingCreateForm() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.85rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:start;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:min(100%, 1080px);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingCreateForm`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeField() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`grid-template-columns:var(--committee-label-width) minmax(0, 1fr);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:stretch;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeField`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeFieldWide() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`grid-column:1 / -1;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeFieldWide`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeFieldLabel() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-end;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:100%;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-sizing:border-box;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.42rem 0.75rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.84rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`letter-spacing:0.01em;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-strong);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(180deg, var(--ui-surface-2), var(--ui-surface-1));`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-right:none;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius) 0 0 var(--ui-radius);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeFieldLabel`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeFieldControl() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:block;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-top-left-radius:0 !important;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom-left-radius:0 !important;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:100%;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-self:stretch;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-sizing:border-box;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-left:1px solid var(--ui-border);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeFieldControl`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeFieldTextarea() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:3.25rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeFieldTextarea`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeFieldLabelTextarea() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`padding-top:0.42rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding-bottom:0.42rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeFieldLabelTextarea`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeFormActions() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.55rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeFormActions`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingsHeading() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:1.15rem 0 0.6rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:1.1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-strong);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingsHeading`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingList() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.7rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.55rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingList`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func PaginationNav() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-wrap:wrap;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.45rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin-top:1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding-top:0.6rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`PaginationNav`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func PaginationInfo() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0 0.3rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.9rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`PaginationInfo`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func PaginationEllipsis() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:1.4rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`PaginationEllipsis`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CenteredPaginationWrap() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:center;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CenteredPaginationWrap`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingCard() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:space-between;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.85rem 0.9rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-panel-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingCard`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingMain() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingMain`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingTitle() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:1.08rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:760;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-strong);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingTitle`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingDescription() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0.35rem 0 0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`line-height:1.35;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingDescription`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingAside() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.6rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-wrap:wrap;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-end;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingAside`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingChips() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.4rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-wrap:wrap;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-end;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingChips`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingChip() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.2rem 0.52rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.73rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-live-badge-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`background:var(--ui-live-badge-bg);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingChip`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingChipPositive() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-first-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-first-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingChipPositive`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingChipNegative() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-priority-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-priority-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingChipNegative`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeMeetingActions() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`grid-template-columns:repeat(2, 2rem);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`grid-auto-rows:2rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.38rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:end;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-content:center;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeMeetingActions`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeIconActionButton() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`width:2rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:2rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:2rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeIconActionButton`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeIconActionDanger() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-danger-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-danger-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeIconActionDanger`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func CommitteeIconActionIcon() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`width:var(--ui-icon-size-md);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:var(--ui-icon-size-md);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`CommitteeIconActionIcon`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
 		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
@@ -746,7 +1324,7 @@ func GlobalStylesheetLink() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<link rel=\"stylesheet\" href=\"/styles/templ.css\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<link rel=\"stylesheet\" href=\"/styles/templ.css\"><style>\n\t\t:root {\n\t\t\t--ui-radius: 10px;\n\t\t\t--ui-icon-size-sm: 0.95rem;\n\t\t\t--ui-icon-size-md: 1.05rem;\n\t\t\t--committee-label-width: 10.4rem;\n\t\t\t--ui-bg-shell-start: #112a53;\n\t\t\t--ui-bg-shell-mid: #0a1937;\n\t\t\t--ui-bg-shell-end: #070f25;\n\t\t\t--ui-bg-header-start: #071126;\n\t\t\t--ui-bg-header-mid: #0b1e3f;\n\t\t\t--ui-bg-header-end: #102a56;\n\t\t\t--ui-header-border: #16355f;\n\n\t\t\t--ui-panel-bg-start: rgba(8, 22, 50, 0.94);\n\t\t\t--ui-panel-bg-end: rgba(5, 17, 39, 0.97);\n\t\t\t--ui-panel-border: rgba(80, 125, 183, 0.38);\n\t\t\t--ui-panel-highlight: rgba(170, 217, 255, 0.06);\n\t\t\t--ui-table-bg: rgba(4, 14, 34, 0.62);\n\n\t\t\t--ui-switcher-bg: rgba(6, 18, 42, 0.72);\n\t\t\t--ui-switcher-border: rgba(96, 155, 232, 0.35);\n\t\t\t--ui-switcher-text: #98d6ff;\n\n\t\t\t--ui-error-bg: rgba(135, 21, 42, 0.28);\n\t\t\t--ui-error-border: rgba(246, 112, 143, 0.52);\n\t\t\t--ui-error-text: #ffd2de;\n\n\t\t\t--ui-surface-0: rgba(8, 22, 50, 0.84);\n\t\t\t--ui-surface-1: rgba(14, 36, 76, 0.9);\n\t\t\t--ui-surface-2: rgba(19, 49, 98, 0.95);\n\t\t\t--ui-border: rgba(107, 168, 245, 0.42);\n\t\t\t--ui-border-strong: rgba(98, 207, 255, 0.82);\n\t\t\t--ui-field-highlight: rgba(220, 241, 255, 0.06);\n\t\t\t--ui-text: #eaf2ff;\n\t\t\t--ui-text-primary: #eaf2ff;\n\t\t\t--ui-text-strong: #f2f8ff;\n\t\t\t--ui-text-muted: #bcd0ee;\n\t\t\t--ui-link: #ebf7ff;\n\t\t\t--ui-link-hover: #f7fcff;\n\t\t\t--ui-focus-inner: rgba(8, 22, 50, 0.9);\n\t\t\t--ui-focus-outer: rgba(98, 207, 255, 0.42);\n\n\t\t\t--ui-button-bg-start: #1d5eb1;\n\t\t\t--ui-button-bg-end: #164684;\n\t\t\t--ui-button-border: rgba(130, 194, 255, 0.7);\n\t\t\t--ui-button-text: #ebf7ff;\n\t\t\t--ui-button-shadow: 0 6px 18px rgba(4, 18, 46, 0.45);\n\n\t\t\t--ui-danger-bg-start: #9f2f51;\n\t\t\t--ui-danger-bg-end: #7f1f3e;\n\t\t\t--ui-danger-border: rgba(255, 173, 199, 0.7);\n\t\t\t--ui-danger-text: #ffeaf1;\n\n\t\t\t--ui-file-button-bg: rgba(29, 94, 177, 0.65);\n\t\t\t--ui-file-button-border: rgba(130, 194, 255, 0.6);\n\t\t\t--ui-file-button-text: #dff2ff;\n\t\t\t--ui-select-caret: #8fd8ff;\n\t\t\t--ui-checkbox-accent: #56d2ff;\n\n\t\t\t--ui-live-action-bg: rgba(11, 172, 255, 0.18);\n\t\t\t--ui-live-manage-bg: rgba(11, 172, 255, 0.12);\n\t\t\t--ui-live-action-border: #21b3ff;\n\t\t\t--ui-live-action-text: #dcf5ff;\n\t\t\t--ui-live-agenda-item-bg: rgba(4, 14, 34, 0.78);\n\t\t\t--ui-live-agenda-item-border: rgba(40, 87, 148, 0.48);\n\t\t\t--ui-live-agenda-item-active-border: #1bbaff;\n\t\t\t--ui-live-agenda-item-active-ring: rgba(27, 186, 255, 0.4);\n\t\t\t--ui-live-agenda-item-active-text: #6dd8ff;\n\t\t\t--ui-live-agenda-position-text: #8cb9ff;\n\t\t\t--ui-live-active-agenda-text: #9cd9ff;\n\t\t\t--ui-live-speaker-head-text: #84a4d0;\n\t\t\t--ui-live-speaker-head-border: rgba(84, 124, 183, 0.45);\n\t\t\t--ui-live-speaker-row-border: rgba(71, 103, 148, 0.28);\n\t\t\t--ui-live-speaker-name-text: #edf5ff;\n\t\t\t--ui-live-speaker-meta-text: #9ebce1;\n\t\t\t--ui-live-speaker-small-text: #7faee8;\n\t\t\t--ui-live-speaking-bg: rgba(17, 128, 197, 0.17);\n\t\t\t--ui-live-myturn-outline: rgba(148, 223, 255, 0.4);\n\t\t\t--ui-live-speaker-item-bg: rgba(8, 22, 50, 0.64);\n\t\t\t--ui-live-speaker-item-border: rgba(74, 117, 174, 0.36);\n\t\t\t--ui-live-speaker-order-text: #9bc5ff;\n\t\t\t--ui-live-badge-border: rgba(146, 183, 229, 0.45);\n\t\t\t--ui-live-badge-text: #d4e8ff;\n\t\t\t--ui-live-badge-bg: rgba(18, 37, 70, 0.75);\n\t\t\t--ui-live-badge-ropm-border: rgba(79, 214, 255, 0.8);\n\t\t\t--ui-live-badge-ropm-text: #7de7ff;\n\t\t\t--ui-live-badge-quoted-border: rgba(216, 164, 255, 0.85);\n\t\t\t--ui-live-badge-quoted-text: #efcfff;\n\t\t\t--ui-live-badge-first-border: rgba(153, 255, 197, 0.85);\n\t\t\t--ui-live-badge-first-text: #b7ffd7;\n\t\t\t--ui-live-badge-priority-border: rgba(255, 205, 112, 0.88);\n\t\t\t--ui-live-badge-priority-text: #ffdea1;\n\t\t\t--ui-live-badge-moderator-border: rgba(111, 215, 255, 0.9);\n\t\t\t--ui-live-badge-moderator-text: #c5f1ff;\n\t\t\t--ui-live-self-add-bg: rgba(11, 172, 255, 0.16);\n\t\t\t--ui-live-self-add-text: #ddf6ff;\n\t\t\t--ui-live-self-add-border: rgba(84, 214, 255, 0.7);\n\n\t\t\t--ui-shadow: 0 10px 30px rgba(3, 11, 30, 0.45);\n\t\t}\n\n\t\t[data-theme=\"light\"] {\n\t\t\t--committee-label-width: 10.4rem;\n\t\t\t--ui-bg-shell-start: #f4f8ff;\n\t\t\t--ui-bg-shell-mid: #ecf2ff;\n\t\t\t--ui-bg-shell-end: #e5ecfb;\n\t\t\t--ui-bg-header-start: #edf4ff;\n\t\t\t--ui-bg-header-mid: #e4eeff;\n\t\t\t--ui-bg-header-end: #d8e5ff;\n\t\t\t--ui-header-border: #b6caef;\n\n\t\t\t--ui-panel-bg-start: rgba(255, 255, 255, 0.96);\n\t\t\t--ui-panel-bg-end: rgba(245, 250, 255, 0.98);\n\t\t\t--ui-panel-border: rgba(111, 145, 197, 0.38);\n\t\t\t--ui-panel-highlight: rgba(255, 255, 255, 0.8);\n\t\t\t--ui-table-bg: rgba(242, 247, 255, 0.92);\n\n\t\t\t--ui-switcher-bg: rgba(236, 244, 255, 0.88);\n\t\t\t--ui-switcher-border: rgba(118, 158, 220, 0.45);\n\t\t\t--ui-switcher-text: #1c4f96;\n\n\t\t\t--ui-error-bg: rgba(233, 88, 120, 0.12);\n\t\t\t--ui-error-border: rgba(208, 74, 106, 0.35);\n\t\t\t--ui-error-text: #8a213f;\n\n\t\t\t--ui-surface-0: rgba(247, 251, 255, 0.98);\n\t\t\t--ui-surface-1: rgba(240, 247, 255, 0.99);\n\t\t\t--ui-surface-2: rgba(229, 240, 255, 0.99);\n\t\t\t--ui-border: rgba(112, 152, 214, 0.42);\n\t\t\t--ui-border-strong: rgba(59, 145, 229, 0.76);\n\t\t\t--ui-field-highlight: rgba(255, 255, 255, 0.9);\n\t\t\t--ui-text: #10284d;\n\t\t\t--ui-text-primary: #132a4d;\n\t\t\t--ui-text-strong: #0f2342;\n\t\t\t--ui-text-muted: #4d6691;\n\t\t\t--ui-link: #ffffff;\n\t\t\t--ui-link-hover: #ffffff;\n\t\t\t--ui-focus-inner: rgba(247, 251, 255, 0.92);\n\t\t\t--ui-focus-outer: rgba(59, 145, 229, 0.34);\n\n\t\t\t--ui-button-bg-start: #2c74c8;\n\t\t\t--ui-button-bg-end: #205ca8;\n\t\t\t--ui-button-border: rgba(53, 112, 188, 0.62);\n\t\t\t--ui-button-text: #ffffff;\n\t\t\t--ui-button-shadow: 0 6px 18px rgba(44, 87, 150, 0.24);\n\n\t\t\t--ui-danger-bg-start: #bf3b5f;\n\t\t\t--ui-danger-bg-end: #a22d50;\n\t\t\t--ui-danger-border: rgba(201, 59, 101, 0.55);\n\t\t\t--ui-danger-text: #fff6f9;\n\n\t\t\t--ui-file-button-bg: rgba(44, 116, 200, 0.22);\n\t\t\t--ui-file-button-border: rgba(53, 112, 188, 0.45);\n\t\t\t--ui-file-button-text: #1a3e75;\n\t\t\t--ui-select-caret: #3473bc;\n\t\t\t--ui-checkbox-accent: #2f83df;\n\n\t\t\t--ui-live-action-bg: rgba(35, 133, 226, 0.18);\n\t\t\t--ui-live-manage-bg: rgba(35, 133, 226, 0.12);\n\t\t\t--ui-live-action-border: #2f83df;\n\t\t\t--ui-live-action-text: #134888;\n\t\t\t--ui-live-agenda-item-bg: rgba(240, 246, 255, 0.98);\n\t\t\t--ui-live-agenda-item-border: rgba(111, 146, 199, 0.5);\n\t\t\t--ui-live-agenda-item-active-border: #2b86e2;\n\t\t\t--ui-live-agenda-item-active-ring: rgba(43, 134, 226, 0.24);\n\t\t\t--ui-live-agenda-item-active-text: #1b67b5;\n\t\t\t--ui-live-agenda-position-text: #2f6fbc;\n\t\t\t--ui-live-active-agenda-text: #2467b4;\n\t\t\t--ui-live-speaker-head-text: #365d91;\n\t\t\t--ui-live-speaker-head-border: rgba(103, 137, 188, 0.42);\n\t\t\t--ui-live-speaker-row-border: rgba(115, 146, 193, 0.34);\n\t\t\t--ui-live-speaker-name-text: #133159;\n\t\t\t--ui-live-speaker-meta-text: #48689b;\n\t\t\t--ui-live-speaker-small-text: #4872ac;\n\t\t\t--ui-live-speaking-bg: rgba(45, 128, 211, 0.14);\n\t\t\t--ui-live-myturn-outline: rgba(75, 152, 226, 0.4);\n\t\t\t--ui-live-speaker-item-bg: rgba(244, 249, 255, 0.98);\n\t\t\t--ui-live-speaker-item-border: rgba(109, 146, 199, 0.38);\n\t\t\t--ui-live-speaker-order-text: #2f6fbc;\n\t\t\t--ui-live-badge-border: rgba(105, 141, 188, 0.45);\n\t\t\t--ui-live-badge-text: #2e568c;\n\t\t\t--ui-live-badge-bg: rgba(236, 245, 255, 0.95);\n\t\t\t--ui-live-badge-ropm-border: rgba(32, 154, 208, 0.62);\n\t\t\t--ui-live-badge-ropm-text: #1675a5;\n\t\t\t--ui-live-badge-quoted-border: rgba(171, 117, 218, 0.62);\n\t\t\t--ui-live-badge-quoted-text: #7f4ca9;\n\t\t\t--ui-live-badge-first-border: rgba(75, 173, 128, 0.66);\n\t\t\t--ui-live-badge-first-text: #2f7b58;\n\t\t\t--ui-live-badge-priority-border: rgba(213, 144, 45, 0.7);\n\t\t\t--ui-live-badge-priority-text: #965f13;\n\t\t\t--ui-live-badge-moderator-border: rgba(57, 148, 217, 0.66);\n\t\t\t--ui-live-badge-moderator-text: #186196;\n\t\t\t--ui-live-self-add-bg: rgba(35, 133, 226, 0.16);\n\t\t\t--ui-live-self-add-text: #1f5d9e;\n\t\t\t--ui-live-self-add-border: rgba(47, 131, 223, 0.55);\n\n\t\t\t--ui-shadow: 0 10px 30px rgba(48, 85, 136, 0.2);\n\t\t}\n\n\t\t.language-switcher--compact {\n\t\t\tpadding: 0.18rem 0.38rem;\n\t\t\tgap: 0.32rem;\n\t\t\tfont-size: 0.82rem;\n\t\t\tborder-radius: 8px;\n\t\t}\n\n\t\t.language-switcher--compact a {\n\t\t\tpadding: 0.08rem 0.34rem;\n\t\t\tfont-size: 0.82rem;\n\t\t\tmin-height: auto;\n\t\t\tbox-shadow: none;\n\t\t}\n\n\t\t.language-switcher-link-button {\n\t\t\tbackground: none;\n\t\t\tborder: none;\n\t\t\tbox-shadow: none;\n\t\t\tpadding: 0;\n\t\t\tcolor: inherit;\n\t\t\tfont: inherit;\n\t\t\tcursor: pointer;\n\t\t\ttext-decoration: none;\n\t\t\ttransform: none;\n\t\t\tfilter: none;\n\t\t}\n\n\t\t.language-switcher-link-button:hover {\n\t\t\tbackground: none;\n\t\t\ttransform: none;\n\t\t\tfilter: none;\n\t\t}\n\n\t\t.language-switcher-link--active {\n\t\t\tcolor: var(--ui-text-strong);\n\t\t\tbackground: linear-gradient(180deg, var(--ui-button-bg-start) 0%, var(--ui-button-bg-end) 100%);\n\t\t\tborder: 1px solid var(--ui-button-border);\n\t\t\tborder-radius: calc(var(--ui-radius) - 2px);\n\t\t\tpadding: 0.1rem 0.36rem;\n\t\t\tbox-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);\n\t\t}\n\n\t\t.scaffold-header {\n\t\t\tpadding-top: 0.9rem;\n\t\t\tpadding-bottom: 0.65rem;\n\t\t}\n\n\t\t.scaffold-top-row {\n\t\t\tdisplay: flex;\n\t\t\talign-items: flex-start;\n\t\t\tjustify-content: space-between;\n\t\t\tgap: 1rem;\n\t\t}\n\n\t\t.scaffold-title-col {\n\t\t\tmin-width: 0;\n\t\t\tflex: 1;\n\t\t}\n\n\t\t.scaffold-title-row {\n\t\t\tdisplay: flex;\n\t\t\talign-items: center;\n\t\t\tgap: 0.38rem;\n\t\t\tmin-height: 2.1rem;\n\t\t}\n\n\t\t.scaffold-title {\n\t\t\tmargin: 0;\n\t\t\tfont-size: 1.8rem;\n\t\t\tline-height: 1.15;\n\t\t}\n\n\t\t.scaffold-subtitle {\n\t\t\tmargin: 0.15rem 0 0;\n\t\t\tfont-size: 1rem;\n\t\t\tline-height: 1.3;\n\t\t\tcolor: var(--ui-text-muted);\n\t\t}\n\n\t\t.scaffold-subtitle--placeholder {\n\t\t\tvisibility: hidden;\n\t\t}\n\n\t\t.scaffold-back-link {\n\t\t\tpadding: 0.22rem;\n\t\t\tmin-width: 0;\n\t\t\twidth: 1.9rem;\n\t\t\theight: 1.9rem;\n\t\t}\n\n\t\t.scaffold-back-icon {\n\t\t\twidth: 1.12rem;\n\t\t\theight: 1.12rem;\n\t\t}\n\n\t\t.scaffold-desktop-right {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\tgap: 0.55rem;\n\t\t\tflex-wrap: wrap;\n\t\t\tjustify-content: flex-end;\n\t\t}\n\n\t\t.scaffold-auth-text {\n\t\t\tmargin: 0;\n\t\t\tfont-size: 0.92rem;\n\t\t\twhite-space: nowrap;\n\t\t}\n\n\t\t.scaffold-action-row {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\tgap: 0.4rem;\n\t\t\tflex-wrap: wrap;\n\t\t\tjustify-content: flex-end;\n\t\t}\n\n\t\t.scaffold-action-btn {\n\t\t\tpadding: 0.3rem 0.6rem;\n\t\t\tfont-size: 0.86rem;\n\t\t\tfont-weight: 650;\n\t\t}\n\n\t\t.scaffold-action--error {\n\t\t\tbackground: linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);\n\t\t\tborder-color: var(--ui-danger-border);\n\t\t\tcolor: var(--ui-danger-text);\n\t\t}\n\n\t\t.scaffold-action--warning {\n\t\t\tbackground: linear-gradient(180deg, #b48a26 0%, #8f6c14 100%);\n\t\t\tborder-color: #f0d17a;\n\t\t\tcolor: #fff7dd;\n\t\t}\n\n\t\t.scaffold-action--info {\n\t\t\tbackground: linear-gradient(180deg, var(--ui-button-bg-start) 0%, var(--ui-button-bg-end) 100%);\n\t\t\tborder-color: var(--ui-button-border);\n\t\t\tcolor: var(--ui-button-text);\n\t\t}\n\n\t\t.scaffold-breadcrumbs {\n\t\t\tdisplay: flex;\n\t\t\tflex-wrap: wrap;\n\t\t\talign-items: center;\n\t\t\tgap: 0.35rem;\n\t\t\tmargin-top: 0.55rem;\n\t\t\tfont-size: 0.85rem;\n\t\t}\n\n\t\t.scaffold-breadcrumb-link {\n\t\t\tbackground: none;\n\t\t\tborder: none;\n\t\t\tpadding: 0;\n\t\t\tbox-shadow: none;\n\t\t\tcolor: var(--ui-text-muted);\n\t\t\tfont-weight: 500;\n\t\t\ttext-decoration: underline;\n\t\t}\n\n\t\t.scaffold-breadcrumb-link:hover {\n\t\t\ttransform: none;\n\t\t\tfilter: none;\n\t\t\tcolor: var(--ui-text-primary);\n\t\t}\n\n\t\t.scaffold-breadcrumb-sep {\n\t\t\tcolor: var(--ui-text-muted);\n\t\t}\n\n\t\t.scaffold-mobile-menu {\n\t\t\tdisplay: none;\n\t\t}\n\n\t\t.scaffold-mobile-menu-panel {\n\t\t\tdisplay: none;\n\t\t}\n\n\t\t.scaffold-footer {\n\t\t\tbackground: transparent;\n\t\t}\n\n\t\t.scaffold-footer-inner {\n\t\t\tdisplay: grid;\n\t\t\tgrid-template-columns: 1fr auto 1fr;\n\t\t\talign-items: center;\n\t\t\tgap: 0.6rem;\n\t\t}\n\n\t\t.scaffold-footer-center {\n\t\t\tjustify-self: center;\n\t\t}\n\n\t\t.scaffold-footer-right {\n\t\t\tjustify-self: end;\n\t\t}\n\n\t\t.scaffold-made-with {\n\t\t\tfont-size: 0.88rem;\n\t\t\tcolor: var(--ui-text-muted);\n\t\t}\n\n\t\t.meeting-list-grid {\n\t\t\tdisplay: grid;\n\t\t\tgrid-template-columns: minmax(0, 1fr);\n\t\t\tgap: 1.1rem;\n\t\t\talign-items: start;\n\t\t}\n\n\t\t.meeting-list-error-row {\n\t\t\tgrid-column: 1 / -1;\n\t\t}\n\n\t\t.committee-section-stack {\n\t\t\tdisplay: flex;\n\t\t\tflex-direction: column;\n\t\t\talign-items: center;\n\t\t}\n\n\t\t.committee-section-inner {\n\t\t\twidth: min(100%, 1080px);\n\t\t}\n\n\t\t.committee-section-create {\n\t\t\tmin-width: 0;\n\t\t}\n\n\t\t.committee-section-existing {\n\t\t\tmin-width: 0;\n\t\t\tpadding-top: 0.95rem;\n\t\t\tborder-top: 1px solid var(--ui-panel-border);\n\t\t}\n\n\t\t.committee-create-layout {\n\t\t\tgrid-template-columns: minmax(0, 1fr);\n\t\t\tgrid-template-areas:\n\t\t\t\t\"name\"\n\t\t\t\t\"description\"\n\t\t\t\t\"signup\"\n\t\t\t\t\"submit\";\n\t\t}\n\n\t\t.committee-create-name {\n\t\t\tgrid-area: name;\n\t\t\twidth: 100%;\n\t\t}\n\n\t\t.committee-create-description {\n\t\t\tgrid-area: description;\n\t\t}\n\n\t\t.committee-create-signup {\n\t\t\tgrid-area: signup;\n\t\t\talign-self: center;\n\t\t}\n\n\t\t.committee-create-submit {\n\t\t\tgrid-area: submit;\n\t\t\tdisplay: flex;\n\t\t\tjustify-content: center;\n\t\t\tmargin-top: 0.1rem;\n\t\t}\n\n\t\t.committee-create-button {\n\t\t\tmin-width: 11rem;\n\t\t}\n\n\t\t.committee-create-divider {\n\t\t\tmargin: 1.2rem 0 0.7rem;\n\t\t\tborder: 0;\n\t\t\tborder-top: 1px solid var(--ui-panel-border);\n\t\t}\n\n\t\t.committee-signup-toggle-wrap {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\tgap: 0.5rem;\n\t\t\tcursor: pointer;\n\t\t\tuser-select: none;\n\t\t}\n\n\t\t.committee-signup-toggle {\n\t\t\tposition: absolute;\n\t\t\topacity: 0;\n\t\t\twidth: 1px;\n\t\t\theight: 1px;\n\t\t\tmargin: 0;\n\t\t}\n\n\t\t.committee-signup-toggle-track {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\twidth: 2.35rem;\n\t\t\theight: 1.35rem;\n\t\t\tpadding: 0.12rem;\n\t\t\tbox-sizing: border-box;\n\t\t\tborder-radius: 999px;\n\t\t\tborder: 1px solid var(--ui-border);\n\t\t\tbackground: linear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));\n\t\t\tbox-shadow: inset 0 1px 0 var(--ui-field-highlight);\n\t\t\toverflow: hidden;\n\t\t\ttransition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;\n\t\t}\n\n\t\t.committee-signup-toggle-thumb {\n\t\t\twidth: 1.03rem;\n\t\t\theight: 1.03rem;\n\t\t\tborder-radius: 50%;\n\t\t\tbackground: var(--ui-text-muted);\n\t\t\tbox-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);\n\t\t\ttransform: translateX(0);\n\t\t\ttransition: transform 140ms ease, background-color 140ms ease;\n\t\t}\n\n\t\t.committee-signup-toggle:checked + .committee-signup-toggle-track {\n\t\t\tbackground: linear-gradient(180deg, #2f9957 0%, #237244 100%);\n\t\t\tborder-color: #4ecf80;\n\t\t\tbox-shadow:\n\t\t\t\tinset 0 1px 0 rgba(255, 255, 255, 0.22),\n\t\t\t\t0 0 0 1px rgba(78, 207, 128, 0.2);\n\t\t}\n\n\t\t.committee-signup-toggle:checked + .committee-signup-toggle-track .committee-signup-toggle-thumb {\n\t\t\ttransform: translateX(0.88rem);\n\t\t\tbackground: #f5fff9;\n\t\t}\n\n\t\t.committee-signup-toggle:focus-visible {\n\t\t\toutline: none;\n\t\t}\n\n\t\t.committee-signup-toggle:focus-visible + .committee-signup-toggle-track {\n\t\t\tbox-shadow:\n\t\t\t\t0 0 0 2px var(--ui-focus-inner),\n\t\t\t\t0 0 0 4px var(--ui-focus-outer),\n\t\t\t\tinset 0 1px 0 var(--ui-field-highlight);\n\t\t}\n\n\t\t.committee-signup-toggle-text {\n\t\t\tcolor: var(--ui-text-primary);\n\t\t\tline-height: 1.2;\n\t\t}\n\n\t\t.live-agenda-accordion:not([open]) .live-agenda-accordion-content {\n\t\t\tdisplay: block;\n\t\t}\n\n\t\t.live-agenda-accordion[open] .live-agenda-accordion-icon {\n\t\t\ttransform: rotate(90deg);\n\t\t}\n\n\t\t.live-agenda-accordion-summary::-webkit-details-marker {\n\t\t\tdisplay: none;\n\t\t}\n\n\t\t@media (min-width: 980px) {\n\t\t\t.meeting-list-grid {\n\t\t\t\tgrid-template-columns: minmax(0, 1fr) minmax(0, 2fr);\n\t\t\t\tcolumn-gap: 1.25rem;\n\t\t\t\trow-gap: 0.8rem;\n\t\t\t}\n\n\t\t\t.committee-section-existing {\n\t\t\t\tpadding-top: 0;\n\t\t\t\tpadding-left: 1.25rem;\n\t\t\t\tborder-top: none;\n\t\t\t\tborder-left: 1px solid var(--ui-panel-border);\n\t\t\t}\n\t\t}\n\n\t\t@media (max-width: 760px) {\n\t\t\t.live-mobile-layout {\n\t\t\t\tgrid-template-columns: minmax(0, 1fr);\n\t\t\t\tgrid-template-rows: minmax(0, 1fr) minmax(0, 2fr);\n\t\t\t\theight: calc(100dvh - 10.75rem);\n\t\t\t\tmin-height: 0;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-agenda-accordion {\n\t\t\t\tmax-height: 33dvh;\n\t\t\t\tmin-height: 0;\n\t\t\t\toverflow: hidden;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-agenda-accordion-content {\n\t\t\t\tmax-height: 0;\n\t\t\t\toverflow: hidden;\n\t\t\t\topacity: 0;\n\t\t\t\ttransition: max-height 170ms ease, opacity 120ms ease;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-agenda-accordion[open] .live-agenda-accordion-content {\n\t\t\t\tmax-height: 33dvh;\n\t\t\t\toverflow-y: auto;\n\t\t\t\topacity: 1;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-speakers-panel {\n\t\t\t\tmin-height: 0;\n\t\t\t\theight: 100%;\n\t\t\t}\n\n\t\t\t.live-mobile-layout #attendee-speakers-list {\n\t\t\t\theight: 100%;\n\t\t\t\tmin-height: 0;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-speakers-panel .live-speakers-card-content {\n\t\t\t\theight: 100%;\n\t\t\t\tmin-height: 0;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-speakers-panel .live-speakers-list-viewport {\n\t\t\t\toverflow-y: auto;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-self-add-row {\n\t\t\t\tgap: 0.35rem;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-self-add-button {\n\t\t\t\tpadding-left: 0.4rem;\n\t\t\t\tpadding-right: 0.4rem;\n\t\t\t\tfont-size: 0.82rem;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-self-add-text-full {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.live-mobile-layout .live-self-add-text-short {\n\t\t\t\tdisplay: inline;\n\t\t\t}\n\n\t\t\t.live-mobile-layout:has(.live-agenda-accordion[open]) .live-speaker-row:not(.speaking) {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.live-mobile-layout:has(.live-agenda-accordion[open]) .live-speakers-panel .live-speakers-list-viewport {\n\t\t\t\toverflow: hidden;\n\t\t\t}\n\n\t\t\t.scaffold-top-row {\n\t\t\t\tflex-wrap: wrap;\n\t\t\t\talign-items: flex-start;\n\t\t\t}\n\n\t\t\t.scaffold-desktop-right {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-menu {\n\t\t\t\tdisplay: block;\n\t\t\t\tflex: 0 0 auto;\n\t\t\t\tmargin-left: auto;\n\t\t\t\tposition: static;\n\t\t\t\twidth: auto;\n\t\t\t\tmargin-top: 0;\n\t\t\t\tpadding-top: 0;\n\t\t\t\tborder-top: none;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-menu-button {\n\t\t\t\tlist-style: none;\n\t\t\t\tdisplay: inline-flex;\n\t\t\t\tflex-direction: column;\n\t\t\t\tgap: 0.2rem;\n\t\t\t\tjustify-content: center;\n\t\t\t\talign-items: center;\n\t\t\t\twidth: 2rem;\n\t\t\t\theight: 2rem;\n\t\t\t\tborder-radius: var(--ui-radius);\n\t\t\t\tborder: 1px solid var(--ui-border);\n\t\t\t\tbackground: linear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));\n\t\t\t\tcursor: pointer;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-menu-button::-webkit-details-marker {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.scaffold-hamburger-bar {\n\t\t\t\tdisplay: block;\n\t\t\t\twidth: 1.05rem;\n\t\t\t\theight: 2px;\n\t\t\t\tborder-radius: 99px;\n\t\t\t\tbackground: var(--ui-text-primary);\n\t\t\t}\n\n\t\t\t.scaffold-mobile-menu-panel {\n\t\t\t\tposition: static;\n\t\t\t\twidth: 100%;\n\t\t\t\tmin-width: 0;\n\t\t\t\tmargin-top: 0.15rem;\n\t\t\t\tbackground: transparent;\n\t\t\t\tborder: 0;\n\t\t\t\tborder-radius: 0;\n\t\t\t\tpadding: 0;\n\t\t\t\tbox-shadow: none;\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.scaffold-header:has(.scaffold-mobile-menu[open]) .scaffold-mobile-menu-panel {\n\t\t\t\tdisplay: block;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-subtitle,\n\t\t\t.scaffold-mobile-auth {\n\t\t\t\tmargin: 0.15rem 0 0.5rem;\n\t\t\t\tfont-size: 0.92rem;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-subtitle-divider {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-logout-form {\n\t\t\t\tdisplay: block;\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-action-stack {\n\t\t\t\tdisplay: flex;\n\t\t\t\tflex-direction: column;\n\t\t\t\tgap: 0;\n\t\t\t\tborder-top: 1px solid var(--ui-panel-border);\n\t\t\t\tmargin: 0 0 0.1rem;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-action-row {\n\t\t\t\tpadding: 0;\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-action-link {\n\t\t\t\tdisplay: block;\n\t\t\t\tbackground: none;\n\t\t\t\tborder: 0;\n\t\t\t\tborder-bottom: 1px solid var(--ui-panel-border);\n\t\t\t\tpadding: 0.46rem 0;\n\t\t\t\ttext-decoration: none;\n\t\t\t\tcolor: var(--ui-text-primary);\n\t\t\t\tbox-shadow: none;\n\t\t\t\ttransform: none;\n\t\t\t\tfilter: none;\n\t\t\t\tfont-weight: 600;\n\t\t\t\twidth: 100%;\n\t\t\t\ttext-align: left;\n\t\t\t\tborder-radius: 0;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-action-link:hover {\n\t\t\t\ttransform: none;\n\t\t\t\tfilter: none;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-action-link--logout {\n\t\t\t\tmargin: 0;\n\t\t\t}\n\n\t\t\t.scaffold-mobile-auth {\n\t\t\t\tmargin: 0.42rem 0 0.6rem;\n\t\t\t\tcolor: var(--ui-text-muted);\n\t\t\t}\n\n\t\t\t.scaffold-mobile-bottom-row {\n\t\t\t\tdisplay: flex;\n\t\t\t\talign-items: center;\n\t\t\t\tjustify-content: space-between;\n\t\t\t\tgap: 0.45rem;\n\t\t\t}\n\n\t\t\t.scaffold-subtitle {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\n\t\t\t.scaffold-title {\n\t\t\t\tfont-size: 1.35rem;\n\t\t\t}\n\n\t\t\t.scaffold-footer {\n\t\t\t\tdisplay: none;\n\t\t\t}\n\t\t}\n\n\t\t.ui-icon {\n\t\t\twidth: var(--ui-icon-size-sm);\n\t\t\theight: var(--ui-icon-size-sm);\n\t\t\tdisplay: inline-block;\n\t\t\tflex: 0 0 auto;\n\t\t\tvertical-align: middle;\n\t\t}\n\n\t\t.ui-icon--left {\n\t\t\tmargin-right: 0.35rem;\n\t\t}\n\n\t\t.ui-icon--right {\n\t\t\tmargin-left: 0.35rem;\n\t\t}\n\n\t\t.ui-icon-label {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\tjustify-content: center;\n\t\t\tgap: 0;\n\t\t}\n\n\t\t.ui-icon-text {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t}\n\n\t\t.committee-action-icon {\n\t\t\twidth: var(--ui-icon-size-md);\n\t\t\theight: var(--ui-icon-size-md);\n\t\t}\n\n\t\ta {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\tjustify-content: center;\n\t\t\tbackground: linear-gradient(180deg, var(--ui-button-bg-start) 0%, var(--ui-button-bg-end) 100%);\n\t\t\tborder: 1px solid var(--ui-button-border);\n\t\t\tcolor: var(--ui-link);\n\t\t\tborder-radius: var(--ui-radius);\n\t\t\tpadding: 0.34rem 0.7rem;\n\t\t\tfont-weight: 650;\n\t\t\tbox-shadow: var(--ui-button-shadow);\n\t\t\ttext-decoration: none;\n\t\t\ttransition: color 140ms ease, transform 120ms ease, filter 120ms ease;\n\t\t}\n\n\t\ta:hover {\n\t\t\tcolor: var(--ui-link-hover);\n\t\t\tfilter: brightness(1.08);\n\t\t\ttransform: translateY(-1px);\n\t\t}\n\n\t\ta:active {\n\t\t\ttransform: translateY(0);\n\t\t\tfilter: brightness(0.98);\n\t\t}\n\n\t\ta:focus-visible {\n\t\t\toutline: none;\n\t\t\tborder-color: var(--ui-border-strong);\n\t\t\tbox-shadow:\n\t\t\t\t0 0 0 2px var(--ui-focus-inner),\n\t\t\t\t0 0 0 4px var(--ui-focus-outer);\n\t\t}\n\n\t\ta:visited {\n\t\t\tcolor: var(--ui-link);\n\t\t}\n\n\t\tbutton,\n\t\tinput,\n\t\tselect,\n\t\ttextarea {\n\t\t\tfont: inherit;\n\t\t\tcolor: var(--ui-text);\n\t\t}\n\n\t\tinput[type=\"text\"],\n\t\tinput[type=\"password\"],\n\t\tinput[type=\"number\"],\n\t\tinput[type=\"file\"],\n\t\tselect,\n\t\ttextarea {\n\t\t\tbackground: linear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));\n\t\t\tborder: 1px solid var(--ui-border);\n\t\t\tborder-radius: var(--ui-radius);\n\t\t\tpadding: 0.42rem 0.62rem;\n\t\t\tbox-shadow: inset 0 1px 0 var(--ui-field-highlight);\n\t\t\ttransition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;\n\t\t}\n\n\t\tselect {\n\t\t\tpadding-right: 1.9rem;\n\t\t\tappearance: none;\n\t\t\tbackground-image:\n\t\t\t\tlinear-gradient(45deg, transparent 50%, var(--ui-select-caret) 50%),\n\t\t\t\tlinear-gradient(135deg, var(--ui-select-caret) 50%, transparent 50%),\n\t\t\t\tlinear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));\n\t\t\tbackground-position:\n\t\t\t\tcalc(100% - 16px) 52%,\n\t\t\t\tcalc(100% - 10px) 52%,\n\t\t\t\t0 0;\n\t\t\tbackground-size:\n\t\t\t\t6px 6px,\n\t\t\t\t6px 6px,\n\t\t\t\t100% 100%;\n\t\t\tbackground-repeat: no-repeat;\n\t\t}\n\n\t\ttextarea {\n\t\t\tresize: vertical;\n\t\t\tmin-height: 2.4rem;\n\t\t}\n\n\t\tinput::placeholder,\n\t\ttextarea::placeholder {\n\t\t\tcolor: var(--ui-text-muted);\n\t\t}\n\n\t\tinput:focus-visible,\n\t\tselect:focus-visible,\n\t\ttextarea:focus-visible,\n\t\tbutton:focus-visible {\n\t\t\toutline: none;\n\t\t\tborder-color: var(--ui-border-strong);\n\t\t\tbox-shadow:\n\t\t\t\t0 0 0 2px var(--ui-focus-inner),\n\t\t\t\t0 0 0 4px var(--ui-focus-outer);\n\t\t}\n\n\t\tinput[type=\"checkbox\"],\n\t\tinput[type=\"radio\"] {\n\t\t\taccent-color: var(--ui-checkbox-accent);\n\t\t\twidth: 1rem;\n\t\t\theight: 1rem;\n\t\t\tvertical-align: middle;\n\t\t}\n\n\t\tbutton,\n\t\tinput[type=\"submit\"],\n\t\tinput[type=\"button\"] {\n\t\t\tdisplay: inline-flex;\n\t\t\talign-items: center;\n\t\t\tjustify-content: center;\n\t\t\tbackground: linear-gradient(180deg, var(--ui-button-bg-start) 0%, var(--ui-button-bg-end) 100%);\n\t\t\tborder: 1px solid var(--ui-button-border);\n\t\t\tcolor: var(--ui-button-text);\n\t\t\tborder-radius: var(--ui-radius);\n\t\t\tpadding: 0.4rem 0.72rem;\n\t\t\tfont-weight: 650;\n\t\t\tcursor: pointer;\n\t\t\tbox-shadow: var(--ui-button-shadow);\n\t\t\ttransition: transform 120ms ease, filter 120ms ease;\n\t\t}\n\n\t\tbutton:hover,\n\t\tinput[type=\"submit\"]:hover,\n\t\tinput[type=\"button\"]:hover {\n\t\t\tfilter: brightness(1.08);\n\t\t\ttransform: translateY(-1px);\n\t\t}\n\n\t\tbutton:active,\n\t\tinput[type=\"submit\"]:active,\n\t\tinput[type=\"button\"]:active {\n\t\t\ttransform: translateY(0);\n\t\t\tfilter: brightness(0.98);\n\t\t}\n\n\t\tbutton:disabled,\n\t\tinput[type=\"submit\"]:disabled,\n\t\tinput[type=\"button\"]:disabled {\n\t\t\topacity: 0.55;\n\t\t\tcursor: default;\n\t\t\tfilter: grayscale(0.22);\n\t\t\ttransform: none;\n\t\t}\n\n\t\tbutton[hx-delete],\n\t\tbutton[data-danger],\n\t\tinput[type=\"submit\"][value*=\"Delete\"] {\n\t\t\tbackground: linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);\n\t\t\tborder-color: var(--ui-danger-border);\n\t\t\tcolor: var(--ui-danger-text);\n\t\t}\n\n\t\tinput[type=\"file\"]::file-selector-button {\n\t\t\tmargin-right: 0.55rem;\n\t\t\tbackground: var(--ui-file-button-bg);\n\t\t\tborder: 1px solid var(--ui-file-button-border);\n\t\t\tcolor: var(--ui-file-button-text);\n\t\t\tborder-radius: var(--ui-radius);\n\t\t\tpadding: 0.22rem 0.5rem;\n\t\t\tfont: inherit;\n\t\t\tcursor: pointer;\n\t\t}\n\t</style>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -775,7 +1353,17 @@ func GlobalCSSClasses() []templ.CSSClass {
 		LiveLogoutButton(),
 		LiveManageLink(),
 		LiveGrid(),
+		LiveAgendaPanel(),
 		LivePanel(),
+		LiveAgendaAccordion(),
+		LiveAgendaAccordionSummary(),
+		LiveAgendaPreviewBlock(),
+		LiveAgendaPreviewRow(),
+		LiveAgendaPreviewLabel(),
+		LiveAgendaPreviewValue(),
+		LiveAgendaAccordionContent(),
+		LiveAgendaAccordionIndicator(),
+		LiveAgendaAccordionIcon(),
 		LiveAgendaList(),
 		LiveAgendaItem(),
 		LiveAgendaItemActive(),
@@ -809,8 +1397,42 @@ func GlobalCSSClasses() []templ.CSSClass {
 		LiveBadgePriority(),
 		LiveBadgeModerator(),
 		LiveSpeakersHeaderRow(),
+		LiveSpeakersPanelMeta(),
+		LiveSpeakersPanel(),
+		LiveSpeakersSSE(),
+		LiveSpeakersCardContent(),
+		LiveSpeakersListViewport(),
 		LiveSelfAddRow(),
 		LiveSelfAddButton(),
+		LiveSelfAddTextFull(),
+		LiveSelfAddTextShort(),
+		CommitteeMeetingCreateForm(),
+		CommitteeField(),
+		CommitteeFieldWide(),
+		CommitteeFieldLabel(),
+		CommitteeFieldControl(),
+		CommitteeFieldTextarea(),
+		CommitteeFieldLabelTextarea(),
+		CommitteeFormActions(),
+		CommitteeMeetingsHeading(),
+		CommitteeMeetingList(),
+		CommitteeMeetingCard(),
+		CommitteeMeetingMain(),
+		CommitteeMeetingTitle(),
+		CommitteeMeetingDescription(),
+		CommitteeMeetingAside(),
+		CommitteeMeetingChips(),
+		CommitteeMeetingChip(),
+		CommitteeMeetingChipPositive(),
+		CommitteeMeetingChipNegative(),
+		PaginationNav(),
+		PaginationInfo(),
+		PaginationEllipsis(),
+		CenteredPaginationWrap(),
+		CommitteeMeetingActions(),
+		CommitteeIconActionButton(),
+		CommitteeIconActionDanger(),
+		CommitteeIconActionIcon(),
 	}
 }
 

@@ -26,8 +26,8 @@ type UserItem struct {
 	Quoted   bool
 }
 
-func (i *AdminCommitteeUsersInput) PageURL(ctx context.Context, page int) templ.SafeURL {
-	q := paths.AdminCommitteeUsersGetQueryParams{Page: strconv.Itoa(page)}
+func (i *AdminCommitteeUsersInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
+	q := paths.AdminCommitteeUsersGetQueryParams{Page: strconv.FormatUint(uint64(page), 10)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
@@ -64,12 +64,18 @@ func (i *UserListPartialInput) AdminDeleteUserPostStr(ctx context.Context, user 
 	return paths.NewAdminCommitteeSlugUserUserIdDeleteRoute(i.CommitteeSlug, user.IDString).AdminDeleteUserPost(ctx, "")
 }
 
-func (i *UserListPartialInput) PageURL(ctx context.Context, page int) templ.SafeURL {
-	q := paths.AdminCommitteeUsersGetQueryParams{Page: strconv.Itoa(page)}
+func (i *UserListPartialInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
+	q := paths.AdminCommitteeUsersGetQueryParams{Page: strconv.FormatUint(uint64(page), 10)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
 	return templ.URL(paths.NewAdminCommitteeSlugRoute(i.CommitteeSlug).AdminCommitteeUsersGetWithQuery(ctx, "", q))
+}
+
+func (i *UserListPartialInput) PaginationArgs(ctx context.Context) PaginationArgs {
+	return BuildPaginationArgs(i.Pagination, func(page uint32) templ.SafeURL {
+		return i.PageURL(ctx, page)
+	})
 }
 
 // UserListPartial renders the add-user form and the paginated user table.
@@ -160,7 +166,7 @@ templ UserListPartial(input UserListPartialInput) {
 					</tbody>
 				</table>
 			}
-			@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(ctx, input.Pagination.PrevPage), input.PageURL(ctx, input.Pagination.NextPage))
+			@Pagination(input.PaginationArgs(ctx))
 		</section>
 	</div>
 }
@@ -176,23 +182,19 @@ templ AdminCommitteeUsersTemplate(input AdminCommitteeUsersInput) {
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>{ i18n.T(ctx, "admin_committee_users.heading", input.CommitteeName) }</h1>
-			@LanguageSwitcher()
-			<nav>
-				<a href={ input.AdminDashboardGet(ctx) }>{ i18n.T(ctx, "admin_committee_users.back_link") }</a>
-			</nav>
-		</header>
-		<main class={ PageMain() }>
-			@UserListPartial(UserListPartialInput{
-				CommitteeSlug: input.CommitteeSlug,
-				Users:         input.Users,
-				Pagination:    input.Pagination,
-				Error:         input.Error,
-			})
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    i18n.T(ctx, "admin_committee_users.heading", input.CommitteeName),
+			BackLink: SafeURLPtr(input.AdminDashboardGet(ctx)),
+		}, AdminCommitteeUsersContent(input))
 	</body>
 	</html>
 }
 
-
+templ AdminCommitteeUsersContent(input AdminCommitteeUsersInput) {
+	@UserListPartial(UserListPartialInput{
+		CommitteeSlug: input.CommitteeSlug,
+		Users:         input.Users,
+		Pagination:    input.Pagination,
+		Error:         input.Error,
+	})
+}

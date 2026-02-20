@@ -2,6 +2,8 @@ en:
   common:
     yes: "Yes"
     no: "No"
+    logout: "Logout"
+    logged_in_as: "Logged in as %s"
 
   login:
     page_title: "Login - Conference Tool"
@@ -37,7 +39,7 @@ en:
   admin_committee_users:
     page_title: "%s - Users"
     heading: "%s - Users"
-    back_link: "<- Back to Dashboard"
+    back_link: "Back to Dashboard"
     add_heading: "Add New User"
     username_label: "Username:"
     password_label: "Password:"
@@ -63,6 +65,7 @@ en:
     welcome: "Welcome to the committee management system."
     meetings_heading: "Meetings"
     create_meeting_heading: "Create New Meeting"
+    existing_meetings_heading: "Existing Meetings"
     name_label: "Name:"
     description_label: "Description:"
     signup_label: "Open for signup"
@@ -71,6 +74,8 @@ en:
     col_name: "Name"
     col_description: "Description"
     col_signup: "Signup Open"
+    signup_open_chip: "Signup Open"
+    signup_closed_chip: "Signup Closed"
     col_active: "Active"
     col_actions: "Actions"
     view_link: "View"
@@ -82,13 +87,13 @@ en:
     logout_button: "Logout"
 
   pagination:
-    previous: "<- Previous"
-    next: "Next ->"
+    previous: "Previous"
+    next: "Next"
     page_info: "Page %s of %s"
 
   meeting_view:
     page_title: "%s - %s"
-    back_link: "<- Back to Dashboard"
+    back_link: "Back to Dashboard"
     coming_soon: "Meeting view coming soon."
 
   meeting_join:
@@ -107,7 +112,7 @@ en:
     success_heading: "You're signed up!"
     access_code_label: "Your access code:"
     keep_code_hint: "Keep this code safe - you will need it to log in to the live meeting page."
-    to_login_link: "Go to login ->"
+    to_login_link: "Go to login"
 
   meeting_live:
     page_title: "%s - Live"
@@ -116,9 +121,14 @@ en:
     chair: "Chair"
     logout_button: "Logout"
     agenda_heading: "Agenda"
+    current_item: "Current"
+    next_item: "Next"
+    none_label: "None"
     speakers_heading: "Speakers List"
     add_self_regular: "Add Me (Regular)"
     add_self_ropm: "Add Me (RoPM)"
+    add_self_regular_short: "Regular"
+    add_self_ropm_short: "RoPM"
     moderator_badge: "Moderator: %s"
     no_active_agenda: "No agenda point is currently active."
     no_agenda_points: "No agenda points yet."
@@ -135,7 +145,7 @@ en:
   meeting_protocol:
     page_title: "Protocol: %s - %s"
     heading: "Protocol: %s"
-    back_link: "<- Back to Manage"
+    back_link: "Back to Manage"
     empty_state: "No agenda points yet."
     saved: "Saved."
     save_button: "Save"
@@ -172,5 +182,3 @@ en:
     label: "Language:"
     en_button: "EN"
     de_button: "DE"
-
-

@@ -34,20 +34,17 @@ templ MeetingAttendeeRecoveryTemplate(input MeetingAttendeeRecoveryInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>Guest Recovery Link</h1>
-			<h2>{ input.AttendeeName } - { input.MeetingName }</h2>
-			<nav>
-				<a href={ input.MeetingManageGet(ctx) }>← Back to Manage</a>
-			</nav>
-		</header>
-		<main class={ PageMain() }>
-			<p>Share this link with the guest to let them log back in directly.</p>
-			<p><a id="attendee-recovery-link" href={ templ.URL(input.LoginURL) }>{ input.LoginURL }</a></p>
-			<img id="attendee-recovery-qr" src={ input.QRCodeSrc() } alt="Guest Recovery QR Code"/>
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    "Guest Recovery Link",
+			Subtitle: input.AttendeeName + " - " + input.MeetingName,
+			BackLink: SafeURLPtr(input.MeetingManageGet(ctx)),
+		}, MeetingAttendeeRecoveryContent(input))
 	</body>
 	</html>
 }
 
-
+templ MeetingAttendeeRecoveryContent(input MeetingAttendeeRecoveryInput) {
+	<p>Share this link with the guest to let them log back in directly.</p>
+	<p><a id="attendee-recovery-link" href={ templ.URL(input.LoginURL) }>{ input.LoginURL }</a></p>
+	<img id="attendee-recovery-qr" src={ input.QRCodeSrc() } alt="Guest Recovery QR Code"/>
+}

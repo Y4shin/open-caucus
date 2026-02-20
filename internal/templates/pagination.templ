@@ -3,22 +3,95 @@ package templates
 import (
 	"strconv"
 
+	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/invopop/ctxi18n/i18n"
 )
 
-templ PaginationBar(current, total int, hasPrev, hasNext bool, prevURL, nextURL templ.SafeURL) {
-	<nav class="pagination">
-		if hasPrev {
-			<a href={ prevURL }>{ i18n.T(ctx, "pagination.previous") }</a>
+type PaginationArgs struct {
+	PrevPage    uint32
+	NextPage    uint32
+	CurrentPage uint32
+	PrevPages   []uint32
+	NextPages   []uint32
+	FirstPage   uint32
+	LastPage    uint32
+	PageURL     func(page uint32) templ.SafeURL
+}
+
+func BuildPaginationArgs(p pagination.Page, pageURL func(page uint32) templ.SafeURL) PaginationArgs {
+	args := PaginationArgs{
+		PageURL:     pageURL,
+		CurrentPage: uint32(p.CurrentPage),
+	}
+
+	if p.TotalPages <= 0 {
+		return args
+	}
+
+	if p.HasPrev {
+		args.PrevPage = uint32(p.PrevPage)
+	}
+	if p.HasNext {
+		args.NextPage = uint32(p.NextPage)
+	}
+
+	if p.CurrentPage > 1 {
+		args.PrevPages = append(args.PrevPages, uint32(p.CurrentPage-1))
+	}
+	if p.CurrentPage < p.TotalPages {
+		args.NextPages = append(args.NextPages, uint32(p.CurrentPage+1))
+	}
+
+	if p.CurrentPage > 2 {
+		args.FirstPage = 1
+	}
+	if p.CurrentPage < p.TotalPages-1 {
+		args.LastPage = uint32(p.TotalPages)
+	}
+
+	return args
+}
+
+templ Pagination(args PaginationArgs) {
+	<nav class={ PaginationNav() }>
+		if args.PrevPage > 0 {
+			@IconLabelLink(args.PageURL(args.PrevPage), IconChevronLeft, i18n.T(ctx, "pagination.previous"), "left")
 		} else {
-			<span class="pagination-disabled">{ i18n.T(ctx, "pagination.previous") }</span>
+			@IconLabelButton(IconChevronLeft, i18n.T(ctx, "pagination.previous"), "left", true)
 		}
-		<span class="pagination-info">{ i18n.T(ctx, "pagination.page_info", strconv.Itoa(current), strconv.Itoa(total)) }</span>
-		if hasNext {
-			<a href={ nextURL }>{ i18n.T(ctx, "pagination.next") }</a>
+
+		if args.FirstPage > 0 {
+			<a href={ args.PageURL(args.FirstPage) }>{ strconv.FormatUint(uint64(args.FirstPage), 10) }</a>
+			if len(args.PrevPages) > 0 && args.PrevPages[0] > args.FirstPage+1 {
+				<span class={ PaginationEllipsis() }>...</span>
+			}
+		}
+
+		for _, p := range args.PrevPages {
+			<a href={ args.PageURL(p) }>{ strconv.FormatUint(uint64(p), 10) }</a>
+		}
+
+		<button type="button" disabled>{ strconv.FormatUint(uint64(args.CurrentPage), 10) }</button>
+
+		for _, p := range args.NextPages {
+			<a href={ args.PageURL(p) }>{ strconv.FormatUint(uint64(p), 10) }</a>
+		}
+
+		if args.LastPage > 0 {
+			if len(args.NextPages) > 0 {
+				if args.NextPages[len(args.NextPages)-1]+1 < args.LastPage {
+					<span class={ PaginationEllipsis() }>...</span>
+				}
+			} else if args.CurrentPage+1 < args.LastPage {
+				<span class={ PaginationEllipsis() }>...</span>
+			}
+			<a href={ args.PageURL(args.LastPage) }>{ strconv.FormatUint(uint64(args.LastPage), 10) }</a>
+		}
+
+		if args.NextPage > 0 {
+			@IconLabelLink(args.PageURL(args.NextPage), IconChevronRight, i18n.T(ctx, "pagination.next"), "right")
 		} else {
-			<span class="pagination-disabled">{ i18n.T(ctx, "pagination.next") }</span>
+			@IconLabelButton(IconChevronRight, i18n.T(ctx, "pagination.next"), "right", true)
 		}
 	</nav>
 }
-

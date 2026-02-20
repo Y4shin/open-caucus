@@ -27,35 +27,37 @@ templ LoginPageTemplate(input LoginPageInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<h1>{ i18n.T(ctx, "login.title") }</h1>
-
-		if input.Error != "" {
-			<div class={ ErrorText() }>{ input.Error }</div>
-		}
-
-		<form method="POST" action={ input.LoginSubmitPost(ctx) }>
-			<div>
-				<label for="committee">{ i18n.T(ctx, "login.committee_label") }</label>
-				<input type="text" id="committee" name="committee"
-				       value={ input.Committee } required/>
-			</div>
-
-			<div>
-				<label for="username">{ i18n.T(ctx, "login.username_label") }</label>
-				<input type="text" id="username" name="username"
-				       value={ input.Username } required/>
-			</div>
-
-			<div>
-				<label for="password">{ i18n.T(ctx, "login.password_label") }</label>
-				<input type="password" id="password" name="password" required/>
-			</div>
-
-			<button type="submit">{ i18n.T(ctx, "login.button") }</button>
-		</form>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title: i18n.T(ctx, "login.title"),
+		}, LoginPageContent(input))
 	</body>
 	</html>
 }
 
+templ LoginPageContent(input LoginPageInput) {
+	if input.Error != "" {
+		<div class={ ErrorText() }>{ input.Error }</div>
+	}
+
+	<form method="POST" action={ input.LoginSubmitPost(ctx) }>
+		<div>
+			<label for="committee">{ i18n.T(ctx, "login.committee_label") }</label>
+			<input type="text" id="committee" name="committee"
+			       value={ input.Committee } required/>
+		</div>
+
+		<div>
+			<label for="username">{ i18n.T(ctx, "login.username_label") }</label>
+			<input type="text" id="username" name="username"
+			       value={ input.Username } required/>
+		</div>
+
+		<div>
+			<label for="password">{ i18n.T(ctx, "login.password_label") }</label>
+			<input type="password" id="password" name="password" required/>
+		</div>
+
+		<button type="submit">{ i18n.T(ctx, "login.button") }</button>
+	</form>
+}
 

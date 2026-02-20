@@ -1,0 +1,144 @@
+package templates
+
+import (
+	"strings"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/invopop/ctxi18n/i18n"
+)
+
+type Breadcrumb struct {
+	Slug string
+	URL  templ.SafeURL
+}
+
+type Action struct {
+	Title string
+	URL   templ.SafeURL
+	Kind  string
+}
+
+type ScaffoldInput struct {
+	Title       string
+	Subtitle    string
+	BackLink    *templ.SafeURL
+	Breadcrumbs []Breadcrumb
+	Actions     []Action
+}
+
+func SafeURLPtr(u templ.SafeURL) *templ.SafeURL {
+	return &u
+}
+
+func scaffoldActionKindClass(kind string) string {
+	switch strings.ToLower(strings.TrimSpace(kind)) {
+	case "error", "danger":
+		return "scaffold-action--error"
+	case "warning":
+		return "scaffold-action--warning"
+	default:
+		return "scaffold-action--info"
+	}
+}
+
+templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
+	<header class={ PageHeader(), "scaffold-header" }>
+		<div class="scaffold-top-row">
+			<div class="scaffold-title-col">
+				<div class="scaffold-title-row">
+					if input.BackLink != nil {
+						<a href={ *input.BackLink } class="scaffold-back-link" aria-label="Back">
+							@Icon(IconChevronLeft, "", "scaffold-back-icon")
+						</a>
+					}
+					<h1 class="scaffold-title">{ input.Title }</h1>
+				</div>
+				if input.Subtitle != "" {
+					<p class="scaffold-subtitle">{ input.Subtitle }</p>
+				} else {
+					<p class="scaffold-subtitle scaffold-subtitle--placeholder">placeholder</p>
+				}
+			</div>
+			<div class="scaffold-desktop-right">
+				if len(input.Actions) > 0 {
+					<div class="scaffold-action-row">
+						for _, action := range input.Actions {
+							<a href={ action.URL } class={ "scaffold-action-btn " + scaffoldActionKindClass(action.Kind) }>{ action.Title }</a>
+						}
+					</div>
+				}
+				if CurrentDisplayName(ctx) != "" {
+					<p class="scaffold-auth-text">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
+					<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
+						<button type="submit">{ i18n.T(ctx, "common.logout") }</button>
+					</form>
+				} else if session.IsAdminAuthenticated(ctx) {
+					<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") }>
+						<button type="submit">{ i18n.T(ctx, "common.logout") }</button>
+					</form>
+				}
+			</div>
+			<details class="scaffold-mobile-menu">
+				<summary class="scaffold-mobile-menu-button" aria-label="Open menu">
+					<span class="scaffold-hamburger-bar"></span>
+					<span class="scaffold-hamburger-bar"></span>
+					<span class="scaffold-hamburger-bar"></span>
+				</summary>
+			</details>
+		</div>
+		<div class="scaffold-mobile-menu-panel">
+			if input.Subtitle != "" {
+				<p class="scaffold-mobile-subtitle">{ input.Subtitle }</p>
+			}
+			<div class="scaffold-mobile-subtitle-divider"></div>
+			if len(input.Actions) > 0 || CurrentDisplayName(ctx) != "" || session.IsAdminAuthenticated(ctx) {
+				<div class="scaffold-mobile-action-stack">
+					for _, action := range input.Actions {
+						<a href={ action.URL } class="scaffold-mobile-action-link scaffold-mobile-action-row">{ action.Title }</a>
+					}
+					if CurrentDisplayName(ctx) != "" {
+						<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") } class="scaffold-mobile-logout-form scaffold-mobile-action-row">
+							<button type="submit" class="scaffold-mobile-action-link scaffold-mobile-action-link--logout">{ i18n.T(ctx, "common.logout") }</button>
+						</form>
+					} else if session.IsAdminAuthenticated(ctx) {
+						<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") } class="scaffold-mobile-logout-form scaffold-mobile-action-row">
+							<button type="submit" class="scaffold-mobile-action-link scaffold-mobile-action-link--logout">{ i18n.T(ctx, "common.logout") }</button>
+						</form>
+					}
+				</div>
+			}
+			if CurrentDisplayName(ctx) != "" {
+				<p class="scaffold-mobile-auth">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
+			}
+			<div class="scaffold-mobile-bottom-row">
+				<span class="scaffold-made-with">Made with ♥ by Patric</span>
+				@LanguageSwitcherCompact("scaffold-mobile-lang")
+			</div>
+		</div>
+		if len(input.Breadcrumbs) > 0 {
+			<nav class="scaffold-breadcrumbs" aria-label="Breadcrumb">
+				for idx, crumb := range input.Breadcrumbs {
+					if idx > 0 {
+						<span class="scaffold-breadcrumb-sep">/</span>
+					}
+					<a href={ crumb.URL } class="scaffold-breadcrumb-link">{ crumb.Slug }</a>
+				}
+			</nav>
+		}
+	</header>
+	<main class={ PageMain() }>
+		@content
+	</main>
+	<footer class={ PageFooter(), "scaffold-footer" }>
+		<div class="scaffold-footer-inner">
+			<div class="scaffold-footer-left"></div>
+			<div class="scaffold-footer-center">
+				<span class="scaffold-made-with">Made with ♥ by Patric</span>
+			</div>
+			<div class="scaffold-footer-right">
+				@LanguageSwitcherCompact("scaffold-footer-lang")
+			</div>
+		</div>
+	</footer>
+}

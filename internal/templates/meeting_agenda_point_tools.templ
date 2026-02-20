@@ -32,25 +32,24 @@ templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>{ input.MeetingName }</h1>
-			<h2>Agenda Point Tools: { input.AgendaPointTitle }</h2>
-			<nav>
-				<a href={ input.ManagePageGet(ctx) }>← Back to Manage</a>
-			</nav>
-		</header>
-		<main class={ PageMain() }>
-			<div class={ ManageGrid() }>
-				<section class={ Panel() }>
-					<h2>Attachments</h2>
-					@AttachmentListPartial(input.Attachments)
-				</section>
-				<section class={ Panel() }>
-					<h2>Motions</h2>
-					@MotionListPartial(input.Motions)
-				</section>
-			</div>
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    input.MeetingName,
+			Subtitle: "Agenda Point Tools: " + input.AgendaPointTitle,
+			BackLink: SafeURLPtr(input.ManagePageGet(ctx)),
+		}, MeetingAgendaPointToolsContent(input))
 	</body>
 	</html>
+}
+
+templ MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) {
+	<div class={ ManageGrid() }>
+		<section class={ Panel() }>
+			<h2>Attachments</h2>
+			@AttachmentListPartial(input.Attachments)
+		</section>
+		<section class={ Panel() }>
+			<h2>Motions</h2>
+			@MotionListPartial(input.Motions)
+		</section>
+	</div>
 }

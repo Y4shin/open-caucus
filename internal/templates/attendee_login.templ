@@ -29,26 +29,25 @@ templ AttendeeLoginTemplate(input AttendeeLoginInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<header class={ PageHeader() }>
-			<h1>{ input.MeetingName }</h1>
-			<h2>{ input.CommitteeName }</h2>
-		</header>
-		<main class={ PageMain() }>
-			<h3>{ i18n.T(ctx, "attendee_login.heading") }</h3>
-			if input.Error != "" {
-				<p class={ ErrorText() }>{ input.Error }</p>
-			}
-			<form method="POST" action={ input.LoginSubmitPost(ctx) }>
-				<div>
-					<label for="secret">{ i18n.T(ctx, "attendee_login.secret_label") }</label>
-					<input type="text" id="secret" name="secret" required autocomplete="off"/>
-				</div>
-				<button type="submit">{ i18n.T(ctx, "attendee_login.button") }</button>
-			</form>
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    input.MeetingName,
+			Subtitle: input.CommitteeName,
+		}, AttendeeLoginContent(input))
 	</body>
 	</html>
 }
 
+templ AttendeeLoginContent(input AttendeeLoginInput) {
+	<h3>{ i18n.T(ctx, "attendee_login.heading") }</h3>
+	if input.Error != "" {
+		<p class={ ErrorText() }>{ input.Error }</p>
+	}
+	<form method="POST" action={ input.LoginSubmitPost(ctx) }>
+		<div>
+			<label for="secret">{ i18n.T(ctx, "attendee_login.secret_label") }</label>
+			<input type="text" id="secret" name="secret" required autocomplete="off"/>
+		</div>
+		<button type="submit">{ i18n.T(ctx, "attendee_login.button") }</button>
+	</form>
+}
 

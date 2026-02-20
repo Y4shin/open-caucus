@@ -207,11 +207,7 @@ func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError s
 
 	sessionData, _ := session.GetSession(ctx)
 
-	username := ""
 	role := ""
-	if sessionData.Username != nil {
-		username = *sessionData.Username
-	}
 	if sessionData.Role != nil {
 		role = *sessionData.Role
 	}
@@ -219,8 +215,6 @@ func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError s
 	input := &templates.CommitteePageInput{
 		CommitteeName: committee.Name,
 		CommitteeSlug: committee.Slug,
-		Username:      username,
-		Role:          role,
 		FormError:     formError,
 	}
 

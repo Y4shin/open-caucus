@@ -2,6 +2,8 @@ de:
   common:
     yes: "Ja"
     no: "Nein"
+    logout: "Abmelden"
+    logged_in_as: "Angemeldet als %s"
 
   login:
     page_title: "Anmeldung - Konferenztool"
@@ -37,7 +39,7 @@ de:
   admin_committee_users:
     page_title: "%s - Benutzer"
     heading: "%s - Benutzer"
-    back_link: "<- Zurueck zum Dashboard"
+    back_link: "Zurueck zum Dashboard"
     add_heading: "Neuen Benutzer anlegen"
     username_label: "Benutzername:"
     password_label: "Passwort:"
@@ -63,6 +65,7 @@ de:
     welcome: "Willkommen im Ausschussverwaltungssystem."
     meetings_heading: "Sitzungen"
     create_meeting_heading: "Neue Sitzung erstellen"
+    existing_meetings_heading: "Vorhandene Sitzungen"
     name_label: "Name:"
     description_label: "Beschreibung:"
     signup_label: "Fuer Anmeldung geoeffnet"
@@ -71,6 +74,8 @@ de:
     col_name: "Name"
     col_description: "Beschreibung"
     col_signup: "Anmeldung offen"
+    signup_open_chip: "Anmeldung offen"
+    signup_closed_chip: "Anmeldung geschlossen"
     col_active: "Aktiv"
     col_actions: "Aktionen"
     view_link: "Ansehen"
@@ -82,13 +87,13 @@ de:
     logout_button: "Abmelden"
 
   pagination:
-    previous: "<- Zurueck"
-    next: "Weiter ->"
+    previous: "Zurueck"
+    next: "Weiter"
     page_info: "Seite %s von %s"
 
   meeting_view:
     page_title: "%s - %s"
-    back_link: "<- Zurueck zum Dashboard"
+    back_link: "Zurueck zum Dashboard"
     coming_soon: "Sitzungsansicht folgt bald."
 
   meeting_join:
@@ -107,7 +112,7 @@ de:
     success_heading: "Du bist angemeldet!"
     access_code_label: "Dein Zugangscode:"
     keep_code_hint: "Bewahre diesen Code gut auf - du brauchst ihn fuer die Anmeldung zur Live-Sitzung."
-    to_login_link: "Zur Anmeldung ->"
+    to_login_link: "Zur Anmeldung"
 
   meeting_live:
     page_title: "%s - Live"
@@ -116,9 +121,14 @@ de:
     chair: "Vorsitz"
     logout_button: "Abmelden"
     agenda_heading: "Tagesordnung"
+    current_item: "Aktuell"
+    next_item: "Als Naechstes"
+    none_label: "Keine"
     speakers_heading: "Redeliste"
     add_self_regular: "Mich melden (Regulaer)"
     add_self_ropm: "Mich melden (GO)"
+    add_self_regular_short: "Regulaer"
+    add_self_ropm_short: "GO"
     moderator_badge: "Moderation: %s"
     no_active_agenda: "Derzeit ist kein Tagesordnungspunkt aktiv."
     no_agenda_points: "Noch keine Tagesordnungspunkte."
@@ -135,7 +145,7 @@ de:
   meeting_protocol:
     page_title: "Protokoll: %s - %s"
     heading: "Protokoll: %s"
-    back_link: "<- Zurueck zur Verwaltung"
+    back_link: "Zurueck zur Verwaltung"
     empty_state: "Noch keine Tagesordnungspunkte."
     saved: "Gespeichert."
     save_button: "Speichern"
@@ -172,5 +182,3 @@ de:
     label: "Sprache:"
     en_button: "EN"
     de_button: "DE"
-
-

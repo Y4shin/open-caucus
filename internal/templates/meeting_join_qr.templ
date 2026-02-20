@@ -33,20 +33,17 @@ templ MeetingJoinQRTemplate(input MeetingJoinQRInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>Guest Join QR</h1>
-			<h2>{ input.MeetingName } - { input.CommitteeName }</h2>
-			<nav>
-				<a href={ input.MeetingManageGet(ctx) }>← Back to Manage</a>
-			</nav>
-		</header>
-		<main class={ PageMain() }>
-			<p>Guests can scan this QR code to open the join page with the meeting secret prefilled.</p>
-			<p><a href={ templ.URL(input.JoinURL) }>{ input.JoinURL }</a></p>
-			<img id="join-qr-code" src={ input.QRCodeSrc() } alt="Guest Join QR Code"/>
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    "Guest Join QR",
+			Subtitle: input.MeetingName + " - " + input.CommitteeName,
+			BackLink: SafeURLPtr(input.MeetingManageGet(ctx)),
+		}, MeetingJoinQRContent(input))
 	</body>
 	</html>
 }
 
-
+templ MeetingJoinQRContent(input MeetingJoinQRInput) {
+	<p>Guests can scan this QR code to open the join page with the meeting secret prefilled.</p>
+	<p><a href={ templ.URL(input.JoinURL) }>{ input.JoinURL }</a></p>
+	<img id="join-qr-code" src={ input.QRCodeSrc() } alt="Guest Join QR Code"/>
+}

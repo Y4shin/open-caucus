@@ -25,23 +25,25 @@ templ AdminLoginTemplate(input AdminLoginInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<h1>{ i18n.T(ctx, "admin_login.title") }</h1>
-
-		if input.Error != "" {
-			<div class={ ErrorText() }>{ input.Error }</div>
-		}
-
-		<form method="POST" action={ input.AdminLoginSubmitPost(ctx) }>
-			<div>
-				<label for="admin_key">{ i18n.T(ctx, "admin_login.password_label") }</label>
-				<input type="password" id="admin_key" name="admin_key" required autofocus/>
-			</div>
-
-			<button type="submit">{ i18n.T(ctx, "admin_login.button") }</button>
-		</form>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title: i18n.T(ctx, "admin_login.title"),
+		}, AdminLoginContent(input))
 	</body>
 	</html>
 }
 
+templ AdminLoginContent(input AdminLoginInput) {
+	if input.Error != "" {
+		<div class={ ErrorText() }>{ input.Error }</div>
+	}
+
+	<form method="POST" action={ input.AdminLoginSubmitPost(ctx) }>
+		<div>
+			<label for="admin_key">{ i18n.T(ctx, "admin_login.password_label") }</label>
+			<input type="password" id="admin_key" name="admin_key" required autofocus/>
+		</div>
+
+		<button type="submit">{ i18n.T(ctx, "admin_login.button") }</button>
+	</form>
+}
 

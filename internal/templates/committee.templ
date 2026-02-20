@@ -21,15 +21,9 @@ type MeetingItem struct {
 type CommitteePageInput struct {
 	CommitteeName string
 	CommitteeSlug string
-	Username      string
-	Role          string
 	Meetings      []MeetingItem
 	Pagination    pagination.Page
 	FormError     string
-}
-
-func (i *CommitteePageInput) LogoutSubmitPost(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.Route.LogoutSubmitPost(ctx, ""))
 }
 
 func (i *CommitteePageInput) CommitteeCreateMeetingPost(ctx context.Context) templ.SafeURL {
@@ -52,8 +46,8 @@ func (i *CommitteePageInput) MeetingActivatePost(ctx context.Context, m *Meeting
 	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost(ctx, ""))
 }
 
-func (i *CommitteePageInput) PageURL(ctx context.Context, page int) templ.SafeURL {
-	q := paths.CommitteePageGetQueryParams{Page: strconv.Itoa(page)}
+func (i *CommitteePageInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
+	q := paths.CommitteePageGetQueryParams{Page: strconv.FormatUint(uint64(page), 10)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
@@ -90,106 +84,140 @@ func (i *MeetingListPartialInput) MeetingActivatePostStr(ctx context.Context, m 
 	return paths.NewCommitteeSlugMeetingMeetingIdActivateRoute(i.CommitteeSlug, m.IDString).CommitteeActivateMeetingPost(ctx, "")
 }
 
-func (i *MeetingListPartialInput) PageURL(ctx context.Context, page int) templ.SafeURL {
-	q := paths.CommitteePageGetQueryParams{Page: strconv.Itoa(page)}
+func (i *MeetingListPartialInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
+	q := paths.CommitteePageGetQueryParams{Page: strconv.FormatUint(uint64(page), 10)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
 	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(ctx, "", q))
 }
 
+func (i *MeetingListPartialInput) PaginationArgs(ctx context.Context) PaginationArgs {
+	return BuildPaginationArgs(i.Pagination, func(page uint32) templ.SafeURL {
+		return i.PageURL(ctx, page)
+	})
+}
+
+templ SignupToggleField(id string, name string, label string) {
+	<label class="committee-signup-toggle-wrap" for={ id }>
+		<input class="committee-signup-toggle" type="checkbox" id={ id } name={ name } value="true"/>
+		<span class="committee-signup-toggle-track" aria-hidden="true">
+			<span class="committee-signup-toggle-thumb"></span>
+		</span>
+		<span class="committee-signup-toggle-text">{ label }</span>
+	</label>
+}
+
 // MeetingListPartial renders the create-meeting form and the paginated meetings table.
 // It is used both inside CommitteePageTemplate and as the sole response body for
 // HTMX mutation requests (create/delete/activate meeting).
 templ MeetingListPartial(input MeetingListPartialInput) {
-	<div id="meeting-list-container">
+	<div id="meeting-list-container" class="meeting-list-grid">
 		if input.FormError != "" {
-			<p class={ ErrorText() }>{ input.FormError }</p>
+			<p class={ ErrorText(), "meeting-list-error-row" }>{ input.FormError }</p>
 		}
-		<h3>{ i18n.T(ctx, "committee.create_meeting_heading") }</h3>
-		<form
-			hx-post={ input.CommitteeCreateMeetingPostStr(ctx) }
-			hx-target="#meeting-list-container"
-			hx-swap="outerHTML"
-			hx-on::after-request="if(event.detail.successful) this.reset()"
-		>
-			<div>
-				<label for="name">{ i18n.T(ctx, "committee.name_label") }</label>
-				<input type="text" id="name" name="name" required/>
+		<div class="committee-section-stack committee-section-create">
+			<div class="committee-section-inner">
+				<h3>{ i18n.T(ctx, "committee.create_meeting_heading") }</h3>
+				<form
+					class={ CommitteeMeetingCreateForm(), "committee-create-layout" }
+					hx-post={ input.CommitteeCreateMeetingPostStr(ctx) }
+					hx-target="#meeting-list-container"
+					hx-swap="outerHTML"
+					hx-on::after-request="if(event.detail.successful) this.reset()"
+				>
+					<div class={ CommitteeField(), "committee-create-name" }>
+						<label class={ CommitteeFieldLabel() } for="name">{ i18n.T(ctx, "committee.name_label") }</label>
+						<input class={ CommitteeFieldControl() } type="text" id="name" name="name" required/>
+					</div>
+					<div class={ CommitteeField(), "committee-create-description" }>
+						<label class={ CommitteeFieldLabel(), CommitteeFieldLabelTextarea() } for="description">{ i18n.T(ctx, "committee.description_label") }</label>
+						<textarea class={ CommitteeFieldControl(), CommitteeFieldTextarea() } id="description" name="description"></textarea>
+					</div>
+					<div class="committee-create-signup">
+						@SignupToggleField("signup_open", "signup_open", i18n.T(ctx, "committee.signup_label"))
+					</div>
+					<div class="committee-create-submit">
+						<button class="committee-create-button" type="submit">{ i18n.T(ctx, "committee.create_button") }</button>
+					</div>
+				</form>
 			</div>
-			<div>
-				<label for="description">{ i18n.T(ctx, "committee.description_label") }</label>
-				<textarea id="description" name="description"></textarea>
+		</div>
+		<div class="committee-section-stack committee-section-existing">
+			<div class="committee-section-inner">
+				<h3 class={ CommitteeMeetingsHeading() }>{ i18n.T(ctx, "committee.existing_meetings_heading") }</h3>
+				if len(input.Meetings) == 0 {
+					<p>{ i18n.T(ctx, "committee.empty_state") }</p>
+				} else {
+					<div class={ CommitteeMeetingList() }>
+						for _, m := range input.Meetings {
+							<article class={ CommitteeMeetingCard() }>
+								<div class={ CommitteeMeetingMain() }>
+									<h4 class={ CommitteeMeetingTitle() }>{ m.Name }</h4>
+									if m.Description != "" {
+										<p class={ CommitteeMeetingDescription() }>{ m.Description }</p>
+									} else {
+										<p class={ CommitteeMeetingDescription() }>No description provided.</p>
+									}
+								</div>
+								<div class={ CommitteeMeetingAside() }>
+									<div class={ CommitteeMeetingChips() }>
+										if m.SignupOpen {
+											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipPositive() }>{ i18n.T(ctx, "committee.signup_open_chip") }</span>
+										} else {
+											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipNegative() }>{ i18n.T(ctx, "committee.signup_closed_chip") }</span>
+										}
+										if m.IsActive {
+											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipPositive() }>{ i18n.T(ctx, "committee.col_active") }: { i18n.T(ctx, "common.yes") }</span>
+										} else {
+											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipNegative() }>{ i18n.T(ctx, "committee.col_active") }: { i18n.T(ctx, "common.no") }</span>
+										}
+									</div>
+									<div class={ CommitteeMeetingActions() }>
+										<a href={ input.MeetingViewGet(ctx, &m) } class={ CommitteeIconActionButton() } title={ i18n.T(ctx, "committee.view_link") } aria-label={ i18n.T(ctx, "committee.view_link") }>
+											@Icon(IconVisibility, "", "committee-action-icon")
+										</a>
+										<a href={ input.MeetingManageGet(ctx, &m) } class={ CommitteeIconActionButton() } title={ i18n.T(ctx, "committee.manage_link") } aria-label={ i18n.T(ctx, "committee.manage_link") }>
+											@Icon(IconSettings, "", "committee-action-icon")
+										</a>
+										if m.IsActive {
+											<button class={ CommitteeIconActionButton() } type="button" disabled title={ i18n.T(ctx, "committee.activate_button") } aria-label={ i18n.T(ctx, "committee.activate_button") }>
+												@Icon(IconCheckCircle, "", "committee-action-icon")
+											</button>
+										} else {
+											<form
+												hx-post={ input.MeetingActivatePostStr(ctx, &m) }
+												hx-target="#meeting-list-container"
+												hx-swap="outerHTML"
+												class={ InlineForm() }
+											>
+												<button class={ CommitteeIconActionButton() } type="submit" title={ i18n.T(ctx, "committee.activate_button") } aria-label={ i18n.T(ctx, "committee.activate_button") }>
+													@Icon(IconCheckCircle, "", "committee-action-icon")
+												</button>
+											</form>
+										}
+										<form
+											hx-post={ input.MeetingDeletePostStr(ctx, &m) }
+											hx-target="#meeting-list-container"
+											hx-swap="outerHTML"
+											hx-confirm={ i18n.T(ctx, "committee.delete_confirm") }
+											class={ InlineForm() }
+										>
+											<button class={ CommitteeIconActionButton(), CommitteeIconActionDanger() } type="submit" title={ i18n.T(ctx, "committee.delete_button") } aria-label={ i18n.T(ctx, "committee.delete_button") }>
+												@Icon(IconDelete, "", "committee-action-icon")
+											</button>
+										</form>
+									</div>
+								</div>
+							</article>
+						}
+					</div>
+					<div class={ CenteredPaginationWrap() }>
+						@Pagination(input.PaginationArgs(ctx))
+					</div>
+				}
 			</div>
-			<div>
-				<label>
-					<input type="checkbox" name="signup_open" value="true"/>
-					{ i18n.T(ctx, "committee.signup_label") }
-				</label>
-			</div>
-			<button type="submit">{ i18n.T(ctx, "committee.create_button") }</button>
-		</form>
-		if len(input.Meetings) == 0 {
-			<p>{ i18n.T(ctx, "committee.empty_state") }</p>
-		} else {
-			<table class={ DataTable() }>
-				<thead>
-					<tr>
-						<th>{ i18n.T(ctx, "committee.col_name") }</th>
-						<th>{ i18n.T(ctx, "committee.col_description") }</th>
-						<th>{ i18n.T(ctx, "committee.col_signup") }</th>
-						<th>{ i18n.T(ctx, "committee.col_active") }</th>
-						<th>{ i18n.T(ctx, "committee.col_actions") }</th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, m := range input.Meetings {
-						<tr>
-							<td>{ m.Name }</td>
-							<td>{ m.Description }</td>
-							<td>
-								if m.SignupOpen {
-									{ i18n.T(ctx, "common.yes") }
-								} else {
-									{ i18n.T(ctx, "common.no") }
-								}
-							</td>
-							<td>
-								if m.IsActive {
-									{ i18n.T(ctx, "common.yes") }
-								} else {
-									{ i18n.T(ctx, "common.no") }
-								}
-							</td>
-							<td>
-								<a href={ input.MeetingViewGet(ctx, &m) }>{ i18n.T(ctx, "committee.view_link") }</a>
-								<a href={ input.MeetingManageGet(ctx, &m) }>{ i18n.T(ctx, "committee.manage_link") }</a>
-								if !m.IsActive {
-									<form
-										hx-post={ input.MeetingActivatePostStr(ctx, &m) }
-										hx-target="#meeting-list-container"
-										hx-swap="outerHTML"
-										class={ InlineForm() }
-									>
-										<button type="submit">{ i18n.T(ctx, "committee.activate_button") }</button>
-									</form>
-								}
-								<form
-									hx-post={ input.MeetingDeletePostStr(ctx, &m) }
-									hx-target="#meeting-list-container"
-									hx-swap="outerHTML"
-									hx-confirm={ i18n.T(ctx, "committee.delete_confirm") }
-									class={ InlineForm() }
-								>
-									<button type="submit">{ i18n.T(ctx, "committee.delete_button") }</button>
-								</form>
-							</td>
-						</tr>
-					}
-				</tbody>
-			</table>
-			@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(ctx, input.Pagination.PrevPage), input.PageURL(ctx, input.Pagination.NextPage))
-		}
+		</div>
 	</div>
 }
 
@@ -204,36 +232,26 @@ templ CommitteePageTemplate(input CommitteePageInput) {
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>{ input.CommitteeName }</h1>
-			<p>{ i18n.T(ctx, "committee.logged_in_as", input.Username, input.Role) }</p>
-			@LanguageSwitcher()
-		</header>
-
-		<main class={ PageMain() }>
-			<h2>{ i18n.T(ctx, "committee.dashboard_heading") }</h2>
-			<p>{ i18n.T(ctx, "committee.welcome") }</p>
-
-			if input.Role == "chairperson" {
-				<section class={ Panel() }>
-					<h2>{ i18n.T(ctx, "committee.meetings_heading") }</h2>
-					@MeetingListPartial(MeetingListPartialInput{
-						CommitteeSlug: input.CommitteeSlug,
-						Meetings:      input.Meetings,
-						Pagination:    input.Pagination,
-						FormError:     input.FormError,
-					})
-				</section>
-			}
-		</main>
-
-		<footer class={ PageFooter() }>
-			<form method="POST" action={ input.LogoutSubmitPost(ctx) }>
-				<button type="submit">{ i18n.T(ctx, "committee.logout_button") }</button>
-			</form>
-		</footer>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    input.CommitteeName,
+			Subtitle: i18n.T(ctx, "committee.dashboard_heading"),
+		}, CommitteePageContent(input))
 	</body>
 	</html>
 }
 
+templ CommitteePageContent(input CommitteePageInput) {
+	<p>{ i18n.T(ctx, "committee.welcome") }</p>
 
+	if CurrentUserRole(ctx) == "chairperson" {
+		<section class={ Panel() }>
+			<h2>{ i18n.T(ctx, "committee.meetings_heading") }</h2>
+			@MeetingListPartial(MeetingListPartialInput{
+				CommitteeSlug: input.CommitteeSlug,
+				Meetings:      input.Meetings,
+				Pagination:    input.Pagination,
+				FormError:     input.FormError,
+			})
+		</section>
+	}
+}

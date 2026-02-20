@@ -290,7 +290,6 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 	}
 
 	var attendeeID int64
-	fullName := ""
 	isChair := false
 	canManage := false
 
@@ -309,7 +308,6 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		}
 
 		attendeeID = attendee.ID
-		fullName = attendee.FullName
 		isChair = attendee.IsChair
 		canManage = attendee.IsChair || (sd.Role != nil && *sd.Role == "chairperson")
 	} else {
@@ -321,9 +319,6 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		}
 		if sd.AttendeeID != nil {
 			attendeeID = *sd.AttendeeID
-		}
-		if sd.FullName != nil {
-			fullName = *sd.FullName
 		}
 		isChair = sd.IsChair != nil && *sd.IsChair
 		canManage = isChair
@@ -361,7 +356,6 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		CommitteeSlug: committee.Slug,
 		MeetingName:   meeting.Name,
 		IDString:      params.MeetingId,
-		FullName:      fullName,
 		IsChair:       isChair,
 		CanManage:     canManage,
 		AgendaPoints:  buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),

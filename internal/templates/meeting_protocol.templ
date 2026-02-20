@@ -83,27 +83,23 @@ templ MeetingProtocolTemplate(input MeetingProtocolInput) {
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<header class={ PageHeader() }>
-			<h1>{ i18n.T(ctx, "meeting_protocol.heading", input.MeetingName) }</h1>
-			<nav>
-				<a href={ input.ManageURL(ctx) }>{ i18n.T(ctx, "meeting_protocol.back_link") }</a>
-			</nav>
-		</header>
-		<main class={ PageMain() }>
-			if len(input.AgendaPoints) == 0 {
-				<p>{ i18n.T(ctx, "meeting_protocol.empty_state") }</p>
-			} else {
-				for _, ap := range input.AgendaPoints {
-					<section class={ Panel() }>
-						<h2>{ strconv.FormatInt(ap.Position, 10) }. { ap.Title }</h2>
-						@ProtocolAgendaPointPartial(input.agendaPointPartialInput(ap))
-					</section>
-				}
-			}
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    i18n.T(ctx, "meeting_protocol.heading", input.MeetingName),
+			BackLink: SafeURLPtr(input.ManageURL(ctx)),
+		}, MeetingProtocolContent(input))
 	</body>
 	</html>
 }
 
-
+templ MeetingProtocolContent(input MeetingProtocolInput) {
+	if len(input.AgendaPoints) == 0 {
+		<p>{ i18n.T(ctx, "meeting_protocol.empty_state") }</p>
+	} else {
+		for _, ap := range input.AgendaPoints {
+			<section class={ Panel() }>
+				<h2>{ strconv.FormatInt(ap.Position, 10) }. { ap.Title }</h2>
+				@ProtocolAgendaPointPartial(input.agendaPointPartialInput(ap))
+			</section>
+		}
+	}
+}

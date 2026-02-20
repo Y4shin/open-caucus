@@ -1,0 +1,120 @@
+package templates
+
+import "strings"
+
+type IconName string
+
+const (
+	IconChevronLeft  IconName = "chevron_left"
+	IconChevronRight IconName = "chevron_right"
+	IconArrowBack    IconName = "arrow_back"
+	IconArrowForward IconName = "arrow_forward"
+	IconStar         IconName = "star"
+	IconStarOutline  IconName = "star_outline"
+	IconVisibility   IconName = "visibility"
+	IconSettings     IconName = "settings"
+	IconCheckCircle  IconName = "check_circle"
+	IconDelete       IconName = "delete"
+	IconToggleOff    IconName = "toggle_off"
+	IconToggleOn     IconName = "toggle_on"
+)
+
+func iconPath(name IconName) string {
+	switch name {
+	case IconChevronLeft:
+		return "M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"
+	case IconChevronRight:
+		return "m8.59 16.59 1.41 1.41 6-6-6-6-1.41 1.41L13.17 12z"
+	case IconArrowBack:
+		return "M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"
+	case IconArrowForward:
+		return "m12 4-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
+	case IconStar:
+		return "m12 17.27 6.18 3.73-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+	case IconStarOutline:
+		return "m22 9.24-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03zm-10 6.3-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.24l1.71 4.04 4.38.38-3.32 2.88 1 4.28z"
+	case IconVisibility:
+		return "M12 6.5c-5 0-9.27 3.11-11 7.5 1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+	case IconSettings:
+		return "M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.18 7.18 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.55 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.05.31-.08.63-.08.94s.03.63.08.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.31.62.22l2.37-.96c.5.38 1.05.69 1.64.94l.36 2.54c.04.24.25.42.49.42h3.84c.24 0 .45-.18.49-.42l.36-2.54c.59-.24 1.14-.56 1.64-.94l2.37.96c.23.09.49 0 .62-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.01-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"
+	case IconCheckCircle:
+		return "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14-4-4 1.41-1.41L11 13.17l5.59-5.58L18 9l-7 7z"
+	case IconDelete:
+		return "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13l-1.13-1.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"
+	case IconToggleOff:
+		return "M280-240q-100 0-170-70T40-480q0-100 70-170t170-70h400q100 0 170 70t70 170q0 100-70 170t-170 70H280Zm0-80h400q66 0 113-47t47-113q0-66-47-113t-113-47H280q-66 0-113 47t-47 113q0 66 47 113t113 47Zm85-75q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Zm115-85Z"
+	case IconToggleOn:
+		return "M280-240q-100 0-170-70T40-480q0-100 70-170t170-70h400q100 0 170 70t70 170q0 100-70 170t-170 70H280Zm0-80h400q66 0 113-47t47-113q0-66-47-113t-113-47H280q-66 0-113 47t-47 113q0 66 47 113t113 47Zm485-75q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Zm-285-85Z"
+	default:
+		return ""
+	}
+}
+
+func iconViewBox(name IconName) string {
+	switch name {
+	case IconToggleOff, IconToggleOn:
+		return "0 -960 960 960"
+	default:
+		return "0 0 24 24"
+	}
+}
+
+func iconClasses(extra ...string) string {
+	classes := []string{"ui-icon"}
+	for _, cls := range extra {
+		if strings.TrimSpace(cls) == "" {
+			continue
+		}
+		classes = append(classes, cls)
+	}
+	return strings.Join(classes, " ")
+}
+
+templ Icon(name IconName, label string, class ...string) {
+	if label == "" {
+		<svg
+			class={ iconClasses(class...) }
+			viewBox={ iconViewBox(name) }
+			fill="currentColor"
+			aria-hidden="true"
+			focusable="false"
+		>
+			<path d={ iconPath(name) }/>
+		</svg>
+	} else {
+		<svg
+			class={ iconClasses(class...) }
+			viewBox={ iconViewBox(name) }
+			fill="currentColor"
+			role="img"
+			aria-label={ label }
+			focusable="false"
+		>
+			<path d={ iconPath(name) }/>
+		</svg>
+	}
+}
+
+templ IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide string) {
+	<a href={ href } class="ui-icon-label">
+		if iconSide == "right" {
+			<span class="ui-icon-text">{ text }</span>
+			@Icon(icon, "", "ui-icon--right")
+		} else {
+			@Icon(icon, "", "ui-icon--left")
+			<span class="ui-icon-text">{ text }</span>
+		}
+	</a>
+}
+
+templ IconLabelButton(icon IconName, text string, iconSide string, disabled bool) {
+	<button type="button" disabled?={ disabled } class="ui-icon-label">
+		if iconSide == "right" {
+			<span class="ui-icon-text">{ text }</span>
+			@Icon(icon, "", "ui-icon--right")
+		} else {
+			@Icon(icon, "", "ui-icon--left")
+			<span class="ui-icon-text">{ text }</span>
+		}
+	</button>
+}

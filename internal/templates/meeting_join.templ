@@ -55,47 +55,10 @@ templ MeetingJoinTemplate(input MeetingJoinInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<header class={ PageHeader() }>
-			<h1>{ input.MeetingName }</h1>
-			<h2>{ input.CommitteeName }</h2>
-		</header>
-		<main class={ PageMain() }>
-			if input.Error != "" {
-				<p class={ ErrorText() }>{ input.Error }</p>
-			}
-			if input.AlreadySignedUp {
-				<p>{ i18n.T(ctx, "meeting_join.already_signed_up") }</p>
-				<form method="POST" action={ input.JoinSubmitPost(ctx) }>
-					<button type="submit">{ i18n.T(ctx, "meeting_join.enter_button") }</button>
-				</form>
-			} else if input.IsLoggedIn {
-				<h3>{ i18n.T(ctx, "meeting_join.signup_heading") }</h3>
-				<p>{ i18n.T(ctx, "meeting_join.member_logged_in") }</p>
-				<form method="POST" action={ input.JoinSubmitPost(ctx) }>
-					<button type="submit">{ i18n.T(ctx, "meeting_join.signup_button") }</button>
-				</form>
-			} else if input.SignupOpen {
-				<h3>{ i18n.T(ctx, "meeting_join.guest_heading") }</h3>
-				<form method="POST" action={ input.GuestSignupPost(ctx) }>
-					<div>
-						<label for="full_name">{ i18n.T(ctx, "meeting_join.name_label") }</label>
-						<input type="text" id="full_name" name="full_name" required/>
-					</div>
-					if input.PrefilledMeetingSecret != "" {
-						<input type="hidden" name="meeting_secret" value={ input.PrefilledMeetingSecret }/>
-					} else {
-						<div>
-							<label for="meeting_secret">{ i18n.T(ctx, "meeting_join.meeting_secret_label") }</label>
-							<input type="password" id="meeting_secret" name="meeting_secret" required autocomplete="off"/>
-						</div>
-					}
-					<button type="submit">{ i18n.T(ctx, "meeting_join.guest_button") }</button>
-				</form>
-			} else {
-				<p>{ i18n.T(ctx, "meeting_join.signup_closed") }</p>
-			}
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    input.MeetingName,
+			Subtitle: input.CommitteeName,
+		}, MeetingJoinContent(input))
 	</body>
 	</html>
 }
@@ -110,23 +73,58 @@ templ MeetingGuestSuccessTemplate(input MeetingGuestSuccessInput) {
 		@GlobalStylesheetLink()
 	</head>
 	<body class={ AppShell() }>
-		@LanguageSwitcher()
-		<header class={ PageHeader() }>
-			<h1>{ input.MeetingName }</h1>
-			<h2>{ input.CommitteeName }</h2>
-		</header>
-		<main class={ PageMain() }>
-			if input.Error != "" {
-				<p class={ ErrorText() }>{ input.Error }</p>
-			} else {
-				<h3>{ i18n.T(ctx, "meeting_join.success_heading") }</h3>
-				<p>{ i18n.T(ctx, "meeting_join.access_code_label") } <strong>{ input.AttendeeSecret }</strong></p>
-				<p>{ i18n.T(ctx, "meeting_join.keep_code_hint") }</p>
-				<p><a href={ input.AttendeeLoginGet(ctx) }>{ i18n.T(ctx, "meeting_join.to_login_link") }</a></p>
-			}
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    input.MeetingName,
+			Subtitle: input.CommitteeName,
+		}, MeetingGuestSuccessContent(input))
 	</body>
-	</html>
+</html>
 }
 
+templ MeetingJoinContent(input MeetingJoinInput) {
+	if input.Error != "" {
+		<p class={ ErrorText() }>{ input.Error }</p>
+	}
+	if input.AlreadySignedUp {
+		<p>{ i18n.T(ctx, "meeting_join.already_signed_up") }</p>
+		<form method="POST" action={ input.JoinSubmitPost(ctx) }>
+			<button type="submit">{ i18n.T(ctx, "meeting_join.enter_button") }</button>
+		</form>
+	} else if input.IsLoggedIn {
+		<h3>{ i18n.T(ctx, "meeting_join.signup_heading") }</h3>
+		<p>{ i18n.T(ctx, "meeting_join.member_logged_in") }</p>
+		<form method="POST" action={ input.JoinSubmitPost(ctx) }>
+			<button type="submit">{ i18n.T(ctx, "meeting_join.signup_button") }</button>
+		</form>
+	} else if input.SignupOpen {
+		<h3>{ i18n.T(ctx, "meeting_join.guest_heading") }</h3>
+		<form method="POST" action={ input.GuestSignupPost(ctx) }>
+			<div>
+				<label for="full_name">{ i18n.T(ctx, "meeting_join.name_label") }</label>
+				<input type="text" id="full_name" name="full_name" required/>
+			</div>
+			if input.PrefilledMeetingSecret != "" {
+				<input type="hidden" name="meeting_secret" value={ input.PrefilledMeetingSecret }/>
+			} else {
+				<div>
+					<label for="meeting_secret">{ i18n.T(ctx, "meeting_join.meeting_secret_label") }</label>
+					<input type="password" id="meeting_secret" name="meeting_secret" required autocomplete="off"/>
+				</div>
+			}
+			<button type="submit">{ i18n.T(ctx, "meeting_join.guest_button") }</button>
+		</form>
+	} else {
+		<p>{ i18n.T(ctx, "meeting_join.signup_closed") }</p>
+	}
+}
 
+templ MeetingGuestSuccessContent(input MeetingGuestSuccessInput) {
+	if input.Error != "" {
+		<p class={ ErrorText() }>{ input.Error }</p>
+	} else {
+		<h3>{ i18n.T(ctx, "meeting_join.success_heading") }</h3>
+		<p>{ i18n.T(ctx, "meeting_join.access_code_label") } <strong>{ input.AttendeeSecret }</strong></p>
+		<p>{ i18n.T(ctx, "meeting_join.keep_code_hint") }</p>
+		<p>@IconLabelLink(input.AttendeeLoginGet(ctx), IconArrowForward, i18n.T(ctx, "meeting_join.to_login_link"), "right")</p>
+	}
+}

@@ -638,7 +638,7 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 							<td>{ strconv.FormatInt(ap.Position, 10) }</td>
 							<td>
 								if ap.ParentID != nil {
-									-> { ap.Title }
+									Child: { ap.Title }
 								} else {
 									{ ap.Title }
 								}
@@ -811,9 +811,15 @@ templ SpeakersListPartial(input SpeakersListPartialInput) {
 											class={ InlineForm() }
 										>
 											if s.Priority {
-												<button type="submit" title="Remove priority">★</button>
+												<button type="submit" title="Remove priority">
+													@Icon(IconStar, "", "ui-icon--left")
+													Remove priority
+												</button>
 											} else {
-												<button type="submit" title="Give priority">☆</button>
+												<button type="submit" title="Give priority">
+													@Icon(IconStarOutline, "", "ui-icon--left")
+													Give priority
+												</button>
 											}
 										</form>
 									}
@@ -994,9 +1000,15 @@ templ SpeakersListSSEPartial(input SpeakersListPartialInput) {
 											class={ InlineForm() }
 										>
 											if s.Priority {
-												<button type="submit" title="Remove priority">â˜…</button>
+												<button type="submit" title="Remove priority">
+													@Icon(IconStar, "", "ui-icon--left")
+													Remove priority
+												</button>
 											} else {
-												<button type="submit" title="Give priority">â˜†</button>
+												<button type="submit" title="Give priority">
+													@Icon(IconStarOutline, "", "ui-icon--left")
+													Give priority
+												</button>
 											}
 										</form>
 									}
@@ -1078,62 +1090,59 @@ templ MeetingManageTemplate(input MeetingManageInput) {
 		<script src={ paths.Route.HtmxExtSseMinJs() }></script>
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>Manage: { input.MeetingName }</h1>
-			<nav>
-				<a href={ input.CommitteeDashboardGet(ctx) }>← Back to Dashboard</a>
-				|
-				<a href={ input.ManageJoinQRGet(ctx) }>Guest Join QR</a>
-			</nav>
-		</header>
-		<div
-			id="manage-sse-root"
-			hx-ext="sse"
-			data-stream-url={ string(input.ManageStreamGet(ctx)) }
-		>
-			<main class={ PageMain() }>
-				<div class={ ManageGrid() }>
-					@ManageAttendeeDependentPartial(input.attendeeDependentInput())
-					<section class={ Panel() }>
-						<h2>Agenda Points</h2>
-						@AgendaPointListPartial(input.agendaPointListInput())
-					</section>
-				</div>
-			</main>
-		</div>
-		<script>
-			(function() {
-				var root = document.getElementById("manage-sse-root");
-				if (!root) return;
-
-				var key = "manageClientId";
-				var clientID = sessionStorage.getItem(key);
-				if (!clientID) {
-					if (window.crypto && typeof window.crypto.randomUUID === "function") {
-						clientID = window.crypto.randomUUID();
-					} else {
-						clientID = Date.now().toString(36) + Math.random().toString(36).slice(2);
-					}
-					sessionStorage.setItem(key, clientID);
-				}
-				root.dataset.clientId = clientID;
-
-				var streamURL = root.getAttribute("data-stream-url");
-				if (!streamURL) return;
-				var separator = streamURL.indexOf("?") >= 0 ? "&" : "?";
-				root.setAttribute("sse-connect", streamURL + separator + "client_id=" + encodeURIComponent(clientID));
-				if (window.htmx && typeof window.htmx.process === "function") {
-					window.htmx.process(root);
-				}
-			})();
-		</script>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title:    "Manage: " + input.MeetingName,
+			BackLink: SafeURLPtr(input.CommitteeDashboardGet(ctx)),
+			Actions: []Action{
+				{Title: "Guest Join QR", URL: input.ManageJoinQRGet(ctx), Kind: "info"},
+			},
+		}, MeetingManageContent(input))
 	</body>
 	</html>
+}
+
+templ MeetingManageContent(input MeetingManageInput) {
+	<div
+		id="manage-sse-root"
+		hx-ext="sse"
+		data-stream-url={ string(input.ManageStreamGet(ctx)) }
+	>
+		<div class={ ManageGrid() }>
+			@ManageAttendeeDependentPartial(input.attendeeDependentInput())
+			<section class={ Panel() }>
+				<h2>Agenda Points</h2>
+				@AgendaPointListPartial(input.agendaPointListInput())
+			</section>
+		</div>
+	</div>
+	<script>
+		(function() {
+			var root = document.getElementById("manage-sse-root");
+			if (!root) return;
+
+			var key = "manageClientId";
+			var clientID = sessionStorage.getItem(key);
+			if (!clientID) {
+				if (window.crypto && typeof window.crypto.randomUUID === "function") {
+					clientID = window.crypto.randomUUID();
+				} else {
+					clientID = Date.now().toString(36) + Math.random().toString(36).slice(2);
+				}
+				sessionStorage.setItem(key, clientID);
+			}
+			root.dataset.clientId = clientID;
+
+			var streamURL = root.getAttribute("data-stream-url");
+			if (!streamURL) return;
+			var separator = streamURL.indexOf("?") >= 0 ? "&" : "?";
+			root.setAttribute("sse-connect", streamURL + separator + "client_id=" + encodeURIComponent(clientID));
+			if (window.htmx && typeof window.htmx.process === "function") {
+				window.htmx.process(root);
+			}
+		})();
+	</script>
 }
 
 func attendeeItemIDString(id int64) string {
 	return strconv.FormatInt(id, 10)
 }
-
-
-

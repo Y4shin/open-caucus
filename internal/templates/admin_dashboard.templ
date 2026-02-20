@@ -37,16 +37,18 @@ type CommitteeListPartialInput struct {
 	Error      string
 }
 
-func (i *AdminDashboardInput) PageURL(ctx context.Context, page int) templ.SafeURL {
-	q := paths.AdminDashboardGetQueryParams{Page: strconv.Itoa(page)}
+func (i *AdminDashboardInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
+	q := paths.AdminDashboardGetQueryParams{Page: strconv.FormatUint(uint64(page), 10)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
 	return templ.URL(paths.Route.AdminDashboardGetWithQuery(ctx, "", q))
 }
 
-func (i *AdminDashboardInput) AdminLogoutPost(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.Route.AdminLogoutPost(ctx, ""))
+func (i *AdminDashboardInput) PaginationArgs(ctx context.Context) PaginationArgs {
+	return BuildPaginationArgs(i.Pagination, func(page uint32) templ.SafeURL {
+		return i.PageURL(ctx, page)
+	})
 }
 
 func (i *AdminDashboardInput) AdminCreateCommitteePost(ctx context.Context) string {
@@ -109,47 +111,43 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 		<script src={ paths.Route.HtmxMinJs() }></script>
 	</head>
 	<body class={ AppShell() }>
-		<header class={ PageHeader() }>
-			<h1>{ i18n.T(ctx, "admin_dashboard.title") }</h1>
-			@LanguageSwitcher()
-			<form method="POST" action={ input.AdminLogoutPost(ctx) }>
-				<button type="submit">{ i18n.T(ctx, "admin_dashboard.logout_button") }</button>
-			</form>
-		</header>
-
-		<main class={ PageMain() }>
-			<h2>{ i18n.T(ctx, "admin_dashboard.committees_heading") }</h2>
-
-			<section class={ Panel() }>
-				<h3>{ i18n.T(ctx, "admin_dashboard.add_committee_heading") }</h3>
-				<form
-					id="create-committee-form"
-					hx-post={ input.AdminCreateCommitteePost(ctx) }
-					hx-target="#committee-list-container"
-					hx-swap="outerHTML"
-					hx-on::after-request="if(event.detail.successful) this.reset()"
-				>
-					<div>
-						<label for="name">{ i18n.T(ctx, "admin_dashboard.name_label") }</label>
-						<input type="text" id="name" name="name" required/>
-					</div>
-					<div>
-						<label for="slug">{ i18n.T(ctx, "admin_dashboard.slug_label") }</label>
-						<input type="text" id="slug" name="slug" required pattern="[a-z0-9\-]+"/>
-						<small>{ i18n.T(ctx, "admin_dashboard.slug_help") }</small>
-					</div>
-					<button type="submit">{ i18n.T(ctx, "admin_dashboard.create_button") }</button>
-				</form>
-			</section>
-
-			<section class={ Panel() }>
-				<h3>{ i18n.T(ctx, "admin_dashboard.existing_heading") }</h3>
-				@CommitteeListPartial(CommitteeListPartialInput{Committees: input.Committees, Error: input.Error})
-				@PaginationBar(input.Pagination.CurrentPage, input.Pagination.TotalPages, input.Pagination.HasPrev, input.Pagination.HasNext, input.PageURL(ctx, input.Pagination.PrevPage), input.PageURL(ctx, input.Pagination.NextPage))
-			</section>
-		</main>
+		@HeaderFooterScaffold(ScaffoldInput{
+			Title: i18n.T(ctx, "admin_dashboard.title"),
+		}, AdminDashboardContent(input))
 	</body>
-	</html>
+</html>
 }
 
+templ AdminDashboardContent(input AdminDashboardInput) {
+	<h2>{ i18n.T(ctx, "admin_dashboard.committees_heading") }</h2>
 
+	<section class={ Panel() }>
+		<h3>{ i18n.T(ctx, "admin_dashboard.add_committee_heading") }</h3>
+		<form
+			id="create-committee-form"
+			hx-post={ input.AdminCreateCommitteePost(ctx) }
+			hx-target="#committee-list-container"
+			hx-swap="outerHTML"
+			hx-on::after-request="if(event.detail.successful) this.reset()"
+		>
+			<div>
+				<label for="name">{ i18n.T(ctx, "admin_dashboard.name_label") }</label>
+				<input type="text" id="name" name="name" required/>
+			</div>
+			<div>
+				<label for="slug">{ i18n.T(ctx, "admin_dashboard.slug_label") }</label>
+				<input type="text" id="slug" name="slug" required pattern="[a-z0-9\-]+"/>
+				<small>{ i18n.T(ctx, "admin_dashboard.slug_help") }</small>
+			</div>
+			<button type="submit">{ i18n.T(ctx, "admin_dashboard.create_button") }</button>
+		</form>
+	</section>
+
+	<section class={ Panel() }>
+		<h3>{ i18n.T(ctx, "admin_dashboard.existing_heading") }</h3>
+		@CommitteeListPartial(CommitteeListPartialInput{Committees: input.Committees, Error: input.Error})
+		<div class={ CenteredPaginationWrap() }>
+			@Pagination(input.PaginationArgs(ctx))
+		</div>
+	</section>
+}
