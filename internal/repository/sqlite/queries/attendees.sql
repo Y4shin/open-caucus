@@ -1,6 +1,9 @@
 -- name: CreateAttendee :one
-INSERT INTO attendees (meeting_id, user_id, full_name, secret)
-VALUES (?, ?, ?, ?)
+INSERT INTO attendees (meeting_id, user_id, full_name, secret, attendee_number)
+VALUES (
+    ?, ?, ?, ?,
+    COALESCE((SELECT MAX(a.attendee_number) + 1 FROM attendees a WHERE a.meeting_id = ?), 1)
+)
 RETURNING *;
 
 -- name: GetAttendeeByUserIDAndMeetingID :one
@@ -13,7 +16,7 @@ SELECT * FROM attendees WHERE id = ?;
 SELECT * FROM attendees WHERE meeting_id = ? AND secret = ?;
 
 -- name: ListAttendeesForMeeting :many
-SELECT * FROM attendees WHERE meeting_id = ? ORDER BY created_at ASC;
+SELECT * FROM attendees WHERE meeting_id = ? ORDER BY attendee_number ASC, created_at ASC;
 
 -- name: DeleteAttendee :exec
 DELETE FROM attendees WHERE id = ?;

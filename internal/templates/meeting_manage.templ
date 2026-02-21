@@ -2,22 +2,27 @@ package templates
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
 )
 
 type AttendeeItem struct {
-	ID       int64
-	IDString string
-	FullName string
-	IsChair  bool
-	IsGuest  bool
+	ID             int64
+	IDString       string
+	AttendeeNumber int64
+	FullName       string
+	IsChair        bool
+	IsGuest        bool
 }
 
 type AttendeeListPartialInput struct {
 	CommitteeSlug string
 	IDString      string // meeting ID
+	SignupOpen    bool
+	ShowSelfSignup bool
 	Attendees     []AttendeeItem
 	Error         string
 }
@@ -28,6 +33,32 @@ func (i *AttendeeListPartialInput) AttendeeCreatePostStr(ctx context.Context) st
 
 func (i *AttendeeListPartialInput) AttendeeSelfSignupPostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeSelfSignupRoute(i.CommitteeSlug, i.IDString).ManageAttendeeSelfSignupPost(ctx, "")
+}
+
+func (i *AttendeeListPartialInput) ToggleSignupOpenPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSignupOpenRoute(i.CommitteeSlug, i.IDString).ManageToggleSignupOpenPost(ctx, "")
+}
+
+func (i *AttendeeListPartialInput) ManageJoinQRGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageJoinQrRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageJoinQRGet(ctx, ""))
+}
+
+func attendeeSignupStateLabel(open bool) string {
+	if open {
+		return "Guest signup is open"
+	}
+	return "Guest signup is closed"
+}
+
+func attendeeSignupToggleLabel() string {
+	return "Guest signup"
+}
+
+func attendeeChairToggleLabel(isChair bool) string {
+	if isChair {
+		return "Demote chair"
+	}
+	return "Make chair"
 }
 
 func (i *AttendeeListPartialInput) AttendeeDeletePostStr(ctx context.Context, a *AttendeeItem) string {
@@ -70,6 +101,30 @@ func (i *MeetingSettingsPartialInput) SetMeetingModeratorPostStr(ctx context.Con
 	return paths.NewCommitteeSlugMeetingMeetingIdModeratorRoute(i.CommitteeSlug, i.IDString).ManageMeetingSetModeratorPost(ctx, "")
 }
 
+func (i *MeetingSettingsPartialInput) ProtocolWriterName() string {
+	if i.ProtocolWriterID == nil {
+		return ""
+	}
+	for _, a := range i.Attendees {
+		if a.ID == *i.ProtocolWriterID {
+			return a.FullName
+		}
+	}
+	return ""
+}
+
+func (i *MeetingSettingsPartialInput) ModeratorName() string {
+	if i.ModeratorID == nil {
+		return ""
+	}
+	for _, a := range i.Attendees {
+		if a.ID == *i.ModeratorID {
+			return a.FullName
+		}
+	}
+	return ""
+}
+
 // AgendaPointItem holds display data for one agenda point row.
 type AgendaPointItem struct {
 	ID       int64
@@ -105,6 +160,39 @@ func (i *AgendaPointListPartialInput) AgendaPointToolsGet(ctx context.Context, a
 	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdToolsRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointToolsPageGet(ctx, ""))
 }
 
+func (i *AgendaPointListPartialInput) AgendaPointDisplayNumber(ap AgendaPointItem) string {
+	if ap.ParentID == nil {
+		return fmt.Sprintf("TOP %d", ap.Position)
+	}
+
+	parentPosition := int64(0)
+	for _, candidate := range i.AgendaPoints {
+		if candidate.ID == *ap.ParentID {
+			parentPosition = candidate.Position
+			break
+		}
+	}
+	if parentPosition <= 0 {
+		parentPosition = ap.Position
+	}
+
+	childIndex := int64(0)
+	for _, candidate := range i.AgendaPoints {
+		if candidate.ParentID == nil || *candidate.ParentID != *ap.ParentID {
+			continue
+		}
+		childIndex++
+		if candidate.ID == ap.ID {
+			break
+		}
+	}
+	if childIndex <= 0 {
+		childIndex = ap.Position
+	}
+
+	return fmt.Sprintf("TOP %d.%d", parentPosition, childIndex)
+}
+
 // SpeakerItem holds display data for one speakers-list row.
 type SpeakerItem struct {
 	ID            int64
@@ -112,13 +200,15 @@ type SpeakerItem struct {
 	AttendeeID    int64  // ID of the attendee (for highlighting own row in attendee view)
 	AttendeeName  string
 	Type          string // "regular" or "ropm"
-	Status        string // "WAITING", "SPEAKING", "DONE", "WITHDRAWN"
+	Status        string // "WAITING", "SPEAKING", "DONE"
 	IsWaiting     bool
 	IsSpeaking    bool
 	GenderQuoted  bool
 	FirstSpeaker  bool
 	Priority      bool
 	OrderPosition int64 // computed queue position (meaningful for WAITING)
+	SpeakingSinceUnix int64
+	DoneDurationLabel string
 }
 
 type SpeakersListPartialInput struct {
@@ -140,11 +230,16 @@ type SpeakersListPartialInput struct {
 	// Effective moderator ID for the active agenda point
 	ModeratorID                     *int64
 	Error                           string
+	SearchQuery                     string
 	SwapOOB                         bool
 }
 
 func (i *SpeakersListPartialInput) SpeakerAddPostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerAddRoute(i.CommitteeSlug, i.IDString).ManageSpeakerAddPost(ctx, "")
+}
+
+func (i *SpeakersListPartialInput) SpeakerAddCandidatesPartialGetStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdSpeakerAddCandidatesRoute(i.CommitteeSlug, i.IDString).ManageSpeakerAddCandidatesGet(ctx, "")
 }
 
 func (i *SpeakersListPartialInput) SpeakerRemovePostStr(ctx context.Context, s *SpeakerItem) string {
@@ -173,6 +268,114 @@ func (i *SpeakersListPartialInput) AgendaPointQuotationPostStr(ctx context.Conte
 
 func (i *SpeakersListPartialInput) AgendaPointModeratorPostStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdModeratorRoute(i.CommitteeSlug, i.IDString, i.AgendaPointIDString).ManageAgendaPointSetModeratorPost(ctx, "")
+}
+
+func (i *SpeakersListPartialInput) CardVariant(s SpeakerItem) LiveSpeakerCardVariant {
+	switch {
+	case s.IsSpeaking:
+		return LiveSpeakerCardSpeaking
+	case s.IsWaiting:
+		return LiveSpeakerCardWaiting
+	default:
+		return LiveSpeakerCardDone
+	}
+}
+
+func (i *SpeakersListPartialInput) rowClass(s SpeakerItem) string {
+	if s.IsSpeaking {
+		return "speaking LiveSpeaking"
+	}
+	return ""
+}
+
+func (i *SpeakersListPartialInput) asLiveSpeakerContext() AttendeeSpeakersListPartialInput {
+	return AttendeeSpeakersListPartialInput{
+		Speakers: i.Speakers,
+	}
+}
+
+func (i *SpeakersListPartialInput) ActionsForSpeaker(ctx context.Context, s SpeakerItem) []LiveSpeakerAction {
+	if s.Status == "DONE" {
+		return nil
+	}
+
+	if s.IsSpeaking {
+		return []LiveSpeakerAction{
+			{
+				PostURL: i.SpeakerEndPostStr(ctx, &s),
+				Target:  "#speakers-list-container",
+				Swap:    "outerHTML",
+				Title:   "End",
+				Icon:    IconCheckCircle,
+			},
+		}
+	}
+
+	if s.IsWaiting {
+		priorityIcon := IconStarOutline
+		priorityTitle := "Give Priority"
+		if s.Priority {
+			priorityIcon = IconStar
+			priorityTitle = "Remove Priority"
+		}
+		return []LiveSpeakerAction{
+			{
+				PostURL: i.SpeakerTogglePriorityPostStr(ctx, &s),
+				Target:  "#speakers-list-container",
+				Swap:    "outerHTML",
+				Title:   priorityTitle,
+				Icon:    priorityIcon,
+			},
+			{
+				PostURL: i.SpeakerStartPostStr(ctx, &s),
+				Target:  "#speakers-list-container",
+				Swap:    "outerHTML",
+				Title:   "Start",
+				Icon:    IconArrowForward,
+			},
+			{
+				PostURL: i.SpeakerRemovePostStr(ctx, &s),
+				Target:  "#speakers-list-container",
+				Swap:    "outerHTML",
+				Title:   "Remove",
+				Icon:    IconDelete,
+				Confirm: "Remove this speaker?",
+				Danger:  true,
+			},
+		}
+	}
+
+	return nil
+}
+
+func (i *SpeakersListPartialInput) hasAttendeeWaitingType(attendeeID int64, speakerType string) bool {
+	for _, s := range i.Speakers {
+		if s.AttendeeID == attendeeID && s.IsWaiting && s.Type == speakerType {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *SpeakersListPartialInput) attendeeMatchesSearch(a AttendeeItem) bool {
+	q := strings.TrimSpace(strings.ToLower(i.SearchQuery))
+	if q == "" {
+		return true
+	}
+	if strings.Contains(strings.ToLower(a.FullName), q) {
+		return true
+	}
+	return strings.Contains(strconv.FormatInt(a.AttendeeNumber, 10), q)
+}
+
+func (i *SpeakersListPartialInput) FilteredSpeakerCandidates() []AttendeeItem {
+	result := make([]AttendeeItem, 0, len(i.Attendees))
+	for _, a := range i.Attendees {
+		if i.attendeeMatchesSearch(a) {
+			result = append(result, a)
+		}
+	}
+	return result
 }
 
 type MeetingManageInput struct {
@@ -224,6 +427,7 @@ func (i *MeetingManageInput) attendeeListInput() AttendeeListPartialInput {
 	return AttendeeListPartialInput{
 		CommitteeSlug: i.CommitteeSlug,
 		IDString:      i.IDString,
+		SignupOpen:    i.SignupOpen,
 		Attendees:     i.Attendees,
 	}
 }
@@ -288,92 +492,125 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 		if input.Error != "" {
 			<p class={ ErrorText() }>{ input.Error }</p>
 		}
-		<h3>Add Guest</h3>
-		<form
-			hx-post={ input.AttendeeCreatePostStr(ctx) }
-			hx-target="#manage-attendee-dependent-container"
-			hx-swap="outerHTML"
-			hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-			hx-on::after-request="if(event.detail.successful) this.reset()"
-		>
-			<div>
-				<label for="full_name">Name:</label>
-				<input type="text" id="full_name" name="full_name" required/>
+		<div class={ ManageAttendeeControls(), "manage-attendee-controls" }>
+			<form
+				hx-post={ input.AttendeeCreatePostStr(ctx) }
+				hx-target="#manage-attendee-dependent-container"
+				hx-swap="outerHTML"
+				hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+				hx-on::after-request="if(event.detail.successful) this.reset()"
+				class={ ManageAttendeeAddGuestForm(), "manage-attendee-add-guest-form" }
+			>
+				<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="full_name">Add guest</label>
+				<input type="text" id="full_name" name="full_name" placeholder="Display name" required/>
+				<button type="submit">Add</button>
+			</form>
+
+			<div class={ ManageAttendeeActionRow(), "manage-attendee-action-row" }>
+				<form
+					hx-post={ input.ToggleSignupOpenPostStr(ctx) }
+					hx-target="#manage-attendee-dependent-container"
+					hx-swap="outerHTML"
+					hx-trigger="change from:input"
+					class={ InlineForm(), ManageAttendeeSignupSwitch(), "manage-attendee-signup-switch" }
+					title={ attendeeSignupStateLabel(input.SignupOpen) }
+				>
+					@SignupToggleField("manage_signup_open", "signup_open", attendeeSignupToggleLabel(), input.SignupOpen, "")
+				</form>
+				if input.ShowSelfSignup {
+					<form
+						hx-post={ input.AttendeeSelfSignupPostStr(ctx) }
+						hx-target="#manage-attendee-dependent-container"
+						hx-swap="outerHTML"
+						hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+						class={ InlineForm() }
+					>
+						<button
+							type="submit"
+							class={ ManageAttendeeIconButton(), "manage-attendee-icon-button" }
+							title="Sign yourself up"
+							aria-label="Sign yourself up"
+						>
+							@Icon(IconPersonRaised, "", "manage-attendee-icon")
+						</button>
+					</form>
+				}
 			</div>
-			<button type="submit">Add Guest</button>
-		</form>
-		<form
-			hx-post={ input.AttendeeSelfSignupPostStr(ctx) }
-			hx-target="#manage-attendee-dependent-container"
-			hx-swap="outerHTML"
-			hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-		>
-			<button type="submit">Sign yourself up</button>
-		</form>
+		</div>
 		if len(input.Attendees) == 0 {
 			<p>No attendees yet.</p>
 		} else {
-			<table class={ DataTable() }>
-				<thead>
-					<tr>
-						<th>Name</th>
-						<th>Type</th>
-						<th>Chair</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, a := range input.Attendees {
-						<tr>
-							<td>{ a.FullName }</td>
-							<td>
+			<div class={ ManageAttendeeGrid(), "manage-attendee-grid" }>
+				for _, a := range input.Attendees {
+					<div class={ ManageAttendeeCard(), "manage-attendee-card" }>
+						<div class={ ManageAttendeeCardHead(), "manage-attendee-card-head" }>
+							<span class={ ManageAttendeeNumber(), "manage-attendee-number" }>#{ strconv.FormatInt(a.AttendeeNumber, 10) }</span>
+							<span class={ ManageAttendeeName(), "manage-attendee-name" }>{ a.FullName }</span>
+						</div>
+						<div class={ ManageAttendeeMeta(), "manage-attendee-meta" }>
+							<span class={ ManageAttendeeMetaChip(), "manage-attendee-meta-chip" }>
 								if a.IsGuest {
 									Guest
 								} else {
 									Member
 								}
-							</td>
-							<td>
+							</span>
+							<span class={ ManageAttendeeMetaChip(), "manage-attendee-meta-chip", templ.KV(ManageAttendeeMetaChipChair(), a.IsChair) }>
 								if a.IsChair {
-									Yes
+									Chair
 								} else {
-									No
+									Member
 								}
-							</td>
-							<td>
-								<form
-									hx-post={ input.AttendeeToggleChairPostStr(ctx, &a) }
-									hx-target="#manage-attendee-dependent-container"
-									hx-swap="outerHTML"
-									hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-									class={ InlineForm() }
+							</span>
+						</div>
+						<div class={ ManageAttendeeCardActions(), "manage-attendee-card-actions" }>
+							<form
+								hx-post={ input.AttendeeToggleChairPostStr(ctx, &a) }
+								hx-target="#manage-attendee-dependent-container"
+								hx-swap="outerHTML"
+								hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+								class={ InlineForm() }
+							>
+								<button
+									type="submit"
+									class={ ManageAttendeeIconButton(), "manage-attendee-icon-button", templ.KV(ManageAttendeeIconButtonOn(), a.IsChair) }
+									title={ attendeeChairToggleLabel(a.IsChair) }
+									aria-label={ attendeeChairToggleLabel(a.IsChair) }
 								>
-									if a.IsChair {
-										<button type="submit">Demote</button>
-									} else {
-										<button type="submit">Make Chair</button>
-									}
-								</form>
-								<form
-									hx-post={ input.AttendeeDeletePostStr(ctx, &a) }
-									hx-target="#manage-attendee-dependent-container"
-									hx-swap="outerHTML"
-									hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-									hx-confirm="Remove this attendee?"
-									class={ InlineForm() }
+									@Icon(IconCrown, "", "manage-attendee-icon")
+								</button>
+							</form>
+							if a.IsGuest {
+								<a
+									href={ input.AttendeeRecoveryGet(ctx, &a) }
+									class={ ManageAttendeeIconButton(), "manage-attendee-icon-button" }
+									title="Recovery link"
+									aria-label="Recovery link"
 								>
-									<button type="submit">Remove</button>
-								</form>
-								if a.IsGuest {
-									<a href={ input.AttendeeRecoveryGet(ctx, &a) }>
-										<button type="button">Recovery Link</button>
-									</a>
-								}
-							</td>
-						</tr>
-					}
-				</tbody>
-			</table>
+									@Icon(IconHistory, "", "manage-attendee-icon")
+								</a>
+							}
+							<form
+								hx-post={ input.AttendeeDeletePostStr(ctx, &a) }
+								hx-target="#manage-attendee-dependent-container"
+								hx-swap="outerHTML"
+								hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+								hx-confirm="Remove this attendee?"
+								class={ InlineForm() }
+							>
+								<button
+									type="submit"
+									class={ ManageAttendeeIconButton(), ManageAttendeeIconButtonDanger(), "manage-attendee-icon-button", "manage-attendee-icon-button-danger" }
+									title="Remove attendee"
+									aria-label="Remove attendee"
+								>
+									@Icon(IconDelete, "", "manage-attendee-icon")
+								</button>
+							</form>
+						</div>
+					</div>
+				}
+			</div>
 		}
 	</div>
 }
@@ -385,104 +622,7 @@ templ MeetingSettingsPartial(input MeetingSettingsPartialInput) {
 		hx-swap="outerHTML"
 		hx-swap-oob="true"
 	>
-		<p>
-			Guest signup:
-			if input.SignupOpen {
-				<strong>Open</strong>
-			} else {
-				<strong>Closed</strong>
-			}
-		</p>
-		<form
-			hx-post={ input.ToggleSignupOpenPostStr(ctx) }
-			hx-target="#meeting-settings-container"
-			hx-swap="outerHTML"
-			class={ InlineForm() }
-		>
-			if input.SignupOpen {
-				<button type="submit">Close Signup</button>
-			} else {
-				<button type="submit">Open Signup</button>
-			}
-		</form>
-		<div>
-			<p>
-				Protocol writer:
-				if input.ProtocolWriterID == nil {
-					<strong>None</strong>
-				} else {
-					for _, a := range input.Attendees {
-						if a.ID == *input.ProtocolWriterID {
-							<strong>{ a.FullName }</strong>
-						}
-					}
-				}
-			</p>
-			<form
-				hx-post={ input.SetProtocolWriterPostStr(ctx) }
-				hx-target="#meeting-settings-container"
-				hx-swap="outerHTML"
-			>
-				<select id="protocol_writer_attendee_id" name="attendee_id">
-					<option value="">-- none --</option>
-					for _, a := range input.Attendees {
-						<option value={ a.IDString }>{ a.FullName }</option>
-					}
-				</select>
-				<button type="submit">Assign Protocol Writer</button>
-			</form>
-		</div>
-		<div>
-			<h3>Quotation Settings</h3>
-			<form
-				hx-post={ input.SetMeetingQuotationPostStr(ctx) }
-				hx-target="#meeting-settings-container"
-				hx-swap="outerHTML"
-			>
-				<div>
-					<label for="gender_quotation_enabled">Gender quotation:</label>
-					<select id="gender_quotation_enabled" name="gender_quotation_enabled">
-						<option value="true" selected?={ input.GenderQuotationEnabled }>Enabled</option>
-						<option value="false" selected?={ !input.GenderQuotationEnabled }>Disabled</option>
-					</select>
-				</div>
-				<div>
-					<label for="first_speaker_quotation_enabled">First-speaker bonus:</label>
-					<select id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled">
-						<option value="true" selected?={ input.FirstSpeakerQuotationEnabled }>Enabled</option>
-						<option value="false" selected?={ !input.FirstSpeakerQuotationEnabled }>Disabled</option>
-					</select>
-				</div>
-				<button type="submit">Apply</button>
-			</form>
-		</div>
-		<div>
-			<p>
-				Moderator:
-				if input.ModeratorID == nil {
-					<strong>None</strong>
-				} else {
-					for _, a := range input.Attendees {
-						if a.ID == *input.ModeratorID {
-							<strong>{ a.FullName }</strong>
-						}
-					}
-				}
-			</p>
-			<form
-				hx-post={ input.SetMeetingModeratorPostStr(ctx) }
-				hx-target="#meeting-settings-container"
-				hx-swap="outerHTML"
-			>
-				<select id="meeting_moderator_attendee_id" name="attendee_id">
-					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
-					for _, a := range input.Attendees {
-						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
-					}
-				</select>
-				<button type="submit">Set Moderator</button>
-			</form>
-		</div>
+		@MeetingSettingsContent(input)
 	</div>
 }
 
@@ -492,94 +632,64 @@ templ MeetingSettingsSSEPartial(input MeetingSettingsPartialInput) {
 		sse-swap="manage-meeting-settings-updated"
 		hx-swap="outerHTML"
 	>
-		<p>
-			Guest signup:
-			if input.SignupOpen {
-				<strong>Open</strong>
-			} else {
-				<strong>Closed</strong>
-			}
-		</p>
-		<form
-			hx-post={ input.ToggleSignupOpenPostStr(ctx) }
-			hx-target="#meeting-settings-container"
-			hx-swap="outerHTML"
-			class={ InlineForm() }
-		>
-			if input.SignupOpen {
-				<button type="submit">Close Signup</button>
-			} else {
-				<button type="submit">Open Signup</button>
-			}
-		</form>
-		<div>
-			<p>
-				Protocol writer:
-				if input.ProtocolWriterID == nil {
-					<strong>None</strong>
-				} else {
-					for _, a := range input.Attendees {
-						if a.ID == *input.ProtocolWriterID {
-							<strong>{ a.FullName }</strong>
-						}
-					}
-				}
-			</p>
+		@MeetingSettingsContent(input)
+	</div>
+}
+
+templ MeetingSettingsContent(input MeetingSettingsPartialInput) {
+	<div class={ ManageSettings(), "manage-settings" }>
+		<div class={ ManageSettingsSection(), "manage-settings-section" }>
+			<h3 class={ ManageSettingsSectionTitle(), "manage-settings-section-title" }>Protocol Writer</h3>
 			<form
 				hx-post={ input.SetProtocolWriterPostStr(ctx) }
 				hx-target="#meeting-settings-container"
 				hx-swap="outerHTML"
+				hx-trigger="change"
+				class={ ManageSettingsForm(), "manage-settings-form" }
 			>
 				<select id="protocol_writer_attendee_id" name="attendee_id">
-					<option value="">-- none --</option>
+					<option value="" selected?={ input.ProtocolWriterID == nil }>-- none --</option>
 					for _, a := range input.Attendees {
-						<option value={ a.IDString }>{ a.FullName }</option>
+						<option value={ a.IDString } selected?={ input.ProtocolWriterID != nil && *input.ProtocolWriterID == a.ID }>{ a.FullName }</option>
 					}
 				</select>
-				<button type="submit">Assign Protocol Writer</button>
 			</form>
 		</div>
-		<div>
-			<h3>Quotation Settings</h3>
+
+		<div class={ ManageSettingsSection(), "manage-settings-section" }>
+			<h3 class={ ManageSettingsSectionTitle(), "manage-settings-section-title" }>Quotation Settings</h3>
 			<form
 				hx-post={ input.SetMeetingQuotationPostStr(ctx) }
 				hx-target="#meeting-settings-container"
 				hx-swap="outerHTML"
+				hx-trigger="change"
+				class={ ManageSettingsFormGrid(), "manage-settings-form-grid" }
 			>
-				<div>
-					<label for="gender_quotation_enabled">Gender quotation:</label>
+				<div class={ ManageSettingsField(), "manage-settings-field" }>
+					<label for="gender_quotation_enabled">Gender quotation</label>
 					<select id="gender_quotation_enabled" name="gender_quotation_enabled">
 						<option value="true" selected?={ input.GenderQuotationEnabled }>Enabled</option>
 						<option value="false" selected?={ !input.GenderQuotationEnabled }>Disabled</option>
 					</select>
 				</div>
-				<div>
-					<label for="first_speaker_quotation_enabled">First-speaker bonus:</label>
+				<div class={ ManageSettingsField(), "manage-settings-field" }>
+					<label for="first_speaker_quotation_enabled">First-speaker bonus</label>
 					<select id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled">
 						<option value="true" selected?={ input.FirstSpeakerQuotationEnabled }>Enabled</option>
 						<option value="false" selected?={ !input.FirstSpeakerQuotationEnabled }>Disabled</option>
 					</select>
 				</div>
-				<button type="submit">Apply</button>
 			</form>
 		</div>
-		<div>
-			<p>
-				Moderator:
-				if input.ModeratorID == nil {
-					<strong>None</strong>
-				} else {
-					for _, a := range input.Attendees {
-						if a.ID == *input.ModeratorID {
-							<strong>{ a.FullName }</strong>
-						}
-					}
-				}
-			</p>
+
+		<div class={ ManageSettingsSection(), "manage-settings-section" }>
+			<h3 class={ ManageSettingsSectionTitle(), "manage-settings-section-title" }>Moderator</h3>
 			<form
 				hx-post={ input.SetMeetingModeratorPostStr(ctx) }
 				hx-target="#meeting-settings-container"
 				hx-swap="outerHTML"
+				hx-trigger="change"
+				class={ ManageSettingsForm(), "manage-settings-form" }
 			>
 				<select id="meeting_moderator_attendee_id" name="attendee_id">
 					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
@@ -587,97 +697,112 @@ templ MeetingSettingsSSEPartial(input MeetingSettingsPartialInput) {
 						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
 					}
 				</select>
-				<button type="submit">Set Moderator</button>
 			</form>
 		</div>
 	</div>
 }
 
 templ AgendaPointListPartial(input AgendaPointListPartialInput) {
-	<div id="agenda-point-list-container">
+	<div id="agenda-point-list-container" class={ ManageAgendaLayout(), "manage-agenda-layout" }>
 		if input.Error != "" {
 			<p class={ ErrorText() }>{ input.Error }</p>
 		}
-		<h3>Add Agenda Point</h3>
-		<form
-			hx-post={ input.AgendaPointCreatePostStr(ctx) }
-			hx-target="#agenda-point-list-container"
-			hx-swap="outerHTML"
-			hx-on::after-request="if(event.detail.successful) this.reset()"
-		>
-			<div>
-				<label for="ap_title">Title:</label>
-				<input type="text" id="ap_title" name="title" required/>
-			</div>
-			<div>
-				<label for="ap_parent_id">Parent (optional):</label>
-				<select id="ap_parent_id" name="parent_id">
-					<option value="">-- top-level --</option>
-					for _, p := range input.ParentOptions {
-						<option value={ p.IDString }>{ p.Title }</option>
-					}
-				</select>
-			</div>
-			<button type="submit">Add Agenda Point</button>
-		</form>
+		<div class={ ManageAgendaAddSection(), "manage-agenda-add-section" }>
+			<h3 class={ ManageAgendaSectionTitle(), "manage-agenda-section-title" }>Add Agenda Point</h3>
+			<form
+				hx-post={ input.AgendaPointCreatePostStr(ctx) }
+				hx-target="#agenda-point-list-container"
+				hx-swap="outerHTML"
+				hx-on::after-request="if(event.detail.successful) this.reset()"
+				class={ ManageAgendaAddForm(), "manage-agenda-add-form" }
+			>
+				<div class={ ManageAgendaField(), ManageAgendaFieldWide(), "manage-agenda-field", "manage-agenda-field-wide" }>
+					<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="ap_title">Title</label>
+					<input type="text" id="ap_title" name="title" required placeholder="Agenda point title"/>
+				</div>
+				<div class={ ManageAgendaField(), "manage-agenda-field" }>
+					<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="ap_parent_id">Parent (optional)</label>
+					<select id="ap_parent_id" name="parent_id">
+						<option value="">-- top-level --</option>
+						for _, p := range input.ParentOptions {
+							<option value={ p.IDString }>{ p.Title }</option>
+						}
+					</select>
+				</div>
+				<button type="submit" class={ ManageAgendaSubmitButton(), "manage-agenda-submit-button" }>
+					@Icon(IconArrowForward, "", "manage-agenda-submit-icon")
+					Add
+				</button>
+			</form>
+		</div>
 		if len(input.AgendaPoints) == 0 {
-			<p>No agenda points yet.</p>
+			<p class={ ManageAgendaEmptyState(), "manage-agenda-empty-state" }>No agenda points yet.</p>
 		} else {
-			<table class={ DataTable() }>
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Title</th>
-						<th>Active</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, ap := range input.AgendaPoints {
-						<tr>
-							<td>{ strconv.FormatInt(ap.Position, 10) }</td>
-							<td>
-								if ap.ParentID != nil {
-									Child: { ap.Title }
-								} else {
-									{ ap.Title }
-								}
-							</td>
-							<td>
-								if ap.IsActive {
-									Yes
-								} else {
-									No
-								}
-							</td>
-							<td>
-								if !ap.IsActive {
-									<form
-										hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
-										hx-target="#agenda-point-list-container"
-										hx-swap="outerHTML"
-										class={ InlineForm() }
-									>
-										<button type="submit">Activate</button>
-									</form>
-								}
+			<div class={ ManageAgendaList(), "manage-agenda-list" }>
+				for _, ap := range input.AgendaPoints {
+					<div class={ ManageAgendaPointCard(), "manage-agenda-point-card", templ.KV(ManageAgendaPointCardActive(), ap.IsActive), templ.KV(ManageAgendaPointCardChild(), ap.ParentID != nil) }>
+						<div class={ ManageAgendaPointHeader(), "manage-agenda-point-header" }>
+							<span class={ ManageAgendaPointPosition(), "manage-agenda-point-position" }>{ input.AgendaPointDisplayNumber(ap) }</span>
+							<div class={ ManageAgendaPointTitleWrap(), "manage-agenda-point-title-wrap" }>
+								<div class={ ManageAgendaPointTitle(), "manage-agenda-point-title" }>{ ap.Title }</div>
+								<div class={ ManageAgendaPointBadges(), "manage-agenda-point-badges" }>
+									if ap.ParentID != nil {
+										<span class={ ManageAgendaPointBadge(), "manage-agenda-point-badge" }>Child</span>
+									}
+									if ap.IsActive {
+										<span class={ ManageAgendaPointBadge(), "manage-agenda-point-badge", ManageAgendaPointBadgeActive(), "manage-agenda-point-badge-active" }>
+											Active
+										</span>
+									}
+								</div>
+							</div>
+						</div>
+						<div class={ ManageAgendaPointActions(), "manage-agenda-point-actions" }>
+							if !ap.IsActive {
 								<form
-									hx-post={ input.AgendaPointDeletePostStr(ctx, &ap) }
+									hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
 									hx-target="#agenda-point-list-container"
 									hx-swap="outerHTML"
-									hx-confirm="Delete this agenda point?"
 									class={ InlineForm() }
 								>
-									<button type="submit">Delete</button>
+									<button
+										type="submit"
+										class={ ManageAgendaActionButton(), "manage-agenda-action-button" }
+										title="Activate agenda point"
+										aria-label="Activate agenda point"
+									>
+										@Icon(IconCheckCircle, "", "manage-agenda-action-icon")
+									</button>
 								</form>
-								<a href={ input.AgendaPointToolsGet(ctx, &ap) }>
-									<button type="button">Open Tools</button>
-								</a>
-							</td>
-						</tr>
-					}
-				</tbody>
-			</table>
+							}
+							<a
+								href={ input.AgendaPointToolsGet(ctx, &ap) }
+								class={ ManageAgendaActionButton(), "manage-agenda-action-button" }
+								title="Open tools"
+								aria-label="Open tools"
+							>
+								@Icon(IconSettings, "", "manage-agenda-action-icon")
+							</a>
+							<form
+								hx-post={ input.AgendaPointDeletePostStr(ctx, &ap) }
+								hx-target="#agenda-point-list-container"
+								hx-swap="outerHTML"
+								hx-confirm="Delete this agenda point?"
+								class={ InlineForm() }
+							>
+								<button
+									type="submit"
+									class={ ManageAgendaActionButton(), ManageAgendaActionButtonDanger(), "manage-agenda-action-button", "manage-agenda-action-button-danger" }
+									title="Delete agenda point"
+									aria-label="Delete agenda point"
+								>
+									@Icon(IconDelete, "", "manage-agenda-action-icon")
+								</button>
+							</form>
+						</div>
+					</div>
+				}
+			</div>
 		}
 	</div>
 }
@@ -689,186 +814,7 @@ templ SpeakersListPartial(input SpeakersListPartialInput) {
 		hx-swap="outerHTML"
 		hx-swap-oob="true"
 	>
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
-		if input.CurrentAgendaPointID == nil {
-			<p>No active agenda point. Activate one above to manage the speakers list.</p>
-		} else {
-			<h3>Quotation Settings</h3>
-			<form
-				hx-post={ input.AgendaPointQuotationPostStr(ctx) }
-				hx-target="#speakers-list-container"
-				hx-swap="outerHTML"
-			>
-				<div>
-					<label for="ap_gender_quotation">Gender quotation:</label>
-					<select id="ap_gender_quotation" name="gender_quotation_enabled">
-						<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
-						<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
-						<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
-					</select>
-				</div>
-				<div>
-					<label for="ap_first_speaker">First-speaker bonus:</label>
-					<select id="ap_first_speaker" name="first_speaker_quotation_enabled">
-						<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
-						<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
-						<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
-					</select>
-				</div>
-				<button type="submit">Apply</button>
-			</form>
-			<p>
-				Effective: gender quotation
-				if input.EffectiveGenderQuotation {
-					<strong>on</strong>
-				} else {
-					<strong>off</strong>
-				}
-				, first-speaker bonus
-				if input.EffectiveFirstSpeakerQuotation {
-					<strong>on</strong>
-				} else {
-					<strong>off</strong>
-				}
-			</p>
-			<h3>Agenda Point Moderator</h3>
-			<form
-				hx-post={ input.AgendaPointModeratorPostStr(ctx) }
-				hx-target="#speakers-list-container"
-				hx-swap="outerHTML"
-			>
-				<select name="attendee_id">
-					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
-					for _, a := range input.Attendees {
-						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
-					}
-				</select>
-				<button type="submit">Set Moderator</button>
-			</form>
-			<h3>Add Speaker</h3>
-			<form
-				hx-post={ input.SpeakerAddPostStr(ctx) }
-				hx-target="#speakers-list-container"
-				hx-swap="outerHTML"
-				hx-on::after-request="if(event.detail.successful) this.reset()"
-			>
-				<div>
-					<label for="speaker_attendee_id">Attendee:</label>
-					<select id="speaker_attendee_id" name="attendee_id" required>
-						<option value="">-- select --</option>
-						for _, a := range input.Attendees {
-							<option value={ a.IDString }>{ a.FullName }</option>
-						}
-					</select>
-				</div>
-				<div>
-					<label for="speaker_type">Type:</label>
-					<select id="speaker_type" name="type" required>
-						<option value="regular">Regular</option>
-						<option value="ropm">RoPM</option>
-					</select>
-				</div>
-				<button type="submit">Add Speaker</button>
-			</form>
-			if len(input.Speakers) == 0 {
-				<p>No speakers in the queue.</p>
-			} else {
-				<table class={ DataTable() }>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Status</th>
-							<th>Q</th>
-							<th>1st</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, s := range input.Speakers {
-							<tr>
-								<td>{ s.AttendeeName }</td>
-								<td>{ s.Type }</td>
-								<td>{ s.Status }</td>
-								<td>
-									if s.GenderQuoted {
-										Q
-									}
-								</td>
-								<td>
-									if s.FirstSpeaker {
-										1st
-									}
-								</td>
-								<td>
-									if s.IsWaiting {
-										<form
-											hx-post={ input.SpeakerTogglePriorityPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											if s.Priority {
-												<button type="submit" title="Remove priority">
-													@Icon(IconStar, "", "ui-icon--left")
-													Remove priority
-												</button>
-											} else {
-												<button type="submit" title="Give priority">
-													@Icon(IconStarOutline, "", "ui-icon--left")
-													Give priority
-												</button>
-											}
-										</form>
-									}
-									if s.IsWaiting {
-										<form
-											hx-post={ input.SpeakerStartPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											<button type="submit">Start</button>
-										</form>
-									}
-									if s.IsSpeaking {
-										<form
-											hx-post={ input.SpeakerEndPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											<button type="submit">End</button>
-										</form>
-									}
-									if s.IsWaiting {
-										<form
-											hx-post={ input.SpeakerWithdrawPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											<button type="submit">Withdraw</button>
-										</form>
-									}
-									<form
-										hx-post={ input.SpeakerRemovePostStr(ctx, &s) }
-										hx-target="#speakers-list-container"
-										hx-swap="outerHTML"
-										hx-confirm="Remove this speaker?"
-										class={ InlineForm() }
-									>
-										<button type="submit">Remove</button>
-									</form>
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
-			}
-		}
+		@SpeakersListContent(input)
 	</div>
 }
 
@@ -878,184 +824,181 @@ templ SpeakersListSSEPartial(input SpeakersListPartialInput) {
 		sse-swap="manage-speakers-list-updated"
 		hx-swap="outerHTML"
 	>
+		@SpeakersListContent(input)
+	</div>
+}
+
+templ SpeakersListContent(input SpeakersListPartialInput) {
 		if input.Error != "" {
 			<p class={ ErrorText() }>{ input.Error }</p>
 		}
-		if input.CurrentAgendaPointID == nil {
-			<p>No active agenda point. Activate one above to manage the speakers list.</p>
-		} else {
-			<h3>Quotation Settings</h3>
-			<form
-				hx-post={ input.AgendaPointQuotationPostStr(ctx) }
-				hx-target="#speakers-list-container"
-				hx-swap="outerHTML"
-			>
-				<div>
-					<label for="ap_gender_quotation">Gender quotation:</label>
-					<select id="ap_gender_quotation" name="gender_quotation_enabled">
-						<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
-						<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
-						<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
-					</select>
+	if input.CurrentAgendaPointID == nil {
+		<p>No active agenda point. Activate one above to manage the speakers list.</p>
+	} else {
+		<div class={ ManageSpeakersSettings(), "manage-speakers-settings" }>
+			<div class={ ManageSpeakersSection(), "manage-speakers-section" }>
+				<h3 class={ ManageSpeakersSectionTitle(), "manage-speakers-section-title" }>Quotation Settings</h3>
+				<form
+					hx-post={ input.AgendaPointQuotationPostStr(ctx) }
+					hx-target="#speakers-list-container"
+					hx-swap="outerHTML"
+					hx-trigger="change"
+					class={ ManageSpeakersSettingsFormGrid(), "manage-speakers-settings-form-grid" }
+				>
+					<div class={ ManageSpeakersField(), "manage-speakers-field" }>
+						<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="ap_gender_quotation">Gender quotation</label>
+						<select id="ap_gender_quotation" name="gender_quotation_enabled">
+							<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
+							<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
+							<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
+						</select>
+					</div>
+					<div class={ ManageSpeakersField(), "manage-speakers-field" }>
+						<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="ap_first_speaker">First-speaker bonus</label>
+						<select id="ap_first_speaker" name="first_speaker_quotation_enabled">
+							<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
+							<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
+							<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
+						</select>
+					</div>
+				</form>
+				<div class={ ManageSpeakersEffective(), "manage-speakers-effective" }>
+					<span class={ ManageSpeakersEffectiveChip(), "manage-speakers-effective-chip", templ.KV(ManageSpeakersEffectiveChipOn(), input.EffectiveGenderQuotation), templ.KV(ManageSpeakersEffectiveChipOff(), !input.EffectiveGenderQuotation) }>
+						Gender:
+						if input.EffectiveGenderQuotation {
+							on
+						} else {
+							off
+						}
+					</span>
+					<span class={ ManageSpeakersEffectiveChip(), "manage-speakers-effective-chip", templ.KV(ManageSpeakersEffectiveChipOn(), input.EffectiveFirstSpeakerQuotation), templ.KV(ManageSpeakersEffectiveChipOff(), !input.EffectiveFirstSpeakerQuotation) }>
+						First speaker:
+						if input.EffectiveFirstSpeakerQuotation {
+							on
+						} else {
+							off
+						}
+					</span>
 				</div>
-				<div>
-					<label for="ap_first_speaker">First-speaker bonus:</label>
-					<select id="ap_first_speaker" name="first_speaker_quotation_enabled">
-						<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
-						<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
-						<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
-					</select>
-				</div>
-				<button type="submit">Apply</button>
-			</form>
-			<p>
-				Effective: gender quotation
-				if input.EffectiveGenderQuotation {
-					<strong>on</strong>
-				} else {
-					<strong>off</strong>
-				}
-				, first-speaker bonus
-				if input.EffectiveFirstSpeakerQuotation {
-					<strong>on</strong>
-				} else {
-					<strong>off</strong>
-				}
-			</p>
-			<h3>Agenda Point Moderator</h3>
-			<form
-				hx-post={ input.AgendaPointModeratorPostStr(ctx) }
-				hx-target="#speakers-list-container"
-				hx-swap="outerHTML"
-			>
-				<select name="attendee_id">
-					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
-					for _, a := range input.Attendees {
-						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
-					}
-				</select>
-				<button type="submit">Set Moderator</button>
-			</form>
-			<h3>Add Speaker</h3>
-			<form
-				hx-post={ input.SpeakerAddPostStr(ctx) }
-				hx-target="#speakers-list-container"
-				hx-swap="outerHTML"
-				hx-on::after-request="if(event.detail.successful) this.reset()"
-			>
-				<div>
-					<label for="speaker_attendee_id">Attendee:</label>
-					<select id="speaker_attendee_id" name="attendee_id" required>
-						<option value="">-- select --</option>
+			</div>
+
+			<div class={ ManageSpeakersSection(), "manage-speakers-section" }>
+				<h3 class={ ManageSpeakersSectionTitle(), "manage-speakers-section-title" }>Agenda Point Moderator</h3>
+				<form
+					hx-post={ input.AgendaPointModeratorPostStr(ctx) }
+					hx-target="#speakers-list-container"
+					hx-swap="outerHTML"
+					hx-trigger="change"
+					class={ ManageSpeakersSettingsForm(), "manage-speakers-settings-form" }
+				>
+					<select name="attendee_id">
+						<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
 						for _, a := range input.Attendees {
-							<option value={ a.IDString }>{ a.FullName }</option>
+							<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
 						}
 					</select>
+				</form>
+			</div>
+
+			<div class={ ManageSpeakersSection(), "manage-speakers-section" }>
+				<h3 class={ ManageSpeakersSectionTitle(), "manage-speakers-section-title" }>Add Speaker</h3>
+				<button
+					type="button"
+					class={ ManageSpeakerAddOpenButton(), "manage-speaker-add-open-button" }
+					data-manage-dialog-open
+					aria-controls="manage-speaker-add-dialog"
+				>
+					@Icon(IconPersonRaised, "", "manage-speaker-add-open-icon")
+					Add Speaker
+				</button>
+			</div>
+		</div>
+		if len(input.Speakers) == 0 {
+			<p class={ ManageSpeakersRows(), "manage-speakers-rows" }>No speakers in the queue.</p>
+		} else {
+				<div class={ LiveSpeakerList(), ManageSpeakersRows(), "live-speaker-list", "manage-speakers-rows" }>
+					for _, s := range input.Speakers {
+						@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s))
+					}
 				</div>
-				<div>
-					<label for="speaker_type">Type:</label>
-					<select id="speaker_type" name="type" required>
-						<option value="regular">Regular</option>
-						<option value="ropm">RoPM</option>
-					</select>
+			}
+
+			<dialog id="manage-speaker-add-dialog" class={ ManageSpeakerAddDialog(), "manage-speaker-add-dialog" } data-manage-dialog>
+				<div class={ ManageSpeakerAddDialogHeader(), "manage-speaker-add-dialog-header" }>
+					<h3>Add Speaker</h3>
+					<button type="button" class={ ManageSpeakerAddDialogClose(), "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
 				</div>
-				<button type="submit">Add Speaker</button>
-			</form>
-			if len(input.Speakers) == 0 {
-				<p>No speakers in the queue.</p>
-			} else {
-				<table class={ DataTable() }>
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Status</th>
-							<th>Q</th>
-							<th>1st</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, s := range input.Speakers {
-							<tr>
-								<td>{ s.AttendeeName }</td>
-								<td>{ s.Type }</td>
-								<td>{ s.Status }</td>
-								<td>
-									if s.GenderQuoted {
-										Q
-									}
-								</td>
-								<td>
-									if s.FirstSpeaker {
-										1st
-									}
-								</td>
-								<td>
-									if s.IsWaiting {
-										<form
-											hx-post={ input.SpeakerTogglePriorityPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											if s.Priority {
-												<button type="submit" title="Remove priority">
-													@Icon(IconStar, "", "ui-icon--left")
-													Remove priority
-												</button>
-											} else {
-												<button type="submit" title="Give priority">
-													@Icon(IconStarOutline, "", "ui-icon--left")
-													Give priority
-												</button>
-											}
-										</form>
-									}
-									if s.IsWaiting {
-										<form
-											hx-post={ input.SpeakerStartPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											<button type="submit">Start</button>
-										</form>
-									}
-									if s.IsSpeaking {
-										<form
-											hx-post={ input.SpeakerEndPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											<button type="submit">End</button>
-										</form>
-									}
-									if s.IsWaiting {
-										<form
-											hx-post={ input.SpeakerWithdrawPostStr(ctx, &s) }
-											hx-target="#speakers-list-container"
-											hx-swap="outerHTML"
-											class={ InlineForm() }
-										>
-											<button type="submit">Withdraw</button>
-										</form>
-									}
-									<form
-										hx-post={ input.SpeakerRemovePostStr(ctx, &s) }
-										hx-target="#speakers-list-container"
-										hx-swap="outerHTML"
-										hx-confirm="Remove this speaker?"
-										class={ InlineForm() }
-									>
-										<button type="submit">Remove</button>
-									</form>
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
+				<div class={ ManageSpeakerAddSearchWrap(), "manage-speaker-add-search-wrap" }>
+					<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="speaker-add-search-input">Search name or number</label>
+					<input
+						type="text"
+						id="speaker-add-search-input"
+						name="q"
+						value={ input.SearchQuery }
+						placeholder="Type name or number"
+						hx-get={ input.SpeakerAddCandidatesPartialGetStr(ctx) }
+						hx-target="#speaker-add-candidates-container"
+						hx-swap="outerHTML"
+						hx-trigger="input changed delay:180ms, search"
+					/>
+				</div>
+				@SpeakerAddCandidatesPartial(input)
+			</dialog>
+		}
+}
+
+templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
+	<div id="speaker-add-candidates-container" class={ ManageSpeakerCandidateGrid(), "manage-speaker-candidate-grid" }>
+		if len(input.FilteredSpeakerCandidates()) == 0 {
+			<p class={ LiveEmptyState() }>No matching attendees.</p>
+		} else {
+			for _, a := range input.FilteredSpeakerCandidates() {
+			<div class={ ManageSpeakerCandidateCard(), "manage-speaker-candidate-card" }>
+				<div class={ ManageSpeakerCandidateHeader(), "manage-speaker-candidate-header" }>
+					<span class={ ManageSpeakerCandidateNumber(), "manage-speaker-candidate-number" }>#{ strconv.FormatInt(a.AttendeeNumber, 10) }</span>
+					<span class={ ManageSpeakerCandidateName(), "manage-speaker-candidate-name" }>{ a.FullName }</span>
+				</div>
+				<div class={ ManageSpeakerCandidateActions(), "manage-speaker-candidate-actions" }>
+					<form
+						hx-post={ input.SpeakerAddPostStr(ctx) }
+						hx-target="#speakers-list-container"
+						hx-swap="outerHTML"
+						hx-on::after-request="if(event.detail.successful) document.getElementById('manage-speaker-add-dialog')?.close()"
+						class={ InlineForm() }
+					>
+						<input type="hidden" name="attendee_id" value={ a.IDString }/>
+						<input type="hidden" name="type" value="regular"/>
+						<button
+							type="submit"
+							title="Add regular speech"
+							aria-label="Add regular speech"
+							disabled?={ input.hasAttendeeWaitingType(a.ID, "regular") }
+							class={ ManageSpeakerCandidateButton(), "manage-speaker-candidate-button" }
+						>
+							@Icon(IconPersonRaised, "", "manage-speaker-candidate-button-icon")
+						</button>
+					</form>
+					<form
+						hx-post={ input.SpeakerAddPostStr(ctx) }
+						hx-target="#speakers-list-container"
+						hx-swap="outerHTML"
+						hx-on::after-request="if(event.detail.successful) document.getElementById('manage-speaker-add-dialog')?.close()"
+						class={ InlineForm() }
+					>
+						<input type="hidden" name="attendee_id" value={ a.IDString }/>
+						<input type="hidden" name="type" value="ropm"/>
+						<button
+							type="submit"
+							title="Add RoPM speech"
+							aria-label="Add RoPM speech"
+							disabled?={ input.hasAttendeeWaitingType(a.ID, "ropm") }
+							class={ ManageSpeakerCandidateButton(), ManageSpeakerCandidateButtonRopm(), "manage-speaker-candidate-button", "manage-speaker-candidate-button-ropm" }
+						>
+							@Icon(IconScale, "", "manage-speaker-candidate-button-icon")
+						</button>
+					</form>
+				</div>
+			</div>
 			}
 		}
 	</div>
@@ -1063,19 +1006,48 @@ templ SpeakersListSSEPartial(input SpeakersListPartialInput) {
 
 templ ManageAttendeeDependentPartial(input ManageAttendeeDependentPartialInput) {
 	<div id="manage-attendee-dependent-container" sse-swap="manage-attendee-list-updated" hx-swap="outerHTML" class={ ManageGridSlice() }>
-		<section class={ Panel() }>
-			<h2>Meeting Settings</h2>
-			@MeetingSettingsSSEPartial(input.MeetingSettings)
-		</section>
-		<section class={ Panel() }>
-			<h2>Speakers List</h2>
-			@SpeakersListSSEPartial(input.SpeakersList)
-		</section>
-		<section class={ Panel() }>
-			<h2>Attendees</h2>
-			@AttendeeListPartial(input.AttendeeList)
-		</section>
+		@ManageMeetingSettingsCard(input.MeetingSettings)
+		@ManageSpeakersListCard(input.SpeakersList)
+		@ManageAttendeesCard(input.AttendeeList)
 	</div>
+}
+
+templ ManageMeetingSettingsCard(input MeetingSettingsPartialInput) {
+	<section class={ Panel(), ManageCard(), ManageSettingsCard(), "manage-card", "manage-settings-card" }>
+		<h2 class={ ManageCardTitle(), "manage-card-title" }>Meeting Settings</h2>
+		@MeetingSettingsSSEPartial(input)
+	</section>
+}
+
+templ ManageSpeakersListCard(input SpeakersListPartialInput) {
+	<section class={ Panel(), ManageCard(), "manage-card" }>
+		<h2 class={ ManageCardTitle(), "manage-card-title" }>Speakers List</h2>
+		@SpeakersListSSEPartial(input)
+	</section>
+}
+
+templ ManageAttendeesCard(input AttendeeListPartialInput) {
+	<section class={ Panel(), ManageCard(), "manage-card" }>
+		<div class={ ManageCardHeaderRow(), "manage-card-header-row" }>
+			<h2 class={ ManageCardTitle(), "manage-card-title" }>Attendees</h2>
+			<a
+				href={ input.ManageJoinQRGet(ctx) }
+				class={ ManageAttendeeIconButton(), "manage-attendee-icon-button" }
+				title="Show signup QR"
+				aria-label="Show signup QR"
+			>
+				@Icon(IconQrCode2, "", "manage-attendee-icon")
+			</a>
+		</div>
+		@AttendeeListPartial(input)
+	</section>
+}
+
+templ ManageAgendaPointsCard(input AgendaPointListPartialInput) {
+	<section class={ Panel(), ManageCard(), "manage-card" }>
+		<h2 class={ ManageCardTitle(), "manage-card-title" }>Agenda Points</h2>
+		@AgendaPointListPartial(input)
+	</section>
 }
 
 templ MeetingManageTemplate(input MeetingManageInput) {
@@ -1093,9 +1065,6 @@ templ MeetingManageTemplate(input MeetingManageInput) {
 		@HeaderFooterScaffold(ScaffoldInput{
 			Title:    "Manage: " + input.MeetingName,
 			BackLink: SafeURLPtr(input.CommitteeDashboardGet(ctx)),
-			Actions: []Action{
-				{Title: "Guest Join QR", URL: input.ManageJoinQRGet(ctx), Kind: "info"},
-			},
 		}, MeetingManageContent(input))
 	</body>
 	</html>
@@ -1109,14 +1078,65 @@ templ MeetingManageContent(input MeetingManageInput) {
 	>
 		<div class={ ManageGrid() }>
 			@ManageAttendeeDependentPartial(input.attendeeDependentInput())
-			<section class={ Panel() }>
-				<h2>Agenda Points</h2>
-				@AgendaPointListPartial(input.agendaPointListInput())
-			</section>
+			@ManageAgendaPointsCard(input.agendaPointListInput())
 		</div>
 	</div>
 	<script>
 		(function() {
+			function formatElapsed(totalSeconds) {
+				var mins = Math.floor(totalSeconds / 60);
+				var secs = totalSeconds % 60;
+				return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+			}
+
+			function updateSpeakingTimers() {
+				var nowSec = Math.floor(Date.now() / 1000);
+				var timers = document.querySelectorAll("[data-speaking-since]");
+				for (var i = 0; i < timers.length; i++) {
+					var el = timers[i];
+					var since = Number(el.getAttribute("data-speaking-since"));
+					if (!Number.isFinite(since) || since <= 0) {
+						continue;
+					}
+					var elapsed = Math.max(0, nowSec - since);
+					el.textContent = formatElapsed(elapsed);
+				}
+			}
+
+			function wireManageDialogs() {
+				document.addEventListener("click", function (event) {
+					var openBtn = event.target.closest("[data-manage-dialog-open]");
+					if (openBtn) {
+						var dialogID = openBtn.getAttribute("aria-controls");
+						var dialog = dialogID ? document.getElementById(dialogID) : null;
+						if (dialog && typeof dialog.showModal === "function") {
+							dialog.showModal();
+						}
+						return;
+					}
+
+					var closeBtn = event.target.closest("[data-manage-dialog-close]");
+					if (closeBtn) {
+						var closeDialog = closeBtn.closest("dialog");
+						if (closeDialog && typeof closeDialog.close === "function") {
+							closeDialog.close();
+						}
+					}
+				});
+
+				document.addEventListener("click", function (event) {
+					var dialog = event.target;
+					if (!(dialog instanceof HTMLDialogElement) || !dialog.hasAttribute("data-manage-dialog")) {
+						return;
+					}
+					var rect = dialog.getBoundingClientRect();
+					var outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+					if (outside) {
+						dialog.close();
+					}
+				});
+			}
+
 			var root = document.getElementById("manage-sse-root");
 			if (!root) return;
 
@@ -1139,6 +1159,11 @@ templ MeetingManageContent(input MeetingManageInput) {
 			if (window.htmx && typeof window.htmx.process === "function") {
 				window.htmx.process(root);
 			}
+
+			updateSpeakingTimers();
+			window.setInterval(updateSpeakingTimers, 1000);
+			document.addEventListener("htmx:afterSwap", updateSpeakingTimers);
+			wireManageDialogs();
 		})();
 	</script>
 }

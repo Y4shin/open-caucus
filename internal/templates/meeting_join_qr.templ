@@ -44,6 +44,6 @@ templ MeetingJoinQRTemplate(input MeetingJoinQRInput) {
 
 templ MeetingJoinQRContent(input MeetingJoinQRInput) {
 	<p>Guests can scan this QR code to open the join page with the meeting secret prefilled.</p>
-	<p><a href={ templ.URL(input.JoinURL) }>{ input.JoinURL }</a></p>
+	<p><a class={ PlainTextLink(), "plain-text-link" } href={ templ.URL(input.JoinURL) }>{ input.JoinURL }</a></p>
 	<img id="join-qr-code" src={ input.QRCodeSrc() } alt="Guest Join QR Code"/>
 }

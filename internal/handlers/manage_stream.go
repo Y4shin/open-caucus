@@ -11,6 +11,7 @@ import (
 )
 
 const meetingAttendeesChangedEvent = "meeting-attendees-changed"
+const speakersUpdatedEvent = "speakers-updated"
 
 // ManageStream streams attendee-related manage-page updates for a meeting.
 func (h *Handler) ManageStream(ctx context.Context, r *http.Request, params routes.RouteParams) (<-chan routes.ManageStreamEvent, error) {
@@ -33,7 +34,7 @@ func (h *Handler) ManageStream(ctx context.Context, r *http.Request, params rout
 				if !ok {
 					return
 				}
-				if evt.Event != meetingAttendeesChangedEvent {
+				if evt.Event != meetingAttendeesChangedEvent && evt.Event != speakersUpdatedEvent {
 					continue
 				}
 				if evt.MeetingID == nil || *evt.MeetingID != meetingID {

@@ -249,8 +249,8 @@ routes:
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingSettingsPartial
-          input_type: MeetingSettingsPartialInput
+          type: ManageAttendeeDependentPartial
+          input_type: ManageAttendeeDependentPartialInput
 
   # Meeting Settings Partial (refresh helper)
   - path: /committee/{slug}/meeting/{meeting_id}/settings/partial
@@ -560,6 +560,23 @@ routes:
           type: SpeakersListPartial
           input_type: SpeakersListPartialInput
 
+  # Speaker Add Candidates Partial (for modal filtering)
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/add-candidates
+    methods:
+      - verb: GET
+        handler: ManageSpeakerAddCandidates
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        query_params:
+          - q
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: SpeakerAddCandidatesPartial
+          input_type: SpeakersListPartialInput
+
   # Speaker Remove
   - path: /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove
     methods:
@@ -797,6 +814,18 @@ routes:
     methods:
       - verb: POST
         handler: AttendeeSpeakerSelfAdd
+        middleware:
+          - session
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttendeeSpeakersListPartial
+          input_type: AttendeeSpeakersListPartialInput
+
+  # Attendee Speaker Self Yield (end own current speech)
+  - path: /committee/{slug}/meeting/{meeting_id}/speaker/self-yield
+    methods:
+      - verb: POST
+        handler: AttendeeSpeakerSelfYield
         middleware:
           - session
         template:

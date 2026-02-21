@@ -69,10 +69,12 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 					</div>
 				}
 				if CurrentDisplayName(ctx) != "" {
-					<p class="scaffold-auth-text">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
-					<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
-						<button type="submit">{ i18n.T(ctx, "common.logout") }</button>
-					</form>
+					<div class="scaffold-desktop-right-logout-stack">
+						<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
+							<button type="submit">{ i18n.T(ctx, "common.logout") }</button>
+						</form>
+						<p class="scaffold-auth-text">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
+					</div>
 				} else if session.IsAdminAuthenticated(ctx) {
 					<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") }>
 						<button type="submit">{ i18n.T(ctx, "common.logout") }</button>

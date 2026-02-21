@@ -21,6 +21,16 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 		return nil, fmt.Errorf("failed to load meeting: %w", err)
 	}
 
+	topLevelAgendaPoints, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load agenda points: %w", err)
+	}
+	subAgendaPoints, err := h.Repository.ListSubAgendaPointsForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load sub-agenda points: %w", err)
+	}
+	agendaPoints := flattenAgendaPoints(topLevelAgendaPoints, subAgendaPoints)
+
 	var speakers []*model.SpeakerEntry
 	agendaTitle := ""
 	hasActiveAP := false
@@ -55,6 +65,7 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 		CommitteeSlug:     "",
 		IDString:          strconv.FormatInt(meetingID, 10),
 		Speakers:          buildSpeakerItems(speakers),
+		AgendaPoints:      buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
 		CurrentAttendeeID: attendeeID,
 		AgendaTitle:       agendaTitle,
 		HasActiveAP:       hasActiveAP,
@@ -62,9 +73,10 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 	}, nil
 }
 
-// publishSpeakersUpdated broadcasts a speakers-updated SSE event to all connected clients.
-func (h *Handler) publishSpeakersUpdated() {
-	h.Broker.Publish(broker.SSEEvent{Event: "speakers-updated", Data: []byte("{}")})
+// publishSpeakersUpdated broadcasts a speakers-updated SSE event scoped to a meeting.
+func (h *Handler) publishSpeakersUpdated(meetingID int64) {
+	mid := meetingID
+	h.Broker.Publish(broker.SSEEvent{Event: "speakers-updated", Data: []byte("{}"), MeetingID: &mid})
 }
 
 // AttendeeSpeakersStream streams live speaker list updates to the attendee via SSE.
@@ -226,7 +238,7 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to check first speaker: %w", err)
 	}
-	firstSpeaker := !hasSpoken
+	firstSpeaker := speakerType == "regular" && !hasSpoken
 
 	if _, err := h.Repository.AddSpeaker(ctx, apID, attendeeID, speakerType, genderQuoted, firstSpeaker); err != nil {
 		return nil, nil, fmt.Errorf("failed to add speaker: %w", err)
@@ -234,7 +246,92 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, apID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
-	h.publishSpeakersUpdated()
+	h.publishSpeakersUpdated(meetingID)
+
+	partial, err := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+	if err != nil {
+		return nil, nil, err
+	}
+	partial.CommitteeSlug = params.Slug
+	partial.IDString = params.MeetingId
+	return partial, nil, nil
+}
+
+// AttendeeSpeakerSelfYield lets the currently speaking attendee end their own speech.
+func (h *Handler) AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AttendeeSpeakersListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	sd, ok := session.GetSession(ctx)
+	if !ok || sd.IsExpired() {
+		return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
+	}
+
+	var attendeeID int64
+	if sd.IsUserSession() {
+		if sd.UserID == nil {
+			return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
+		}
+		attendee, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("forbidden")
+		}
+		attendeeID = attendee.ID
+	} else {
+		if !sd.IsAttendeeSession() || sd.MeetingID == nil || *sd.MeetingID != meetingID || sd.AttendeeID == nil {
+			return nil, nil, fmt.Errorf("forbidden")
+		}
+		attendeeID = *sd.AttendeeID
+	}
+
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+	if meeting.CurrentAgendaPointID == nil {
+		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		partial.CommitteeSlug = params.Slug
+		partial.IDString = params.MeetingId
+		partial.Error = "No active agenda point."
+		return partial, nil, nil
+	}
+	apID := *meeting.CurrentAgendaPointID
+
+	entries, err := h.Repository.ListSpeakersForAgendaPoint(ctx, apID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load speakers: %w", err)
+	}
+
+	var speakingEntryID int64
+	for _, e := range entries {
+		if e.AttendeeID == attendeeID && e.Status == "SPEAKING" {
+			speakingEntryID = e.ID
+			break
+		}
+	}
+	if speakingEntryID == 0 {
+		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		partial.CommitteeSlug = params.Slug
+		partial.IDString = params.MeetingId
+		partial.Error = "You are not currently speaking."
+		return partial, nil, nil
+	}
+
+	if err := h.Repository.SetSpeakerDone(ctx, speakingEntryID); err != nil {
+		return nil, nil, fmt.Errorf("failed to yield speech: %w", err)
+	}
+	if err := h.Repository.RecomputeSpeakerOrder(ctx, apID); err != nil {
+		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
+	}
+	h.publishSpeakersUpdated(meetingID)
 
 	partial, err := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
 	if err != nil {

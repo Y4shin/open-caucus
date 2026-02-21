@@ -136,7 +136,10 @@ func (q *Queries) GetWaitingSpeakersForAgendaPoint(ctx context.Context, agendaPo
 const hasAttendeeSpokenOnAgendaPoint = `-- name: HasAttendeeSpokenOnAgendaPoint :one
 SELECT EXISTS(
     SELECT 1 FROM speakers_list
-    WHERE agenda_point_id = ? AND attendee_id = ? AND status IN ('SPEAKING', 'DONE')
+    WHERE agenda_point_id = ?
+      AND attendee_id = ?
+      AND type = 'regular'
+      AND status IN ('SPEAKING', 'DONE')
 )
 `
 
@@ -162,10 +165,16 @@ JOIN attendees a ON a.id = sl.attendee_id
 WHERE sl.agenda_point_id = ?
 ORDER BY
     CASE sl.status
-        WHEN 'SPEAKING' THEN 0
-        WHEN 'WAITING'  THEN sl.order_position + 1
-        WHEN 'DONE'     THEN 1000000
-        ELSE                 1000001
+        WHEN 'DONE'     THEN 0
+        WHEN 'SPEAKING' THEN 1
+        WHEN 'WAITING'  THEN 2
+        ELSE                 3
+    END ASC,
+    CASE
+        WHEN sl.status IN ('DONE', 'SPEAKING') THEN COALESCE(sl.start_of_speech, sl.requested_at)
+    END ASC,
+    CASE
+        WHEN sl.status = 'WAITING' THEN sl.order_position
     END ASC,
     sl.requested_at ASC
 `
@@ -277,7 +286,7 @@ func (q *Queries) SetSpeakerSpeaking(ctx context.Context, id int64) error {
 }
 
 const setSpeakerWithdrawn = `-- name: SetSpeakerWithdrawn :exec
-UPDATE speakers_list SET status = 'WITHDRAWN' WHERE id = ?
+DELETE FROM speakers_list WHERE id = ?
 `
 
 func (q *Queries) SetSpeakerWithdrawn(ctx context.Context, id int64) error {

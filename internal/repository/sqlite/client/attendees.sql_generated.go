@@ -11,16 +11,20 @@ import (
 )
 
 const createAttendee = `-- name: CreateAttendee :one
-INSERT INTO attendees (meeting_id, user_id, full_name, secret)
-VALUES (?, ?, ?, ?)
-RETURNING id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted
+INSERT INTO attendees (meeting_id, user_id, full_name, secret, attendee_number)
+VALUES (
+    ?, ?, ?, ?,
+    COALESCE((SELECT MAX(a.attendee_number) + 1 FROM attendees a WHERE a.meeting_id = ?), 1)
+)
+RETURNING id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted, attendee_number
 `
 
 type CreateAttendeeParams struct {
-	MeetingID int64
-	UserID    sql.NullInt64
-	FullName  string
-	Secret    string
+	MeetingID   int64
+	UserID      sql.NullInt64
+	FullName    string
+	Secret      string
+	MeetingID_2 int64
 }
 
 func (q *Queries) CreateAttendee(ctx context.Context, arg CreateAttendeeParams) (Attendee, error) {
@@ -29,6 +33,7 @@ func (q *Queries) CreateAttendee(ctx context.Context, arg CreateAttendeeParams) 
 		arg.UserID,
 		arg.FullName,
 		arg.Secret,
+		arg.MeetingID_2,
 	)
 	var i Attendee
 	err := row.Scan(
@@ -40,6 +45,7 @@ func (q *Queries) CreateAttendee(ctx context.Context, arg CreateAttendeeParams) 
 		&i.CreatedAt,
 		&i.IsChair,
 		&i.Quoted,
+		&i.AttendeeNumber,
 	)
 	return i, err
 }
@@ -54,7 +60,7 @@ func (q *Queries) DeleteAttendee(ctx context.Context, id int64) error {
 }
 
 const getAttendeeByID = `-- name: GetAttendeeByID :one
-SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted FROM attendees WHERE id = ?
+SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted, attendee_number FROM attendees WHERE id = ?
 `
 
 func (q *Queries) GetAttendeeByID(ctx context.Context, id int64) (Attendee, error) {
@@ -69,12 +75,13 @@ func (q *Queries) GetAttendeeByID(ctx context.Context, id int64) (Attendee, erro
 		&i.CreatedAt,
 		&i.IsChair,
 		&i.Quoted,
+		&i.AttendeeNumber,
 	)
 	return i, err
 }
 
 const getAttendeeByMeetingIDAndSecret = `-- name: GetAttendeeByMeetingIDAndSecret :one
-SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted FROM attendees WHERE meeting_id = ? AND secret = ?
+SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted, attendee_number FROM attendees WHERE meeting_id = ? AND secret = ?
 `
 
 type GetAttendeeByMeetingIDAndSecretParams struct {
@@ -94,12 +101,13 @@ func (q *Queries) GetAttendeeByMeetingIDAndSecret(ctx context.Context, arg GetAt
 		&i.CreatedAt,
 		&i.IsChair,
 		&i.Quoted,
+		&i.AttendeeNumber,
 	)
 	return i, err
 }
 
 const getAttendeeByUserIDAndMeetingID = `-- name: GetAttendeeByUserIDAndMeetingID :one
-SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted FROM attendees WHERE user_id = ? AND meeting_id = ?
+SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted, attendee_number FROM attendees WHERE user_id = ? AND meeting_id = ?
 `
 
 type GetAttendeeByUserIDAndMeetingIDParams struct {
@@ -119,12 +127,13 @@ func (q *Queries) GetAttendeeByUserIDAndMeetingID(ctx context.Context, arg GetAt
 		&i.CreatedAt,
 		&i.IsChair,
 		&i.Quoted,
+		&i.AttendeeNumber,
 	)
 	return i, err
 }
 
 const listAttendeesForMeeting = `-- name: ListAttendeesForMeeting :many
-SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted FROM attendees WHERE meeting_id = ? ORDER BY created_at ASC
+SELECT id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted, attendee_number FROM attendees WHERE meeting_id = ? ORDER BY attendee_number ASC, created_at ASC
 `
 
 func (q *Queries) ListAttendeesForMeeting(ctx context.Context, meetingID int64) ([]Attendee, error) {
@@ -145,6 +154,7 @@ func (q *Queries) ListAttendeesForMeeting(ctx context.Context, meetingID int64) 
 			&i.CreatedAt,
 			&i.IsChair,
 			&i.Quoted,
+			&i.AttendeeNumber,
 		); err != nil {
 			return nil, err
 		}

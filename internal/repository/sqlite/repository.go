@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -585,10 +587,11 @@ func (r *Repository) CreateAttendee(ctx context.Context, meetingID int64, userID
 		uid = sql.NullInt64{Int64: *userID, Valid: true}
 	}
 	a, err := r.Queries.CreateAttendee(ctx, client.CreateAttendeeParams{
-		MeetingID: meetingID,
-		UserID:    uid,
-		FullName:  fullName,
-		Secret:    secret,
+		MeetingID:   meetingID,
+		UserID:      uid,
+		FullName:    fullName,
+		Secret:      secret,
+		MeetingID_2: meetingID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create attendee: %w", err)
@@ -677,15 +680,20 @@ func attendeeFromClient(a *client.Attendee) *model.Attendee {
 	if a.UserID.Valid {
 		userID = &a.UserID.Int64
 	}
+	var attendeeNumber int64
+	if a.AttendeeNumber.Valid {
+		attendeeNumber = a.AttendeeNumber.Int64
+	}
 	return &model.Attendee{
-		ID:        a.ID,
-		MeetingID: a.MeetingID,
-		UserID:    userID,
-		FullName:  a.FullName,
-		Secret:    a.Secret,
-		IsChair:   a.IsChair,
-		Quoted:    a.Quoted,
-		CreatedAt: createdAt,
+		ID:             a.ID,
+		MeetingID:      a.MeetingID,
+		AttendeeNumber: attendeeNumber,
+		UserID:         userID,
+		FullName:       a.FullName,
+		Secret:         a.Secret,
+		IsChair:        a.IsChair,
+		Quoted:         a.Quoted,
+		CreatedAt:      createdAt,
 	}
 }
 
@@ -877,6 +885,11 @@ func (r *Repository) SetCurrentAgendaPoint(ctx context.Context, meetingID int64,
 
 // AddSpeaker adds an attendee to the speakers list for an agenda point.
 func (r *Repository) AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string, genderQuoted, firstSpeaker bool) (*model.SpeakerEntry, error) {
+	// RoPM entries never receive the first-speaker flag.
+	if speakerType == "ropm" {
+		firstSpeaker = false
+	}
+
 	row, err := r.Queries.AddSpeaker(ctx, client.AddSpeakerParams{
 		AgendaPointID: agendaPointID,
 		AttendeeID:    attendeeID,
@@ -887,11 +900,53 @@ func (r *Repository) AddSpeaker(ctx context.Context, agendaPointID, attendeeID i
 	if err != nil {
 		return nil, fmt.Errorf("add speaker: %w", err)
 	}
-	return speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, "", row.Type, row.Status, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition), nil
+	return speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, "", row.Type, row.Status, row.StartOfSpeech, row.Duration, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition), nil
 }
 
 // speakerFromRow constructs a model.SpeakerEntry from individual column values.
-func speakerFromRow(id, agendaPointID, attendeeID int64, attendeeName, typ, status string, genderQuoted, firstSpeaker, priority bool, orderPosition int64) *model.SpeakerEntry {
+func parseStartOfSpeech(startOfSpeech sql.NullString) *time.Time {
+	if !startOfSpeech.Valid || startOfSpeech.String == "" {
+		return nil
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, startOfSpeech.String)
+	if err != nil {
+		return nil
+	}
+	return &parsed
+}
+
+func parseDurationSeconds(duration sql.NullString) int64 {
+	if !duration.Valid || duration.String == "" {
+		return 0
+	}
+
+	s := strings.TrimSpace(duration.String)
+	if secs, err := strconv.ParseInt(s, 10, 64); err == nil {
+		if secs < 0 {
+			return 0
+		}
+		return secs
+	}
+
+	parsed, err := time.ParseDuration(s)
+	if err != nil {
+		return 0
+	}
+	secs := int64(parsed / time.Second)
+	if secs < 0 {
+		return 0
+	}
+	return secs
+}
+
+func speakerFromRow(
+	id, agendaPointID, attendeeID int64,
+	attendeeName, typ, status string,
+	startOfSpeech sql.NullString,
+	duration sql.NullString,
+	genderQuoted, firstSpeaker, priority bool,
+	orderPosition int64,
+) *model.SpeakerEntry {
 	return &model.SpeakerEntry{
 		ID:            id,
 		AgendaPointID: agendaPointID,
@@ -903,6 +958,8 @@ func speakerFromRow(id, agendaPointID, attendeeID int64, attendeeName, typ, stat
 		FirstSpeaker:  firstSpeaker,
 		Priority:      priority,
 		OrderPosition: orderPosition,
+		StartOfSpeech: parseStartOfSpeech(startOfSpeech),
+		DurationSeconds: parseDurationSeconds(duration),
 	}
 }
 
@@ -914,7 +971,7 @@ func (r *Repository) ListSpeakersForAgendaPoint(ctx context.Context, agendaPoint
 	}
 	result := make([]*model.SpeakerEntry, len(rows))
 	for i, row := range rows {
-		result[i] = speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, row.AttendeeFullName, row.Type, row.Status, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition)
+		result[i] = speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, row.AttendeeFullName, row.Type, row.Status, row.StartOfSpeech, row.Duration, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition)
 	}
 	return result, nil
 }
@@ -928,7 +985,7 @@ func (r *Repository) GetSpeakerEntryByID(ctx context.Context, id int64) (*model.
 		}
 		return nil, fmt.Errorf("get speaker entry: %w", err)
 	}
-	return speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, "", row.Type, row.Status, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition), nil
+	return speakerFromRow(row.ID, row.AgendaPointID, row.AttendeeID, "", row.Type, row.Status, row.StartOfSpeech, row.Duration, row.GenderQuoted, row.FirstSpeaker, row.Priority, row.OrderPosition), nil
 }
 
 // DeleteSpeaker removes a speaker entry.
@@ -961,8 +1018,17 @@ func (r *Repository) SetSpeakerDone(ctx context.Context, id int64) error {
 	if err != nil {
 		return fmt.Errorf("get speaker entry for done: %w", err)
 	}
+	elapsedSeconds := int64(0)
+	if entry.StartOfSpeech.Valid && entry.StartOfSpeech.String != "" {
+		if start, parseErr := time.Parse(time.RFC3339Nano, entry.StartOfSpeech.String); parseErr == nil {
+			elapsedSeconds = int64(time.Since(start) / time.Second)
+			if elapsedSeconds < 0 {
+				elapsedSeconds = 0
+			}
+		}
+	}
 	if err := r.Queries.SetSpeakerDone(ctx, client.SetSpeakerDoneParams{
-		Duration: sql.NullString{String: "0s", Valid: true},
+		Duration: sql.NullString{String: fmt.Sprintf("%ds", elapsedSeconds), Valid: true},
 		ID:       id,
 	}); err != nil {
 		return fmt.Errorf("set speaker done: %w", err)
@@ -976,15 +1042,15 @@ func (r *Repository) SetSpeakerDone(ctx context.Context, id int64) error {
 	return nil
 }
 
-// SetSpeakerWithdrawn transitions a speaker entry to WITHDRAWN.
+// SetSpeakerWithdrawn removes a speaker entry (legacy name kept for compatibility).
 func (r *Repository) SetSpeakerWithdrawn(ctx context.Context, id int64) error {
 	if err := r.Queries.SetSpeakerWithdrawn(ctx, id); err != nil {
-		return fmt.Errorf("set speaker withdrawn: %w", err)
+		return fmt.Errorf("remove speaker: %w", err)
 	}
 	return nil
 }
 
-// HasAttendeeSpokenOnAgendaPoint returns true if the attendee has any SPEAKING or DONE entry for the agenda point.
+// HasAttendeeSpokenOnAgendaPoint returns true if the attendee has any regular SPEAKING or DONE entry for the agenda point.
 func (r *Repository) HasAttendeeSpokenOnAgendaPoint(ctx context.Context, agendaPointID, attendeeID int64) (bool, error) {
 	v, err := r.Queries.HasAttendeeSpokenOnAgendaPoint(ctx, client.HasAttendeeSpokenOnAgendaPointParams{
 		AgendaPointID: agendaPointID,
@@ -1008,7 +1074,7 @@ func (r *Repository) SetSpeakerPriority(ctx context.Context, id int64, priority 
 }
 
 // RecomputeSpeakerOrder recomputes and persists order_position for all WAITING speakers on an agenda point.
-// Sort key: priority DESC, gender_quoted DESC, first_speaker DESC, requested_at ASC.
+// Sort key: ropm first, then priority DESC, gender_quoted DESC, first_speaker DESC, requested_at ASC.
 func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID int64) error {
 	rows, err := r.Queries.GetWaitingSpeakersForAgendaPoint(ctx, agendaPointID)
 	if err != nil {
@@ -1017,6 +1083,10 @@ func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID in
 
 	sort.Slice(rows, func(i, j int) bool {
 		a, b := rows[i], rows[j]
+		aRopm, bRopm := a.Type == "ropm", b.Type == "ropm"
+		if aRopm != bRopm {
+			return aRopm
+		}
 		if a.Priority != b.Priority {
 			return a.Priority
 		}

@@ -19,11 +19,12 @@ func buildAttendeeItems(attendees []*model.Attendee) []templates.AttendeeItem {
 	items := make([]templates.AttendeeItem, len(attendees))
 	for i, a := range attendees {
 		items[i] = templates.AttendeeItem{
-			ID:       a.ID,
-			IDString: strconv.FormatInt(a.ID, 10),
-			FullName: a.FullName,
-			IsChair:  a.IsChair,
-			IsGuest:  a.UserID == nil,
+			ID:             a.ID,
+			IDString:       strconv.FormatInt(a.ID, 10),
+			AttendeeNumber: a.AttendeeNumber,
+			FullName:       a.FullName,
+			IsChair:        a.IsChair,
+			IsGuest:        a.UserID == nil,
 		}
 	}
 	return items
@@ -68,6 +69,14 @@ func flattenAgendaPoints(topLevel, children []*model.AgendaPoint) []*model.Agend
 func buildSpeakerItems(entries []*model.SpeakerEntry) []templates.SpeakerItem {
 	items := make([]templates.SpeakerItem, len(entries))
 	for i, e := range entries {
+		var speakingSinceUnix int64
+		if e.StartOfSpeech != nil {
+			speakingSinceUnix = e.StartOfSpeech.Unix()
+		}
+		doneDurationLabel := ""
+		if e.Status == "DONE" && e.DurationSeconds > 0 {
+			doneDurationLabel = formatElapsedLabel(e.DurationSeconds)
+		}
 		items[i] = templates.SpeakerItem{
 			ID:            e.ID,
 			IDString:      strconv.FormatInt(e.ID, 10),
@@ -81,21 +90,56 @@ func buildSpeakerItems(entries []*model.SpeakerEntry) []templates.SpeakerItem {
 			FirstSpeaker:  e.FirstSpeaker,
 			Priority:      e.Priority,
 			OrderPosition: e.OrderPosition,
+			SpeakingSinceUnix: speakingSinceUnix,
+			DoneDurationLabel: doneDurationLabel,
 		}
 	}
 	return items
 }
 
+func formatElapsedLabel(totalSeconds int64) string {
+	if totalSeconds < 0 {
+		totalSeconds = 0
+	}
+	mins := totalSeconds / 60
+	secs := totalSeconds % 60
+	return fmt.Sprintf("%02d:%02d", mins, secs)
+}
+
 // loadAttendeeListPartial loads the current attendee list for a meeting and
 // returns an AttendeeListPartialInput ready for rendering.
 func (h *Handler) loadAttendeeListPartial(ctx context.Context, slug, meetingIDStr string, meetingID int64) (*templates.AttendeeListPartialInput, error) {
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
 	attendees, err := h.Repository.ListAttendeesForMeeting(ctx, meetingID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load attendees: %w", err)
 	}
+
+	showSelfSignup := false
+	if sd, ok := session.GetSession(ctx); ok && !sd.IsExpired() {
+		switch {
+		case sd.IsAttendeeSession():
+			showSelfSignup = false
+		case sd.IsUserSession() && sd.UserID != nil:
+			_, attendeeErr := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
+			if attendeeErr != nil {
+				if strings.Contains(attendeeErr.Error(), "attendee not found") {
+					showSelfSignup = true
+				} else {
+					return nil, fmt.Errorf("failed to resolve self-signup visibility: %w", attendeeErr)
+				}
+			}
+		}
+	}
+
 	return &templates.AttendeeListPartialInput{
 		CommitteeSlug: slug,
 		IDString:      meetingIDStr,
+		SignupOpen:    meeting.SignupOpen,
+		ShowSelfSignup: showSelfSignup,
 		Attendees:     buildAttendeeItems(attendees),
 	}, nil
 }
@@ -291,6 +335,10 @@ func (h *Handler) loadAgendaPointListPartial(ctx context.Context, slug, meetingI
 
 // loadSpeakersListPartial loads the speakers list for the active agenda point.
 func (h *Handler) loadSpeakersListPartial(ctx context.Context, slug, meetingIDStr string, meetingID int64) (*templates.SpeakersListPartialInput, error) {
+	return h.loadSpeakersListPartialWithSearch(ctx, slug, meetingIDStr, meetingID, "")
+}
+
+func (h *Handler) loadSpeakersListPartialWithSearch(ctx context.Context, slug, meetingIDStr string, meetingID int64, searchQuery string) (*templates.SpeakersListPartialInput, error) {
 	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load meeting: %w", err)
@@ -348,6 +396,7 @@ func (h *Handler) loadSpeakersListPartial(ctx context.Context, slug, meetingIDSt
 		ModeratorID:                      apModeratorID,
 		Speakers:                         buildSpeakerItems(speakers),
 		Attendees:                        buildAttendeeItems(attendees),
+		SearchQuery:                      searchQuery,
 	}, nil
 }
 
@@ -385,6 +434,7 @@ func (h *Handler) ManageAgendaPointCreate(ctx context.Context, r *http.Request, 
 		}
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	h.publishSpeakersUpdated(meetingID)
 	return partial, nil, err
 }
 
@@ -402,6 +452,7 @@ func (h *Handler) ManageAgendaPointDelete(ctx context.Context, r *http.Request, 
 		return nil, nil, fmt.Errorf("failed to delete agenda point: %w", err)
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	h.publishSpeakersUpdated(meetingID)
 	return partial, nil, err
 }
 
@@ -415,10 +466,36 @@ func (h *Handler) ManageActivateAgendaPoint(ctx context.Context, r *http.Request
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid agenda point ID")
 	}
+
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+
+	// If switching away from an agenda point with an active speech, end it first.
+	if meeting.CurrentAgendaPointID != nil && *meeting.CurrentAgendaPointID != apID {
+		currentSpeakers, err := h.Repository.ListSpeakersForAgendaPoint(ctx, *meeting.CurrentAgendaPointID)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to load current agenda speakers: %w", err)
+		}
+		for _, s := range currentSpeakers {
+			if s.Status != "SPEAKING" {
+				continue
+			}
+			if err := h.Repository.SetSpeakerDone(ctx, s.ID); err != nil {
+				return nil, nil, fmt.Errorf("failed to end ongoing speech: %w", err)
+			}
+		}
+		if err := h.Repository.RecomputeSpeakerOrder(ctx, *meeting.CurrentAgendaPointID); err != nil {
+			return nil, nil, fmt.Errorf("failed to recompute previous agenda speaker order: %w", err)
+		}
+	}
+
 	if err := h.Repository.SetCurrentAgendaPoint(ctx, meetingID, &apID); err != nil {
 		return nil, nil, fmt.Errorf("failed to activate agenda point: %w", err)
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	h.publishSpeakersUpdated(meetingID)
 	return partial, nil, err
 }
 
@@ -492,7 +569,7 @@ func (h *Handler) ManageSpeakerAdd(ctx context.Context, r *http.Request, params 
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to check first speaker: %w", err)
 	}
-	firstSpeaker := !hasSpoken
+	firstSpeaker := speakerType == "regular" && !hasSpoken
 
 	if _, err := h.Repository.AddSpeaker(ctx, apID, attendeeID, speakerType, genderQuoted, firstSpeaker); err != nil {
 		return nil, nil, fmt.Errorf("failed to add speaker: %w", err)
@@ -500,7 +577,7 @@ func (h *Handler) ManageSpeakerAdd(ctx context.Context, r *http.Request, params 
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, apID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
-	h.publishSpeakersUpdated()
+	h.publishSpeakersUpdated(meetingID)
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -525,7 +602,7 @@ func (h *Handler) ManageSpeakerRemove(ctx context.Context, r *http.Request, para
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
-	h.publishSpeakersUpdated()
+	h.publishSpeakersUpdated(meetingID)
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -550,7 +627,7 @@ func (h *Handler) ManageSpeakerStart(ctx context.Context, r *http.Request, param
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
-	h.publishSpeakersUpdated()
+	h.publishSpeakersUpdated(meetingID)
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -575,12 +652,12 @@ func (h *Handler) ManageSpeakerEnd(ctx context.Context, r *http.Request, params 
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
-	h.publishSpeakersUpdated()
+	h.publishSpeakersUpdated(meetingID)
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
 
-// ManageSpeakerWithdraw moves a speaker to WITHDRAWN status.
+// ManageSpeakerWithdraw removes a speaker entry (legacy route name).
 func (h *Handler) ManageSpeakerWithdraw(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.SpeakersListPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
@@ -595,12 +672,12 @@ func (h *Handler) ManageSpeakerWithdraw(ctx context.Context, r *http.Request, pa
 		return nil, nil, fmt.Errorf("failed to load speaker entry: %w", err)
 	}
 	if err := h.Repository.SetSpeakerWithdrawn(ctx, speakerID); err != nil {
-		return nil, nil, fmt.Errorf("failed to withdraw speaker: %w", err)
+		return nil, nil, fmt.Errorf("failed to remove speaker: %w", err)
 	}
 	if err := h.Repository.RecomputeSpeakerOrder(ctx, entry.AgendaPointID); err != nil {
 		return nil, nil, fmt.Errorf("failed to recompute speaker order: %w", err)
 	}
-	h.publishSpeakersUpdated()
+	h.publishSpeakersUpdated(meetingID)
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
@@ -628,7 +705,7 @@ func (h *Handler) loadMeetingSettingsPartial(ctx context.Context, slug, meetingI
 }
 
 // ManageToggleSignupOpen flips the signup_open flag on the meeting.
-func (h *Handler) ManageToggleSignupOpen(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingSettingsPartialInput, *routes.ResponseMeta, error) {
+func (h *Handler) ManageToggleSignupOpen(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ManageAttendeeDependentPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid meeting ID")
@@ -644,7 +721,7 @@ func (h *Handler) ManageToggleSignupOpen(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to update signup_open: %w", err)
 	}
 
-	partial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
 
@@ -693,5 +770,16 @@ func (h *Handler) ManageSpeakersListPartial(ctx context.Context, r *http.Request
 		return nil, nil, fmt.Errorf("invalid meeting ID")
 	}
 	partial, err := h.loadSpeakersListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	return partial, nil, err
+}
+
+// ManageSpeakerAddCandidates returns the filtered attendee candidates list for the add-speaker modal.
+func (h *Handler) ManageSpeakerAddCandidates(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.SpeakersListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+	searchQuery := strings.TrimSpace(r.URL.Query().Get("q"))
+	partial, err := h.loadSpeakersListPartialWithSearch(ctx, params.Slug, params.MeetingId, meetingID, searchQuery)
 	return partial, nil, err
 }

@@ -32,14 +32,15 @@ type AgendaPoint struct {
 }
 
 type Attendee struct {
-	ID        int64
-	MeetingID int64
-	UserID    sql.NullInt64
-	FullName  string
-	Secret    string
-	CreatedAt string
-	IsChair   bool
-	Quoted    bool
+	ID             int64
+	MeetingID      int64
+	UserID         sql.NullInt64
+	FullName       string
+	Secret         string
+	CreatedAt      string
+	IsChair        bool
+	Quoted         bool
+	AttendeeNumber sql.NullInt64
 }
 
 type BinaryBlob struct {

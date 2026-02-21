@@ -6,6 +6,8 @@ css AppShell() {
 	color: var(--ui-text-primary);
 	margin: 0;
 	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
 }
 
 css PageHeader() {
@@ -19,6 +21,13 @@ css PageMain() {
 	max-width: 1200px;
 	margin: 0 auto;
 	padding: 1.25rem 1.25rem 1.7rem;
+	flex: 1 1 auto;
+	min-height: 0;
+	width: min(1200px, 100%);
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
 }
 
 css PageFooter() {
@@ -64,6 +73,17 @@ css LanguageSwitcherLink() {
 	font-weight: 600;
 }
 
+css PlainTextLink() {
+	display: inline;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	box-shadow: none;
+	color: var(--ui-text-primary);
+	text-decoration: underline;
+	font-weight: 500;
+}
+
 css FullWidthField() {
 	width: 100%;
 	max-width: 100%;
@@ -89,11 +109,582 @@ css ManageGridSlice() {
 	display: contents;
 }
 
+css ManageCard() {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+css ManageCardTitle() {
+	margin: 0;
+}
+
+css ManageCardHeaderRow() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+css ManageSettingsCard() {
+	padding-top: 0.9rem;
+}
+
+css ManageSettings() {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+css ManageSettingsStateRow() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.55rem 0.65rem;
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+}
+
+css ManageSettingsState() {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+css ManageSettingsStateLabel() {
+	font-size: 0.77rem;
+	font-weight: 650;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--ui-text-muted);
+}
+
+css ManageSettingsStateValue() {
+	font-size: 1.02rem;
+	font-weight: 700;
+	color: var(--ui-text-primary);
+}
+
+css ManageSettingsStateValueOn() {
+	color: #78f0b5;
+}
+
+css ManageSettingsStateValueOff() {
+	color: #ffb6c8;
+}
+
+css ManageSettingsInlineAction() {
+	flex: 0 0 auto;
+}
+
+css ManageSettingsSection() {
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+	padding: 0.62rem 0.65rem;
+}
+
+css ManageSettingsSectionTitle() {
+	margin: 0 0 0.35rem;
+	font-size: 0.9rem;
+}
+
+css ManageSettingsSummary() {
+	margin: 0 0 0.45rem;
+	color: var(--ui-text-muted);
+}
+
+css ManageSettingsForm() {
+	display: flex;
+	gap: 0.48rem;
+	align-items: center;
+}
+
+css ManageSettingsFormGrid() {
+	display: grid;
+	gap: 0.52rem;
+}
+
+css ManageSettingsField() {
+	display: grid;
+	gap: 0.24rem;
+}
+
+css ManageAgendaLayout() {
+	display: flex;
+	flex-direction: column;
+	gap: 0.58rem;
+}
+
+css ManageAgendaAddSection() {
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+	padding: 0.58rem 0.62rem;
+}
+
+css ManageAgendaSectionTitle() {
+	margin: 0 0 0.38rem;
+	font-size: 0.88rem;
+	line-height: 1.2;
+}
+
+css ManageAgendaAddForm() {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) auto;
+	gap: 0.42rem;
+	align-items: end;
+}
+
+css ManageAgendaField() {
+	display: grid;
+	gap: 0.18rem;
+}
+
+css ManageAgendaFieldWide() {
+	min-width: 0;
+}
+
+css ManageAgendaSubmitButton() {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.35rem 0.62rem;
+}
+
+css ManageAgendaSubmitIcon() {
+	width: 0.92rem;
+	height: 0.92rem;
+}
+
+css ManageAgendaEmptyState() {
+	margin: 0;
+	color: var(--ui-text-muted);
+}
+
+css ManageAgendaList() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+	gap: 0.45rem;
+}
+
+css ManageAgendaPointCard() {
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+	padding: 0.48rem 0.56rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.44rem;
+}
+
+css ManageAgendaPointCardChild() {
+	margin-left: 0.72rem;
+}
+
+css ManageAgendaPointCardActive() {
+	border-color: var(--ui-live-agenda-item-active-border);
+	box-shadow: inset 0 0 0 1px var(--ui-live-agenda-item-active-ring);
+}
+
+css ManageAgendaPointHeader() {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.45rem;
+	align-items: start;
+}
+
+css ManageAgendaPointPosition() {
+	font-size: 0.8rem;
+	font-weight: 750;
+	color: var(--ui-live-agenda-position-text);
+}
+
+css ManageAgendaPointTitleWrap() {
+	display: grid;
+	gap: 0.24rem;
+	min-width: 0;
+}
+
+css ManageAgendaPointTitle() {
+	font-size: 0.95rem;
+	font-weight: 700;
+	line-height: 1.22;
+	color: var(--ui-text-primary);
+	overflow-wrap: anywhere;
+}
+
+css ManageAgendaPointBadges() {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+}
+
+css ManageAgendaPointBadge() {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.08rem 0.36rem;
+	font-size: 0.67rem;
+	font-weight: 700;
+	border-radius: calc(var(--ui-radius) - 3px);
+	border: 1px solid var(--ui-border);
+	color: var(--ui-text-muted);
+	background: rgba(6, 18, 42, 0.3);
+}
+
+css ManageAgendaPointBadgeActive() {
+	border-color: var(--ui-live-agenda-item-active-border);
+	color: var(--ui-live-agenda-item-active-text);
+}
+
+css ManageAgendaPointActions() {
+	display: flex;
+	gap: 0.35rem;
+}
+
+css ManageAgendaActionButton() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.9rem;
+	height: 1.9rem;
+	padding: 0;
+	border-radius: calc(var(--ui-radius) - 2px);
+}
+
+css ManageAgendaActionButtonDanger() {
+	background: linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);
+	border-color: var(--ui-danger-border);
+	color: var(--ui-danger-text);
+}
+
+css ManageAgendaActionIcon() {
+	width: 1rem;
+	height: 1rem;
+}
+
+css ManageSpeakersSettings() {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+css ManageSpeakersSection() {
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+	padding: 0.5rem 0.58rem;
+}
+
+css ManageSpeakersSectionTitle() {
+	margin: 0 0 0.3rem;
+	font-size: 0.86rem;
+	line-height: 1.2;
+}
+
+css ManageSpeakersSettingsForm() {
+	display: flex;
+	gap: 0.4rem;
+	align-items: center;
+}
+
+css ManageSpeakersSettingsFormGrid() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: 0.38rem;
+}
+
+css ManageSpeakersField() {
+	display: grid;
+	gap: 0.18rem;
+}
+
+css ManageSpeakersFieldLabel() {
+	font-size: 0.72rem;
+	font-weight: 650;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	color: var(--ui-text-muted);
+}
+
+css ManageSpeakersEffective() {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin-top: 0.38rem;
+}
+
+css ManageSpeakersEffectiveChip() {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.22rem;
+	padding: 0.12rem 0.4rem;
+	border-radius: calc(var(--ui-radius) - 3px);
+	font-size: 0.72rem;
+	font-weight: 700;
+	border: 1px solid var(--ui-border);
+	color: var(--ui-text-muted);
+	background: rgba(6, 18, 42, 0.32);
+}
+
+css ManageSpeakersEffectiveChipOn() {
+	border-color: #4ecf80;
+	color: #b7ffd7;
+}
+
+css ManageSpeakersEffectiveChipOff() {
+	border-color: #f39ab6;
+	color: #ffd6e3;
+}
+
+css ManageSpeakersAddForm() {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 0.42rem;
+}
+
+css ManageSpeakersAddPrimaryField() {
+	flex: 1 1 14rem;
+}
+
+css ManageSpeakersAddSecondaryField() {
+	flex: 0 1 10.5rem;
+}
+
+css ManageSpeakersRows() {
+	margin-top: 0.55rem;
+}
+
+css ManageSpeakerAddOpenButton() {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.3rem 0.62rem;
+}
+
+css ManageSpeakerAddOpenIcon() {
+	width: 0.95rem;
+	height: 0.95rem;
+}
+
+css ManageSpeakerAddDialog() {
+	width: min(44rem, calc(100vw - 2rem));
+	max-height: min(78vh, 46rem);
+	padding: 0.75rem;
+	border: 1px solid var(--ui-panel-border);
+	border-radius: var(--ui-radius);
+	background: linear-gradient(170deg, var(--ui-panel-bg-start), var(--ui-panel-bg-end));
+	color: var(--ui-text-primary);
+}
+
+css ManageSpeakerAddDialogHeader() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.55rem;
+	margin-bottom: 0.45rem;
+}
+
+css ManageSpeakerAddDialogClose() {
+	padding: 0.28rem 0.52rem;
+}
+
+css ManageSpeakerAddSearchWrap() {
+	display: grid;
+	gap: 0.2rem;
+	margin-bottom: 0.45rem;
+}
+
+css ManageSpeakerCandidateGrid() {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+	gap: 0.42rem;
+	max-height: min(58vh, 34rem);
+	overflow-y: auto;
+	padding-right: 0.1rem;
+}
+
+css ManageSpeakerCandidateCard() {
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+	padding: 0.42rem 0.48rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.38rem;
+}
+
+css ManageSpeakerCandidateHeader() {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.38rem;
+	align-items: baseline;
+}
+
+css ManageSpeakerCandidateNumber() {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--ui-live-speaker-order-text);
+}
+
+css ManageSpeakerCandidateName() {
+	font-size: 0.92rem;
+	font-weight: 700;
+	color: var(--ui-text-primary);
+	line-height: 1.2;
+}
+
+css ManageSpeakerCandidateActions() {
+	display: flex;
+	gap: 0.35rem;
+}
+
+css ManageSpeakerCandidateButton() {
+	width: 1.75rem;
+	height: 1.75rem;
+	padding: 0;
+	border-radius: calc(var(--ui-radius) - 3px);
+}
+
+css ManageSpeakerCandidateButtonRopm() {
+	border-color: var(--ui-live-badge-ropm-border);
+	color: var(--ui-live-badge-ropm-text);
+}
+
+css ManageSpeakerCandidateButtonIcon() {
+	width: 1rem;
+	height: 1rem;
+}
+
+css ManageAttendeeControls() {
+	display: grid;
+	gap: 0.45rem;
+	margin-bottom: 0.55rem;
+}
+
+css ManageAttendeeAddGuestForm() {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	gap: 0.45rem;
+	align-items: center;
+}
+
+css ManageAttendeeActionRow() {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+}
+
+css ManageAttendeeSignupSwitch() {
+	display: inline-flex;
+	align-items: center;
+}
+
+css ManageAttendeeIconButton() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.9rem;
+	height: 1.9rem;
+	padding: 0;
+	border-radius: calc(var(--ui-radius) - 2px);
+}
+
+css ManageAttendeeIconButtonOn() {
+	border-color: #4ecf80;
+	color: #b7ffd7;
+}
+
+css ManageAttendeeIconButtonOff() {
+	border-color: rgba(121, 154, 199, 0.6);
+	color: var(--ui-text-muted);
+}
+
+css ManageAttendeeIconButtonDanger() {
+	background: linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);
+	border-color: var(--ui-danger-border);
+	color: var(--ui-danger-text);
+}
+
+css ManageAttendeeIcon() {
+	width: 1rem;
+	height: 1rem;
+}
+
+css ManageAttendeeGrid() {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.45rem;
+}
+
+css ManageAttendeeCard() {
+	border: 1px solid var(--ui-panel-border);
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-table-bg);
+	padding: 0.44rem 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+css ManageAttendeeCardHead() {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.38rem;
+	align-items: baseline;
+}
+
+css ManageAttendeeNumber() {
+	font-size: 0.8rem;
+	font-weight: 750;
+	color: var(--ui-live-speaker-order-text);
+}
+
+css ManageAttendeeName() {
+	font-size: 0.96rem;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--ui-text-primary);
+}
+
+css ManageAttendeeMeta() {
+	display: flex;
+	gap: 0.3rem;
+	flex-wrap: wrap;
+}
+
+css ManageAttendeeMetaChip() {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.08rem 0.35rem;
+	font-size: 0.68rem;
+	font-weight: 700;
+	border-radius: calc(var(--ui-radius) - 3px);
+	border: 1px solid var(--ui-border);
+	color: var(--ui-text-muted);
+	background: rgba(6, 18, 42, 0.3);
+}
+
+css ManageAttendeeMetaChipChair() {
+	border-color: #4ecf80;
+	color: #b7ffd7;
+}
+
+css ManageAttendeeCardActions() {
+	display: flex;
+	gap: 0.35rem;
+}
+
 css LiveBody() {
 	background: radial-gradient(circle at 18% 0%, var(--ui-bg-shell-start) 0%, var(--ui-bg-shell-mid) 38%, var(--ui-bg-shell-end) 100%);
 	color: var(--ui-text-primary);
 	font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
-	min-height: 100vh;
+	min-height: 100dvh;
+	height: 100dvh;
+	overflow: hidden;
 }
 
 css LiveHeader() {
@@ -139,6 +730,8 @@ css LiveGrid() {
 	display: grid;
 	grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
 	gap: 1rem;
+	flex: 1 1 auto;
+	min-height: 0;
 }
 
 css LiveAgendaPanel() {
@@ -151,6 +744,7 @@ css LivePanel() {
 	border-radius: var(--ui-radius);
 	color: var(--ui-text-primary);
 	min-height: 520px;
+	margin-bottom: 0;
 	box-shadow: inset 0 1px 0 var(--ui-panel-highlight);
 }
 
@@ -163,10 +757,19 @@ css LiveAgendaAccordion() {
 css LiveAgendaAccordionSummary() {
 	list-style: none;
 	cursor: pointer;
+	display: grid;
+	gap: 0.6rem;
+}
+
+css LiveAgendaSummaryHeadingRow() {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: space-between;
 	gap: 0.65rem;
+}
+
+css LiveAgendaSummaryHeading() {
+	margin: 0;
 }
 
 css LiveAgendaPreviewBlock() {
@@ -195,6 +798,15 @@ css LiveAgendaPreviewValue() {
 	font-size: 0.98rem;
 	font-weight: 600;
 	color: var(--ui-text-primary);
+}
+
+css LiveAgendaInlineList() {
+	display: none;
+	margin-top: 0.55rem;
+}
+
+css LiveAgendaFullButton() {
+	display: inline-flex;
 }
 
 css LiveAgendaAccordionContent() {
@@ -315,7 +927,12 @@ css LiveSpeakerCellSmall() {
 }
 
 css LiveSpeaking() {
-	background: var(--ui-live-speaking-bg);
+	background: linear-gradient(135deg, var(--ui-live-speaking-bg) 0%, var(--ui-live-speaker-item-bg) 100%);
+	border-color: var(--ui-live-badge-ropm-text);
+	box-shadow:
+		inset 0.3rem 0 0 var(--ui-live-badge-ropm-text),
+		0 0 0 1px var(--ui-live-badge-ropm-text),
+		0 0 1.15rem rgba(68, 198, 255, 0.26);
 }
 
 css LiveMyTurn() {
@@ -351,14 +968,19 @@ css LiveSpeakerItem() {
 	border: 1px solid var(--ui-live-speaker-item-border);
 	border-radius: var(--ui-radius);
 	padding: 0.65rem 0.75rem;
+	transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
 css LiveSpeakerOrder() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	min-width: 2.2rem;
+	height: 1.2rem;
 	font-size: 1rem;
 	font-weight: 700;
+	line-height: 1;
 	color: var(--ui-live-speaker-order-text);
-	padding-top: 0.2rem;
 }
 
 css LiveSpeakerMain() {
@@ -375,11 +997,59 @@ css LiveSpeakerName() {
 	color: var(--ui-live-speaker-name-text);
 }
 
+css LiveSpeakerTitleRow() {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.6rem;
+}
+
+css LiveSpeakingTimer() {
+	font-size: 0.84rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--ui-live-speaker-meta-text);
+	flex: 0 0 auto;
+}
+
 css LiveSpeakerMetaRow() {
 	display: flex;
 	gap: 0.6rem;
 	align-items: center;
 	flex-wrap: wrap;
+	min-height: 1.5rem;
+}
+
+css LiveSpeakerActionRow() {
+	display: flex;
+	gap: 0.35rem;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+css LiveSpeakerActionForm() {
+	display: inline-flex;
+}
+
+css LiveSpeakerActionButton() {
+	width: 1.7rem;
+	height: 1.7rem;
+	padding: 0;
+	border-radius: calc(var(--ui-radius) - 2px);
+	background: var(--ui-live-self-add-bg);
+	color: var(--ui-live-self-add-text);
+	border: 1px solid var(--ui-live-self-add-border);
+}
+
+css LiveSpeakerActionButtonDanger() {
+	background: linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);
+	border-color: var(--ui-danger-border);
+	color: var(--ui-danger-text);
+}
+
+css LiveSpeakerActionIcon() {
+	width: 1rem;
+	height: 1rem;
 }
 
 css LiveSpeakerType() {
@@ -393,6 +1063,8 @@ css LiveBadgeRow() {
 	display: flex;
 	gap: 0.35rem;
 	flex-wrap: wrap;
+	min-height: 1.25rem;
+	align-items: center;
 }
 
 css LiveBadge() {
@@ -432,12 +1104,76 @@ css LiveBadgeModerator() {
 	color: var(--ui-live-badge-moderator-text);
 }
 
+css LiveSpeakerRowDone() {
+	opacity: 0.9;
+}
+
 css LiveSpeakersHeaderRow() {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	gap: 0.5rem;
 	margin-bottom: 0.5rem;
+}
+
+css LiveSpeakersHeadingRow() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	position: relative;
+	z-index: 3;
+}
+
+css LiveSpeakerHistoryButton() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: var(--ui-radius);
+	border: 1px solid var(--ui-live-action-border);
+	background: var(--ui-live-manage-bg);
+	color: var(--ui-live-action-text);
+	cursor: pointer;
+	flex: 0 0 auto;
+	position: relative;
+	z-index: 4;
+}
+
+css LiveSpeakerHistoryDialog() {
+	width: min(40rem, calc(100vw - 2rem));
+	max-height: min(70vh, 40rem);
+	padding: 0.8rem;
+	border: 1px solid var(--ui-panel-border);
+	border-radius: var(--ui-radius);
+	background: linear-gradient(170deg, var(--ui-panel-bg-start), var(--ui-panel-bg-end));
+	color: var(--ui-text-primary);
+}
+
+css LiveSpeakerHistoryHeader() {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.55rem;
+	margin-bottom: 0.6rem;
+}
+
+css LiveSpeakerHistoryList() {
+	max-height: min(54vh, 30rem);
+	overflow-y: auto;
+	padding-right: 0.15rem;
+}
+
+css LiveSpeakerHistoryClose() {
+	background: var(--ui-live-self-add-bg);
+	color: var(--ui-live-self-add-text);
+	border: 1px solid var(--ui-live-self-add-border);
+	border-radius: var(--ui-radius);
+	padding: 0.3rem 0.55rem;
+	cursor: pointer;
+	font-size: 0.8rem;
+	font-weight: 600;
 }
 
 css LiveSpeakersPanelMeta() {
@@ -455,6 +1191,8 @@ css LiveSpeakersPanel() {
 }
 
 css LiveSpeakersSSE() {
+	display: flex;
+	flex-direction: column;
 	flex: 1;
 	min-height: 0;
 }
@@ -462,22 +1200,51 @@ css LiveSpeakersSSE() {
 css LiveSpeakersCardContent() {
 	display: flex;
 	flex-direction: column;
+	flex: 1;
 	min-height: 0;
-	height: 100%;
+	height: auto;
+}
+
+css LiveSpeakersListShell() {
+	flex: 1;
+	min-height: 0;
+	position: relative;
+	isolation: isolate;
 }
 
 css LiveSpeakersListViewport() {
-	flex: 1;
+	height: 100%;
 	min-height: 0;
 	overflow-y: auto;
-	padding-right: 0.15rem;
+	padding-right: 0;
+	padding-top: 0.55rem;
+	padding-bottom: 1rem;
+	margin-top: -0.55rem;
+	margin-bottom: -1rem;
 }
 
 css LiveSelfAddRow() {
 	display: flex;
 	gap: 0.5rem;
 	flex-wrap: nowrap;
-	margin-top: 0.8rem;
+	margin-top: auto;
+	padding-top: 0.8rem;
+	position: relative;
+	z-index: 4;
+}
+
+css LiveSelfAddForm() {
+	flex: 1 1 0;
+	display: flex;
+	min-width: 0;
+}
+
+css LiveSelfAddFormRopm() {
+	flex: 1 1 0;
+}
+
+css LiveSelfAddFormRegular() {
+	flex: 2 1 0;
 }
 
 css LiveSelfAddButton() {
@@ -489,7 +1256,28 @@ css LiveSelfAddButton() {
 	font-weight: 600;
 	cursor: pointer;
 	width: 100%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0;
 	white-space: nowrap;
+}
+
+css LiveSelfAddButtonWarning() {
+	background: linear-gradient(180deg, #b48a26 0%, #8f6c14 100%);
+	border-color: #f0d17a;
+	color: #fff7dd;
+}
+
+css LiveSelfAddButtonDanger() {
+	background: linear-gradient(180deg, var(--ui-danger-bg-start) 0%, var(--ui-danger-bg-end) 100%);
+	border-color: var(--ui-danger-border);
+	color: var(--ui-danger-text);
+}
+
+css LiveSelfAddIcon() {
+	width: 1.05rem;
+	height: 1.05rem;
 }
 
 css LiveSelfAddTextFull() {
@@ -719,6 +1507,7 @@ templ GlobalStylesheetLink() {
 
 			--ui-panel-bg-start: rgba(8, 22, 50, 0.94);
 			--ui-panel-bg-end: rgba(5, 17, 39, 0.97);
+			--ui-panel-fade-bg: #081632;
 			--ui-panel-border: rgba(80, 125, 183, 0.38);
 			--ui-panel-highlight: rgba(170, 217, 255, 0.06);
 			--ui-table-bg: rgba(4, 14, 34, 0.62);
@@ -757,14 +1546,16 @@ templ GlobalStylesheetLink() {
 			--ui-danger-border: rgba(255, 173, 199, 0.7);
 			--ui-danger-text: #ffeaf1;
 
-			--ui-file-button-bg: rgba(29, 94, 177, 0.65);
+			--ui-file-button-bg: #1d5eb1;
 			--ui-file-button-border: rgba(130, 194, 255, 0.6);
 			--ui-file-button-text: #dff2ff;
 			--ui-select-caret: #8fd8ff;
+			--ui-select-bg: rgba(8, 22, 50, 0.52);
+			--ui-select-popup-scheme: dark;
 			--ui-checkbox-accent: #56d2ff;
 
-			--ui-live-action-bg: rgba(11, 172, 255, 0.18);
-			--ui-live-manage-bg: rgba(11, 172, 255, 0.12);
+			--ui-live-action-bg: #0f4f8d;
+			--ui-live-manage-bg: #0d3f73;
 			--ui-live-action-border: #21b3ff;
 			--ui-live-action-text: #dcf5ff;
 			--ui-live-agenda-item-bg: rgba(4, 14, 34, 0.78);
@@ -783,6 +1574,7 @@ templ GlobalStylesheetLink() {
 			--ui-live-speaking-bg: rgba(17, 128, 197, 0.17);
 			--ui-live-myturn-outline: rgba(148, 223, 255, 0.4);
 			--ui-live-speaker-item-bg: rgba(8, 22, 50, 0.64);
+			--ui-live-speaker-item-bg-solid: #081632;
 			--ui-live-speaker-item-border: rgba(74, 117, 174, 0.36);
 			--ui-live-speaker-order-text: #9bc5ff;
 			--ui-live-badge-border: rgba(146, 183, 229, 0.45);
@@ -798,7 +1590,7 @@ templ GlobalStylesheetLink() {
 			--ui-live-badge-priority-text: #ffdea1;
 			--ui-live-badge-moderator-border: rgba(111, 215, 255, 0.9);
 			--ui-live-badge-moderator-text: #c5f1ff;
-			--ui-live-self-add-bg: rgba(11, 172, 255, 0.16);
+			--ui-live-self-add-bg: #0e477f;
 			--ui-live-self-add-text: #ddf6ff;
 			--ui-live-self-add-border: rgba(84, 214, 255, 0.7);
 
@@ -817,6 +1609,7 @@ templ GlobalStylesheetLink() {
 
 			--ui-panel-bg-start: rgba(255, 255, 255, 0.96);
 			--ui-panel-bg-end: rgba(245, 250, 255, 0.98);
+			--ui-panel-fade-bg: #f6faff;
 			--ui-panel-border: rgba(111, 145, 197, 0.38);
 			--ui-panel-highlight: rgba(255, 255, 255, 0.8);
 			--ui-table-bg: rgba(242, 247, 255, 0.92);
@@ -855,14 +1648,16 @@ templ GlobalStylesheetLink() {
 			--ui-danger-border: rgba(201, 59, 101, 0.55);
 			--ui-danger-text: #fff6f9;
 
-			--ui-file-button-bg: rgba(44, 116, 200, 0.22);
+			--ui-file-button-bg: #d7e7fb;
 			--ui-file-button-border: rgba(53, 112, 188, 0.45);
 			--ui-file-button-text: #1a3e75;
 			--ui-select-caret: #3473bc;
+			--ui-select-bg: rgba(247, 251, 255, 0.78);
+			--ui-select-popup-scheme: light;
 			--ui-checkbox-accent: #2f83df;
 
-			--ui-live-action-bg: rgba(35, 133, 226, 0.18);
-			--ui-live-manage-bg: rgba(35, 133, 226, 0.12);
+			--ui-live-action-bg: #d5e9ff;
+			--ui-live-manage-bg: #e1efff;
 			--ui-live-action-border: #2f83df;
 			--ui-live-action-text: #134888;
 			--ui-live-agenda-item-bg: rgba(240, 246, 255, 0.98);
@@ -881,6 +1676,7 @@ templ GlobalStylesheetLink() {
 			--ui-live-speaking-bg: rgba(45, 128, 211, 0.14);
 			--ui-live-myturn-outline: rgba(75, 152, 226, 0.4);
 			--ui-live-speaker-item-bg: rgba(244, 249, 255, 0.98);
+			--ui-live-speaker-item-bg-solid: #f4f9ff;
 			--ui-live-speaker-item-border: rgba(109, 146, 199, 0.38);
 			--ui-live-speaker-order-text: #2f6fbc;
 			--ui-live-badge-border: rgba(105, 141, 188, 0.45);
@@ -896,7 +1692,7 @@ templ GlobalStylesheetLink() {
 			--ui-live-badge-priority-text: #965f13;
 			--ui-live-badge-moderator-border: rgba(57, 148, 217, 0.66);
 			--ui-live-badge-moderator-text: #186196;
-			--ui-live-self-add-bg: rgba(35, 133, 226, 0.16);
+			--ui-live-self-add-bg: #d9ecff;
 			--ui-live-self-add-text: #1f5d9e;
 			--ui-live-self-add-border: rgba(47, 131, 223, 0.55);
 
@@ -918,20 +1714,21 @@ templ GlobalStylesheetLink() {
 		}
 
 		.language-switcher-link-button {
-			background: none;
-			border: none;
+			background: linear-gradient(180deg, var(--ui-button-bg-start) 0%, var(--ui-button-bg-end) 100%);
+			border: 1px solid var(--ui-button-border);
 			box-shadow: none;
-			padding: 0;
-			color: inherit;
+			padding: 0.08rem 0.34rem;
+			color: var(--ui-button-text);
 			font: inherit;
 			cursor: pointer;
 			text-decoration: none;
 			transform: none;
 			filter: none;
+			border-radius: calc(var(--ui-radius) - 2px);
 		}
 
 		.language-switcher-link-button:hover {
-			background: none;
+			background: linear-gradient(180deg, var(--ui-button-bg-start) 0%, var(--ui-button-bg-end) 100%);
 			transform: none;
 			filter: none;
 		}
@@ -1004,6 +1801,14 @@ templ GlobalStylesheetLink() {
 			gap: 0.55rem;
 			flex-wrap: wrap;
 			justify-content: flex-end;
+		}
+
+		.scaffold-desktop-right-logout-stack {
+			display: inline-flex;
+			align-items: end;
+			flex-direction: column;
+			gap: 0.25rem;
+			flex-wrap: nowrap;
 		}
 
 		.scaffold-auth-text {
@@ -1246,16 +2051,189 @@ templ GlobalStylesheetLink() {
 			line-height: 1.2;
 		}
 
-		.live-agenda-accordion:not([open]) .live-agenda-accordion-content {
+		.manage-attendee-signup-switch .committee-signup-toggle-wrap {
+			gap: 0.42rem;
+		}
+
+		.live-speaker-row.speaking .live-speaker-name {
+			color: var(--ui-text-strong);
+		}
+
+		.live-speaker-row.speaking .live-speaker-order {
+			color: var(--ui-live-badge-ropm-text);
+			font-weight: 800;
+		}
+
+		.live-speakers-heading-row h2 {
+			margin: 0;
+		}
+
+		@media (min-width: 761px) {
+			.live-agenda-preview-block {
+				display: none;
+			}
+
+			.live-agenda-inline-list {
+				display: block;
+			}
+
+			.live-agenda-full-button {
+				display: none;
+			}
+		}
+
+		.live-speaker-history-dialog::backdrop {
+			background: rgba(5, 16, 38, 0.58);
+			backdrop-filter: blur(2px);
+		}
+
+		.live-speakers-sse > #attendee-speakers-list {
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+			min-height: 0;
+		}
+
+		.live-speakers-list-shell::before,
+		.live-speakers-list-shell::after {
+			content: "";
+			position: absolute;
+			left: 0;
+			right: 0;
+			height: 1rem;
+			pointer-events: none;
+			z-index: 2;
+		}
+
+		.live-speakers-list-shell::before {
+			top: -0.55rem;
+			background: linear-gradient(to bottom, var(--ui-panel-fade-bg), transparent);
+		}
+
+		.live-speakers-list-shell::after {
+			bottom: -1rem;
+			background: linear-gradient(to top, var(--ui-panel-bg-end), transparent);
+		}
+
+		.live-speaker-row.speaking {
+			--live-rainbow-angle: 0deg;
+			--live-rainbow-stops:
+				#5ee7ff,
+				#7d8cff,
+				#cf79ff,
+				#ff78b8,
+				#ffbf6f,
+				#8affc9,
+				#5ee7ff;
+			--live-mic-gradient-offset-x: 2.25rem;
+			--live-mic-gradient-offset-y: 0.8rem;
+			position: relative;
+			isolation: isolate;
+			overflow: hidden;
+			background: var(--ui-live-speaker-item-bg-solid);
+			border-color: transparent;
+			animation: live-speaking-rainbow-spin 6.8s linear infinite;
+		}
+
+		.live-speaker-row.speaking::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			border-radius: inherit;
+			background: conic-gradient(
+				from var(--live-rainbow-angle),
+				var(--live-rainbow-stops)
+			);
+			pointer-events: none;
+			z-index: 0;
+			animation: live-speaking-rainbow-glow 4.4s ease-in-out infinite;
+		}
+
+		.live-speaker-row.speaking::after {
+			content: "";
+			position: absolute;
+			inset: 2px;
+			border-radius: calc(var(--ui-radius) - 2px);
+			background: var(--ui-live-speaker-item-bg-solid);
+			pointer-events: none;
+			z-index: 1;
+		}
+
+		.live-speaker-row.speaking > * {
+			position: relative;
+			z-index: 2;
+		}
+
+		.live-speaker-row.speaking .live-speaking-marker-icon {
 			display: block;
+			width: 1.02rem;
+			height: 1.02rem;
+			flex: 0 0 auto;
+			aspect-ratio: 1 / 1;
+			background: conic-gradient(
+				from var(--live-rainbow-angle) at calc(50% + var(--live-mic-gradient-offset-x)) calc(50% + var(--live-mic-gradient-offset-y)),
+				var(--live-rainbow-stops)
+			);
+			-webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-1.7z'/%3E%3C/svg%3E");
+			mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-1.7z'/%3E%3C/svg%3E");
+			-webkit-mask-repeat: no-repeat;
+			mask-repeat: no-repeat;
+			-webkit-mask-position: center;
+			mask-position: center;
+			-webkit-mask-size: contain;
+			mask-size: contain;
 		}
 
-		.live-agenda-accordion[open] .live-agenda-accordion-icon {
-			transform: rotate(90deg);
+		/* History dialog should not use the animated speaking ring, it can collapse visually there. */
+		.live-speaker-history-list .live-speaker-row.speaking {
+			animation: none;
+			overflow: visible;
+			background: var(--ui-live-speaker-item-bg);
+			border-color: var(--ui-live-speaker-item-border);
 		}
 
-		.live-agenda-accordion-summary::-webkit-details-marker {
-			display: none;
+		.live-speaker-history-list .live-speaker-row.speaking::before,
+		.live-speaker-history-list .live-speaker-row.speaking::after {
+			content: none;
+		}
+
+		.live-speaker-history-list .live-speaker-row.speaking > * {
+			position: static;
+			z-index: auto;
+		}
+
+		@property --live-rainbow-angle {
+			syntax: "<angle>";
+			inherits: true;
+			initial-value: 0deg;
+		}
+
+		@keyframes live-speaking-rainbow-spin {
+			to {
+				--live-rainbow-angle: 360deg;
+			}
+		}
+
+		@keyframes live-speaking-rainbow-glow {
+			0%,
+			100% {
+				opacity: 0.82;
+			}
+
+			50% {
+				opacity: 1;
+			}
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.live-speaker-row.speaking {
+				animation: none;
+				--live-rainbow-angle: 0deg;
+			}
+
+			.live-speaker-row.speaking::before {
+				animation: none;
+			}
 		}
 
 		@media (min-width: 980px) {
@@ -1274,59 +2252,160 @@ templ GlobalStylesheetLink() {
 		}
 
 		@media (max-width: 760px) {
-			.live-mobile-layout {
+			.manage-agenda-add-form {
 				grid-template-columns: minmax(0, 1fr);
-				grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
-				height: calc(100dvh - 10.75rem);
-				min-height: 0;
 			}
 
-			.live-mobile-layout .live-agenda-accordion {
-				max-height: 33dvh;
+			.manage-agenda-list {
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.manage-agenda-point-card-child {
+				margin-left: 0.5rem;
+			}
+
+			.manage-attendee-grid {
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.manage-attendee-add-guest-form {
+				grid-template-columns: minmax(0, 1fr);
+			}
+
+			.live-mobile-layout {
+				display: grid;
+				grid-template-columns: minmax(0, 1fr);
+				grid-template-rows: auto minmax(0, 1fr);
+				flex: 1 1 auto;
+				height: 100%;
 				min-height: 0;
 				overflow: hidden;
 			}
 
-			.live-mobile-layout .live-agenda-accordion-content {
-				max-height: 0;
-				overflow: hidden;
-				opacity: 0;
-				transition: max-height 170ms ease, opacity 120ms ease;
+			.live-mobile-layout .live-agenda-panel,
+			.live-mobile-layout .live-speakers-panel {
+				padding: 0.7rem;
+				border-radius: 0.65rem;
+				min-height: 0;
+				height: auto;
 			}
 
-			.live-mobile-layout .live-agenda-accordion[open] .live-agenda-accordion-content {
-				max-height: 33dvh;
-				overflow-y: auto;
-				opacity: 1;
+			.live-mobile-layout .live-agenda-panel h2,
+			.live-mobile-layout .live-speakers-panel h2 {
+				margin: 0 0 0.45rem;
+			}
+
+			.live-mobile-layout .live-agenda-panel {
+				display: flex;
+				flex-direction: column;
+				min-height: 0;
+				height: auto;
+				flex: 0 0 auto;
+				overflow: hidden;
 			}
 
 			.live-mobile-layout .live-speakers-panel {
+				display: flex;
+				flex-direction: column;
 				min-height: 0;
-				height: 100%;
+				height: auto;
+				align-self: stretch;
+				flex: 1 1 0;
+				overflow: hidden;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speakers-sse {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
+				min-height: 0;
 			}
 
 			.live-mobile-layout #attendee-speakers-list {
-				height: 100%;
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
 				min-height: 0;
 			}
 
 			.live-mobile-layout .live-speakers-panel .live-speakers-card-content {
-				height: 100%;
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 auto;
 				min-height: 0;
 			}
 
 			.live-mobile-layout .live-speakers-panel .live-speakers-list-viewport {
+				flex: 1;
+				min-height: 0;
+				max-height: none;
 				overflow-y: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-list {
+				gap: 0.32rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-row {
+				gap: 0.42rem;
+				padding: 0.45rem 0.52rem;
+				border-radius: 0.55rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-order {
+				min-width: 1.25rem;
+				font-size: 0.95rem;
+				height: 1rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-main {
+				gap: 0.16rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-name {
+				font-size: clamp(1.02rem, 3.8vw, 1.34rem);
+				line-height: 1.04;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaking-timer {
+				font-size: 0.72rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-history-button {
+				width: 1.8rem;
+				height: 1.8rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-meta-row {
+				gap: 0.33rem;
+				min-height: 1.1rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-speaker-type {
+				display: none;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-badge-row {
+				gap: 0.25rem;
+			}
+
+			.live-mobile-layout .live-speakers-panel .live-badge {
+				font-size: 0.64rem;
+				padding: 0.1rem 0.34rem;
 			}
 
 			.live-mobile-layout .live-self-add-row {
 				gap: 0.35rem;
+				margin-top: 0.42rem;
 			}
 
 			.live-mobile-layout .live-self-add-button {
 				padding-left: 0.4rem;
 				padding-right: 0.4rem;
 				font-size: 0.82rem;
+				padding-top: 0.3rem;
+				padding-bottom: 0.3rem;
 			}
 
 			.live-mobile-layout .live-self-add-text-full {
@@ -1335,14 +2414,6 @@ templ GlobalStylesheetLink() {
 
 			.live-mobile-layout .live-self-add-text-short {
 				display: inline;
-			}
-
-			.live-mobile-layout:has(.live-agenda-accordion[open]) .live-speaker-row:not(.speaking) {
-				display: none;
-			}
-
-			.live-mobile-layout:has(.live-agenda-accordion[open]) .live-speakers-panel .live-speakers-list-viewport {
-				overflow: hidden;
 			}
 
 			.scaffold-top-row {
@@ -1439,7 +2510,7 @@ templ GlobalStylesheetLink() {
 
 			.scaffold-mobile-action-link {
 				display: block;
-				background: none;
+				background: transparent;
 				border: 0;
 				border-bottom: 1px solid var(--ui-panel-border);
 				padding: 0.46rem 0;
@@ -1559,6 +2630,26 @@ templ GlobalStylesheetLink() {
 			color: var(--ui-link);
 		}
 
+		.plain-text-link,
+		.plain-text-link:visited {
+			display: inline;
+			background: transparent;
+			border: 0;
+			padding: 0;
+			box-shadow: none;
+			color: var(--ui-text-primary);
+			text-decoration: underline;
+			font-weight: 500;
+		}
+
+		.plain-text-link:hover,
+		.plain-text-link:active {
+			transform: none;
+			filter: none;
+			color: var(--ui-text-primary);
+			text-decoration: underline;
+		}
+
 		button,
 		input,
 		select,
@@ -1584,19 +2675,26 @@ templ GlobalStylesheetLink() {
 		select {
 			padding-right: 1.9rem;
 			appearance: none;
+			background: none;
+			background-color: var(--ui-select-bg);
+			backdrop-filter: blur(8px);
+			-webkit-backdrop-filter: blur(8px);
+			color-scheme: var(--ui-select-popup-scheme);
 			background-image:
 				linear-gradient(45deg, transparent 50%, var(--ui-select-caret) 50%),
-				linear-gradient(135deg, var(--ui-select-caret) 50%, transparent 50%),
-				linear-gradient(180deg, var(--ui-surface-1), var(--ui-surface-0));
+				linear-gradient(135deg, var(--ui-select-caret) 50%, transparent 50%);
 			background-position:
 				calc(100% - 16px) 52%,
-				calc(100% - 10px) 52%,
-				0 0;
+				calc(100% - 10px) 52%;
 			background-size:
 				6px 6px,
-				6px 6px,
-				100% 100%;
+				6px 6px;
 			background-repeat: no-repeat;
+		}
+
+		select option {
+			background-color: var(--ui-surface-0);
+			color: var(--ui-text-primary);
 		}
 
 		textarea {
@@ -1700,10 +2798,101 @@ func GlobalCSSClasses() []templ.CSSClass {
 		InlineForm(),
 		LanguageSwitcherWrap(),
 		LanguageSwitcherLink(),
+		PlainTextLink(),
 		FullWidthField(),
 		ErrorText(),
 		ManageGrid(),
 		ManageGridSlice(),
+		ManageCard(),
+		ManageCardTitle(),
+		ManageCardHeaderRow(),
+		ManageSettingsCard(),
+		ManageSettings(),
+		ManageSettingsStateRow(),
+		ManageSettingsState(),
+		ManageSettingsStateLabel(),
+		ManageSettingsStateValue(),
+		ManageSettingsStateValueOn(),
+		ManageSettingsStateValueOff(),
+		ManageSettingsInlineAction(),
+		ManageSettingsSection(),
+		ManageSettingsSectionTitle(),
+		ManageSettingsSummary(),
+		ManageSettingsForm(),
+		ManageSettingsFormGrid(),
+		ManageSettingsField(),
+		ManageAgendaLayout(),
+		ManageAgendaAddSection(),
+		ManageAgendaSectionTitle(),
+		ManageAgendaAddForm(),
+		ManageAgendaField(),
+		ManageAgendaFieldWide(),
+		ManageAgendaSubmitButton(),
+		ManageAgendaSubmitIcon(),
+		ManageAgendaEmptyState(),
+		ManageAgendaList(),
+		ManageAgendaPointCard(),
+		ManageAgendaPointCardChild(),
+		ManageAgendaPointCardActive(),
+		ManageAgendaPointHeader(),
+		ManageAgendaPointPosition(),
+		ManageAgendaPointTitleWrap(),
+		ManageAgendaPointTitle(),
+		ManageAgendaPointBadges(),
+		ManageAgendaPointBadge(),
+		ManageAgendaPointBadgeActive(),
+		ManageAgendaPointActions(),
+		ManageAgendaActionButton(),
+		ManageAgendaActionButtonDanger(),
+		ManageAgendaActionIcon(),
+		ManageSpeakersSettings(),
+		ManageSpeakersSection(),
+		ManageSpeakersSectionTitle(),
+		ManageSpeakersSettingsForm(),
+		ManageSpeakersSettingsFormGrid(),
+		ManageSpeakersField(),
+		ManageSpeakersFieldLabel(),
+		ManageSpeakersEffective(),
+		ManageSpeakersEffectiveChip(),
+		ManageSpeakersEffectiveChipOn(),
+		ManageSpeakersEffectiveChipOff(),
+		ManageSpeakersAddForm(),
+		ManageSpeakersAddPrimaryField(),
+		ManageSpeakersAddSecondaryField(),
+		ManageSpeakersRows(),
+		ManageSpeakerAddOpenButton(),
+		ManageSpeakerAddOpenIcon(),
+		ManageSpeakerAddDialog(),
+		ManageSpeakerAddDialogHeader(),
+		ManageSpeakerAddDialogClose(),
+		ManageSpeakerAddSearchWrap(),
+		ManageSpeakerCandidateGrid(),
+		ManageSpeakerCandidateCard(),
+		ManageSpeakerCandidateHeader(),
+		ManageSpeakerCandidateNumber(),
+		ManageSpeakerCandidateName(),
+		ManageSpeakerCandidateActions(),
+		ManageSpeakerCandidateButton(),
+		ManageSpeakerCandidateButtonRopm(),
+		ManageSpeakerCandidateButtonIcon(),
+		ManageAttendeeControls(),
+		ManageAttendeeAddGuestForm(),
+		ManageAttendeeActionRow(),
+		ManageAttendeeSignupSwitch(),
+		ManageAttendeeIconButton(),
+		ManageAttendeeIconButtonOn(),
+		ManageAttendeeIconButtonOff(),
+		ManageAttendeeIconButtonDanger(),
+		ManageAttendeeIcon(),
+		ManageAttendeeGrid(),
+		ManageAttendeeCard(),
+		ManageAttendeeCardHead(),
+		ManageAttendeeNumber(),
+		ManageAttendeeName(),
+		ManageAttendeeMeta(),
+		ManageAttendeeMetaChip(),
+		ManageAttendeeMetaChipChair(),
+		ManageAttendeeCardActions(),
 		LiveBody(),
 		LiveHeader(),
 		LiveUserBar(),
@@ -1714,10 +2903,14 @@ func GlobalCSSClasses() []templ.CSSClass {
 		LivePanel(),
 		LiveAgendaAccordion(),
 		LiveAgendaAccordionSummary(),
+		LiveAgendaSummaryHeadingRow(),
+		LiveAgendaSummaryHeading(),
 		LiveAgendaPreviewBlock(),
 		LiveAgendaPreviewRow(),
 		LiveAgendaPreviewLabel(),
 		LiveAgendaPreviewValue(),
+		LiveAgendaInlineList(),
+		LiveAgendaFullButton(),
 		LiveAgendaAccordionContent(),
 		LiveAgendaAccordionIndicator(),
 		LiveAgendaAccordionIcon(),
@@ -1744,7 +2937,13 @@ func GlobalCSSClasses() []templ.CSSClass {
 		LiveSpeakerOrder(),
 		LiveSpeakerMain(),
 		LiveSpeakerName(),
+		LiveSpeakerTitleRow(),
+		LiveSpeakingTimer(),
 		LiveSpeakerMetaRow(),
+		LiveSpeakerActionRow(),
+		LiveSpeakerActionForm(),
+		LiveSpeakerActionButton(),
+		LiveSpeakerActionButtonDanger(),
 		LiveSpeakerType(),
 		LiveBadgeRow(),
 		LiveBadge(),
@@ -1753,14 +2952,28 @@ func GlobalCSSClasses() []templ.CSSClass {
 		LiveBadgeFirst(),
 		LiveBadgePriority(),
 		LiveBadgeModerator(),
+		LiveSpeakerRowDone(),
 		LiveSpeakersHeaderRow(),
+		LiveSpeakersHeadingRow(),
+		LiveSpeakerHistoryButton(),
+		LiveSpeakerHistoryDialog(),
+		LiveSpeakerHistoryHeader(),
+		LiveSpeakerHistoryList(),
+		LiveSpeakerHistoryClose(),
 		LiveSpeakersPanelMeta(),
 		LiveSpeakersPanel(),
 		LiveSpeakersSSE(),
 		LiveSpeakersCardContent(),
+		LiveSpeakersListShell(),
 		LiveSpeakersListViewport(),
 		LiveSelfAddRow(),
+		LiveSelfAddForm(),
+		LiveSelfAddFormRopm(),
+		LiveSelfAddFormRegular(),
 		LiveSelfAddButton(),
+		LiveSelfAddButtonWarning(),
+		LiveSelfAddButtonDanger(),
+		LiveSelfAddIcon(),
 		LiveSelfAddTextFull(),
 		LiveSelfAddTextShort(),
 		CommitteeMeetingCreateForm(),

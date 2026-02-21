@@ -6,6 +6,7 @@ import "time"
 type Attendee struct {
 	ID        int64
 	MeetingID int64
+	AttendeeNumber int64
 	UserID    *int64 // nil for guests, set for registered users
 	FullName  string
 	Secret    string // Used for guest authentication

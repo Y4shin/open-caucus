@@ -71,7 +71,7 @@ type Handler interface {
 	CommitteeMeetingManage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingManageInput, *ResponseMeta, error)
 	CommitteeMeetingManageJoinQR(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingJoinQRInput, *ResponseMeta, error)
 	ManageStream(ctx context.Context, r *http.Request, params RouteParams) (<-chan ManageStreamEvent, error)
-	ManageToggleSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
+	ManageToggleSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageMeetingSettingsPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
 	ManageSpeakersListPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSetProtocolWriter(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
@@ -93,6 +93,7 @@ type Handler interface {
 	ManageActivateAgendaPoint(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointToolsPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingAgendaPointToolsInput, *ResponseMeta, error)
 	ManageSpeakerAdd(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
+	ManageSpeakerAddCandidates(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerRemove(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerStart(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerEnd(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
@@ -111,6 +112,7 @@ type Handler interface {
 	AttendeeLoginSubmit(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeLoginInput, *ResponseMeta, error)
 	AttendeeSpeakersStream(ctx context.Context, r *http.Request, params RouteParams) (<-chan AttendeeSpeakersStreamEvent, error)
 	AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeSpeakersListPartialInput, *ResponseMeta, error)
+	AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeSpeakersListPartialInput, *ResponseMeta, error)
 	MeetingLiveLegacyRedirect(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingLiveInput, *ResponseMeta, error)
 	LogoutSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
 }
@@ -434,6 +436,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/speaker/add-candidates", rt.wrapMiddleware(
+		rt.handleManageSpeakerAddCandidates,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/add-candidates", groups),
+		[]string{"session", "auth", "committee_access", "manage_access"},
+		false,
+	))
+
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove", rt.wrapMiddleware(
 		rt.handleManageSpeakerRemove,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove", groups),
@@ -556,6 +565,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/self-add", rt.wrapMiddleware(
 		rt.handleAttendeeSpeakerSelfAdd,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/self-add", groups),
+		[]string{"session"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/self-yield", rt.wrapMiddleware(
+		rt.handleAttendeeSpeakerSelfYield,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/self-yield", groups),
 		[]string{"session"},
 		false,
 	))
@@ -1089,7 +1105,7 @@ func (rt *Router) handleManageToggleSignupOpen(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	templates.MeetingSettingsPartial(*input).Render(r.Context(), w)
+	templates.ManageAttendeeDependentPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleManageMeetingSettingsPartial(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
@@ -1717,6 +1733,36 @@ func (rt *Router) handleManageSpeakerAdd(w http.ResponseWriter, r *http.Request)
 
 	templates.SpeakersListPartial(*input).Render(r.Context(), w)
 }
+func (rt *Router) handleManageSpeakerAddCandidates(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageSpeakerAddCandidates(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.SpeakerAddCandidatesPartial(*input).Render(r.Context(), w)
+}
 func (rt *Router) handleManageSpeakerRemove(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug:      r.PathValue("slug"),
@@ -2253,6 +2299,36 @@ func (rt *Router) handleAttendeeSpeakerSelfAdd(w http.ResponseWriter, r *http.Re
 	}
 
 	input, meta, err := rt.handler.AttendeeSpeakerSelfAdd(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AttendeeSpeakersListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleAttendeeSpeakerSelfYield(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.AttendeeSpeakerSelfYield(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

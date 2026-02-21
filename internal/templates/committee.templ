@@ -98,9 +98,9 @@ func (i *MeetingListPartialInput) PaginationArgs(ctx context.Context) Pagination
 	})
 }
 
-templ SignupToggleField(id string, name string, label string) {
-	<label class="committee-signup-toggle-wrap" for={ id }>
-		<input class="committee-signup-toggle" type="checkbox" id={ id } name={ name } value="true"/>
+templ SignupToggleField(id string, name string, label string, checked bool, wrapperClass string) {
+	<label class={ "committee-signup-toggle-wrap", wrapperClass } for={ id }>
+		<input class="committee-signup-toggle" type="checkbox" id={ id } name={ name } value="true" checked?={ checked }/>
 		<span class="committee-signup-toggle-track" aria-hidden="true">
 			<span class="committee-signup-toggle-thumb"></span>
 		</span>
@@ -135,7 +135,7 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 						<textarea class={ CommitteeFieldControl(), CommitteeFieldTextarea() } id="description" name="description"></textarea>
 					</div>
 					<div class="committee-create-signup">
-						@SignupToggleField("signup_open", "signup_open", i18n.T(ctx, "committee.signup_label"))
+						@SignupToggleField("signup_open", "signup_open", i18n.T(ctx, "committee.signup_label"), false, "")
 					</div>
 					<div class="committee-create-submit">
 						<button class="committee-create-button" type="submit">{ i18n.T(ctx, "committee.create_button") }</button>
