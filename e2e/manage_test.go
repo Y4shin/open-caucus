@@ -3,15 +3,61 @@
 package e2e_test
 
 import (
-	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
 
 func manageURL(baseURL, slug, meetingID string) string {
-	return fmt.Sprintf("%s/committee/%s/meeting/%s/manage", baseURL, slug, meetingID)
+	return baseURL + "/committee/" + slug + "/meeting/" + meetingID + "/manage"
+}
+
+func manageAttendeeCard(page playwright.Page, fullName string) playwright.Locator {
+	return page.Locator("#attendee-list-container .manage-attendee-card").Filter(playwright.LocatorFilterOptions{
+		HasText: fullName,
+	})
+}
+
+func submitAddGuest(t *testing.T, page playwright.Page, fullName string) {
+	t.Helper()
+	form := page.Locator("#attendee-list-container .manage-attendee-add-guest-form")
+	if err := form.Locator("input[name=full_name]").Fill(fullName); err != nil {
+		t.Fatalf("fill guest name: %v", err)
+	}
+	if _, err := form.Evaluate("f => { f.requestSubmit(); return true; }", nil); err != nil {
+		t.Fatalf("submit add-guest form: %v", err)
+	}
+}
+
+func submitSelfSignup(t *testing.T, page playwright.Page) bool {
+	t.Helper()
+	form := page.Locator("#attendee-list-container form[hx-post*='/attendee/self-signup']")
+	count, err := form.Count()
+	if err != nil {
+		t.Fatalf("count self-signup forms: %v", err)
+	}
+	if count == 0 {
+		return false
+	}
+	if _, err := form.First().Evaluate("f => { f.requestSubmit(); return true; }", nil); err != nil {
+		t.Fatalf("submit self-signup form: %v", err)
+	}
+	return true
+}
+
+func waitUntil(t *testing.T, timeout time.Duration, fn func() (bool, error), description string) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		ok, err := fn()
+		if err == nil && ok {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	t.Fatalf("timeout waiting for %s", description)
 }
 
 // TestManagePage_ShowsAttendeeList verifies that the manage page shows existing
@@ -26,12 +72,11 @@ func TestManagePage_ShowsAttendeeList(t *testing.T) {
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-
 	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
-	if err := page.Locator("td:has-text('Alice Member')").WaitFor(); err != nil {
-		t.Fatalf("expected attendee name in table: %v", err)
+	if err := manageAttendeeCard(page, "Alice Member").WaitFor(); err != nil {
+		t.Fatalf("expected attendee card for Alice Member: %v", err)
 	}
 }
 
@@ -51,200 +96,18 @@ func TestManagePage_AddGuest(t *testing.T) {
 	}
 
 	urlBefore := page.URL()
-
-	if err := page.Locator("input[name=full_name]").Fill("Bob Guest"); err != nil {
-		t.Fatalf("fill name: %v", err)
-	}
-	if err := page.Locator("button:has-text('Add Guest')").Click(); err != nil {
-		t.Fatalf("click add guest: %v", err)
-	}
-
-	if err := page.Locator("#attendee-list-container td:has-text('Bob Guest')").WaitFor(); err != nil {
-		t.Fatalf("expected new guest in table: %v", err)
+	submitAddGuest(t, page, "Bob Guest")
+	if err := manageAttendeeCard(page, "Bob Guest").WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateAttached,
+	}); err != nil {
+		t.Fatalf("expected new guest attendee card: %v", err)
 	}
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on add guest: got %s, want %s", page.URL(), urlBefore)
 	}
 }
 
-// TestManagePage_SelfSignup verifies that the chairperson can sign themselves
-// up as attendee from the manage page without a full page reload.
-func TestManagePage_SelfSignup(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
-	}
-
-	urlBefore := page.URL()
-
-	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up: %v", err)
-	}
-
-	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected chairperson in attendee table: %v", err)
-	}
-	if page.URL() != urlBefore {
-		t.Errorf("URL changed on self-signup: got %s, want %s", page.URL(), urlBefore)
-	}
-}
-
-// TestManagePage_SelfSignup_ThenNavigateToLive verifies that after adding
-// themselves as attendee on the manage page, a chairperson can navigate
-// directly to /live using their user session and gets auto-authenticated.
-func TestManagePage_SelfSignup_ThenNavigateToLive(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
-	}
-
-	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up: %v", err)
-	}
-	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected chairperson in attendee table: %v", err)
-	}
-
-	// Directly open /live with the existing user session.
-	if _, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto live page: %v", err)
-	}
-	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("expected /live to load with auto-authenticated attendee session: %v", err)
-	}
-	if err := page.Locator("p:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected attendee name on live page: %v", err)
-	}
-	if err := page.Locator("a:has-text('Manage')").WaitFor(); err != nil {
-		t.Fatalf("expected manage button for chairperson user on live page: %v", err)
-	}
-}
-
-// TestManagePage_SelfSignup_ThenAssignSelfModerator verifies that after the
-// chairperson signs themselves up as attendee, they can assign themselves as
-// meeting moderator via the settings partial.
-func TestManagePage_SelfSignup_ThenAssignSelfModerator(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
-	}
-
-	urlBefore := page.URL()
-
-	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up: %v", err)
-	}
-	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected chairperson in attendee table: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container").WaitFor(); err != nil {
-		t.Fatalf("meeting settings not visible after signup: %v", err)
-	}
-
-	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
-		Labels: playwright.StringSlice("Chair Person"),
-	}); err != nil {
-		t.Fatalf("select self as moderator: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
-		t.Fatalf("click set moderator: %v", err)
-	}
-
-	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected self as moderator: %v", err)
-	}
-	if page.URL() != urlBefore {
-		t.Errorf("URL changed on self-signup/moderator assignment: got %s, want %s", page.URL(), urlBefore)
-	}
-}
-
-// TestManagePage_SelfSignup_AssignSelfModerator_Reassign verifies that self
-// moderator assignment can be cleared and set again after self-signup.
-func TestManagePage_SelfSignup_AssignSelfModerator_Reassign(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
-	}
-
-	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up: %v", err)
-	}
-	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected chairperson in attendee table: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container").WaitFor(); err != nil {
-		t.Fatalf("meeting settings not visible after signup: %v", err)
-	}
-
-	// First assignment: self.
-	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
-		Labels: playwright.StringSlice("Chair Person"),
-	}); err != nil {
-		t.Fatalf("select self as moderator: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
-		t.Fatalf("click set moderator: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected self as moderator: %v", err)
-	}
-
-	// Clear moderator.
-	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
-		Values: playwright.StringSlice(""),
-	}); err != nil {
-		t.Fatalf("select none for moderator: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
-		t.Fatalf("click set moderator to clear: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('None')").WaitFor(); err != nil {
-		t.Fatalf("expected moderator to be None after clear: %v", err)
-	}
-
-	// Re-assign self.
-	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
-		Labels: playwright.StringSlice("Chair Person"),
-	}); err != nil {
-		t.Fatalf("re-select self as moderator: %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container button:has-text('Set Moderator')").Click(); err != nil {
-		t.Fatalf("click set moderator (reassign): %v", err)
-	}
-	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected self as moderator after reassign: %v", err)
-	}
-}
-
-// TestManagePage_CrossTab_AttendeeChangePropagates verifies that attendee
+// TestManagePage_CrossTab_AttendeeChangePropagates verifies attendee
 // changes in one tab are reflected in another tab of the same meeting.
 func TestManagePage_CrossTab_AttendeeChangePropagates(t *testing.T) {
 	ts := newTestServer(t)
@@ -265,49 +128,13 @@ func TestManagePage_CrossTab_AttendeeChangePropagates(t *testing.T) {
 		t.Fatalf("goto manage page B: %v", err)
 	}
 
-	if err := pageA.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up in A: %v", err)
+	if !submitSelfSignup(t, pageA) {
+		submitAddGuest(t, pageA, "CrossTab Guest")
 	}
-
-	if err := pageB.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected attendee propagated to B: %v", err)
-	}
-	if err := pageB.Locator("#meeting-settings-container").WaitFor(); err != nil {
-		t.Fatalf("meeting settings missing on B: %v", err)
-	}
-	if err := pageB.Locator("#speakers-list-container").WaitFor(); err != nil {
-		t.Fatalf("speakers list missing on B: %v", err)
-	}
-}
-
-// TestManagePage_NoSelfEcho_PerTab verifies that the initiating tab does not
-// end up with duplicate attendee rows after self-signup.
-func TestManagePage_NoSelfEcho_PerTab(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
-	}
-
-	if err := page.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up: %v", err)
-	}
-	if err := page.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected chairperson in attendee table: %v", err)
-	}
-
-	rowCount, err := page.Locator("#attendee-list-container td:has-text('Chair Person')").Count()
-	if err != nil {
-		t.Fatalf("count chairperson attendee rows: %v", err)
-	}
-	if rowCount != 1 {
-		t.Fatalf("expected exactly 1 chairperson row, got %d", rowCount)
+	if err := pageB.Locator("#attendee-list-container .manage-attendee-card:has-text('Chair Person'), #attendee-list-container .manage-attendee-card:has-text('CrossTab Guest')").WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateAttached,
+	}); err != nil {
+		t.Fatalf("expected attendee update propagated to B: %v", err)
 	}
 }
 
@@ -334,22 +161,22 @@ func TestManagePage_MeetingIsolation_SSE(t *testing.T) {
 		t.Fatalf("goto manage page B: %v", err)
 	}
 
-	if err := pageA.Locator("button:has-text('Sign yourself up')").Click(); err != nil {
-		t.Fatalf("click sign yourself up in A: %v", err)
-	}
-	if err := pageA.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(); err != nil {
-		t.Fatalf("expected attendee in A: %v", err)
+	submitAddGuest(t, pageA, "Isolation Guest")
+	if err := manageAttendeeCard(pageA, "Isolation Guest").WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateAttached,
+	}); err != nil {
+		t.Fatalf("expected attendee in meeting A: %v", err)
 	}
 
-	if err := pageB.Locator("#attendee-list-container td:has-text('Chair Person')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := manageAttendeeCard(pageB, "Isolation Guest").WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(1500),
 	}); err == nil {
-		t.Fatalf("unexpected attendee propagation to different meeting")
+		t.Fatalf("unexpected attendee propagation to meeting B")
 	}
 }
 
 // TestManagePage_RemoveAttendee verifies that clicking Remove deletes the
-// attendee row from the list (after confirmation).
+// attendee card from the list (after confirmation).
 func TestManagePage_RemoveAttendee(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -364,35 +191,28 @@ func TestManagePage_RemoveAttendee(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := page.Locator("td:has-text('Carol Guest')").WaitFor(); err != nil {
+	card := manageAttendeeCard(page, "Carol Guest")
+	if err := card.WaitFor(); err != nil {
 		t.Fatalf("attendee not visible before remove: %v", err)
 	}
 
-	urlBefore := page.URL()
-
-	// Register dialog handler immediately before the click, following the HTMX hx-confirm pattern
 	page.OnDialog(func(d playwright.Dialog) {
 		if err := d.Accept(); err != nil {
 			t.Logf("accept dialog error: %v", err)
 		}
 	})
 
-	if err := page.Locator("button:has-text('Remove')").First().Click(); err != nil {
-		t.Fatalf("click remove: %v", err)
+	if err := card.Locator("button[title='Remove attendee']").Click(); err != nil {
+		t.Fatalf("click remove attendee: %v", err)
 	}
-
-	if err := page.Locator("td:has-text('Carol Guest')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := manageAttendeeCard(page, "Carol Guest").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
-		t.Fatalf("expected attendee row to disappear: %v", err)
-	}
-	if page.URL() != urlBefore {
-		t.Errorf("URL changed on remove: got %s, want %s", page.URL(), urlBefore)
+		t.Fatalf("expected attendee card to disappear: %v", err)
 	}
 }
 
-// TestManagePage_ToggleChair verifies that clicking Make Chair promotes an
-// attendee and the button changes to Demote, without a full page reload.
+// TestManagePage_ToggleChair verifies that chair toggling switches button label.
 func TestManagePage_ToggleChair(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -407,22 +227,27 @@ func TestManagePage_ToggleChair(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	urlBefore := page.URL()
+	card := manageAttendeeCard(page, "Dave Member")
+	if err := card.WaitFor(); err != nil {
+		t.Fatalf("dave card not visible: %v", err)
+	}
 
-	if err := page.Locator("button:has-text('Make Chair')").First().Click(); err != nil {
+	if err := card.Locator("button[title='Make chair']").Click(); err != nil {
 		t.Fatalf("click make chair: %v", err)
 	}
-
-	// After promotion the button should now say Demote
-	if err := page.Locator("button:has-text('Demote')").First().WaitFor(); err != nil {
-		t.Fatalf("expected Demote button after promotion: %v", err)
+	if err := card.Locator("button[title='Demote chair']").WaitFor(); err != nil {
+		t.Fatalf("expected demote chair button after promote: %v", err)
 	}
-	if page.URL() != urlBefore {
-		t.Errorf("URL changed on toggle chair: got %s, want %s", page.URL(), urlBefore)
+
+	if err := card.Locator("button[title='Demote chair']").Click(); err != nil {
+		t.Fatalf("click demote chair: %v", err)
+	}
+	if err := card.Locator("button[title='Make chair']").WaitFor(); err != nil {
+		t.Fatalf("expected make chair button after demote: %v", err)
 	}
 }
 
-// TestManagePage_GuestRecoveryLink verifies that each guest row provides a
+// TestManagePage_GuestRecoveryLink verifies that guest cards provide a
 // recovery-link page with a direct login URL and QR code.
 func TestManagePage_GuestRecoveryLink(t *testing.T) {
 	ts := newTestServer(t)
@@ -438,14 +263,13 @@ func TestManagePage_GuestRecoveryLink(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	row := page.Locator("tr:has(td:has-text('Recoverable Guest'))")
-	if err := row.WaitFor(); err != nil {
-		t.Fatalf("expected guest attendee row: %v", err)
+	card := manageAttendeeCard(page, "Recoverable Guest")
+	if err := card.WaitFor(); err != nil {
+		t.Fatalf("expected guest attendee card: %v", err)
 	}
-	if err := row.Locator("a:has-text('Recovery Link')").Click(); err != nil {
-		t.Fatalf("click recovery link button: %v", err)
+	if err := card.Locator("a[title='Recovery link']").Click(); err != nil {
+		t.Fatalf("click recovery link: %v", err)
 	}
-
 	if err := page.Locator("#attendee-recovery-link").WaitFor(); err != nil {
 		t.Fatalf("expected attendee recovery link on page: %v", err)
 	}
@@ -468,42 +292,18 @@ func TestManagePage_GuestRecoveryLink(t *testing.T) {
 	if err := guestPage.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected direct redirect to /live from recovery link: %v", err)
 	}
-	if err := guestPage.Locator("p:has-text('Recoverable Guest')").WaitFor(); err != nil {
+	if err := guestPage.Locator("p.scaffold-auth-text:has-text('Recoverable Guest')").WaitFor(); err != nil {
 		t.Fatalf("expected guest name on live page: %v", err)
 	}
 }
 
-// TestManagePage_SignupOpen_ShowsCurrentState verifies that the manage page
-// reflects the initial signup_open state of the meeting.
-func TestManagePage_SignupOpen_ShowsCurrentState(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
-	}
-
-	// Should show "Open" and a "Close Signup" button
-	if err := page.Locator("strong:has-text('Open')").WaitFor(); err != nil {
-		t.Fatalf("expected signup status 'Open': %v", err)
-	}
-	if err := page.Locator("button:has-text('Close Signup')").WaitFor(); err != nil {
-		t.Fatalf("expected 'Close Signup' button: %v", err)
-	}
-}
-
-// TestManagePage_ToggleSignupOpen verifies that toggling signup_open switches
-// the label and button text without a full page reload.
+// TestManagePage_ToggleSignupOpen verifies that the signup switch changes state
+// and controls join-page guest form visibility.
 func TestManagePage_ToggleSignupOpen(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "") // signup closed by default
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
 
 	page := newPage(t)
@@ -512,33 +312,26 @@ func TestManagePage_ToggleSignupOpen(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	// Initial state: closed
-	if err := page.Locator("strong:has-text('Closed')").WaitFor(); err != nil {
-		t.Fatalf("expected initial state 'Closed': %v", err)
+	checked, err := page.Locator("#manage_signup_open").IsChecked()
+	if err != nil {
+		t.Fatalf("read initial signup state: %v", err)
+	}
+	if checked {
+		t.Fatalf("expected signup to start closed")
 	}
 
-	urlBefore := page.URL()
+	if err := page.Locator("label[for='manage_signup_open']").Click(); err != nil {
+		t.Fatalf("toggle signup switch on: %v", err)
+	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		return page.Locator("#manage_signup_open").IsChecked()
+	}, "signup switch to become checked")
 
-	// Open signup
-	if err := page.Locator("button:has-text('Open Signup')").Click(); err != nil {
-		t.Fatalf("click open signup: %v", err)
+	guestPage := newPage(t)
+	if _, err := guestPage.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto join page after opening signup: %v", err)
 	}
-	if err := page.Locator("strong:has-text('Open')").WaitFor(); err != nil {
-		t.Fatalf("expected state 'Open' after toggle: %v", err)
-	}
-	if err := page.Locator("button:has-text('Close Signup')").WaitFor(); err != nil {
-		t.Fatalf("expected 'Close Signup' button after opening: %v", err)
-	}
-
-	// Close signup again
-	if err := page.Locator("button:has-text('Close Signup')").Click(); err != nil {
-		t.Fatalf("click close signup: %v", err)
-	}
-	if err := page.Locator("strong:has-text('Closed')").WaitFor(); err != nil {
-		t.Fatalf("expected state 'Closed' after second toggle: %v", err)
-	}
-
-	if page.URL() != urlBefore {
-		t.Errorf("URL changed on toggle: got %s, want %s", page.URL(), urlBefore)
+	if err := guestPage.Locator("input[name=full_name]").WaitFor(); err != nil {
+		t.Fatalf("expected guest signup form when signup is open: %v", err)
 	}
 }

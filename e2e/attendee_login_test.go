@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/Y4shin/conference-tool/internal/repository/model"
-	playwright "github.com/playwright-community/playwright-go"
 )
 
 func liveURL(baseURL, slug, meetingID string) string {
@@ -49,14 +48,14 @@ func TestAttendeeLogin_ValidSecret(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-abc123"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
-	if err := page.Locator("p:has-text('Carol Guest')").WaitFor(); err != nil {
+	if err := page.Locator("p.scaffold-auth-text:has-text('Carol Guest')").WaitFor(); err != nil {
 		t.Fatalf("expected attendee name on live page: %v", err)
 	}
 }
@@ -78,8 +77,8 @@ func TestAttendeeLogin_InvalidSecret(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("wrong-secret"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 
 	if err := page.Locator("p:has-text('Invalid access code')").WaitFor(); err != nil {
@@ -112,7 +111,7 @@ func TestMeetingJoinSubmit_CreatesAttendeeSession(t *testing.T) {
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live after signup: %v", err)
 	}
-	if err := page.Locator("p:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := page.Locator("p.scaffold-auth-text:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected full name on live page: %v", err)
 	}
 }
@@ -151,8 +150,8 @@ func TestAttendeeLoginPage_RedirectsIfAlreadyLoggedIn(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-xyz789"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("first login did not redirect to /live: %v", err)
@@ -182,14 +181,14 @@ func TestGuestLive_LogoutButton(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-logout"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	if err := page.Locator("button:has-text('Logout')").Click(); err != nil {
+	if err := page.Locator(".scaffold-desktop-right button:has-text('Logout')").Click(); err != nil {
 		t.Fatalf("click logout on live page: %v", err)
 	}
 	if err := page.WaitForURL(ts.URL + "/"); err != nil {
@@ -225,17 +224,18 @@ func TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-chair"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	if err := page.Locator("a:has-text('Manage')").WaitFor(); err != nil {
+	manageLink := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')")
+	if err := manageLink.WaitFor(); err != nil {
 		t.Fatalf("expected manage button for chair attendee: %v", err)
 	}
-	if err := page.Locator("a:has-text('Manage')").Click(); err != nil {
+	if err := manageLink.Click(); err != nil {
 		t.Fatalf("click manage button: %v", err)
 	}
 	if err := page.WaitForURL(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
@@ -259,16 +259,18 @@ func TestManagePage_AttendeeNonChair_Forbidden(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-nonchair"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	if err := page.Locator("a:has-text('Manage')").WaitFor(playwright.LocatorWaitForOptions{
-		Timeout: playwright.Float(1200),
-	}); err == nil {
+	manageCount, err := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')").Count()
+	if err != nil {
+		t.Fatalf("count manage links: %v", err)
+	}
+	if manageCount > 0 {
 		t.Fatalf("did not expect manage button for non-chair attendee")
 	}
 

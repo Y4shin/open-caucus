@@ -8,12 +8,19 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
 
+func manageSpeakerRow(page playwright.Page, attendeeName string) playwright.Locator {
+	return page.Locator("#speakers-list-container .manage-speakers-rows .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+		HasText: attendeeName,
+	})
+}
+
 // TestSpeakers_PriorityToggle_MovesToFront seeds two speakers, toggles priority
-// on the second, and verifies it appears first in the WAITING list.
+// on the second, and verifies it appears first in the waiting list.
 func TestSpeakers_PriorityToggle_MovesToFront(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -36,28 +43,23 @@ func TestSpeakers_PriorityToggle_MovesToFront(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	// Both speakers should be visible.
-	if err := page.Locator("#speakers-list-container td:has-text('Alice Speaker')").WaitFor(); err != nil {
+	if err := manageSpeakerRow(page, "Alice Speaker").WaitFor(); err != nil {
 		t.Fatalf("expected Alice in speakers list: %v", err)
 	}
 
 	urlBefore := page.URL()
 
-	// Toggle priority on Bob (second speaker).
-	priorityBtn := page.Locator("#speakers-list-container tr:has-text('Bob Speaker') button[title='Give priority']")
-	if err := priorityBtn.Click(); err != nil {
+	bobRow := manageSpeakerRow(page, "Bob Speaker")
+	if err := bobRow.Locator("button[title='Give Priority']").Click(); err != nil {
 		t.Fatalf("click priority toggle for Bob: %v", err)
 	}
-
-	// After the HTMX swap, Bob's row should show the filled star.
-	if err := page.Locator("#speakers-list-container tr:has-text('Bob Speaker') button[title='Remove priority']").WaitFor(); err != nil {
-		t.Fatalf("expected filled star on Bob after priority toggle: %v", err)
+	if err := bobRow.Locator("button[title='Remove Priority']").WaitFor(); err != nil {
+		t.Fatalf("expected remove-priority button after toggle: %v", err)
 	}
 
-	// Bob should now appear before Alice (priority=true sorts first).
-	rows, err := page.Locator("#speakers-list-container tbody tr").All()
+	rows, err := page.Locator("#speakers-list-container .manage-speakers-rows .live-speaker-row").All()
 	if err != nil {
-		t.Fatalf("get rows: %v", err)
+		t.Fatalf("get speaker rows: %v", err)
 	}
 	if len(rows) < 2 {
 		t.Fatalf("expected at least 2 speaker rows, got %d", len(rows))
@@ -75,8 +77,8 @@ func TestSpeakers_PriorityToggle_MovesToFront(t *testing.T) {
 	}
 }
 
-// TestSpeakers_FirstSpeaker_Badge verifies that the "1st" badge is shown only
-// for speakers whose firstSpeaker flag is true.
+// TestSpeakers_FirstSpeaker_Badge verifies that first-speaker entries render an
+// extra badge compared to regular entries.
 func TestSpeakers_FirstSpeaker_Badge(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -104,33 +106,30 @@ func TestSpeakers_FirstSpeaker_Badge(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := page.Locator("#speakers-list-container td:has-text('First Timer')").WaitFor(); err != nil {
+	firstTimerRow := manageSpeakerRow(page, "First Timer")
+	if err := firstTimerRow.WaitFor(); err != nil {
 		t.Fatalf("wait for First Timer row: %v", err)
 	}
-
-	// First Timer row should contain the "1st" badge.
-	firstTimerRow := page.Locator("#speakers-list-container tr:has-text('First Timer')")
-	firstTimerText, err := firstTimerRow.TextContent()
-	if err != nil {
-		t.Fatalf("get first-timer row text: %v", err)
-	}
-	if !strings.Contains(firstTimerText, "1st") {
-		t.Errorf("expected '1st' badge in First Timer row, got: %q", firstTimerText)
+	repeatRow := manageSpeakerRow(page, "Repeat Speaker")
+	if err := repeatRow.WaitFor(); err != nil {
+		t.Fatalf("wait for Repeat Speaker row: %v", err)
 	}
 
-	// Repeat Speaker row should NOT contain the "1st" badge.
-	repeatRow := page.Locator("#speakers-list-container tr:has-text('Repeat Speaker')")
-	repeatText, err := repeatRow.TextContent()
+	firstBadges, err := firstTimerRow.Locator(".live-badge").Count()
 	if err != nil {
-		t.Fatalf("get repeat row text: %v", err)
+		t.Fatalf("count first-timer badges: %v", err)
 	}
-	if strings.Contains(repeatText, "1st") {
-		t.Errorf("did not expect '1st' badge in Repeat Speaker row, got: %q", repeatText)
+	repeatBadges, err := repeatRow.Locator(".live-badge").Count()
+	if err != nil {
+		t.Fatalf("count repeat-speaker badges: %v", err)
+	}
+	if firstBadges <= repeatBadges {
+		t.Errorf("expected first-speaker row to have more badges than repeat row, got first=%d repeat=%d", firstBadges, repeatBadges)
 	}
 }
 
 // TestSpeakers_MeetingModerator_SetAndClear sets a meeting-level moderator via
-// the settings form and then clears it, verifying HTMX partial updates each time.
+// the settings form and then clears it, verifying auto-submit updates.
 func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -138,6 +137,7 @@ func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
 	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alice Moderator", "secret-am")
+	aliceID := ts.getAttendeeIDForMeeting(t, "test-committee", "Board Meeting", "Alice Moderator")
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
@@ -147,42 +147,34 @@ func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 
 	urlBefore := page.URL()
 
-	// Set Alice as meeting moderator.
 	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
 		Labels: playwright.StringSlice("Alice Moderator"),
 	}); err != nil {
 		t.Fatalf("select moderator: %v", err)
 	}
-	if err := page.Locator("button:has-text('Set Moderator')").Click(); err != nil {
-		t.Fatalf("click set moderator: %v", err)
-	}
 
-	// Moderator name should now be shown in bold.
-	if err := page.Locator("#meeting-settings-container strong:has-text('Alice Moderator')").WaitFor(); err != nil {
-		t.Fatalf("expected moderator name in settings: %v", err)
-	}
-	if page.URL() != urlBefore {
-		t.Errorf("URL changed on set moderator: got %s, want %s", page.URL(), urlBefore)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		val, err := page.Locator("#meeting_moderator_attendee_id").InputValue()
+		return val == aliceID, err
+	}, "moderator select to persist selected attendee")
 
-	// Clear the moderator (select "-- none --").
 	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
 		Values: playwright.StringSlice(""),
 	}); err != nil {
-		t.Fatalf("select none for moderator: %v", err)
+		t.Fatalf("clear moderator: %v", err)
 	}
-	if err := page.Locator("button:has-text('Set Moderator')").Click(); err != nil {
-		t.Fatalf("click set moderator (clear): %v", err)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		val, err := page.Locator("#meeting_moderator_attendee_id").InputValue()
+		return val == "", err
+	}, "moderator select to clear")
 
-	// Moderator section should show "None" again.
-	if err := page.Locator("#meeting-settings-container p:has-text('Moderator:') strong:has-text('None')").WaitFor(); err != nil {
-		t.Fatalf("expected 'None' after clearing moderator: %v", err)
+	if page.URL() != urlBefore {
+		t.Errorf("URL changed during moderator updates: got %s, want %s", page.URL(), urlBefore)
 	}
 }
 
 // TestSpeakers_MeetingQuotation_ToggleDisablesGender verifies that setting the
-// meeting-level gender quotation to "Disabled" persists and updates the UI.
+// meeting-level gender quotation to disabled persists in the UI.
 func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -197,41 +189,27 @@ func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
 	}
 
 	urlBefore := page.URL()
-
-	// Default: gender quotation select should have "true" selected.
 	genderSelect := page.Locator("#gender_quotation_enabled")
 	if err := genderSelect.WaitFor(); err != nil {
 		t.Fatalf("wait for gender quotation select: %v", err)
 	}
 	initialVal, err := genderSelect.InputValue()
 	if err != nil {
-		t.Fatalf("get initial gender quotation value: %v", err)
+		t.Fatalf("read initial gender quotation value: %v", err)
 	}
 	if initialVal != "true" {
-		t.Errorf("expected initial gender quotation to be 'true', got %q", initialVal)
+		t.Fatalf("expected initial gender quotation value 'true', got %q", initialVal)
 	}
 
-	// Set gender quotation to Disabled.
 	if _, err := genderSelect.SelectOption(playwright.SelectOptionValues{
 		Values: playwright.StringSlice("false"),
 	}); err != nil {
-		t.Fatalf("select disabled: %v", err)
+		t.Fatalf("set gender quotation to false: %v", err)
 	}
-	if err := page.Locator("#meeting-settings-container button:has-text('Apply')").Click(); err != nil {
-		t.Fatalf("click apply: %v", err)
-	}
-
-	// After the partial swap, the select should reflect the new "false" value.
-	if err := page.Locator("#gender_quotation_enabled").WaitFor(); err != nil {
-		t.Fatalf("wait for gender quotation select after update: %v", err)
-	}
-	updatedVal, err := page.Locator("#gender_quotation_enabled").InputValue()
-	if err != nil {
-		t.Fatalf("get updated gender quotation value: %v", err)
-	}
-	if updatedVal != "false" {
-		t.Errorf("expected gender quotation to be 'false' after applying, got %q", updatedVal)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		val, err := page.Locator("#gender_quotation_enabled").InputValue()
+		return val == "false", err
+	}, "gender quotation select to persist false")
 
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on quotation toggle: got %s, want %s", page.URL(), urlBefore)

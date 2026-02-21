@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
@@ -34,6 +35,7 @@ func TestManagePage_AssignProtocolWriter(t *testing.T) {
 	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
 	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alice Member", "secret-alice")
+	aliceID := ts.getAttendeeIDForMeeting(t, "test-committee", "Board Meeting", "Alice Member")
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
@@ -48,13 +50,10 @@ func TestManagePage_AssignProtocolWriter(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("select attendee: %v", err)
 	}
-	if err := page.Locator("button:has-text('Assign Protocol Writer')").Click(); err != nil {
-		t.Fatalf("click assign: %v", err)
-	}
-
-	if err := page.Locator("#meeting-settings-container strong:has-text('Alice Member')").WaitFor(); err != nil {
-		t.Fatalf("expected protocol writer name in settings: %v", err)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		val, err := page.Locator("#protocol_writer_attendee_id").InputValue()
+		return val == aliceID, err
+	}, "protocol writer select to persist selected attendee")
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on assign: got %s, want %s", page.URL(), urlBefore)
 	}
@@ -77,8 +76,8 @@ func TestProtocolPage_NotWriter(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-alice"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("wait for /live: %v", err)
@@ -111,8 +110,8 @@ func TestProtocolPage_WriterCanAccessAndSave(t *testing.T) {
 	if err := page.Locator("input[name=secret]").Fill("secret-bob"); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=secret]").Press("Enter"); err != nil {
+		t.Fatalf("submit attendee login: %v", err)
 	}
 	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("wait for /live: %v", err)

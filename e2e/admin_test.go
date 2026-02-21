@@ -114,7 +114,10 @@ func TestAdminCreateUser(t *testing.T) {
 	if _, err := page.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
 		t.Fatalf("select role: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").First().Click(); err != nil {
+	createUserForm := page.Locator("#committee-users-container form").Filter(playwright.LocatorFilterOptions{
+		Has: page.Locator("input[name=username]"),
+	})
+	if err := createUserForm.Locator("button[type=submit]").Click(); err != nil {
 		t.Fatalf("click submit: %v", err)
 	}
 

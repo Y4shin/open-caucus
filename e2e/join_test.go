@@ -279,7 +279,7 @@ func TestGuestSignup_PublishesManageSSE(t *testing.T) {
 		t.Fatalf("expected redirect to /live after guest signup: %v", err)
 	}
 
-	if err := managePage.Locator("#attendee-list-container td:has-text('Guest Via Join')").WaitFor(); err != nil {
+	if err := managePage.Locator("#attendee-list-container .manage-attendee-card:has-text('Guest Via Join')").WaitFor(); err != nil {
 		t.Fatalf("expected attendee propagated to manage page via SSE: %v", err)
 	}
 }
@@ -301,7 +301,7 @@ func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
 		t.Fatalf("expected QR image: %v", err)
 	}
 
-	href, err := page.Locator("main a").First().GetAttribute("href")
+	href, err := page.Locator("main a.plain-text-link").First().GetAttribute("href")
 	if err != nil {
 		t.Fatalf("read join URL href: %v", err)
 	}

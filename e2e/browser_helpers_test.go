@@ -48,8 +48,8 @@ func adminLogin(t *testing.T, page playwright.Page, baseURL string) {
 	if err := page.Locator("input[name=admin_key]").Fill(testAdminKey); err != nil {
 		t.Fatalf("fill admin_key: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=admin_key]").Press("Enter"); err != nil {
+		t.Fatalf("submit admin login: %v", err)
 	}
 	if err := page.WaitForURL(baseURL + "/admin"); err != nil {
 		t.Fatalf("wait for /admin: %v", err)
@@ -72,8 +72,8 @@ func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username,
 	if err := page.Locator("input[name=password]").Fill(password); err != nil {
 		t.Fatalf("fill password: %v", err)
 	}
-	if err := page.Locator("button[type=submit]").Click(); err != nil {
-		t.Fatalf("click submit: %v", err)
+	if err := page.Locator("input[name=password]").Press("Enter"); err != nil {
+		t.Fatalf("submit user login: %v", err)
 	}
 	if err := page.WaitForURL(baseURL + "/committee/" + committee); err != nil {
 		t.Fatalf("wait for /committee/%s: %v", committee, err)
