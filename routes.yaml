@@ -470,6 +470,21 @@ routes:
           type: ManageAttendeeDependentPartial
           input_type: ManageAttendeeDependentPartialInput
 
+  # Attendee Toggle Gender Quoted (guest only)
+  - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/quoted
+    methods:
+      - verb: POST
+        handler: ManageAttendeeToggleQuoted
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - manage_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: ManageAttendeeDependentPartial
+          input_type: ManageAttendeeDependentPartialInput
+
   # Attendee Recovery Link + QR (chairperson tool for guests)
   - path: /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/recovery
     methods:

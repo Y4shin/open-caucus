@@ -85,7 +85,7 @@ func (h *Handler) MeetingJoinSubmit(ctx context.Context, r *http.Request, params
 			return nil, nil, fmt.Errorf("failed to generate attendee secret: %w", err)
 		}
 
-		attendee, err = h.Repository.CreateAttendee(ctx, meetingID, userID, user.FullName, secret)
+		attendee, err = h.Repository.CreateAttendee(ctx, meetingID, userID, user.FullName, secret, user.Quoted)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
 		}
@@ -131,6 +131,7 @@ func (h *Handler) MeetingGuestSignup(ctx context.Context, r *http.Request, param
 	}
 
 	fullName := strings.TrimSpace(r.FormValue("full_name"))
+	quoted := parseGenderQuotedFormValue(r)
 	if fullName == "" {
 		return &templates.MeetingGuestSuccessInput{
 			CommitteeName: committee.Name,
@@ -166,7 +167,7 @@ func (h *Handler) MeetingGuestSignup(ctx context.Context, r *http.Request, param
 		return nil, nil, fmt.Errorf("failed to generate attendee secret: %w", err)
 	}
 
-	attendee, err := h.Repository.CreateAttendee(ctx, meetingID, nil, fullName, secret)
+	attendee, err := h.Repository.CreateAttendee(ctx, meetingID, nil, fullName, secret, quoted)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
 	}

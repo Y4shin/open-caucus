@@ -24,7 +24,7 @@ func (ts *testServer) seedAttendee(t *testing.T, slug, meetingName, fullName, se
 	meetingID := ts.getMeetingID(t, slug, meetingName)
 	mid := int64(0)
 	fmt.Sscanf(meetingID, "%d", &mid)
-	a, err := ts.repo.CreateAttendee(context.Background(), mid, nil, fullName, secret)
+	a, err := ts.repo.CreateAttendee(context.Background(), mid, nil, fullName, secret, false)
 	if err != nil {
 		t.Fatalf("seed attendee %q: %v", fullName, err)
 	}

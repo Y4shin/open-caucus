@@ -892,6 +892,115 @@ func ManageSpeakersRows() templ.CSSClass {
 	}
 }
 
+func ManageSpeakersRowsList() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`max-height:min(58vh, 30rem);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`overflow-y:auto;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding-right:0.1rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersRowsList`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersRowWrap() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`scroll-margin-top:0.12rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersRowWrap`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersQuickControlWrap() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-start;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin-top:0.6rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersQuickControlWrap`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersQuickControlForm() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:block;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersQuickControlForm`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersQuickControlButton() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.34rem 0.64rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.36rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`width:100%;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersQuickControlButton`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersQuickControlButtonStart() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-live-badge-first-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-badge-first-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersQuickControlButtonStart`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersQuickControlButtonEnd() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`border-color:var(--ui-danger-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-danger-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersQuickControlButtonEnd`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersScrollResetWrap() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-end;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin-top:0.42rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersScrollResetWrap`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ManageSpeakersScrollResetButton() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.34rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.26rem 0.52rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.78rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageSpeakersScrollResetButton`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
 func ManageSpeakerAddOpenButton() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`display:inline-flex;`)
@@ -1225,7 +1334,7 @@ func ManageAttendeeCardHead() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`grid-template-columns:auto 1fr;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.38rem;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`align-items:baseline;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:start;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`ManageAttendeeCardHead`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -1258,11 +1367,26 @@ func ManageAttendeeName() templ.CSSClass {
 	}
 }
 
+func ManageAttendeeNameRow() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:flex-start;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:space-between;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.45rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ManageAttendeeNameRow`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
 func ManageAttendeeMeta() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.3rem;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`flex-wrap:wrap;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:flex-end;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`ManageAttendeeMeta`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -1293,6 +1417,28 @@ func ManageAttendeeMetaChipChair() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder.WriteString(`border-color:#4ecf80;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`color:#b7ffd7;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`ManageAttendeeMetaChipChair`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func QuotedStatusChip() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.19rem 0.56rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`QuotedStatusChip`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func QuotedStatusChipIcon() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`width:0.82rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:0.82rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin-right:0.14rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`QuotedStatusChipIcon`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
 		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
@@ -2888,6 +3034,15 @@ func GlobalCSSClasses() []templ.CSSClass {
 		ManageSpeakersAddPrimaryField(),
 		ManageSpeakersAddSecondaryField(),
 		ManageSpeakersRows(),
+		ManageSpeakersRowsList(),
+		ManageSpeakersRowWrap(),
+		ManageSpeakersQuickControlWrap(),
+		ManageSpeakersQuickControlForm(),
+		ManageSpeakersQuickControlButton(),
+		ManageSpeakersQuickControlButtonStart(),
+		ManageSpeakersQuickControlButtonEnd(),
+		ManageSpeakersScrollResetWrap(),
+		ManageSpeakersScrollResetButton(),
 		ManageSpeakerAddOpenButton(),
 		ManageSpeakerAddOpenIcon(),
 		ManageSpeakerAddDialog(),
@@ -2917,9 +3072,12 @@ func GlobalCSSClasses() []templ.CSSClass {
 		ManageAttendeeCardHead(),
 		ManageAttendeeNumber(),
 		ManageAttendeeName(),
+		ManageAttendeeNameRow(),
 		ManageAttendeeMeta(),
 		ManageAttendeeMetaChip(),
 		ManageAttendeeMetaChipChair(),
+		QuotedStatusChip(),
+		QuotedStatusChipIcon(),
 		ManageAttendeeCardActions(),
 		LiveBody(),
 		LiveHeader(),

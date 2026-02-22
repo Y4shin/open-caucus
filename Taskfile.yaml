@@ -84,6 +84,21 @@ tasks:
     cmds:
       - go test -v -tags=e2e -timeout=120s ./e2e/...
 
+  test:e2e:headed:
+    desc: Run browser-based end-to-end tests with visible browser windows
+    env:
+      PLAYWRIGHT_HEADED: "1"
+    cmds:
+      - go test -v -tags=e2e -timeout=120s ./e2e/...
+
+  test:e2e:headed:slow:
+    desc: Run headed E2E tests with slow-motion browser actions
+    env:
+      PLAYWRIGHT_HEADED: "1"
+      PLAYWRIGHT_SLOW_MO_MS: "350"
+    cmds:
+      - go test -v -tags=e2e -timeout=120s ./e2e/...
+
   test:watch:
     desc: Run tests in watch mode
     cmds:

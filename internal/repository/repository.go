@@ -44,13 +44,14 @@ type Repository interface {
 	DeleteExpiredSessions(ctx context.Context, before time.Time) error
 
 	// Attendees
-	CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string) (*model.Attendee, error)
+	CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string, quoted bool) (*model.Attendee, error)
 	GetAttendeeByUserIDAndMeetingID(ctx context.Context, userID, meetingID int64) (*model.Attendee, error)
 	GetAttendeeByID(ctx context.Context, id int64) (*model.Attendee, error)
 	GetAttendeeByMeetingIDAndSecret(ctx context.Context, meetingID int64, secret string) (*model.Attendee, error)
 	ListAttendeesForMeeting(ctx context.Context, meetingID int64) ([]*model.Attendee, error)
 	DeleteAttendee(ctx context.Context, id int64) error
 	SetAttendeeIsChair(ctx context.Context, id int64, isChair bool) error
+	SetAttendeeQuoted(ctx context.Context, id int64, quoted bool) error
 
 	// Meetings
 	GetMeetingByID(ctx context.Context, id int64) (*model.Meeting, error)

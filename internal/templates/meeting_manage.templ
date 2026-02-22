@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type AttendeeItem struct {
@@ -16,6 +17,7 @@ type AttendeeItem struct {
 	FullName       string
 	IsChair        bool
 	IsGuest        bool
+	Quoted         bool
 }
 
 type AttendeeListPartialInput struct {
@@ -61,12 +63,23 @@ func attendeeChairToggleLabel(isChair bool) string {
 	return "Make chair"
 }
 
+func attendeeGenderQuotedToggleLabel(quoted bool) string {
+	if quoted {
+		return "Disable quoted status"
+	}
+	return "Enable quoted status"
+}
+
 func (i *AttendeeListPartialInput) AttendeeDeletePostStr(ctx context.Context, a *AttendeeItem) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdDeleteRoute(i.CommitteeSlug, i.IDString, a.IDString).ManageAttendeeDeletePost(ctx, "")
 }
 
 func (i *AttendeeListPartialInput) AttendeeToggleChairPostStr(ctx context.Context, a *AttendeeItem) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdChairRoute(i.CommitteeSlug, i.IDString, a.IDString).ManageAttendeeToggleChairPost(ctx, "")
+}
+
+func (i *AttendeeListPartialInput) AttendeeToggleQuotedPostStr(ctx context.Context, a *AttendeeItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAttendeeAttendeeIdQuotedRoute(i.CommitteeSlug, i.IDString, a.IDString).ManageAttendeeToggleQuotedPost(ctx, "")
 }
 
 func (i *AttendeeListPartialInput) AttendeeRecoveryGet(ctx context.Context, a *AttendeeItem) templ.SafeURL {
@@ -348,6 +361,40 @@ func (i *SpeakersListPartialInput) ActionsForSpeaker(ctx context.Context, s Spea
 	return nil
 }
 
+func (i *SpeakersListPartialInput) CurrentSpeaker() *SpeakerItem {
+	for idx := range i.Speakers {
+		if i.Speakers[idx].IsSpeaking {
+			return &i.Speakers[idx]
+		}
+	}
+	return nil
+}
+
+func (i *SpeakersListPartialInput) NextWaitingSpeaker() *SpeakerItem {
+	var next *SpeakerItem
+	for idx := range i.Speakers {
+		if !i.Speakers[idx].IsWaiting {
+			continue
+		}
+		if next == nil || i.Speakers[idx].OrderPosition < next.OrderPosition {
+			next = &i.Speakers[idx]
+		}
+	}
+	return next
+}
+
+func (i *SpeakersListPartialInput) InitialScrollSpeaker() *SpeakerItem {
+	if current := i.CurrentSpeaker(); current != nil {
+		return current
+	}
+	return i.NextWaitingSpeaker()
+}
+
+func (i *SpeakersListPartialInput) IsInitialScrollSpeaker(s SpeakerItem) bool {
+	initial := i.InitialScrollSpeaker()
+	return initial != nil && initial.ID == s.ID
+}
+
 func (i *SpeakersListPartialInput) hasAttendeeWaitingType(attendeeID int64, speakerType string) bool {
 	for _, s := range i.Speakers {
 		if s.AttendeeID == attendeeID && s.IsWaiting && s.Type == speakerType {
@@ -503,6 +550,8 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 			>
 				<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="full_name">Add guest</label>
 				<input type="text" id="full_name" name="full_name" placeholder="Display name" required/>
+				<label class={ ManageSpeakersFieldLabel(), "manage-speakers-field-label" } for="manage_guest_gender_quoted">Gender quoted</label>
+				<input type="checkbox" id="manage_guest_gender_quoted" name="gender_quoted" value="true"/>
 				<button type="submit">Add</button>
 			</form>
 
@@ -511,7 +560,7 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 					hx-post={ input.ToggleSignupOpenPostStr(ctx) }
 					hx-target="#manage-attendee-dependent-container"
 					hx-swap="outerHTML"
-					hx-trigger="change from:input"
+					hx-trigger="change"
 					class={ InlineForm(), ManageAttendeeSignupSwitch(), "manage-attendee-signup-switch" }
 					title={ attendeeSignupStateLabel(input.SignupOpen) }
 				>
@@ -545,23 +594,27 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 					<div class={ ManageAttendeeCard(), "manage-attendee-card" }>
 						<div class={ ManageAttendeeCardHead(), "manage-attendee-card-head" }>
 							<span class={ ManageAttendeeNumber(), "manage-attendee-number" }>#{ strconv.FormatInt(a.AttendeeNumber, 10) }</span>
-							<span class={ ManageAttendeeName(), "manage-attendee-name" }>{ a.FullName }</span>
-						</div>
-						<div class={ ManageAttendeeMeta(), "manage-attendee-meta" }>
-							<span class={ ManageAttendeeMetaChip(), "manage-attendee-meta-chip" }>
-								if a.IsGuest {
-									Guest
-								} else {
-									Member
+							<div class={ ManageAttendeeNameRow(), "manage-attendee-name-row" }>
+								<span class={ ManageAttendeeName(), "manage-attendee-name" }>{ a.FullName }</span>
+								if a.IsGuest || a.IsChair || a.Quoted {
+									<div class={ ManageAttendeeMeta(), "manage-attendee-meta" }>
+										if a.IsGuest {
+											<span class={ ManageAttendeeMetaChip(), "manage-attendee-meta-chip" }>Guest</span>
+										}
+										if a.IsChair {
+											<span class={ ManageAttendeeMetaChip(), "manage-attendee-meta-chip", ManageAttendeeMetaChipChair() }>
+												Chair
+											</span>
+										}
+										if a.Quoted {
+											<span class={ ManageAttendeeMetaChip(), QuotedStatusChip(), "manage-attendee-meta-chip", "quoted-status-chip" }>
+												@Icon(IconTransgender, "", "quoted-status-chip-icon")
+												{ "-" + i18n.T(ctx, "meeting_live.badge_quoted") }
+											</span>
+										}
+									</div>
 								}
-							</span>
-							<span class={ ManageAttendeeMetaChip(), "manage-attendee-meta-chip", templ.KV(ManageAttendeeMetaChipChair(), a.IsChair) }>
-								if a.IsChair {
-									Chair
-								} else {
-									Member
-								}
-							</span>
+							</div>
 						</div>
 						<div class={ ManageAttendeeCardActions(), "manage-attendee-card-actions" }>
 							<form
@@ -581,6 +634,26 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 								</button>
 							</form>
 							if a.IsGuest {
+								<form
+									hx-post={ input.AttendeeToggleQuotedPostStr(ctx, &a) }
+									hx-target="#manage-attendee-dependent-container"
+									hx-swap="outerHTML"
+									hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+									class={ InlineForm() }
+								>
+									<button
+										type="submit"
+										class={ ManageAttendeeIconButton(), "manage-attendee-icon-button", templ.KV(ManageAttendeeIconButtonOn(), a.Quoted) }
+										title={ attendeeGenderQuotedToggleLabel(a.Quoted) }
+										aria-label={ attendeeGenderQuotedToggleLabel(a.Quoted) }
+									>
+										if a.Quoted {
+											@Icon(IconTransgender, "", "manage-attendee-icon")
+										} else {
+											@Icon(IconMale, "", "manage-attendee-icon")
+										}
+									</button>
+								</form>
 								<a
 									href={ input.AttendeeRecoveryGet(ctx, &a) }
 									class={ ManageAttendeeIconButton(), "manage-attendee-icon-button" }
@@ -913,12 +986,75 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 				</button>
 			</div>
 		</div>
+		<div class={ ManageSpeakersQuickControlWrap(), "manage-speakers-quick-control-wrap" }>
+			if current := input.CurrentSpeaker(); current != nil {
+				<form
+					hx-post={ input.SpeakerEndPostStr(ctx, current) }
+					hx-target="#speakers-list-container"
+					hx-swap="outerHTML"
+					class={ InlineForm(), ManageSpeakersQuickControlForm(), "manage-speakers-quick-control-form" }
+				>
+					<button
+						type="submit"
+						class={ ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonEnd(), "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end" }
+						data-testid="manage-end-current-speaker"
+						title="End current speech"
+						aria-label="End current speech"
+					>
+						@Icon(IconCheckCircle, "", "ui-icon--left")
+						End Speech
+					</button>
+				</form>
+			} else if next := input.NextWaitingSpeaker(); next != nil {
+				<form
+					hx-post={ input.SpeakerStartPostStr(ctx, next) }
+					hx-target="#speakers-list-container"
+					hx-swap="outerHTML"
+					class={ InlineForm(), ManageSpeakersQuickControlForm(), "manage-speakers-quick-control-form" }
+				>
+					<button
+						type="submit"
+						class={ ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonStart(), "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start" }
+						data-testid="manage-start-next-speaker"
+						title="Start next speaker"
+						aria-label="Start next speaker"
+					>
+						@Icon(IconArrowForward, "", "ui-icon--left")
+						Start Next Speaker
+					</button>
+				</form>
+			}
+		</div>
+		if len(input.Speakers) > 0 {
+			<div class={ ManageSpeakersScrollResetWrap(), "manage-speakers-scroll-reset-wrap" }>
+				<button
+					type="button"
+					class={ ManageSpeakersScrollResetButton(), "manage-speakers-scroll-reset-button" }
+					data-manage-speakers-reset-scroll
+					data-testid="manage-speakers-reset-scroll"
+					title="Scroll to active position"
+					aria-label="Scroll to active position"
+				>
+					@Icon(IconHistory, "", "ui-icon--left")
+					Scroll To Active Position
+				</button>
+			</div>
+		}
 		if len(input.Speakers) == 0 {
 			<p class={ ManageSpeakersRows(), "manage-speakers-rows" }>No speakers in the queue.</p>
 		} else {
-				<div class={ LiveSpeakerList(), ManageSpeakersRows(), "live-speaker-list", "manage-speakers-rows" }>
+				<div
+					class={ LiveSpeakerList(), ManageSpeakersRows(), ManageSpeakersRowsList(), "live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list" }
+					data-manage-speakers-viewport
+					data-testid="manage-speakers-viewport"
+				>
 					for _, s := range input.Speakers {
-						@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s))
+						<div
+							class={ ManageSpeakersRowWrap(), "manage-speakers-row-wrap" }
+							data-manage-scroll-anchor={ strconv.FormatBool(input.IsInitialScrollSpeaker(s)) }
+						>
+							@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s))
+						</div>
 					}
 				</div>
 			}
@@ -1137,6 +1273,66 @@ templ MeetingManageContent(input MeetingManageInput) {
 				});
 			}
 
+			function getManageSpeakersViewport() {
+				var scopedContainer = document.querySelector("section.manage-card #speakers-list-container");
+				if (scopedContainer) {
+					var scopedViewport = scopedContainer.querySelector("[data-manage-speakers-viewport]");
+					if (scopedViewport) {
+						return scopedViewport;
+					}
+				}
+				var viewports = document.querySelectorAll("#speakers-list-container [data-manage-speakers-viewport]");
+				var best = null;
+				var bestScore = -1;
+				for (var i = 0; i < viewports.length; i++) {
+					var viewport = viewports[i];
+					var score = Math.max(viewport.scrollHeight || 0, viewport.clientHeight || 0);
+					if (score > bestScore) {
+						bestScore = score;
+						best = viewport;
+					}
+				}
+				return best;
+			}
+
+			function applyManageSpeakersInitialScroll() {
+				var viewport = getManageSpeakersViewport();
+				if (!viewport) {
+					return;
+				}
+				var anchor = viewport.querySelector("[data-manage-scroll-anchor='true']");
+				if (anchor) {
+					var anchorTop = anchor.offsetTop - viewport.offsetTop;
+					viewport.scrollTop = Math.max(0, anchorTop + 2);
+				} else {
+					viewport.scrollTop = 0;
+				}
+				viewport.dataset.initialScrollTop = String(viewport.scrollTop);
+			}
+
+			function restoreManageSpeakersInitialScroll() {
+				var viewport = getManageSpeakersViewport();
+				if (!viewport) {
+					return;
+				}
+				var saved = Number(viewport.dataset.initialScrollTop);
+				if (Number.isFinite(saved)) {
+					viewport.scrollTop = saved;
+					return;
+				}
+				applyManageSpeakersInitialScroll();
+			}
+
+			function wireManageSpeakersControls() {
+				document.addEventListener("click", function(event) {
+					var resetBtn = event.target.closest("[data-manage-speakers-reset-scroll]");
+					if (!resetBtn) {
+						return;
+					}
+					restoreManageSpeakersInitialScroll();
+				});
+			}
+
 			var root = document.getElementById("manage-sse-root");
 			if (!root) return;
 
@@ -1161,9 +1357,22 @@ templ MeetingManageContent(input MeetingManageInput) {
 			}
 
 			updateSpeakingTimers();
+			applyManageSpeakersInitialScroll();
+			window.setTimeout(applyManageSpeakersInitialScroll, 40);
 			window.setInterval(updateSpeakingTimers, 1000);
-			document.addEventListener("htmx:afterSwap", updateSpeakingTimers);
+			document.addEventListener("htmx:afterSwap", function(event) {
+				updateSpeakingTimers();
+				var target = event.target;
+				if (!(target instanceof Element)) {
+					return;
+				}
+				if (target.id !== "speakers-list-container" && !target.closest("#speakers-list-container")) {
+					return;
+				}
+				window.setTimeout(applyManageSpeakersInitialScroll, 0);
+			});
 			wireManageDialogs();
+			wireManageSpeakersControls();
 		})();
 	</script>
 }

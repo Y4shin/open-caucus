@@ -25,6 +25,7 @@ func buildAttendeeItems(attendees []*model.Attendee) []templates.AttendeeItem {
 			FullName:       a.FullName,
 			IsChair:        a.IsChair,
 			IsGuest:        a.UserID == nil,
+			Quoted:         a.Quoted,
 		}
 	}
 	return items
@@ -78,18 +79,18 @@ func buildSpeakerItems(entries []*model.SpeakerEntry) []templates.SpeakerItem {
 			doneDurationLabel = formatElapsedLabel(e.DurationSeconds)
 		}
 		items[i] = templates.SpeakerItem{
-			ID:            e.ID,
-			IDString:      strconv.FormatInt(e.ID, 10),
-			AttendeeID:    e.AttendeeID,
-			AttendeeName:  e.AttendeeName,
-			Type:          e.Type,
-			Status:        e.Status,
-			IsWaiting:     e.Status == "WAITING",
-			IsSpeaking:    e.Status == "SPEAKING",
-			GenderQuoted:  e.GenderQuoted,
-			FirstSpeaker:  e.FirstSpeaker,
-			Priority:      e.Priority,
-			OrderPosition: e.OrderPosition,
+			ID:                e.ID,
+			IDString:          strconv.FormatInt(e.ID, 10),
+			AttendeeID:        e.AttendeeID,
+			AttendeeName:      e.AttendeeName,
+			Type:              e.Type,
+			Status:            e.Status,
+			IsWaiting:         e.Status == "WAITING",
+			IsSpeaking:        e.Status == "SPEAKING",
+			GenderQuoted:      e.GenderQuoted,
+			FirstSpeaker:      e.FirstSpeaker,
+			Priority:          e.Priority,
+			OrderPosition:     e.OrderPosition,
 			SpeakingSinceUnix: speakingSinceUnix,
 			DoneDurationLabel: doneDurationLabel,
 		}
@@ -136,11 +137,11 @@ func (h *Handler) loadAttendeeListPartial(ctx context.Context, slug, meetingIDSt
 	}
 
 	return &templates.AttendeeListPartialInput{
-		CommitteeSlug: slug,
-		IDString:      meetingIDStr,
-		SignupOpen:    meeting.SignupOpen,
+		CommitteeSlug:  slug,
+		IDString:       meetingIDStr,
+		SignupOpen:     meeting.SignupOpen,
 		ShowSelfSignup: showSelfSignup,
-		Attendees:     buildAttendeeItems(attendees),
+		Attendees:      buildAttendeeItems(attendees),
 	}, nil
 }
 
@@ -169,6 +170,21 @@ func parseClientIDFromForm(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("client_id"))
 }
 
+func parseGenderQuotedFormValue(r *http.Request) bool {
+	parseBool := func(raw string) bool {
+		switch strings.ToLower(strings.TrimSpace(raw)) {
+		case "true", "1", "on", "yes":
+			return true
+		default:
+			return false
+		}
+	}
+	if parseBool(r.FormValue("gender_quoted")) {
+		return true
+	}
+	return parseBool(r.FormValue("quoted"))
+}
+
 func (h *Handler) publishMeetingAttendeesChanged(meetingID int64, originClientID string) {
 	mid := meetingID
 	h.Broker.Publish(broker.SSEEvent{
@@ -192,6 +208,7 @@ func (h *Handler) ManageAttendeeCreate(ctx context.Context, r *http.Request, par
 	clientID := strings.TrimSpace(r.FormValue("client_id"))
 
 	fullName := strings.TrimSpace(r.FormValue("full_name"))
+	quoted := parseGenderQuotedFormValue(r)
 	if fullName == "" {
 		partial, loadErr := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
 		if loadErr != nil {
@@ -206,7 +223,7 @@ func (h *Handler) ManageAttendeeCreate(ctx context.Context, r *http.Request, par
 		return nil, nil, fmt.Errorf("failed to generate secret: %w", err)
 	}
 
-	if _, err := h.Repository.CreateAttendee(ctx, meetingID, nil, fullName, secret); err != nil {
+	if _, err := h.Repository.CreateAttendee(ctx, meetingID, nil, fullName, secret, quoted); err != nil {
 		return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
 	}
 	h.publishMeetingAttendeesChanged(meetingID, clientID)
@@ -247,7 +264,7 @@ func (h *Handler) ManageAttendeeSelfSignup(ctx context.Context, r *http.Request,
 			return nil, nil, fmt.Errorf("failed to generate attendee secret: %w", err)
 		}
 
-		if _, err := h.Repository.CreateAttendee(ctx, meetingID, &userID, user.FullName, secret); err != nil {
+		if _, err := h.Repository.CreateAttendee(ctx, meetingID, &userID, user.FullName, secret, user.Quoted); err != nil {
 			return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
 		}
 		changed = true
@@ -301,6 +318,39 @@ func (h *Handler) ManageAttendeeToggleChair(ctx context.Context, r *http.Request
 	}
 
 	if err := h.Repository.SetAttendeeIsChair(ctx, attendeeID, !attendee.IsChair); err != nil {
+		return nil, nil, fmt.Errorf("failed to update attendee: %w", err)
+	}
+	h.publishMeetingAttendeesChanged(meetingID, clientID)
+
+	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	return partial, nil, err
+}
+
+// ManageAttendeeToggleQuoted flips the quoted flag for a guest attendee.
+func (h *Handler) ManageAttendeeToggleQuoted(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ManageAttendeeDependentPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	attendeeID, err := strconv.ParseInt(params.AttendeeId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid attendee ID")
+	}
+	clientID := parseClientIDFromForm(r)
+
+	attendee, err := h.Repository.GetAttendeeByID(ctx, attendeeID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load attendee: %w", err)
+	}
+	if attendee.MeetingID != meetingID {
+		return nil, nil, fmt.Errorf("attendee does not belong to this meeting")
+	}
+	if attendee.UserID != nil {
+		return nil, nil, fmt.Errorf("only guest attendees can change gender quoted status")
+	}
+
+	if err := h.Repository.SetAttendeeQuoted(ctx, attendeeID, !attendee.Quoted); err != nil {
 		return nil, nil, fmt.Errorf("failed to update attendee: %w", err)
 	}
 	h.publishMeetingAttendeesChanged(meetingID, clientID)

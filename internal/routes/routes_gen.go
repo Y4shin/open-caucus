@@ -87,6 +87,7 @@ type Handler interface {
 	ManageAttendeeSelfSignup(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeToggleChair(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
+	ManageAttendeeToggleQuoted(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeRecoveryPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingAttendeeRecoveryInput, *ResponseMeta, error)
 	ManageAgendaPointCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
@@ -390,6 +391,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair", rt.wrapMiddleware(
 		rt.handleManageAttendeeToggleChair,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair", groups),
+		[]string{"session", "auth", "committee_access", "manage_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/quoted", rt.wrapMiddleware(
+		rt.handleManageAttendeeToggleQuoted,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/quoted", groups),
 		[]string{"session", "auth", "committee_access", "manage_access"},
 		false,
 	))
@@ -1526,6 +1534,37 @@ func (rt *Router) handleManageAttendeeToggleChair(w http.ResponseWriter, r *http
 	}
 
 	input, meta, err := rt.handler.ManageAttendeeToggleChair(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.ManageAttendeeDependentPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAttendeeToggleQuoted(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:       r.PathValue("slug"),
+		MeetingId:  r.PathValue("meeting_id"),
+		AttendeeId: r.PathValue("attendee_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAttendeeToggleQuoted(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

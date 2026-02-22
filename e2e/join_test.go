@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	playwright "github.com/playwright-community/playwright-go"
 )
 
 func joinURL(baseURL, slug, meetingID string) string {
@@ -281,6 +283,50 @@ func TestGuestSignup_PublishesManageSSE(t *testing.T) {
 
 	if err := managePage.Locator("#attendee-list-container .manage-attendee-card:has-text('Guest Via Join')").WaitFor(); err != nil {
 		t.Fatalf("expected attendee propagated to manage page via SSE: %v", err)
+	}
+}
+
+// TestGuestSignup_Quoted_SetsSpeakerQuotedBadge verifies that quoted status
+// chosen during guest signup is carried into the speaker entry chips.
+func TestGuestSignup_Quoted_SetsSpeakerQuotedBadge(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Open Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Open Meeting", apID)
+
+	page := newPage(t)
+	if _, err := page.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto join page: %v", err)
+	}
+	if err := page.Locator("input[name=full_name]").Fill("Quoted Via Join"); err != nil {
+		t.Fatalf("fill name: %v", err)
+	}
+	if err := page.Locator("input[name=gender_quoted]").Check(); err != nil {
+		t.Fatalf("check quoted during guest signup: %v", err)
+	}
+	if err := page.Locator("input[name=meeting_secret]").Fill("test-meeting-secret"); err != nil {
+		t.Fatalf("fill meeting secret: %v", err)
+	}
+	if err := page.Locator("button:has-text('Sign Up as Guest')").Click(); err != nil {
+		t.Fatalf("click guest sign-up submit: %v", err)
+	}
+	if err := page.WaitForURL(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /live after guest signup: %v", err)
+	}
+
+	if err := page.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
+		t.Fatalf("click self-add regular: %v", err)
+	}
+	row := page.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+		HasText: "Quoted Via Join",
+	})
+	if err := row.WaitFor(); err != nil {
+		t.Fatalf("expected quoted guest row in live speakers list: %v", err)
+	}
+	if err := row.Locator(".live-badge:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected quoted badge in guest speaker row: %v", err)
 	}
 }
 

@@ -252,7 +252,10 @@ templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, var
 						<span class={ LiveBadge(), LiveBadgeROPM(), "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_ropm") }</span>
 					}
 					if s.GenderQuoted {
-						<span class={ LiveBadge(), LiveBadgeQuoted(), "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_quoted") }</span>
+						<span class={ LiveBadge(), LiveBadgeQuoted(), QuotedStatusChip(), "live-badge", "quoted-status-chip" }>
+							@Icon(IconTransgender, "", "quoted-status-chip-icon")
+							{ "-" + i18n.T(ctx, "meeting_live.badge_quoted") }
+						</span>
 					}
 					if s.FirstSpeaker {
 						<span class={ LiveBadge(), LiveBadgeFirst(), "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_first") }</span>

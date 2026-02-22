@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -131,12 +130,8 @@ func TestAttendee_QuotedBadgeVisible(t *testing.T) {
 	if err := bobRow.WaitFor(); err != nil {
 		t.Fatalf("expected Bob's row in speakers list: %v", err)
 	}
-	rowText, err := bobRow.TextContent()
-	if err != nil {
-		t.Fatalf("get Bob's row text: %v", err)
-	}
-	if !strings.Contains(rowText, "Q") {
-		t.Errorf("expected quoted badge marker in Bob's row, got: %q", rowText)
+	if err := bobRow.Locator(".live-badge:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected quoted speaker badge in Bob's row: %v", err)
 	}
 }
 

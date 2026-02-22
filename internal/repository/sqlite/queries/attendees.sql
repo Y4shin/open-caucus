@@ -1,7 +1,7 @@
 -- name: CreateAttendee :one
-INSERT INTO attendees (meeting_id, user_id, full_name, secret, attendee_number)
+INSERT INTO attendees (meeting_id, user_id, full_name, secret, quoted, attendee_number)
 VALUES (
-    ?, ?, ?, ?,
+    ?, ?, ?, ?, ?,
     COALESCE((SELECT MAX(a.attendee_number) + 1 FROM attendees a WHERE a.meeting_id = ?), 1)
 )
 RETURNING *;
@@ -23,3 +23,6 @@ DELETE FROM attendees WHERE id = ?;
 
 -- name: SetAttendeeIsChair :exec
 UPDATE attendees SET is_chair = ? WHERE id = ?;
+
+-- name: SetAttendeeQuoted :exec
+UPDATE attendees SET quoted = ? WHERE id = ?;

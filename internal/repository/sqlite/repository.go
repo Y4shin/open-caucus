@@ -581,7 +581,7 @@ func (r *Repository) SetMeetingSignupOpen(ctx context.Context, id int64, open bo
 }
 
 // CreateAttendee creates a new attendee row for a meeting
-func (r *Repository) CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string) (*model.Attendee, error) {
+func (r *Repository) CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string, quoted bool) (*model.Attendee, error) {
 	var uid sql.NullInt64
 	if userID != nil {
 		uid = sql.NullInt64{Int64: *userID, Valid: true}
@@ -591,6 +591,7 @@ func (r *Repository) CreateAttendee(ctx context.Context, meetingID int64, userID
 		UserID:      uid,
 		FullName:    fullName,
 		Secret:      secret,
+		Quoted:      quoted,
 		MeetingID_2: meetingID,
 	})
 	if err != nil {
@@ -670,6 +671,18 @@ func (r *Repository) SetAttendeeIsChair(ctx context.Context, id int64, isChair b
 	})
 	if err != nil {
 		return fmt.Errorf("set attendee is_chair: %w", err)
+	}
+	return nil
+}
+
+// SetAttendeeQuoted updates the quoted flag for an attendee.
+func (r *Repository) SetAttendeeQuoted(ctx context.Context, id int64, quoted bool) error {
+	err := r.Queries.SetAttendeeQuoted(ctx, client.SetAttendeeQuotedParams{
+		Quoted: quoted,
+		ID:     id,
+	})
+	if err != nil {
+		return fmt.Errorf("set attendee quoted: %w", err)
 	}
 	return nil
 }
@@ -948,17 +961,17 @@ func speakerFromRow(
 	orderPosition int64,
 ) *model.SpeakerEntry {
 	return &model.SpeakerEntry{
-		ID:            id,
-		AgendaPointID: agendaPointID,
-		AttendeeID:    attendeeID,
-		AttendeeName:  attendeeName,
-		Type:          typ,
-		Status:        status,
-		GenderQuoted:  genderQuoted,
-		FirstSpeaker:  firstSpeaker,
-		Priority:      priority,
-		OrderPosition: orderPosition,
-		StartOfSpeech: parseStartOfSpeech(startOfSpeech),
+		ID:              id,
+		AgendaPointID:   agendaPointID,
+		AttendeeID:      attendeeID,
+		AttendeeName:    attendeeName,
+		Type:            typ,
+		Status:          status,
+		GenderQuoted:    genderQuoted,
+		FirstSpeaker:    firstSpeaker,
+		Priority:        priority,
+		OrderPosition:   orderPosition,
+		StartOfSpeech:   parseStartOfSpeech(startOfSpeech),
 		DurationSeconds: parseDurationSeconds(duration),
 	}
 }

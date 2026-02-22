@@ -4,6 +4,8 @@ package e2e_test
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
@@ -20,7 +22,15 @@ func newPage(t *testing.T) playwright.Page {
 		t.Skip(fmt.Sprintf("playwright driver not installed — run 'task playwright:install'\n%s", pwErr))
 	}
 
-	browser, err := pw.Chromium.Launch()
+	launchOpts := playwright.BrowserTypeLaunchOptions{}
+	if os.Getenv("PLAYWRIGHT_HEADED") == "1" {
+		launchOpts.Headless = playwright.Bool(false)
+	}
+	if slowMoMs, err := strconv.ParseFloat(os.Getenv("PLAYWRIGHT_SLOW_MO_MS"), 64); err == nil && slowMoMs > 0 {
+		launchOpts.SlowMo = playwright.Float(slowMoMs)
+	}
+
+	browser, err := pw.Chromium.Launch(launchOpts)
 	if err != nil {
 		t.Skipf("chromium not installed (run 'task playwright:install'): %v", err)
 	}

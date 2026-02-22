@@ -3,6 +3,9 @@
 package e2e_test
 
 import (
+	"context"
+	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -20,11 +23,50 @@ func manageAttendeeCard(page playwright.Page, fullName string) playwright.Locato
 	})
 }
 
+func manageSignupOpenChecked(t *testing.T, page playwright.Page) bool {
+	t.Helper()
+	checked, err := page.Locator("#manage_signup_open").IsChecked()
+	if err != nil {
+		t.Fatalf("read signup state: %v", err)
+	}
+	return checked
+}
+
 func submitAddGuest(t *testing.T, page playwright.Page, fullName string) {
 	t.Helper()
+	submitAddGuestWithQuoted(t, page, fullName, false)
+}
+
+func submitAddGuestWithQuoted(t *testing.T, page playwright.Page, fullName string, quoted bool) {
+	t.Helper()
 	form := page.Locator("#attendee-list-container .manage-attendee-add-guest-form")
+	quotedToggle := form.Locator("input[name=gender_quoted]")
+	if quoted {
+		if err := quotedToggle.Check(); err != nil {
+			t.Fatalf("check quoted toggle: %v", err)
+		}
+	} else {
+		if err := quotedToggle.Uncheck(); err != nil {
+			t.Fatalf("uncheck quoted toggle: %v", err)
+		}
+	}
 	if err := form.Locator("input[name=full_name]").Fill(fullName); err != nil {
 		t.Fatalf("fill guest name: %v", err)
+	}
+	value, err := form.Locator("input[name=full_name]").InputValue()
+	if err != nil {
+		t.Fatalf("read guest name input value: %v", err)
+	}
+	if value == "" {
+		t.Fatalf("guest name input unexpectedly empty before submit")
+	}
+	validAny, err := form.Evaluate("f => f.checkValidity()", nil)
+	if err != nil {
+		t.Fatalf("check add-guest form validity: %v", err)
+	}
+	valid, ok := validAny.(bool)
+	if !ok || !valid {
+		t.Fatalf("add-guest form invalid before submit")
 	}
 	if _, err := form.Evaluate("f => { f.requestSubmit(); return true; }", nil); err != nil {
 		t.Fatalf("submit add-guest form: %v", err)
@@ -58,6 +100,112 @@ func waitUntil(t *testing.T, timeout time.Duration, fn func() (bool, error), des
 		time.Sleep(100 * time.Millisecond)
 	}
 	t.Fatalf("timeout waiting for %s", description)
+}
+
+func manageSpeakersViewportSnapshot(t *testing.T, page playwright.Page) (float64, float64, float64, int, string) {
+	t.Helper()
+	raw, err := page.Evaluate(`() => {
+		const scopedContainer = document.querySelector("section.manage-card #speakers-list-container");
+		let viewport = scopedContainer ? scopedContainer.querySelector("[data-manage-speakers-viewport]") : null;
+		if (!viewport) {
+			const allViewports = Array.from(document.querySelectorAll("#speakers-list-container [data-manage-speakers-viewport]"));
+			viewport = allViewports.reduce((best, candidate) => {
+				if (!best) return candidate;
+				const bestScore = Math.max(best.scrollHeight || 0, best.clientHeight || 0);
+				const candidateScore = Math.max(candidate.scrollHeight || 0, candidate.clientHeight || 0);
+				return candidateScore > bestScore ? candidate : best;
+			}, null);
+		}
+		if (!viewport) return null;
+		const rows = Array.from(viewport.querySelectorAll(".live-speaker-row"));
+		const vpRect = viewport.getBoundingClientRect();
+		let firstVisibleName = "";
+		let firstVisibleTop = Number.POSITIVE_INFINITY;
+		for (const row of rows) {
+			const rect = row.getBoundingClientRect();
+			if (rect.bottom <= vpRect.top + 1) continue;
+			if (rect.top < firstVisibleTop) {
+				firstVisibleTop = rect.top;
+				const nameEl = row.querySelector("[data-testid='live-speaker-name']");
+				firstVisibleName = (nameEl ? nameEl.textContent : row.textContent || "").trim();
+			}
+		}
+		const visibleRows = rows.filter((row) => {
+			const rect = row.getBoundingClientRect();
+			return rect.bottom > vpRect.top + 1 && rect.top < vpRect.bottom - 1;
+		}).length;
+		return {
+			scrollTop: viewport.scrollTop,
+			clientHeight: viewport.clientHeight,
+			scrollHeight: viewport.scrollHeight,
+			visibleRows,
+			firstVisibleName
+		};
+	}`, nil)
+	if err != nil {
+		t.Fatalf("read speakers viewport snapshot: %v", err)
+	}
+	state, ok := raw.(map[string]interface{})
+	if !ok || state == nil {
+		t.Fatalf("unexpected speakers viewport snapshot: %#v", raw)
+	}
+	scrollTop, _ := state["scrollTop"].(float64)
+	clientHeight, _ := state["clientHeight"].(float64)
+	scrollHeight, _ := state["scrollHeight"].(float64)
+	visibleRowsFloat, _ := state["visibleRows"].(float64)
+	firstVisibleName, _ := state["firstVisibleName"].(string)
+	return scrollTop, clientHeight, scrollHeight, int(visibleRowsFloat), firstVisibleName
+}
+
+func manageSpeakersQuickControlMetrics(t *testing.T, page playwright.Page) (float64, float64, float64) {
+	t.Helper()
+	raw, err := page.Evaluate(`() => {
+		const scopedContainer = document.querySelector("section.manage-card #speakers-list-container");
+		const wrap = scopedContainer
+			? scopedContainer.querySelector(".manage-speakers-quick-control-wrap")
+			: document.querySelector("#speakers-list-container .manage-speakers-quick-control-wrap");
+		const button = wrap ? wrap.querySelector(".manage-speakers-quick-control-button") : null;
+		if (!wrap || !button) return null;
+		const wrapRect = wrap.getBoundingClientRect();
+		const buttonRect = button.getBoundingClientRect();
+		const marginTop = parseFloat(window.getComputedStyle(wrap).marginTop || "0");
+		return { wrapWidth: wrapRect.width, buttonWidth: buttonRect.width, marginTop };
+	}`, nil)
+	if err != nil {
+		t.Fatalf("read quick control metrics: %v", err)
+	}
+	state, ok := raw.(map[string]interface{})
+	if !ok || state == nil {
+		t.Fatalf("unexpected quick control metrics: %#v", raw)
+	}
+	wrapWidth, _ := state["wrapWidth"].(float64)
+	buttonWidth, _ := state["buttonWidth"].(float64)
+	marginTop, _ := state["marginTop"].(float64)
+	return wrapWidth, buttonWidth, marginTop
+}
+
+func manageSpeakersViewportStyles(t *testing.T, page playwright.Page) (string, string) {
+	t.Helper()
+	raw, err := page.Evaluate(`() => {
+		const scopedContainer = document.querySelector("section.manage-card #speakers-list-container");
+		let viewport = scopedContainer ? scopedContainer.querySelector("[data-manage-speakers-viewport]") : null;
+		if (!viewport) {
+			viewport = document.querySelector("#speakers-list-container [data-manage-speakers-viewport]");
+		}
+		if (!viewport) return null;
+		const style = window.getComputedStyle(viewport);
+		return { overflowY: style.overflowY, maxHeight: style.maxHeight };
+	}`, nil)
+	if err != nil {
+		t.Fatalf("read speakers viewport styles: %v", err)
+	}
+	state, ok := raw.(map[string]interface{})
+	if !ok || state == nil {
+		t.Fatalf("unexpected speakers viewport styles: %#v", raw)
+	}
+	overflowY, _ := state["overflowY"].(string)
+	maxHeight, _ := state["maxHeight"].(string)
+	return overflowY, maxHeight
 }
 
 // TestManagePage_ShowsAttendeeList verifies that the manage page shows existing
@@ -312,11 +460,7 @@ func TestManagePage_ToggleSignupOpen(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	checked, err := page.Locator("#manage_signup_open").IsChecked()
-	if err != nil {
-		t.Fatalf("read initial signup state: %v", err)
-	}
-	if checked {
+	if manageSignupOpenChecked(t, page) {
 		t.Fatalf("expected signup to start closed")
 	}
 
@@ -333,5 +477,382 @@ func TestManagePage_ToggleSignupOpen(t *testing.T) {
 	}
 	if err := guestPage.Locator("input[name=full_name]").WaitFor(); err != nil {
 		t.Fatalf("expected guest signup form when signup is open: %v", err)
+	}
+}
+
+// TestManagePage_SpeakersQuickControls verifies the top speaker controls:
+// start-next when no active speaker, and end-speech when one is active.
+func TestManagePage_SpeakersQuickControls(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+
+	first := ts.seedAttendee(t, "test-committee", "Board Meeting", "First Queue", "secret-first-queue")
+	second := ts.seedAttendee(t, "test-committee", "Board Meeting", "Second Queue", "secret-second-queue")
+	ts.seedSpeaker(t, apID, strconv.FormatInt(first.ID, 10))
+	ts.seedSpeaker(t, apID, strconv.FormatInt(second.ID, 10))
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	urlBefore := page.URL()
+
+	if err := page.Locator("[data-testid='manage-start-next-speaker']").WaitFor(); err != nil {
+		t.Fatalf("expected start-next control when no active speaker: %v", err)
+	}
+	if err := page.Locator("[data-testid='manage-start-next-speaker']").Click(); err != nil {
+		t.Fatalf("click start-next control: %v", err)
+	}
+	if err := page.Locator("[data-testid='manage-end-current-speaker']").WaitFor(); err != nil {
+		t.Fatalf("expected end-speech control after starting next: %v", err)
+	}
+	if err := page.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('First Queue')").WaitFor(); err != nil {
+		t.Fatalf("expected first speaker to be active after start-next: %v", err)
+	}
+
+	if err := page.Locator("[data-testid='manage-end-current-speaker']").Click(); err != nil {
+		t.Fatalf("click end-current control: %v", err)
+	}
+	if err := page.Locator("[data-testid='manage-start-next-speaker']").WaitFor(); err != nil {
+		t.Fatalf("expected start-next control after ending current speaker: %v", err)
+	}
+	if page.URL() != urlBefore {
+		t.Errorf("URL changed during quick speaker controls: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestManagePage_SpeakersViewport_InitialScrollAndReset verifies that the
+// speakers list is capped/scrollable and initially anchored to the active
+// speaker, with a control to restore that initial scroll state.
+func TestManagePage_SpeakersViewport_InitialScrollAndReset(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+
+	var speakerIDs []int64
+	for i := 1; i <= 10; i++ {
+		name := fmt.Sprintf("Speaker %02d", i)
+		secret := fmt.Sprintf("secret-speaker-%02d", i)
+		attendee := ts.seedAttendee(t, "test-committee", "Board Meeting", name, secret)
+		speakerID := parseID(t, ts.seedSpeaker(t, apID, strconv.FormatInt(attendee.ID, 10)))
+		speakerIDs = append(speakerIDs, speakerID)
+	}
+	for i := 0; i < 7; i++ {
+		if err := ts.repo.SetSpeakerDone(context.Background(), speakerIDs[i]); err != nil {
+			t.Fatalf("set speaker %d done: %v", i+1, err)
+		}
+	}
+	if err := ts.repo.SetSpeakerSpeaking(context.Background(), speakerIDs[7], parseID(t, apID)); err != nil {
+		t.Fatalf("set speaking speaker: %v", err)
+	}
+	if err := ts.repo.RecomputeSpeakerOrder(context.Background(), parseID(t, apID)); err != nil {
+		t.Fatalf("recompute speaker order: %v", err)
+	}
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := page.Locator("#speakers-list-container [data-testid='manage-end-current-speaker']").WaitFor(); err != nil {
+		t.Fatalf("expected end-current quick control: %v", err)
+	}
+	if err := page.Locator("#speakers-list-container [data-testid='manage-speakers-reset-scroll']").WaitFor(); err != nil {
+		t.Fatalf("expected speakers reset-scroll button: %v", err)
+	}
+
+	wrapWidth, buttonWidth, marginTop := manageSpeakersQuickControlMetrics(t, page)
+	if diff := wrapWidth - buttonWidth; diff < -2 || diff > 2 {
+		t.Errorf("expected quick control button to fill container width: wrap=%.2f button=%.2f", wrapWidth, buttonWidth)
+	}
+	if marginTop < 8 {
+		t.Errorf("expected visible top spacing on quick control row, got margin-top %.2fpx", marginTop)
+	}
+
+	overflowY, maxHeight := manageSpeakersViewportStyles(t, page)
+	if overflowY != "auto" && overflowY != "scroll" {
+		t.Errorf("expected speakers viewport to be scrollable, got overflow-y=%q", overflowY)
+	}
+	if maxHeight == "" || maxHeight == "none" {
+		t.Errorf("expected speakers viewport to have a max-height, got %q", maxHeight)
+	}
+
+	scrollTop, clientHeight, scrollHeight, visibleRows, firstVisibleName := manageSpeakersViewportSnapshot(t, page)
+	_ = clientHeight
+	_ = scrollHeight
+	if visibleRows > 7 {
+		t.Errorf("expected approximately <= 6 visible speakers (tolerated <=7), got %d", visibleRows)
+	}
+	_ = scrollTop
+	if !strings.Contains(firstVisibleName, "Speaker 07") && !strings.Contains(firstVisibleName, "Speaker 08") {
+		t.Errorf("expected initial viewport to be near the active speaker boundary, got %q", firstVisibleName)
+	}
+
+	if _, err := page.Evaluate(`() => {
+		const scopedContainer = document.querySelector("section.manage-card #speakers-list-container");
+		let viewport = scopedContainer ? scopedContainer.querySelector("[data-manage-speakers-viewport]") : null;
+		if (!viewport) {
+			viewport = document.querySelector("#speakers-list-container [data-manage-speakers-viewport]");
+		}
+		if (!viewport) return false;
+		viewport.scrollTop = viewport.scrollHeight;
+		return true;
+	}`, nil); err != nil {
+		t.Fatalf("scroll viewport away from initial position before reset: %v", err)
+	}
+
+	if err := page.Locator("#speakers-list-container [data-testid='manage-speakers-reset-scroll']").Click(); err != nil {
+		t.Fatalf("click reset-scroll button: %v", err)
+	}
+
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		scrollTopAfterReset, _, _, _, firstVisibleAfterReset := manageSpeakersViewportSnapshot(t, page)
+		_ = firstVisibleAfterReset
+		return scrollTopAfterReset >= scrollTop-2 && scrollTopAfterReset <= scrollTop+2, nil
+	}, "speakers viewport to restore initial anchor")
+}
+
+// TestManagePage_SpeakersViewport_InitialScrollTargetsNextWaiting verifies that
+// when no one is speaking, initial scroll anchors to the next waiting speaker.
+func TestManagePage_SpeakersViewport_InitialScrollTargetsNextWaiting(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+
+	var speakerIDs []int64
+	for i := 1; i <= 10; i++ {
+		name := fmt.Sprintf("Waiting Speaker %02d", i)
+		secret := fmt.Sprintf("secret-waiting-%02d", i)
+		attendee := ts.seedAttendee(t, "test-committee", "Board Meeting", name, secret)
+		speakerID := parseID(t, ts.seedSpeaker(t, apID, strconv.FormatInt(attendee.ID, 10)))
+		speakerIDs = append(speakerIDs, speakerID)
+	}
+	for i := 0; i < 7; i++ {
+		if err := ts.repo.SetSpeakerDone(context.Background(), speakerIDs[i]); err != nil {
+			t.Fatalf("set waiting speaker %d done: %v", i+1, err)
+		}
+	}
+	if err := ts.repo.RecomputeSpeakerOrder(context.Background(), parseID(t, apID)); err != nil {
+		t.Fatalf("recompute speaker order: %v", err)
+	}
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := page.Locator("#speakers-list-container [data-testid='manage-start-next-speaker']").WaitFor(); err != nil {
+		t.Fatalf("expected start-next quick control: %v", err)
+	}
+
+	scrollTop, _, _, _, firstVisibleName := manageSpeakersViewportSnapshot(t, page)
+	_ = scrollTop
+	if !strings.Contains(firstVisibleName, "Waiting Speaker 08") {
+		t.Errorf("expected first visible row to be next waiting speaker, got %q", firstVisibleName)
+	}
+}
+
+// TestManagePage_QuotedCheckbox_DoesNotToggleSignupOpen verifies that interacting
+// with the add-guest quoted control does not trigger signup-open toggles.
+func TestManagePage_QuotedCheckbox_DoesNotToggleSignupOpen(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if manageSignupOpenChecked(t, page) {
+		t.Fatalf("expected signup to start closed")
+	}
+
+	form := page.Locator("#attendee-list-container .manage-attendee-add-guest-form")
+	if err := form.Locator("label[for='manage_guest_gender_quoted']").Click(); err != nil {
+		t.Fatalf("click quoted label: %v", err)
+	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		return form.Locator("#manage_guest_gender_quoted").IsChecked()
+	}, "quoted toggle to become checked")
+	time.Sleep(750 * time.Millisecond)
+
+	if manageSignupOpenChecked(t, page) {
+		t.Fatalf("signup was toggled by quoted control interaction")
+	}
+}
+
+// TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive verifies that
+// chair-added quoted guests keep quoted status into speaker entries in both
+// manage and attendee live sessions.
+func TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+
+	managePage := newPage(t)
+	userLogin(t, managePage, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := managePage.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	if err := managePage.Locator("#attendee-list-container .manage-attendee-add-guest-form input[name=gender_quoted]").WaitFor(); err != nil {
+		t.Fatalf("expected quoted control on add-guest form: %v", err)
+	}
+	if manageSignupOpenChecked(t, managePage) {
+		t.Fatalf("expected signup to start closed")
+	}
+
+	submitAddGuestWithQuoted(t, managePage, "Quoted Guest", true)
+	quotedGuestCard := manageAttendeeCard(managePage, "Quoted Guest")
+	if err := quotedGuestCard.WaitFor(); err != nil {
+		t.Fatalf("expected quoted guest attendee card: %v", err)
+	}
+	if err := quotedGuestCard.Locator(".manage-attendee-meta-chip:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected quoted badge on attendee card: %v", err)
+	}
+	if manageSignupOpenChecked(t, managePage) {
+		t.Fatalf("signup was toggled by quoted guest add flow")
+	}
+
+	meetingIDInt, err := strconv.ParseInt(meetingID, 10, 64)
+	if err != nil {
+		t.Fatalf("parse meeting id: %v", err)
+	}
+	attendees, err := ts.repo.ListAttendeesForMeeting(context.Background(), meetingIDInt)
+	if err != nil {
+		t.Fatalf("list attendees after quoted add: %v", err)
+	}
+	quotedGuestSecret := ""
+	for _, a := range attendees {
+		if a.FullName == "Quoted Guest" {
+			quotedGuestSecret = a.Secret
+			break
+		}
+	}
+	if quotedGuestSecret == "" {
+		t.Fatalf("quoted guest attendee not found in repository")
+	}
+	guestPage := newPage(t)
+	attendeeLoginHelper(t, guestPage, ts.URL, "test-committee", meetingID, quotedGuestSecret)
+
+	openSpeakerAddDialog(t, managePage)
+	if err := speakerCandidateCard(managePage, "Quoted Guest").Locator("button[title='Add regular speech']").Click(); err != nil {
+		t.Fatalf("add quoted guest as speaker: %v", err)
+	}
+
+	manageSpeakerRow := managePage.Locator("#speakers-list-container .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+		HasText: "Quoted Guest",
+	})
+	if err := manageSpeakerRow.WaitFor(); err != nil {
+		t.Fatalf("expected quoted guest row in manage speakers list: %v", err)
+	}
+	if err := manageSpeakerRow.Locator(".live-badge:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected quoted badge in manage speaker row: %v", err)
+	}
+
+	liveSpeakerRow := guestPage.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+		HasText: "Quoted Guest",
+	})
+	if err := liveSpeakerRow.WaitFor(); err != nil {
+		t.Fatalf("expected quoted guest row in live speakers list: %v", err)
+	}
+	if err := liveSpeakerRow.Locator(".live-badge:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected quoted badge in live speaker row: %v", err)
+	}
+}
+
+// TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip verifies that
+// changing a guest attendee's gender-quoted status on manage propagates into
+// newly created speaker entries.
+func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	submitAddGuestWithQuoted(t, page, "Toggle Guest", false)
+	guestCard := manageAttendeeCard(page, "Toggle Guest")
+	if err := guestCard.WaitFor(); err != nil {
+		t.Fatalf("expected guest attendee card: %v", err)
+	}
+	initialQuotedChipCount, err := guestCard.Locator(".manage-attendee-meta-chip:has-text('Quoted')").Count()
+	if err != nil {
+		t.Fatalf("count initial quoted chips: %v", err)
+	}
+	if initialQuotedChipCount != 0 {
+		t.Fatalf("expected no initial quoted attendee chip, got %d", initialQuotedChipCount)
+	}
+
+	if err := guestCard.Locator("button[title='Enable quoted status']").Click(); err != nil {
+		t.Fatalf("toggle guest gender quoted on: %v", err)
+	}
+	if err := guestCard.Locator(".manage-attendee-meta-chip:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected quoted attendee chip after toggle: %v", err)
+	}
+
+	meetingIDInt, err := strconv.ParseInt(meetingID, 10, 64)
+	if err != nil {
+		t.Fatalf("parse meeting id: %v", err)
+	}
+	attendees, err := ts.repo.ListAttendeesForMeeting(context.Background(), meetingIDInt)
+	if err != nil {
+		t.Fatalf("list attendees after toggle: %v", err)
+	}
+	guestSecret := ""
+	for _, a := range attendees {
+		if a.FullName == "Toggle Guest" {
+			guestSecret = a.Secret
+			break
+		}
+	}
+	if guestSecret == "" {
+		t.Fatalf("toggle guest attendee not found in repository")
+	}
+
+	guestPage := newPage(t)
+	attendeeLoginHelper(t, guestPage, ts.URL, "test-committee", meetingID, guestSecret)
+	if err := guestPage.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
+		t.Fatalf("guest self-add regular speaker: %v", err)
+	}
+	guestSpeakerRow := guestPage.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+		HasText: "Toggle Guest",
+	})
+	if err := guestSpeakerRow.WaitFor(); err != nil {
+		t.Fatalf("expected guest speaker row: %v", err)
+	}
+	if err := guestSpeakerRow.Locator(".live-badge:has-text('Quoted')").WaitFor(); err != nil {
+		t.Fatalf("expected gender quoted speaker chip after guest toggle: %v", err)
 	}
 }

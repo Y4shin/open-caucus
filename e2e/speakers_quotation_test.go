@@ -5,6 +5,7 @@ package e2e_test
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -17,6 +18,115 @@ func manageSpeakerRow(page playwright.Page, attendeeName string) playwright.Loca
 	return page.Locator("#speakers-list-container .manage-speakers-rows .live-speaker-row").Filter(playwright.LocatorFilterOptions{
 		HasText: attendeeName,
 	})
+}
+
+func manageSpeakerNamesInDisplayedOrder(t *testing.T, page playwright.Page) []string {
+	t.Helper()
+	raw, err := page.Evaluate(`() => {
+		const container = document.querySelector("section.manage-card #speakers-list-container")
+			|| document.querySelector("#speakers-list-container");
+		if (!container) return [];
+		const rows = Array.from(container.querySelectorAll(".manage-speakers-rows-list .live-speaker-row"));
+		return rows.map((row) => {
+			const nameEl = row.querySelector("[data-testid='live-speaker-name']");
+			return (nameEl ? nameEl.textContent : row.textContent || "").trim();
+		});
+	}`, nil)
+	if err != nil {
+		t.Fatalf("read speakers names order: %v", err)
+	}
+	namesRaw, ok := raw.([]interface{})
+	if !ok {
+		t.Fatalf("unexpected speakers names payload: %#v", raw)
+	}
+	names := make([]string, 0, len(namesRaw))
+	for _, v := range namesRaw {
+		if s, ok := v.(string); ok {
+			names = append(names, s)
+		}
+	}
+	return names
+}
+
+func seedSpeakerOrderingScenario(t *testing.T, withActiveSpeaker bool) (*testServer, string, []string) {
+	t.Helper()
+
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+	apIDInt := parseID(t, apID)
+
+	addSpeaker := func(name, speakerType string, quoted, firstSpeaker, priority bool) int64 {
+		secret := "secret-" + strings.ToLower(strings.ReplaceAll(name, " ", "-"))
+		attendee := ts.seedAttendee(t, "test-committee", "Board Meeting", name, secret)
+		entry, err := ts.repo.AddSpeaker(context.Background(), apIDInt, attendee.ID, speakerType, quoted, firstSpeaker)
+		if err != nil {
+			t.Fatalf("add speaker %q: %v", name, err)
+		}
+		if priority {
+			if err := ts.repo.SetSpeakerPriority(context.Background(), entry.ID, true); err != nil {
+				t.Fatalf("set priority for %q: %v", name, err)
+			}
+		}
+		return entry.ID
+	}
+
+	doneNames := []string{"Done A", "Done B", "Done C"}
+	for _, name := range doneNames {
+		id := addSpeaker(name, "regular", false, false, false)
+		if err := ts.repo.SetSpeakerSpeaking(context.Background(), id, apIDInt); err != nil {
+			t.Fatalf("set speaking for %q: %v", name, err)
+		}
+		time.Sleep(5 * time.Millisecond)
+		if err := ts.repo.SetSpeakerDone(context.Background(), id); err != nil {
+			t.Fatalf("set done for %q: %v", name, err)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	activeName := "Active Speaker"
+	if withActiveSpeaker {
+		activeID := addSpeaker(activeName, "regular", false, false, false)
+		if err := ts.repo.SetSpeakerSpeaking(context.Background(), activeID, apIDInt); err != nil {
+			t.Fatalf("set active speaker: %v", err)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+
+	waitingNames := []string{
+		"Waiting RoPM Priority",
+		"Waiting RoPM Plain",
+		"Waiting Regular Priority",
+		"Waiting Regular Quoted",
+		"Waiting Regular First",
+		"Waiting Regular Plain",
+	}
+	addSpeaker(waitingNames[0], "ropm", true, false, true)
+	time.Sleep(5 * time.Millisecond)
+	addSpeaker(waitingNames[1], "ropm", false, false, false)
+	time.Sleep(5 * time.Millisecond)
+	addSpeaker(waitingNames[2], "regular", false, false, true)
+	time.Sleep(5 * time.Millisecond)
+	addSpeaker(waitingNames[3], "regular", true, false, false)
+	time.Sleep(5 * time.Millisecond)
+	addSpeaker(waitingNames[4], "regular", false, true, false)
+	time.Sleep(5 * time.Millisecond)
+	addSpeaker(waitingNames[5], "regular", false, false, false)
+
+	if err := ts.repo.RecomputeSpeakerOrder(context.Background(), apIDInt); err != nil {
+		t.Fatalf("recompute speaker order: %v", err)
+	}
+
+	expected := append([]string{}, doneNames...)
+	if withActiveSpeaker {
+		expected = append(expected, activeName)
+	}
+	expected = append(expected, waitingNames...)
+	return ts, meetingID, expected
 }
 
 // TestSpeakers_PriorityToggle_MovesToFront seeds two speakers, toggles priority
@@ -213,5 +323,51 @@ func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
 
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on quotation toggle: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestSpeakers_SortingOrder_WithActiveSpeaker verifies displayed row order:
+// DONE entries first, then SPEAKING, then WAITING according queue ordering.
+func TestSpeakers_SortingOrder_WithActiveSpeaker(t *testing.T) {
+	ts, meetingID, expectedOrder := seedSpeakerOrderingScenario(t, true)
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := manageSpeakerRow(page, expectedOrder[len(expectedOrder)-1]).WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateAttached,
+	}); err != nil {
+		t.Fatalf("expected all speaker rows attached: %v", err)
+	}
+
+	gotOrder := manageSpeakerNamesInDisplayedOrder(t, page)
+	if !reflect.DeepEqual(gotOrder, expectedOrder) {
+		t.Errorf("unexpected speaker order with active speaker:\n got: %v\nwant: %v", gotOrder, expectedOrder)
+	}
+}
+
+// TestSpeakers_SortingOrder_WithoutActiveSpeaker verifies displayed row order:
+// DONE entries first, then WAITING according queue ordering.
+func TestSpeakers_SortingOrder_WithoutActiveSpeaker(t *testing.T) {
+	ts, meetingID, expectedOrder := seedSpeakerOrderingScenario(t, false)
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	if err := manageSpeakerRow(page, expectedOrder[len(expectedOrder)-1]).WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateAttached,
+	}); err != nil {
+		t.Fatalf("expected all speaker rows attached: %v", err)
+	}
+
+	gotOrder := manageSpeakerNamesInDisplayedOrder(t, page)
+	if !reflect.DeepEqual(gotOrder, expectedOrder) {
+		t.Errorf("unexpected speaker order without active speaker:\n got: %v\nwant: %v", gotOrder, expectedOrder)
 	}
 }

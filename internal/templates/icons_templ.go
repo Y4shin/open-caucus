@@ -29,6 +29,9 @@ const (
 	IconPersonRaised IconName = "person_raised_hand"
 	IconCrown        IconName = "workspace_premium"
 	IconQrCode2      IconName = "qr_code_2"
+	IconGroup        IconName = "group"
+	IconMale         IconName = "male"
+	IconTransgender  IconName = "transgender"
 	IconToggleOff    IconName = "toggle_off"
 	IconToggleOn     IconName = "toggle_on"
 )
@@ -67,6 +70,12 @@ func iconPath(name IconName) string {
 		return "M200-160v-80h560v80H200Zm0-140-51-321q-2 0-4.5.5t-4.5.5q-25 0-42.5-17.5T80-680q0-25 17.5-42.5T140-740q25 0 42.5 17.5T200-680q0 7-1.5 13t-3.5 11l125 56 125-171q-11-8-18-21t-7-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820q0 15-7 28t-18 21l125 171 125-56q-2-5-3.5-11t-1.5-13q0-25 17.5-42.5T820-740q25 0 42.5 17.5T880-680q0 25-17.5 42.5T820-620q-2 0-4.5-.5t-4.5-.5l-51 321H200Zm68-80h424l26-167-105 46-133-183-133 183-105-46 26 167Zm212 0Z"
 	case IconQrCode2:
 		return "M80-80v-240h240v240H80Zm80-80h80v-80h-80v80Zm-80-480v-240h240v240H80Zm80-80h80v-80h-80v80Zm320 640v-80h80v80h-80Zm160 0v-80h80v80h-80Zm-160-160v-240h240v240H480Zm80-80h80v-80h-80v80Zm80-240v-80h80v80h-80Zm-160 0v-80h80v80h-80Zm80-80v-80h80v80h-80Zm-80 80v-80h80v80h-80Zm160 160v-80h80v80h-80Zm-80-80v-80h80v80h-80Zm-80 80v-80h80v80h-80Zm80-400v-240h240v240H480Zm80-80h80v-80h-80v80ZM320-480v-80h80v80h-80Zm80 0v-80h80v80h-80Zm80 0v-80h80v80h-80Zm-160 80v-80h80v80h-80Zm80 0v-80h80v80h-80Zm80 0v-80h80v80h-80Zm-160 80v-80h80v80h-80Zm80 0v-80h80v80h-80Zm80 0v-80h80v80h-80Z"
+	case IconGroup:
+		return "M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z"
+	case IconMale:
+		return "M800-800v240h-80v-103L561-505q19 28 29 59.5t10 65.5q0 92-64 156t-156 64q-92 0-156-64t-64-156q0-92 64-156t156-64q33 0 65 9.5t59 29.5l159-159H560v-80h240ZM281-479q-41 41-41 99t41 99q41 41 99 41t99-41q41-41 41-99t-41-99q-41-41-99-41t-99 41Z"
+	case IconTransgender:
+		return "M579-401q41-41 41-99t-41-99q-41-41-99-41t-99 41q-41 41-41 99t41 99q41 41 99 41t99-41ZM440-40v-80h-80v-80h80v-84q-78-14-129-75t-51-141q0-33 9.5-65t28.5-59l-26-26-56 56-56-56 56-57-76-76v103H60v-240h240v80H197l76 76 57-56 56 56-56 57 26 26q27-20 59-29.5t65-9.5q33 0 65 9.5t59 29.5l159-159H660v-80h240v240h-80v-103L661-625q19 28 29 59.5t10 65.5q0 80-51 141t-129 75v84h80v80h-80v80h-80Z"
 	case IconToggleOff:
 		return "M280-240q-100 0-170-70T40-480q0-100 70-170t170-70h400q100 0 170 70t70 170q0 100-70 170t-170 70H280Zm0-80h400q66 0 113-47t47-113q0-66-47-113t-113-47H280q-66 0-113 47t-47 113q0 66 47 113t113 47Zm85-75q35-35 35-85t-35-85q-35-35-85-35t-85 35q-35 35-35 85t35 85q35 35 85 35t85-35Zm115-85Z"
 	case IconToggleOn:
@@ -78,7 +87,7 @@ func iconPath(name IconName) string {
 
 func iconViewBox(name IconName) string {
 	switch name {
-	case IconToggleOff, IconToggleOn, IconScale, IconPersonRaised, IconCrown, IconQrCode2:
+	case IconToggleOff, IconToggleOn, IconScale, IconPersonRaised, IconCrown, IconQrCode2, IconTransgender, IconMale:
 		return "0 -960 960 960"
 	default:
 		return "0 0 24 24"
@@ -143,7 +152,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(iconViewBox(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 95, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 104, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -156,7 +165,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(iconPath(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 100, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 109, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -192,7 +201,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(iconViewBox(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 105, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 114, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -205,7 +214,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 108, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 117, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -218,7 +227,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(iconPath(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 111, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 120, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -261,7 +270,7 @@ func IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide stri
 		var templ_7745c5c3_Var12 templ.SafeURL
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 117, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 126, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -279,7 +288,7 @@ func IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide stri
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 119, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 128, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -305,7 +314,7 @@ func IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide stri
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 123, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 132, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -367,7 +376,7 @@ func IconLabelButton(icon IconName, text string, iconSide string, disabled bool)
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 131, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 140, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -393,7 +402,7 @@ func IconLabelButton(icon IconName, text string, iconSide string, disabled bool)
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 135, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 144, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {

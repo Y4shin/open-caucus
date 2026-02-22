@@ -103,6 +103,10 @@ templ MeetingJoinContent(input MeetingJoinInput) {
 				<label for="full_name">{ i18n.T(ctx, "meeting_join.name_label") }</label>
 				<input type="text" id="full_name" name="full_name" required/>
 			</div>
+			<div>
+				<label for="guest_gender_quoted">{ i18n.T(ctx, "meeting_join.quoted_label") }</label>
+				<input type="checkbox" id="guest_gender_quoted" name="gender_quoted" value="true"/>
+			</div>
 			if input.PrefilledMeetingSecret != "" {
 				<input type="hidden" name="meeting_secret" value={ input.PrefilledMeetingSecret }/>
 			} else {

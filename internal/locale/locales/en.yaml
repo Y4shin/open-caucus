@@ -105,6 +105,7 @@ en:
     signup_button: "Sign Up"
     guest_heading: "Guest Sign Up"
     name_label: "Your Name:"
+    quoted_label: "Gender quoted:"
     meeting_secret_label: "Meeting Secret:"
     guest_button: "Sign Up as Guest"
     signup_closed: "Guest signup is currently closed."

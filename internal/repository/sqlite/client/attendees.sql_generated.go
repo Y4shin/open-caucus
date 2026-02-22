@@ -11,9 +11,9 @@ import (
 )
 
 const createAttendee = `-- name: CreateAttendee :one
-INSERT INTO attendees (meeting_id, user_id, full_name, secret, attendee_number)
+INSERT INTO attendees (meeting_id, user_id, full_name, secret, quoted, attendee_number)
 VALUES (
-    ?, ?, ?, ?,
+    ?, ?, ?, ?, ?,
     COALESCE((SELECT MAX(a.attendee_number) + 1 FROM attendees a WHERE a.meeting_id = ?), 1)
 )
 RETURNING id, meeting_id, user_id, full_name, secret, created_at, is_chair, quoted, attendee_number
@@ -24,6 +24,7 @@ type CreateAttendeeParams struct {
 	UserID      sql.NullInt64
 	FullName    string
 	Secret      string
+	Quoted      bool
 	MeetingID_2 int64
 }
 
@@ -33,6 +34,7 @@ func (q *Queries) CreateAttendee(ctx context.Context, arg CreateAttendeeParams) 
 		arg.UserID,
 		arg.FullName,
 		arg.Secret,
+		arg.Quoted,
 		arg.MeetingID_2,
 	)
 	var i Attendee
@@ -180,5 +182,19 @@ type SetAttendeeIsChairParams struct {
 
 func (q *Queries) SetAttendeeIsChair(ctx context.Context, arg SetAttendeeIsChairParams) error {
 	_, err := q.db.ExecContext(ctx, setAttendeeIsChair, arg.IsChair, arg.ID)
+	return err
+}
+
+const setAttendeeQuoted = `-- name: SetAttendeeQuoted :exec
+UPDATE attendees SET quoted = ? WHERE id = ?
+`
+
+type SetAttendeeQuotedParams struct {
+	Quoted bool
+	ID     int64
+}
+
+func (q *Queries) SetAttendeeQuoted(ctx context.Context, arg SetAttendeeQuotedParams) error {
+	_, err := q.db.ExecContext(ctx, setAttendeeQuoted, arg.Quoted, arg.ID)
 	return err
 }

@@ -458,6 +458,61 @@ css ManageSpeakersRows() {
 	margin-top: 0.55rem;
 }
 
+css ManageSpeakersRowsList() {
+	max-height: min(58vh, 30rem);
+	overflow-y: auto;
+	padding-right: 0.1rem;
+}
+
+css ManageSpeakersRowWrap() {
+	scroll-margin-top: 0.12rem;
+}
+
+css ManageSpeakersQuickControlWrap() {
+	display: flex;
+	justify-content: flex-start;
+	margin-top: 0.6rem;
+}
+
+css ManageSpeakersQuickControlForm() {
+	display: block;
+	width: 100%;
+}
+
+css ManageSpeakersQuickControlButton() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.34rem 0.64rem;
+	gap: 0.36rem;
+	width: 100%;
+}
+
+css ManageSpeakersQuickControlButtonStart() {
+	border-color: var(--ui-live-badge-first-border);
+	color: var(--ui-live-badge-first-text);
+}
+
+css ManageSpeakersQuickControlButtonEnd() {
+	border-color: var(--ui-danger-border);
+	color: var(--ui-danger-text);
+}
+
+css ManageSpeakersScrollResetWrap() {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 0.42rem;
+}
+
+css ManageSpeakersScrollResetButton() {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.34rem;
+	padding: 0.26rem 0.52rem;
+	font-size: 0.78rem;
+}
+
 css ManageSpeakerAddOpenButton() {
 	display: inline-flex;
 	align-items: center;
@@ -634,7 +689,7 @@ css ManageAttendeeCardHead() {
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 0.38rem;
-	align-items: baseline;
+	align-items: start;
 }
 
 css ManageAttendeeNumber() {
@@ -650,10 +705,19 @@ css ManageAttendeeName() {
 	color: var(--ui-text-primary);
 }
 
+css ManageAttendeeNameRow() {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.45rem;
+	min-width: 0;
+}
+
 css ManageAttendeeMeta() {
 	display: flex;
 	gap: 0.3rem;
 	flex-wrap: wrap;
+	justify-content: flex-end;
 }
 
 css ManageAttendeeMetaChip() {
@@ -671,6 +735,16 @@ css ManageAttendeeMetaChip() {
 css ManageAttendeeMetaChipChair() {
 	border-color: #4ecf80;
 	color: #b7ffd7;
+}
+
+css QuotedStatusChip() {
+	padding: 0.19rem 0.56rem;
+}
+
+css QuotedStatusChipIcon() {
+	width: 0.82rem;
+	height: 0.82rem;
+	margin-right: 0.14rem;
 }
 
 css ManageAttendeeCardActions() {
@@ -2860,6 +2934,15 @@ func GlobalCSSClasses() []templ.CSSClass {
 		ManageSpeakersAddPrimaryField(),
 		ManageSpeakersAddSecondaryField(),
 		ManageSpeakersRows(),
+		ManageSpeakersRowsList(),
+		ManageSpeakersRowWrap(),
+		ManageSpeakersQuickControlWrap(),
+		ManageSpeakersQuickControlForm(),
+		ManageSpeakersQuickControlButton(),
+		ManageSpeakersQuickControlButtonStart(),
+		ManageSpeakersQuickControlButtonEnd(),
+		ManageSpeakersScrollResetWrap(),
+		ManageSpeakersScrollResetButton(),
 		ManageSpeakerAddOpenButton(),
 		ManageSpeakerAddOpenIcon(),
 		ManageSpeakerAddDialog(),
@@ -2889,9 +2972,12 @@ func GlobalCSSClasses() []templ.CSSClass {
 		ManageAttendeeCardHead(),
 		ManageAttendeeNumber(),
 		ManageAttendeeName(),
+		ManageAttendeeNameRow(),
 		ManageAttendeeMeta(),
 		ManageAttendeeMetaChip(),
 		ManageAttendeeMetaChipChair(),
+		QuotedStatusChip(),
+		QuotedStatusChipIcon(),
 		ManageAttendeeCardActions(),
 		LiveBody(),
 		LiveHeader(),
