@@ -7,7 +7,7 @@ routes:
       - verb: GET
         handler: AdminLogin
         middleware:
-          - admin_session  # Check if already logged in
+          - session  # Check if already logged in
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AdminLoginTemplate
@@ -16,7 +16,7 @@ routes:
       - verb: POST
         handler: AdminLoginSubmit
         middleware:
-          - admin_session
+          - session
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AdminLoginTemplate
@@ -28,7 +28,7 @@ routes:
       - verb: POST
         handler: AdminLogout
         middleware:
-          - admin_session
+          - session
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AdminLoginTemplate
@@ -40,7 +40,7 @@ routes:
       - verb: GET
         handler: AdminDashboard
         middleware:
-          - admin_session
+          - session
           - admin_required
         query_params:
           - page
@@ -56,7 +56,7 @@ routes:
       - verb: POST
         handler: AdminCreateCommittee
         middleware:
-          - admin_session
+          - session
           - admin_required
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -69,7 +69,7 @@ routes:
       - verb: POST
         handler: AdminDeleteCommittee
         middleware:
-          - admin_session
+          - session
           - admin_required
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -82,7 +82,7 @@ routes:
       - verb: GET
         handler: AdminCommitteeUsers
         middleware:
-          - admin_session
+          - session
           - admin_required
         query_params:
           - page
@@ -98,7 +98,7 @@ routes:
       - verb: POST
         handler: AdminCreateUser
         middleware:
-          - admin_session
+          - session
           - admin_required
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -111,7 +111,7 @@ routes:
       - verb: POST
         handler: AdminDeleteUser
         middleware:
-          - admin_session
+          - session
           - admin_required
         template:
           package: github.com/Y4shin/conference-tool/internal/templates

@@ -10,17 +10,15 @@ import (
 
 // Registry provides middleware functions by name
 type Registry struct {
-	SessionManager      *session.Manager
-	AdminSessionManager *session.AdminSessionManager
-	Repository          repository.Repository
+	SessionManager *session.Manager
+	Repository     repository.Repository
 }
 
 // NewRegistry creates a new middleware registry
-func NewRegistry(sessionManager *session.Manager, adminSessionManager *session.AdminSessionManager, repo repository.Repository) *Registry {
+func NewRegistry(sessionManager *session.Manager, repo repository.Repository) *Registry {
 	return &Registry{
-		SessionManager:      sessionManager,
-		AdminSessionManager: adminSessionManager,
-		Repository:          repo,
+		SessionManager: sessionManager,
+		Repository:     repo,
 	}
 }
 
@@ -35,8 +33,6 @@ func (r *Registry) Get(name string) func(http.Handler) http.Handler {
 		return r.committeeAccess
 	case "manage_access":
 		return r.manageAccess
-	case "admin_session":
-		return r.adminSession
 	case "admin_required":
 		return r.adminRequired
 	case "attendee_session":

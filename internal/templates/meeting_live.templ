@@ -307,9 +307,7 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 		<div class={ LiveSpeakersCardContent(), "live-speakers-card-content" }>
 			<div class={ LiveSpeakersListShell(), "live-speakers-list-shell" }>
 				<div class={ LiveSpeakersListViewport(), "live-speakers-list-viewport" }>
-				if input.Error != "" {
-					<p class={ ErrorText() }>{ input.Error }</p>
-				}
+				@ErrorMessage(input.Error)
 				if len(input.ActiveSpeakers()) == 0 {
 					<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
 				} else {

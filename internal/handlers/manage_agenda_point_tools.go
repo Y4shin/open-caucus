@@ -48,13 +48,13 @@ func (h *Handler) ManageAgendaPointToolsPage(ctx context.Context, r *http.Reques
 	}
 
 	return &templates.MeetingAgendaPointToolsInput{
-		CommitteeName:   committee.Name,
-		CommitteeSlug:   committee.Slug,
-		MeetingName:     meeting.Name,
-		MeetingIDStr:    params.MeetingId,
+		CommitteeName:    committee.Name,
+		CommitteeSlug:    committee.Slug,
+		MeetingName:      meeting.Name,
+		MeetingIDStr:     params.MeetingId,
 		AgendaPointIDStr: params.AgendaPointId,
 		AgendaPointTitle: agendaPoint.Title,
-		Attachments:     *attachments,
-		Motions:         *motions,
+		Attachments:      *attachments,
+		Motions:          *motions,
 	}, nil, nil
 }

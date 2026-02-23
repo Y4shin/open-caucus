@@ -49,16 +49,19 @@ func newPage(t *testing.T) playwright.Page {
 	return page
 }
 
-// adminLogin navigates to /admin/login and authenticates with the test admin key.
+// adminLogin navigates to /admin/login and authenticates with the test admin credentials.
 func adminLogin(t *testing.T, page playwright.Page, baseURL string) {
 	t.Helper()
 	if _, err := page.Goto(baseURL + "/admin/login"); err != nil {
 		t.Fatalf("goto /admin/login: %v", err)
 	}
-	if err := page.Locator("input[name=admin_key]").Fill(testAdminKey); err != nil {
-		t.Fatalf("fill admin_key: %v", err)
+	if err := page.Locator("input[name=username]").Fill(testAdminUsername); err != nil {
+		t.Fatalf("fill username: %v", err)
 	}
-	if err := page.Locator("input[name=admin_key]").Press("Enter"); err != nil {
+	if err := page.Locator("input[name=password]").Fill(testAdminPassword); err != nil {
+		t.Fatalf("fill password: %v", err)
+	}
+	if err := page.Locator("input[name=password]").Press("Enter"); err != nil {
 		t.Fatalf("submit admin login: %v", err)
 	}
 	if err := page.WaitForURL(baseURL + "/admin"); err != nil {

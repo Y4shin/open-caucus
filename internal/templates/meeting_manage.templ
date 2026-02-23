@@ -536,9 +536,7 @@ func (i *MeetingManageInput) attendeeDependentInput() ManageAttendeeDependentPar
 
 templ AttendeeListPartial(input AttendeeListPartialInput) {
 	<div id="attendee-list-container" sse-swap="manage-attendee-list-updated" hx-swap="outerHTML">
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+		@ErrorMessage(input.Error)
 		<div class={ ManageAttendeeControls(), "manage-attendee-controls" }>
 			<form
 				hx-post={ input.AttendeeCreatePostStr(ctx) }
@@ -777,9 +775,7 @@ templ MeetingSettingsContent(input MeetingSettingsPartialInput) {
 
 templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 	<div id="agenda-point-list-container" class={ ManageAgendaLayout(), "manage-agenda-layout" }>
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+		@ErrorMessage(input.Error)
 		<div class={ ManageAgendaAddSection(), "manage-agenda-add-section" }>
 			<h3 class={ ManageAgendaSectionTitle(), "manage-agenda-section-title" }>Add Agenda Point</h3>
 			<form
@@ -902,9 +898,7 @@ templ SpeakersListSSEPartial(input SpeakersListPartialInput) {
 }
 
 templ SpeakersListContent(input SpeakersListPartialInput) {
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+	@ErrorMessage(input.Error)
 	if input.CurrentAgendaPointID == nil {
 		<p>No active agenda point. Activate one above to manage the speakers list.</p>
 	} else {
@@ -1187,23 +1181,12 @@ templ ManageAgendaPointsCard(input AgendaPointListPartialInput) {
 }
 
 templ MeetingManageTemplate(input MeetingManageInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>Manage: { input.MeetingName } - { input.CommitteeName }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-		<script src={ paths.Route.HtmxMinJs() }></script>
-		<script src={ paths.Route.HtmxExtSseMinJs() }></script>
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate("Manage: "+input.MeetingName+" - "+input.CommitteeName, false, true,
+		ScaffoldInput{
 			Title:    "Manage: " + input.MeetingName,
 			BackLink: SafeURLPtr(input.CommitteeDashboardGet(ctx)),
-		}, MeetingManageContent(input))
-	</body>
-	</html>
+		},
+		MeetingManageContent(input))
 }
 
 templ MeetingManageContent(input MeetingManageInput) {

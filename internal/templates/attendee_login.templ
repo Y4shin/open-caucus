@@ -20,28 +20,17 @@ func (i *AttendeeLoginInput) LoginSubmitPost(ctx context.Context) templ.SafeURL 
 }
 
 templ AttendeeLoginTemplate(input AttendeeLoginInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "attendee_login.page_title", input.MeetingName) }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate(i18n.T(ctx, "attendee_login.page_title", input.MeetingName), false, false,
+		ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: input.CommitteeName,
-		}, AttendeeLoginContent(input))
-	</body>
-	</html>
+		},
+		AttendeeLoginContent(input))
 }
 
 templ AttendeeLoginContent(input AttendeeLoginInput) {
 	<h3>{ i18n.T(ctx, "attendee_login.heading") }</h3>
-	if input.Error != "" {
-		<p class={ ErrorText() }>{ input.Error }</p>
-	}
+	@ErrorMessage(input.Error)
 	<form method="POST" action={ input.LoginSubmitPost(ctx) }>
 		<div>
 			<label for="secret">{ i18n.T(ctx, "attendee_login.secret_label") }</label>
@@ -50,4 +39,3 @@ templ AttendeeLoginContent(input AttendeeLoginInput) {
 		<button type="submit">{ i18n.T(ctx, "attendee_login.button") }</button>
 	</form>
 }
-

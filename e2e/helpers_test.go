@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	testAdminKey = "test-admin-key"
-	testSecret   = "test-secret-32-bytes-exactly!!!!"
+	testAdminUsername = "admin"
+	testAdminPassword = "admin-password"
+	testSecret        = "test-secret-32-bytes-exactly!!!!"
 )
 
 type testServer struct {
@@ -52,18 +53,15 @@ func newTestServer(t *testing.T) *testServer {
 
 	secret := []byte(testSecret)
 	sessionMgr := session.NewManager(repo, secret)
-	adminMgr := session.NewAdminSessionManager(secret)
-	mw := middleware.NewRegistry(sessionMgr, adminMgr, repo)
+	mw := middleware.NewRegistry(sessionMgr, repo)
 	b := broker.NewMemoryBroker()
 	store := storage.NewMemStorage()
 
 	h := &handlers.Handler{
-		Broker:              b,
-		Repository:          repo,
-		Storage:             store,
-		SessionManager:      sessionMgr,
-		AdminSessionManager: adminMgr,
-		AdminKey:            testAdminKey,
+		Broker:         b,
+		Repository:     repo,
+		Storage:        store,
+		SessionManager: sessionMgr,
 	}
 
 	if err := locale.LoadTranslations(); err != nil {
@@ -86,7 +84,12 @@ func newTestServer(t *testing.T) *testServer {
 		repo.Close()
 	})
 
-	return &testServer{Server: ts, repo: repo, storage: store}
+	result := &testServer{Server: ts, repo: repo, storage: store}
+
+	// Seed the default admin account so adminLogin() always works
+	result.seedAdminAccount(t, testAdminUsername, testAdminPassword)
+
+	return result
 }
 
 // seedCommittee creates a committee with the given name and slug.
@@ -110,6 +113,22 @@ func (ts *testServer) seedUser(t *testing.T, slug, username, password, fullName,
 	}
 	if err := ts.repo.CreateUser(context.Background(), committeeID, username, string(hash), fullName, false, role); err != nil {
 		t.Fatalf("seed user %q: %v", username, err)
+	}
+}
+
+// seedAdminAccount creates an account with admin privileges.
+func (ts *testServer) seedAdminAccount(t *testing.T, username, password string) {
+	t.Helper()
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		t.Fatalf("hash password for admin: %v", err)
+	}
+	account, err := ts.repo.CreateAccount(context.Background(), username, string(hash))
+	if err != nil {
+		t.Fatalf("create admin account %q: %v", username, err)
+	}
+	if err := ts.repo.SetAccountIsAdmin(context.Background(), account.ID, true); err != nil {
+		t.Fatalf("set admin flag for %q: %v", username, err)
 	}
 }
 

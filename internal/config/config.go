@@ -12,6 +12,7 @@ import (
 // Config holds all application configuration
 type Config struct {
 	Application *ApplicationConfig `mapstructure:"application"`
+	Database    *DatabaseConfig    `mapstructure:"database"`
 }
 
 // ConfigGroup identifies config subsections
@@ -19,11 +20,12 @@ type ConfigGroup string
 
 const (
 	ApplicationGroup ConfigGroup = "application"
+	DatabaseGroup    ConfigGroup = "database"
 )
 
 // LoadConfig loads full configuration
 func LoadConfig() (*Config, error) {
-	return LoadConfigSelective([]ConfigGroup{ApplicationGroup})
+	return LoadConfigSelective([]ConfigGroup{ApplicationGroup, DatabaseGroup})
 }
 
 // stringToStringMapHook decodes comma-separated key=value strings into map[string]string
@@ -83,6 +85,11 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 			if err := BindConfigToViper(v, cfg.Application, string(ApplicationGroup)); err != nil {
 				return nil, fmt.Errorf("failed to bind application config: %w", err)
 			}
+		case DatabaseGroup:
+			cfg.Database = &DatabaseConfig{}
+			if err := BindConfigToViper(v, cfg.Database, string(DatabaseGroup)); err != nil {
+				return nil, fmt.Errorf("failed to bind database config: %w", err)
+			}
 		default:
 			return nil, fmt.Errorf("unknown config group: %s", group)
 		}
@@ -121,6 +128,8 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 		switch group {
 		case ApplicationGroup:
 			groupCfg = cfg.Application
+		case DatabaseGroup:
+			groupCfg = cfg.Database
 		}
 
 		if groupCfg != nil {
@@ -136,6 +145,8 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 		switch group {
 		case ApplicationGroup:
 			groupCfg = cfg.Application
+		case DatabaseGroup:
+			groupCfg = cfg.Database
 		}
 
 		if groupCfg != nil {

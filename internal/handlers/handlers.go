@@ -75,12 +75,10 @@ func (b *HandlerBuilder) Build() *Handler {
 }
 
 type Handler struct {
-	Broker              broker.Broker
-	Repository          repository.Repository
-	Storage             storage.Service
-	SessionManager      *session.Manager
-	AdminSessionManager *session.AdminSessionManager
-	AdminKey            string
+	Broker         broker.Broker
+	Repository     repository.Repository
+	Storage        storage.Service
+	SessionManager *session.Manager
 }
 
 func NewHandler(b broker.Broker) *Handler {

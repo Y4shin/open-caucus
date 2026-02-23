@@ -33,6 +33,27 @@ func (q *Queries) CountUsersInCommittee(ctx context.Context, slug string) (int64
 	return count, err
 }
 
+const createAccount = `-- name: CreateAccount :one
+INSERT INTO accounts (username, auth_method, created_at, updated_at)
+VALUES (?, 'password', datetime('now'), datetime('now'))
+RETURNING id, username, auth_method, is_admin, created_at, updated_at
+`
+
+// Creates a new sitewide account. Caller must also create a credential row.
+func (q *Queries) CreateAccount(ctx context.Context, username string) (Account, error) {
+	row := q.db.QueryRowContext(ctx, createAccount, username)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.AuthMethod,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createCommitteeWithSlug = `-- name: CreateCommitteeWithSlug :one
 INSERT INTO committees (name, slug, created_at, updated_at)
 VALUES (?, ?, datetime('now'), datetime('now'))
@@ -58,43 +79,65 @@ func (q *Queries) CreateCommitteeWithSlug(ctx context.Context, arg CreateCommitt
 	return i, err
 }
 
-const createUser = `-- name: CreateUser :one
-INSERT INTO users (
-    committee_id, username, password_hash, full_name,
-    quoted, role, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-RETURNING id, committee_id, username, password_hash, full_name, role, created_at, updated_at, quoted
+const createMembership = `-- name: CreateMembership :one
+INSERT INTO users (account_id, committee_id, full_name, role, quoted, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+RETURNING id, account_id, committee_id, full_name, role, quoted, created_at, updated_at
 `
 
-type CreateUserParams struct {
-	CommitteeID  int64
-	Username     string
-	PasswordHash string
-	FullName     string
-	Quoted       bool
-	Role         string
+type CreateMembershipParams struct {
+	AccountID   int64
+	CommitteeID int64
+	FullName    string
+	Role        string
+	Quoted      bool
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
+// Creates a committee membership row for an existing account.
+func (q *Queries) CreateMembership(ctx context.Context, arg CreateMembershipParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, createMembership,
+		arg.AccountID,
 		arg.CommitteeID,
-		arg.Username,
-		arg.PasswordHash,
 		arg.FullName,
-		arg.Quoted,
 		arg.Role,
+		arg.Quoted,
 	)
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.AccountID,
 		&i.CommitteeID,
-		&i.Username,
-		&i.PasswordHash,
 		&i.FullName,
 		&i.Role,
+		&i.Quoted,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Quoted,
+	)
+	return i, err
+}
+
+const createPasswordCredential = `-- name: CreatePasswordCredential :one
+INSERT INTO password_credentials (account_id, auth_method, password_hash, created_at, updated_at)
+VALUES (?, 'password', ?, datetime('now'), datetime('now'))
+RETURNING id, account_id, auth_method, password_hash, created_at, updated_at
+`
+
+type CreatePasswordCredentialParams struct {
+	AccountID    int64
+	PasswordHash string
+}
+
+// Creates a password credential for an account.
+func (q *Queries) CreatePasswordCredential(ctx context.Context, arg CreatePasswordCredentialParams) (PasswordCredential, error) {
+	row := q.db.QueryRowContext(ctx, createPasswordCredential, arg.AccountID, arg.PasswordHash)
+	var i PasswordCredential
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.AuthMethod,
+		&i.PasswordHash,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -171,10 +214,13 @@ func (q *Queries) ListAllCommittees(ctx context.Context, arg ListAllCommitteesPa
 
 const listUsersInCommittee = `-- name: ListUsersInCommittee :many
 
-SELECT u.id, u.committee_id, u.username, u.password_hash, u.full_name, u.role, u.created_at, u.updated_at, u.quoted FROM users u
+SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+       u.created_at, u.updated_at, a.username
+FROM users u
+JOIN accounts a ON u.account_id = a.id
 JOIN committees c ON u.committee_id = c.id
 WHERE c.slug = ?
-ORDER BY u.username ASC LIMIT ? OFFSET ?
+ORDER BY a.username ASC LIMIT ? OFFSET ?
 `
 
 type ListUsersInCommitteeParams struct {
@@ -183,26 +229,38 @@ type ListUsersInCommitteeParams struct {
 	Offset int64
 }
 
-// User Management
-func (q *Queries) ListUsersInCommittee(ctx context.Context, arg ListUsersInCommitteeParams) ([]User, error) {
+type ListUsersInCommitteeRow struct {
+	ID          int64
+	AccountID   int64
+	CommitteeID int64
+	FullName    string
+	Role        string
+	Quoted      bool
+	CreatedAt   string
+	UpdatedAt   string
+	Username    string
+}
+
+// User / Membership Management
+func (q *Queries) ListUsersInCommittee(ctx context.Context, arg ListUsersInCommitteeParams) ([]ListUsersInCommitteeRow, error) {
 	rows, err := q.db.QueryContext(ctx, listUsersInCommittee, arg.Slug, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []User
+	var items []ListUsersInCommitteeRow
 	for rows.Next() {
-		var i User
+		var i ListUsersInCommitteeRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.AccountID,
 			&i.CommitteeID,
-			&i.Username,
-			&i.PasswordHash,
 			&i.FullName,
 			&i.Role,
+			&i.Quoted,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Quoted,
+			&i.Username,
 		); err != nil {
 			return nil, err
 		}
@@ -217,27 +275,58 @@ func (q *Queries) ListUsersInCommittee(ctx context.Context, arg ListUsersInCommi
 	return items, nil
 }
 
-const updateUser = `-- name: UpdateUser :exec
+const setAccountIsAdmin = `-- name: SetAccountIsAdmin :exec
+UPDATE accounts SET is_admin = ?, updated_at = datetime('now') WHERE id = ?
+`
+
+type SetAccountIsAdminParams struct {
+	IsAdmin bool
+	ID      int64
+}
+
+func (q *Queries) SetAccountIsAdmin(ctx context.Context, arg SetAccountIsAdminParams) error {
+	_, err := q.db.ExecContext(ctx, setAccountIsAdmin, arg.IsAdmin, arg.ID)
+	return err
+}
+
+const updateMembership = `-- name: UpdateMembership :exec
 UPDATE users
-SET password_hash = ?, full_name = ?, quoted = ?, role = ?, updated_at = datetime('now')
+SET full_name = ?, quoted = ?, role = ?, updated_at = datetime('now')
 WHERE id = ?
 `
 
-type UpdateUserParams struct {
-	PasswordHash string
-	FullName     string
-	Quoted       bool
-	Role         string
-	ID           int64
+type UpdateMembershipParams struct {
+	FullName string
+	Quoted   bool
+	Role     string
+	ID       int64
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.ExecContext(ctx, updateUser,
-		arg.PasswordHash,
+func (q *Queries) UpdateMembership(ctx context.Context, arg UpdateMembershipParams) error {
+	_, err := q.db.ExecContext(ctx, updateMembership,
 		arg.FullName,
 		arg.Quoted,
 		arg.Role,
 		arg.ID,
 	)
+	return err
+}
+
+const upsertPasswordCredential = `-- name: UpsertPasswordCredential :exec
+INSERT INTO password_credentials (account_id, auth_method, password_hash, created_at, updated_at)
+VALUES (?, 'password', ?, datetime('now'), datetime('now'))
+ON CONFLICT (account_id) DO UPDATE
+    SET password_hash = excluded.password_hash,
+        updated_at    = datetime('now')
+`
+
+type UpsertPasswordCredentialParams struct {
+	AccountID    int64
+	PasswordHash string
+}
+
+// Inserts or updates the password credential for an account.
+func (q *Queries) UpsertPasswordCredential(ctx context.Context, arg UpsertPasswordCredentialParams) error {
+	_, err := q.db.ExecContext(ctx, upsertPasswordCredential, arg.AccountID, arg.PasswordHash)
 	return err
 }

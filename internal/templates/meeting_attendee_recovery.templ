@@ -25,22 +25,13 @@ func (i *MeetingAttendeeRecoveryInput) QRCodeSrc() templ.SafeURL {
 }
 
 templ MeetingAttendeeRecoveryTemplate(input MeetingAttendeeRecoveryInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>Guest Recovery Link: { input.AttendeeName }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate("Guest Recovery Link: "+input.AttendeeName, false, false,
+		ScaffoldInput{
 			Title:    "Guest Recovery Link",
 			Subtitle: input.AttendeeName + " - " + input.MeetingName,
 			BackLink: SafeURLPtr(input.MeetingManageGet(ctx)),
-		}, MeetingAttendeeRecoveryContent(input))
-	</body>
-	</html>
+		},
+		MeetingAttendeeRecoveryContent(input))
 }
 
 templ MeetingAttendeeRecoveryContent(input MeetingAttendeeRecoveryInput) {

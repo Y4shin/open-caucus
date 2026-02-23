@@ -83,9 +83,7 @@ func (i *UserListPartialInput) PaginationArgs(ctx context.Context) PaginationArg
 // body for HTMX mutation requests (create/delete user).
 templ UserListPartial(input UserListPartialInput) {
 	<div id="committee-users-container">
-		if input.Error != "" {
-			<div class={ ErrorText() }>{ input.Error }</div>
-		}
+		@ErrorMessage(input.Error)
 		<section class={ Panel() }>
 			<h2>{ i18n.T(ctx, "admin_committee_users.add_heading") }</h2>
 			<form
@@ -94,18 +92,28 @@ templ UserListPartial(input UserListPartialInput) {
 				hx-swap="outerHTML"
 				hx-on::after-request="if(event.detail.successful) this.reset()"
 			>
-				<div>
-					<label for="username">{ i18n.T(ctx, "admin_committee_users.username_label") }</label>
-					<input type="text" id="username" name="username" required/>
-				</div>
-				<div>
-					<label for="password">{ i18n.T(ctx, "admin_committee_users.password_label") }</label>
-					<input type="password" id="password" name="password" required/>
-				</div>
-				<div>
-					<label for="full_name">{ i18n.T(ctx, "admin_committee_users.fullname_label") }</label>
-					<input type="text" id="full_name" name="full_name" required/>
-				</div>
+				@FormField(FormFieldInput{
+					ID:       "username",
+					Name:     "username",
+					Label:    i18n.T(ctx, "admin_committee_users.username_label"),
+					Type:     "text",
+					Required: true,
+				})
+				@FormField(FormFieldInput{
+					ID:       "password",
+					Name:     "password",
+					Label:    i18n.T(ctx, "admin_committee_users.password_label"),
+					Type:     "password",
+					Required: true,
+					Hint:     i18n.T(ctx, "admin_committee_users.password_hint"),
+				})
+				@FormField(FormFieldInput{
+					ID:       "full_name",
+					Name:     "full_name",
+					Label:    i18n.T(ctx, "admin_committee_users.fullname_label"),
+					Type:     "text",
+					Required: true,
+				})
 				<div>
 					<label for="role">{ i18n.T(ctx, "admin_committee_users.role_label") }</label>
 					<select id="role" name="role" required>
@@ -172,22 +180,12 @@ templ UserListPartial(input UserListPartialInput) {
 }
 
 templ AdminCommitteeUsersTemplate(input AdminCommitteeUsersInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "admin_committee_users.page_title", input.CommitteeName) }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-		<script src={ paths.Route.HtmxMinJs() }></script>
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate(i18n.T(ctx, "admin_committee_users.page_title", input.CommitteeName), true, false,
+		ScaffoldInput{
 			Title:    i18n.T(ctx, "admin_committee_users.heading", input.CommitteeName),
 			BackLink: SafeURLPtr(input.AdminDashboardGet(ctx)),
-		}, AdminCommitteeUsersContent(input))
-	</body>
-	</html>
+		},
+		AdminCommitteeUsersContent(input))
 }
 
 templ AdminCommitteeUsersContent(input AdminCommitteeUsersInput) {

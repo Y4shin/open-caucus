@@ -96,9 +96,7 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 		<strong>{ input.Motion.Title }</strong>
 		{ " " }
 		<a href={ templ.URL(input.BlobDownloadGetStr(ctx)) }>{ input.Motion.Filename }</a>
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+		@ErrorMessage(input.Error)
 		if input.Motion.HasVotes() {
 			<p>
 				{ i18n.T(ctx, "motion.vote_for_label") } { strconv.FormatInt(*input.Motion.VotesFor, 10) } |
@@ -135,9 +133,7 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 templ MotionListPartial(input MotionListPartialInput) {
 	<div id={ input.containerID() }>
 		<h4>{ input.AgendaPointTitle } — { i18n.T(ctx, "motion.heading") }</h4>
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+		@ErrorMessage(input.Error)
 		<form
 			hx-post={ input.MotionCreatePostStr(ctx) }
 			hx-target={ "#" + input.containerID() }

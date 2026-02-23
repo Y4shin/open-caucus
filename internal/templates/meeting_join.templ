@@ -46,45 +46,25 @@ func (i *MeetingGuestSuccessInput) AttendeeLoginGet(ctx context.Context) templ.S
 }
 
 templ MeetingJoinTemplate(input MeetingJoinInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "meeting_join.page_title", input.MeetingName, input.CommitteeName) }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate(i18n.T(ctx, "meeting_join.page_title", input.MeetingName, input.CommitteeName), false, false,
+		ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: input.CommitteeName,
-		}, MeetingJoinContent(input))
-	</body>
-	</html>
+		},
+		MeetingJoinContent(input))
 }
 
 templ MeetingGuestSuccessTemplate(input MeetingGuestSuccessInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "meeting_join.success_page_title", input.MeetingName) }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate(i18n.T(ctx, "meeting_join.success_page_title", input.MeetingName), false, false,
+		ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: input.CommitteeName,
-		}, MeetingGuestSuccessContent(input))
-	</body>
-</html>
+		},
+		MeetingGuestSuccessContent(input))
 }
 
 templ MeetingJoinContent(input MeetingJoinInput) {
-	if input.Error != "" {
-		<p class={ ErrorText() }>{ input.Error }</p>
-	}
+	@ErrorMessage(input.Error)
 	if input.AlreadySignedUp {
 		<p>{ i18n.T(ctx, "meeting_join.already_signed_up") }</p>
 		<form method="POST" action={ input.JoinSubmitPost(ctx) }>
@@ -99,10 +79,13 @@ templ MeetingJoinContent(input MeetingJoinInput) {
 	} else if input.SignupOpen {
 		<h3>{ i18n.T(ctx, "meeting_join.guest_heading") }</h3>
 		<form method="POST" action={ input.GuestSignupPost(ctx) }>
-			<div>
-				<label for="full_name">{ i18n.T(ctx, "meeting_join.name_label") }</label>
-				<input type="text" id="full_name" name="full_name" required/>
-			</div>
+			@FormField(FormFieldInput{
+				ID:       "full_name",
+				Name:     "full_name",
+				Label:    i18n.T(ctx, "meeting_join.name_label"),
+				Type:     "text",
+				Required: true,
+			})
 			<div>
 				<label for="guest_gender_quoted">{ i18n.T(ctx, "meeting_join.quoted_label") }</label>
 				<input type="checkbox" id="guest_gender_quoted" name="gender_quoted" value="true"/>
@@ -124,7 +107,7 @@ templ MeetingJoinContent(input MeetingJoinInput) {
 
 templ MeetingGuestSuccessContent(input MeetingGuestSuccessInput) {
 	if input.Error != "" {
-		<p class={ ErrorText() }>{ input.Error }</p>
+		@ErrorMessage(input.Error)
 	} else {
 		<h3>{ i18n.T(ctx, "meeting_join.success_heading") }</h3>
 		<p>{ i18n.T(ctx, "meeting_join.access_code_label") } <strong>{ input.AttendeeSecret }</strong></p>

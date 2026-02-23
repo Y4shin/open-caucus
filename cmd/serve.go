@@ -29,7 +29,7 @@ var serveCmd = &cobra.Command{
 		}
 
 		// Initialize database repository
-		repo, err := sqlite.New("conference.db")
+		repo, err := sqlite.New(cfg.Database.Path)
 		if err != nil {
 			return fmt.Errorf("failed to create repository: %w", err)
 		}
@@ -53,20 +53,15 @@ var serveCmd = &cobra.Command{
 		// Initialize session manager with repository as store
 		sessionManager := session.NewManager(repo, []byte(cfg.Application.SessionSecret))
 
-		// Initialize admin session manager
-		adminSessionManager := session.NewAdminSessionManager([]byte(cfg.Application.SessionSecret))
+		// Initialize middleware registry with session manager
+		mw := middleware.NewRegistry(sessionManager, repo)
 
-		// Initialize middleware registry with session managers
-		mw := middleware.NewRegistry(sessionManager, adminSessionManager, repo)
-
-		// Initialize handlers with repository, broker, storage, and session managers
+		// Initialize handlers with repository, broker, storage, and session manager
 		handler := &handlers.Handler{
-			Broker:              b,
-			Repository:          repo,
-			Storage:             store,
-			SessionManager:      sessionManager,
-			AdminSessionManager: adminSessionManager,
-			AdminKey:            cfg.Application.AdminKey,
+			Broker:         b,
+			Repository:     repo,
+			Storage:        store,
+			SessionManager: sessionManager,
 		}
 
 		// Create router

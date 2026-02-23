@@ -14,8 +14,8 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 		t.Fatalf("CollectEnvFields failed: %v", err)
 	}
 
-	// ApplicationConfig has 5 fields
-	expectedCount := 8
+	// ApplicationConfig has 7 fields
+	expectedCount := 7
 	if len(fields) != expectedCount {
 		t.Errorf("Expected %d fields, got %d", expectedCount, len(fields))
 	}
@@ -31,7 +31,6 @@ func TestCollectEnvFields_ApplicationGroup(t *testing.T) {
 		"ENVIRONMENT",
 		"PORT",
 		"HOST",
-		"ADMIN_KEY",
 		"SESSION_SECRET",
 		"SESSION_EXPIRATION",
 	}
@@ -57,7 +56,6 @@ func TestCollectEnvFields_FieldTypes(t *testing.T) {
 		{"ENVIRONMENT", "string"},
 		{"PORT", "int"},
 		{"HOST", "string"},
-		{"ADMIN_KEY", "string"},
 	}
 
 	for _, tt := range tests {
@@ -92,7 +90,6 @@ func TestCollectEnvFields_RequiredVsOptional(t *testing.T) {
 		{"ENVIRONMENT", false},  // has default
 		{"PORT", false},         // has default
 		{"HOST", false},         // has default
-		{"ADMIN_KEY", false},    // has default
 	}
 
 	for _, tt := range tests {
@@ -180,10 +177,6 @@ func TestGenerateExampleEnv(t *testing.T) {
 	if !strings.Contains(content, "HOST=0.0.0.0") {
 		t.Error("Expected HOST with default value")
 	}
-	if !strings.Contains(content, "ADMIN_KEY=changeme") {
-		t.Error("Expected ADMIN_KEY with default value")
-	}
-
 	// Check for documentation comments
 	if !strings.Contains(content, "# Service name for identification") {
 		t.Error("Expected documentation for SERVICE_NAME")
@@ -206,7 +199,6 @@ SERVICE_NAME=test-service
 ENVIRONMENT=production
 PORT=9000
 HOST=127.0.0.1
-ADMIN_KEY=test-admin-key
 `
 	if err := os.WriteFile(tmpFile, []byte(content), 0644); err != nil {
 		t.Fatalf("Failed to write test file: %v", err)

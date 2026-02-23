@@ -81,7 +81,7 @@ func TestAttendeeLogin_InvalidSecret(t *testing.T) {
 		t.Fatalf("submit attendee login: %v", err)
 	}
 
-	if err := page.Locator("p:has-text('Invalid access code')").WaitFor(); err != nil {
+	if err := page.Locator("div:has-text('Invalid access code')").WaitFor(); err != nil {
 		t.Fatalf("expected error message for invalid code: %v", err)
 	}
 	if page.URL() != urlBefore {

@@ -15,7 +15,8 @@ en:
 
   admin_login:
     title: "Admin Login"
-    password_label: "Admin Key:"
+    username_label: "Username:"
+    password_label: "Password:"
     button: "Login"
 
   admin_dashboard:
@@ -43,6 +44,7 @@ en:
     add_heading: "Add New User"
     username_label: "Username:"
     password_label: "Password:"
+    password_hint: "Only used when creating a new account. Ignored if the username already has an account."
     fullname_label: "Full Name:"
     role_label: "Role:"
     role_member: "Member"

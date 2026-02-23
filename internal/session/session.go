@@ -11,6 +11,7 @@ type SessionType string
 const (
 	SessionTypeUser     SessionType = "user"
 	SessionTypeAttendee SessionType = "attendee"
+	SessionTypeAdmin    SessionType = "admin"
 )
 
 // SessionData contains information about an authenticated session
@@ -66,6 +67,11 @@ func (s *SessionData) IsAttendeeSession() bool {
 	return s.SessionType == SessionTypeAttendee
 }
 
+// IsAdminSession returns true if this is an admin session
+func (s *SessionData) IsAdminSession() bool {
+	return s.SessionType == SessionTypeAdmin
+}
+
 // Context keys for storing session data in request context
 type contextKey int
 
@@ -109,4 +115,10 @@ func WithCurrentAttendee(ctx context.Context, attendee *CurrentAttendee) context
 func GetCurrentAttendee(ctx context.Context) (*CurrentAttendee, bool) {
 	attendee, ok := ctx.Value(currentAttendeeContextKey).(*CurrentAttendee)
 	return attendee, ok
+}
+
+// IsAdminAuthenticated checks if the context has an active admin session.
+func IsAdminAuthenticated(ctx context.Context) bool {
+	sd, ok := GetSession(ctx)
+	return ok && sd.IsAdminSession()
 }

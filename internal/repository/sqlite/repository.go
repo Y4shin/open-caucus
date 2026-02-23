@@ -160,11 +160,35 @@ func (r *Repository) MigrationVersion() (version uint, dirty bool, err error) {
 	return v, d, nil
 }
 
-// GetUserByCommitteeAndUsername retrieves a user by committee slug and username
+// GetAccountByUsername retrieves a sitewide account by username
+func (r *Repository) GetAccountByUsername(ctx context.Context, username string) (*model.Account, error) {
+	account, err := r.Queries.GetAccountByUsername(ctx, username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("account not found: %w", err)
+		}
+		return nil, fmt.Errorf("get account by username: %w", err)
+	}
+	return accountFromClient(&account), nil
+}
+
+// GetPasswordCredential retrieves the password credential for an account.
+func (r *Repository) GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error) {
+	cred, err := r.Queries.GetPasswordCredentialByAccountID(ctx, accountID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("password credential not found: %w", err)
+		}
+		return nil, fmt.Errorf("get password credential: %w", err)
+	}
+	return passwordCredentialFromClient(&cred), nil
+}
+
+// GetUserByCommitteeAndUsername retrieves a committee membership by committee slug and username
 func (r *Repository) GetUserByCommitteeAndUsername(ctx context.Context, slug, username string) (*model.User, error) {
-	user, err := r.Queries.GetUserByCommitteeAndUsername(ctx, client.GetUserByCommitteeAndUsernameParams{
-		Slug:     slug,
+	row, err := r.Queries.GetUserMembershipByAccountAndCommittee(ctx, client.GetUserMembershipByAccountAndCommitteeParams{
 		Username: username,
+		Slug:     slug,
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -172,7 +196,7 @@ func (r *Repository) GetUserByCommitteeAndUsername(ctx context.Context, slug, us
 		}
 		return nil, fmt.Errorf("get user by committee and username: %w", err)
 	}
-	return userFromClient(&user), nil
+	return userFromMembershipRow(&row), nil
 }
 
 // GetCommitteeBySlug retrieves a committee by its slug
@@ -187,16 +211,16 @@ func (r *Repository) GetCommitteeBySlug(ctx context.Context, slug string) (*mode
 	return committeeFromClient(&committee), nil
 }
 
-// GetUserByID retrieves a user by ID
+// GetUserByID retrieves a membership row by ID, including the username from accounts
 func (r *Repository) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
-	user, err := r.Queries.GetUserByID(ctx, id)
+	row, err := r.Queries.GetUserByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, fmt.Errorf("get user by id: %w", err)
 	}
-	return userFromClient(&user), nil
+	return userFromGetUserByIDRow(&row), nil
 }
 
 // CreateSession stores a new session in the database
@@ -293,20 +317,82 @@ func (r *Repository) DeleteExpiredSessions(ctx context.Context, before time.Time
 
 // Converter functions from SQLC client types to model types
 
-func userFromClient(u *client.User) *model.User {
-	createdAt, _ := time.Parse(time.RFC3339, u.CreatedAt)
-	updatedAt, _ := time.Parse(time.RFC3339, u.UpdatedAt)
+func accountFromClient(a *client.Account) *model.Account {
+	createdAt, _ := time.Parse(time.RFC3339, a.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, a.UpdatedAt)
 
-	return &model.User{
-		ID:           u.ID,
-		CommitteeID:  u.CommitteeID,
-		Username:     u.Username,
-		PasswordHash: u.PasswordHash,
-		FullName:     u.FullName,
-		Quoted:       u.Quoted,
-		Role:         u.Role,
+	return &model.Account{
+		ID:         a.ID,
+		Username:   a.Username,
+		AuthMethod: a.AuthMethod,
+		IsAdmin:    a.IsAdmin,
+		CreatedAt:  createdAt,
+		UpdatedAt:  updatedAt,
+	}
+}
+
+func passwordCredentialFromClient(c *client.PasswordCredential) *model.PasswordCredential {
+	createdAt, _ := time.Parse(time.RFC3339, c.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, c.UpdatedAt)
+
+	return &model.PasswordCredential{
+		ID:           c.ID,
+		AccountID:    c.AccountID,
+		AuthMethod:   c.AuthMethod,
+		PasswordHash: c.PasswordHash,
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
+	}
+}
+
+func userFromGetUserByIDRow(r *client.GetUserByIDRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:          r.ID,
+		AccountID:   r.AccountID,
+		CommitteeID: r.CommitteeID,
+		Username:    r.Username,
+		FullName:    r.FullName,
+		Quoted:      r.Quoted,
+		Role:        r.Role,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
+	}
+}
+
+func userFromMembershipRow(r *client.GetUserMembershipByAccountAndCommitteeRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:          r.ID,
+		AccountID:   r.AccountID,
+		CommitteeID: r.CommitteeID,
+		Username:    r.Username,
+		FullName:    r.FullName,
+		Quoted:      r.Quoted,
+		Role:        r.Role,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
+	}
+}
+
+func userFromListRow(r *client.ListUsersInCommitteeRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:          r.ID,
+		AccountID:   r.AccountID,
+		CommitteeID: r.CommitteeID,
+		Username:    r.Username,
+		FullName:    r.FullName,
+		Quoted:      r.Quoted,
+		Role:        r.Role,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}
 }
 
@@ -456,7 +542,7 @@ func (r *Repository) ListUsersInCommittee(ctx context.Context, slug string, limi
 
 	result := make([]*model.User, len(users))
 	for i := range users {
-		result[i] = userFromClient(&users[i])
+		result[i] = userFromListRow(&users[i])
 	}
 	return result, nil
 }
@@ -470,15 +556,35 @@ func (r *Repository) CountUsersInCommittee(ctx context.Context, slug string) (in
 	return count, nil
 }
 
-// CreateUser creates a new user
+// CreateUser creates a committee membership for a sitewide account.
+// If no account with the given username exists, one is created using the provided
+// passwordHash. If an account already exists, it is reused and the passwordHash
+// is ignored.
 func (r *Repository) CreateUser(ctx context.Context, committeeID int64, username, passwordHash, fullName string, quoted bool, role string) error {
-	_, err := r.Queries.CreateUser(ctx, client.CreateUserParams{
-		CommitteeID:  committeeID,
-		Username:     username,
-		PasswordHash: passwordHash,
-		FullName:     fullName,
-		Quoted:       quoted,
-		Role:         role,
+	account, err := r.Queries.GetAccountByUsername(ctx, username)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("create user: look up account: %w", err)
+		}
+		// Account does not exist yet — create it.
+		account, err = r.Queries.CreateAccount(ctx, username)
+		if err != nil {
+			return fmt.Errorf("create user: create account: %w", err)
+		}
+		if _, err := r.Queries.CreatePasswordCredential(ctx, client.CreatePasswordCredentialParams{
+			AccountID:    account.ID,
+			PasswordHash: passwordHash,
+		}); err != nil {
+			return fmt.Errorf("create user: create account credential: %w", err)
+		}
+	}
+
+	_, err = r.Queries.CreateMembership(ctx, client.CreateMembershipParams{
+		AccountID:   account.ID,
+		CommitteeID: committeeID,
+		FullName:    fullName,
+		Role:        role,
+		Quoted:      quoted,
 	})
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
@@ -493,6 +599,33 @@ func (r *Repository) DeleteUserByID(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete user: %w", err)
 	}
 	return nil
+}
+
+// SetAccountIsAdmin sets or clears the is_admin flag on an account
+func (r *Repository) SetAccountIsAdmin(ctx context.Context, accountID int64, isAdmin bool) error {
+	err := r.Queries.SetAccountIsAdmin(ctx, client.SetAccountIsAdminParams{
+		IsAdmin: isAdmin,
+		ID:      accountID,
+	})
+	if err != nil {
+		return fmt.Errorf("set account is_admin: %w", err)
+	}
+	return nil
+}
+
+// CreateAccount creates a new sitewide account with the given username and password hash.
+func (r *Repository) CreateAccount(ctx context.Context, username, passwordHash string) (*model.Account, error) {
+	account, err := r.Queries.CreateAccount(ctx, username)
+	if err != nil {
+		return nil, fmt.Errorf("create account: %w", err)
+	}
+	if _, err := r.Queries.CreatePasswordCredential(ctx, client.CreatePasswordCredentialParams{
+		AccountID:    account.ID,
+		PasswordHash: passwordHash,
+	}); err != nil {
+		return nil, fmt.Errorf("create account credential: %w", err)
+	}
+	return accountFromClient(&account), nil
 }
 
 // ListMeetingsForCommittee retrieves a page of meetings for a committee by slug

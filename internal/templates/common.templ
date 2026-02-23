@@ -1,0 +1,82 @@
+package templates
+
+import "strconv"
+
+func errorTimeoutStr(timeoutMs []int) string {
+	if len(timeoutMs) > 0 {
+		return strconv.Itoa(timeoutMs[0])
+	}
+	return "0"
+}
+
+// ErrorMessage renders a styled, dismissable error message when message is non-empty.
+// The optional timeoutMs parameter auto-dismisses the message after that many milliseconds.
+templ ErrorMessage(message string, timeoutMs ...int) {
+	if message != "" {
+		<div
+			class={ ErrorText(), ErrorMessageLayout() }
+			data-error-message
+			data-error-timeout={ errorTimeoutStr(timeoutMs) }
+		>
+			<span>{ message }</span>
+			<button
+				type="button"
+				class={ ErrorMessageDismiss() }
+				onclick="var p=this.closest('[data-error-message]');if(p)p.remove()"
+				aria-label="Dismiss"
+			>&#x00D7;</button>
+			<script>
+				(function(){
+					var s=document.currentScript;
+					var el=s&&s.closest?s.closest('[data-error-message]'):null;
+					if(!el){var a=document.querySelectorAll('[data-error-message]:not([data-em-init])');el=a.length?a[a.length-1]:null;}
+					if(!el)return;
+					el.setAttribute('data-em-init','1');
+					var t=parseInt(el.getAttribute('data-error-timeout'),10);
+					if(!t||t<=0)return;
+					setTimeout(function(){
+						el.style.transition='opacity 0.3s ease';
+						el.style.opacity='0';
+						setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
+					},t);
+				})();
+			</script>
+		</div>
+	}
+}
+
+// FormFieldInput holds the parameters for a single label + input field group.
+type FormFieldInput struct {
+	ID        string
+	Name      string
+	Label     string
+	Type      string // "text", "password", "email", etc.
+	Value     string
+	Required  bool
+	Autofocus bool
+	Pattern   string
+	Hint      string // renders as <small> below the input
+}
+
+// FormField renders a <div> containing a <label> and <input>, with an optional
+// <small> hint. Use for text/password/email/number inputs. For checkboxes,
+// file inputs, or <select> elements keep the markup inline.
+templ FormField(f FormFieldInput) {
+	<div>
+		<label for={ f.ID }>{ f.Label }</label>
+		<input
+			type={ f.Type }
+			id={ f.ID }
+			name={ f.Name }
+			value={ f.Value }
+			required?={ f.Required }
+			autofocus?={ f.Autofocus }
+			if f.Pattern != "" {
+				pattern={ f.Pattern }
+			}
+		/>
+		if f.Hint != "" {
+			<small>{ f.Hint }</small>
+		}
+	</div>
+}

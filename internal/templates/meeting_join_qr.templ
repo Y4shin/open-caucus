@@ -24,22 +24,13 @@ func (i *MeetingJoinQRInput) QRCodeSrc() templ.SafeURL {
 }
 
 templ MeetingJoinQRTemplate(input MeetingJoinQRInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>Guest Join QR: { input.MeetingName } - { input.CommitteeName }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate("Guest Join QR: "+input.MeetingName+" - "+input.CommitteeName, false, false,
+		ScaffoldInput{
 			Title:    "Guest Join QR",
 			Subtitle: input.MeetingName + " - " + input.CommitteeName,
 			BackLink: SafeURLPtr(input.MeetingManageGet(ctx)),
-		}, MeetingJoinQRContent(input))
-	</body>
-	</html>
+		},
+		MeetingJoinQRContent(input))
 }
 
 templ MeetingJoinQRContent(input MeetingJoinQRInput) {

@@ -55,9 +55,7 @@ func (i *MeetingProtocolInput) agendaPointPartialInput(ap ProtocolAgendaPointIte
 
 templ ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) {
 	<div id={ "ap-protocol-" + input.AgendaPoint.IDString }>
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+		@ErrorMessage(input.Error)
 		if input.Saved {
 			<p><em>{ i18n.T(ctx, "meeting_protocol.saved") }</em></p>
 		}
@@ -73,22 +71,12 @@ templ ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) {
 }
 
 templ MeetingProtocolTemplate(input MeetingProtocolInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "meeting_protocol.page_title", input.MeetingName, input.CommitteeName) }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-		<script src={ paths.Route.HtmxMinJs() }></script>
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate(i18n.T(ctx, "meeting_protocol.page_title", input.MeetingName, input.CommitteeName), true, false,
+		ScaffoldInput{
 			Title:    i18n.T(ctx, "meeting_protocol.heading", input.MeetingName),
 			BackLink: SafeURLPtr(input.ManageURL(ctx)),
-		}, MeetingProtocolContent(input))
-	</body>
-	</html>
+		},
+		MeetingProtocolContent(input))
 }
 
 templ MeetingProtocolContent(input MeetingProtocolInput) {

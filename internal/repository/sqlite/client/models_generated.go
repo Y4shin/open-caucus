@@ -8,6 +8,15 @@ import (
 	"database/sql"
 )
 
+type Account struct {
+	ID         int64
+	Username   string
+	AuthMethod string
+	IsAdmin    bool
+	CreatedAt  string
+	UpdatedAt  string
+}
+
 type AgendaAttachment struct {
 	ID            int64
 	AgendaPointID int64
@@ -90,6 +99,15 @@ type Motion struct {
 	UpdatedAt      string
 }
 
+type PasswordCredential struct {
+	ID           int64
+	AccountID    int64
+	AuthMethod   string
+	PasswordHash string
+	CreatedAt    string
+	UpdatedAt    string
+}
+
 type Session struct {
 	SessionID     string
 	SessionType   string
@@ -122,13 +140,12 @@ type SpeakersList struct {
 }
 
 type User struct {
-	ID           int64
-	CommitteeID  int64
-	Username     string
-	PasswordHash string
-	FullName     string
-	Role         string
-	CreatedAt    string
-	UpdatedAt    string
-	Quoted       bool
+	ID          int64
+	AccountID   int64
+	CommitteeID int64
+	FullName    string
+	Role        string
+	Quoted      bool
+	CreatedAt   string
+	UpdatedAt   string
 }

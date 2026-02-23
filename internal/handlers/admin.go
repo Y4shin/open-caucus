@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -14,17 +15,15 @@ import (
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
-
-	playwright "github.com/playwright-community/playwright-go"
 )
 
 var slugRegex = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 // AdminLogin shows the admin login page
 func (h *Handler) AdminLogin(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
-	playwright.Run()
-	// Check if already logged in
-	if session.IsAdminAuthenticated(ctx) {
+	// Redirect if already logged in as admin
+	sd, ok := session.GetSession(ctx)
+	if ok && sd.IsAdminSession() {
 		meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/admin")
 		return nil, meta, nil
 	}
@@ -41,20 +40,41 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 		}, nil, nil
 	}
 
-	adminKey := r.FormValue("admin_key")
+	username := r.FormValue("username")
+	password := r.FormValue("password")
 
-	// Verify admin key
-	if adminKey != h.AdminKey {
-		return &templates.AdminLoginInput{
-			Error: "Invalid admin key",
-		}, nil, nil
+	// Lookup account
+	account, err := h.Repository.GetAccountByUsername(ctx, username)
+	if err != nil {
+		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+	}
+
+	// Verify password
+	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
+	if err != nil {
+		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
+		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+	}
+
+	// Check admin flag
+	if !account.IsAdmin {
+		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
 	}
 
 	// Create admin session
-	sessionToken := h.AdminSessionManager.CreateAdminSession()
-	cookie := h.AdminSessionManager.CreateAdminCookie(sessionToken)
+	sessionData := &session.SessionData{
+		SessionType: session.SessionTypeAdmin,
+		Username:    &account.Username,
+		ExpiresAt:   time.Now().Add(24 * time.Hour),
+	}
+	signedID, err := h.SessionManager.CreateSession(ctx, sessionData)
+	if err != nil {
+		return nil, nil, fmt.Errorf("create admin session: %w", err)
+	}
 
-	// Redirect to admin dashboard with cookie
+	cookie := h.SessionManager.CreateCookie(signedID)
 	meta := routes.NewResponseMeta().
 		WithCookie(cookie).
 		WithRedirect(http.StatusSeeOther, "/admin")
@@ -64,10 +84,20 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 
 // AdminLogout logs out the admin
 func (h *Handler) AdminLogout(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
-	// Clear admin cookie
-	clearCookie := h.AdminSessionManager.ClearAdminCookie()
+	// Destroy session from store
+	if cookie, err := r.Cookie("session_id"); err == nil {
+		_ = h.SessionManager.DestroySession(ctx, cookie.Value)
+	}
 
-	// Redirect to admin login
+	// Clear the session cookie
+	clearCookie := &http.Cookie{
+		Name:     "session_id",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	}
+
 	meta := routes.NewResponseMeta().
 		WithCookie(clearCookie).
 		WithRedirect(http.StatusSeeOther, "/admin/login")

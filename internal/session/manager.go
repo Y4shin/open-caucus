@@ -51,6 +51,8 @@ func (m *Manager) CreateSession(ctx context.Context, data *SessionData) (string,
 		modelSession.Username = data.Username
 		modelSession.Role = data.Role
 		modelSession.Quoted = data.Quoted
+	} else if data.IsAdminSession() {
+		modelSession.Username = data.Username
 	} else {
 		modelSession.AttendeeID = data.AttendeeID
 		modelSession.MeetingID = data.MeetingID

@@ -52,9 +52,7 @@ func (i *AttachmentListPartialInput) blobDownloadGetStr(ctx context.Context, a *
 templ AttachmentListPartial(input AttachmentListPartialInput) {
 	<div id={ input.containerID() }>
 		<h4>{ input.AgendaPointTitle } — { i18n.T(ctx, "attachment.heading") }</h4>
-		if input.Error != "" {
-			<p class={ ErrorText() }>{ input.Error }</p>
-		}
+		@ErrorMessage(input.Error)
 		<form
 			hx-post={ input.AttachmentCreatePostStr(ctx) }
 			hx-target={ "#" + input.containerID() }

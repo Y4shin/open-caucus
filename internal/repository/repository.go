@@ -31,6 +31,9 @@ type Repository interface {
 	MigrationVersion() (version uint, dirty bool, err error)
 
 	// User and authentication
+	GetAccountByUsername(ctx context.Context, username string) (*model.Account, error)
+	CreateAccount(ctx context.Context, username, passwordHash string) (*model.Account, error)
+	GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error)
 	GetUserByCommitteeAndUsername(ctx context.Context, slug, username string) (*model.User, error)
 	GetUserByID(ctx context.Context, id int64) (*model.User, error)
 
@@ -121,4 +124,7 @@ type Repository interface {
 	CountUsersInCommittee(ctx context.Context, slug string) (int64, error)
 	CreateUser(ctx context.Context, committeeID int64, username, passwordHash, fullName string, quoted bool, role string) error
 	DeleteUserByID(ctx context.Context, id int64) error
+
+	// Admin - Account admin flag
+	SetAccountIsAdmin(ctx context.Context, accountID int64, isAdmin bool) error
 }

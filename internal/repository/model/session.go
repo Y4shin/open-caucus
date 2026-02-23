@@ -8,6 +8,7 @@ type SessionType string
 const (
 	SessionTypeUser     SessionType = "user"
 	SessionTypeAttendee SessionType = "attendee"
+	SessionTypeAdmin    SessionType = "admin"
 )
 
 // Session represents an authentication session

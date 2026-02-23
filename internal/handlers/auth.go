@@ -56,10 +56,10 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 		}, nil, nil
 	}
 
-	// Look up user
-	user, err := h.Repository.GetUserByCommitteeAndUsername(ctx, committeeSlug, username)
+	// Look up sitewide account and verify password
+	account, err := h.Repository.GetAccountByUsername(ctx, username)
 	if err != nil {
-		// Generic error message for security (don't reveal if user exists)
+		// Generic error message for security (don't reveal if account exists)
 		return &templates.LoginPageInput{
 			Error:     "Invalid credentials",
 			Committee: committeeSlug,
@@ -67,8 +67,26 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 		}, nil, nil
 	}
 
-	// Verify password using bcrypt
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
+	if err != nil {
+		return &templates.LoginPageInput{
+			Error:     "Invalid credentials",
+			Committee: committeeSlug,
+			Username:  username,
+		}, nil, nil
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
+		return &templates.LoginPageInput{
+			Error:     "Invalid credentials",
+			Committee: committeeSlug,
+			Username:  username,
+		}, nil, nil
+	}
+
+	// Verify account has a membership in the requested committee
+	user, err := h.Repository.GetUserByCommitteeAndUsername(ctx, committeeSlug, username)
+	if err != nil {
 		return &templates.LoginPageInput{
 			Error:     "Invalid credentials",
 			Committee: committeeSlug,
@@ -81,7 +99,7 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 		SessionType:   session.SessionTypeUser,
 		UserID:        &user.ID,
 		CommitteeSlug: &committeeSlug,
-		Username:      &user.Username,
+		Username:      &account.Username,
 		Role:          &user.Role,
 		Quoted:        &user.Quoted,
 		ExpiresAt:     time.Now().Add(24 * time.Hour),

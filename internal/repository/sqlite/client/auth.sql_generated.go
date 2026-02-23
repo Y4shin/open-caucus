@@ -9,6 +9,25 @@ import (
 	"context"
 )
 
+const getAccountByUsername = `-- name: GetAccountByUsername :one
+SELECT id, username, auth_method, is_admin, created_at, updated_at FROM accounts WHERE username = ?
+`
+
+// Retrieves sitewide account for login authentication
+func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccountByUsername, username)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.AuthMethod,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getCommitteeBySlug = `-- name: GetCommitteeBySlug :one
 SELECT id, name, slug, created_at, updated_at, current_meeting_id FROM committees WHERE slug = ?
 `
@@ -28,54 +47,104 @@ func (q *Queries) GetCommitteeBySlug(ctx context.Context, slug string) (Committe
 	return i, err
 }
 
-const getUserByCommitteeAndUsername = `-- name: GetUserByCommitteeAndUsername :one
-SELECT u.id, u.committee_id, u.username, u.password_hash, u.full_name, u.role, u.created_at, u.updated_at, u.quoted
-FROM users u
-JOIN committees c ON u.committee_id = c.id
-WHERE c.slug = ? AND u.username = ?
+const getPasswordCredentialByAccountID = `-- name: GetPasswordCredentialByAccountID :one
+SELECT id, account_id, auth_method, password_hash, created_at, updated_at FROM password_credentials WHERE account_id = ?
 `
 
-type GetUserByCommitteeAndUsernameParams struct {
-	Slug     string
-	Username string
-}
-
-// Retrieves user for login authentication
-func (q *Queries) GetUserByCommitteeAndUsername(ctx context.Context, arg GetUserByCommitteeAndUsernameParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByCommitteeAndUsername, arg.Slug, arg.Username)
-	var i User
+// Retrieves the password credential for a given account
+func (q *Queries) GetPasswordCredentialByAccountID(ctx context.Context, accountID int64) (PasswordCredential, error) {
+	row := q.db.QueryRowContext(ctx, getPasswordCredentialByAccountID, accountID)
+	var i PasswordCredential
 	err := row.Scan(
 		&i.ID,
-		&i.CommitteeID,
-		&i.Username,
+		&i.AccountID,
+		&i.AuthMethod,
 		&i.PasswordHash,
-		&i.FullName,
-		&i.Role,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Quoted,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, committee_id, username, password_hash, full_name, role, created_at, updated_at, quoted FROM users WHERE id = ?
+SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+       u.created_at, u.updated_at, a.username
+FROM users u
+JOIN accounts a ON u.account_id = a.id
+WHERE u.id = ?
 `
 
-// Retrieves user by ID (for session restoration if needed)
-func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
+type GetUserByIDRow struct {
+	ID          int64
+	AccountID   int64
+	CommitteeID int64
+	FullName    string
+	Role        string
+	Quoted      bool
+	CreatedAt   string
+	UpdatedAt   string
+	Username    string
+}
+
+// Retrieves membership row by ID (for session restoration), including username from accounts
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserByID, id)
-	var i User
+	var i GetUserByIDRow
 	err := row.Scan(
 		&i.ID,
+		&i.AccountID,
 		&i.CommitteeID,
-		&i.Username,
-		&i.PasswordHash,
 		&i.FullName,
 		&i.Role,
+		&i.Quoted,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Username,
+	)
+	return i, err
+}
+
+const getUserMembershipByAccountAndCommittee = `-- name: GetUserMembershipByAccountAndCommittee :one
+SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+       u.created_at, u.updated_at, a.username
+FROM users u
+JOIN accounts a ON u.account_id = a.id
+JOIN committees c ON u.committee_id = c.id
+WHERE a.username = ? AND c.slug = ?
+`
+
+type GetUserMembershipByAccountAndCommitteeParams struct {
+	Username string
+	Slug     string
+}
+
+type GetUserMembershipByAccountAndCommitteeRow struct {
+	ID          int64
+	AccountID   int64
+	CommitteeID int64
+	FullName    string
+	Role        string
+	Quoted      bool
+	CreatedAt   string
+	UpdatedAt   string
+	Username    string
+}
+
+// Retrieves the committee membership row for an account+committee combination,
+// including the username from the accounts table.
+func (q *Queries) GetUserMembershipByAccountAndCommittee(ctx context.Context, arg GetUserMembershipByAccountAndCommitteeParams) (GetUserMembershipByAccountAndCommitteeRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserMembershipByAccountAndCommittee, arg.Username, arg.Slug)
+	var i GetUserMembershipByAccountAndCommitteeRow
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.CommitteeID,
+		&i.FullName,
+		&i.Role,
 		&i.Quoted,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Username,
 	)
 	return i, err
 }

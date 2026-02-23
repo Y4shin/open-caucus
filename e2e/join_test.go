@@ -212,7 +212,7 @@ func TestGuestSignup_InvalidMeetingSecret(t *testing.T) {
 		t.Fatalf("click submit: %v", err)
 	}
 
-	if err := page.Locator("p:has-text('Invalid meeting secret')").WaitFor(); err != nil {
+	if err := page.Locator("div:has-text('Invalid meeting secret')").WaitFor(); err != nil {
 		t.Fatalf("expected invalid meeting secret error: %v", err)
 	}
 }

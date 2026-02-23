@@ -23,6 +23,7 @@ func TestMigrateUp(t *testing.T) {
 
 	// Verify all expected tables exist
 	tables := []string{
+		"accounts",
 		"committees",
 		"users",
 		"meetings",
@@ -122,9 +123,15 @@ func TestMigrateUp_ForeignKeysEnforced(t *testing.T) {
 		t.Fatalf("MigrateUp failed: %v", err)
 	}
 
-	// Inserting a user with a non-existent committee_id should fail
+	// Create an account first, then try inserting a membership with a non-existent committee_id.
 	_, err := repo.DB.Exec(
-		"INSERT INTO users (committee_id, username, password_hash, full_name, gender, role) VALUES (999, 'test', 'hash', 'Test', 'm', 'member')",
+		"INSERT INTO accounts (username) VALUES ('test')",
+	)
+	if err != nil {
+		t.Fatalf("failed to insert test account: %v", err)
+	}
+	_, err = repo.DB.Exec(
+		"INSERT INTO users (account_id, committee_id, full_name, role) VALUES (1, 999, 'Test', 'member')",
 	)
 	if err == nil {
 		t.Error("expected foreign key violation, got nil")
@@ -138,18 +145,20 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 		t.Fatalf("MigrateUp failed: %v", err)
 	}
 
-	// Create a committee and user for FK satisfaction
+	// Create accounts, committee, membership, meeting, and agenda point for FK satisfaction
+	repo.DB.Exec("INSERT INTO accounts (username) VALUES ('user1')")
 	repo.DB.Exec("INSERT INTO committees (name) VALUES ('test')")
-	repo.DB.Exec("INSERT INTO users (committee_id, username, password_hash, full_name, gender, role) VALUES (1, 'user1', 'hash', 'User One', 'm', 'member')")
+	repo.DB.Exec("INSERT INTO users (account_id, committee_id, full_name, role) VALUES (1, 1, 'User One', 'member')")
 	repo.DB.Exec("INSERT INTO meetings (committee_id, name) VALUES (1, 'meeting1')")
 	repo.DB.Exec("INSERT INTO agenda_points (meeting_id, position, title) VALUES (1, 1, 'point1')")
 
-	// Invalid gender should fail
+	// Invalid role should fail
+	repo.DB.Exec("INSERT INTO accounts (username) VALUES ('bad')")
 	_, err := repo.DB.Exec(
-		"INSERT INTO users (committee_id, username, password_hash, full_name, gender, role) VALUES (1, 'bad', 'hash', 'Bad', 'x', 'member')",
+		"INSERT INTO users (account_id, committee_id, full_name, role) VALUES (2, 1, 'Bad', 'admin')",
 	)
 	if err == nil {
-		t.Error("expected CHECK constraint violation for invalid gender")
+		t.Error("expected CHECK constraint violation for invalid role")
 	}
 
 	// Invalid speakers_list type should fail

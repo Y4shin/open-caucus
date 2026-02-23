@@ -167,63 +167,63 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("GET /admin/login", rt.wrapMiddleware(
 		rt.handleAdminLogin,
 		getMiddlewareForPath("/admin/login", groups),
-		[]string{"admin_session"},
+		[]string{"session"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /admin/login", rt.wrapMiddleware(
 		rt.handleAdminLoginSubmit,
 		getMiddlewareForPath("/admin/login", groups),
-		[]string{"admin_session"},
+		[]string{"session"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /admin/logout", rt.wrapMiddleware(
 		rt.handleAdminLogout,
 		getMiddlewareForPath("/admin/logout", groups),
-		[]string{"admin_session"},
+		[]string{"session"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /admin", rt.wrapMiddleware(
 		rt.handleAdminDashboard,
 		getMiddlewareForPath("/admin", groups),
-		[]string{"admin_session", "admin_required"},
+		[]string{"session", "admin_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /admin/committee/create", rt.wrapMiddleware(
 		rt.handleAdminCreateCommittee,
 		getMiddlewareForPath("/admin/committee/create", groups),
-		[]string{"admin_session", "admin_required"},
+		[]string{"session", "admin_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /admin/committee/{slug}/delete", rt.wrapMiddleware(
 		rt.handleAdminDeleteCommittee,
 		getMiddlewareForPath("/admin/committee/{slug}/delete", groups),
-		[]string{"admin_session", "admin_required"},
+		[]string{"session", "admin_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /admin/committee/{slug}", rt.wrapMiddleware(
 		rt.handleAdminCommitteeUsers,
 		getMiddlewareForPath("/admin/committee/{slug}", groups),
-		[]string{"admin_session", "admin_required"},
+		[]string{"session", "admin_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /admin/committee/{slug}/user/create", rt.wrapMiddleware(
 		rt.handleAdminCreateUser,
 		getMiddlewareForPath("/admin/committee/{slug}/user/create", groups),
-		[]string{"admin_session", "admin_required"},
+		[]string{"session", "admin_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /admin/committee/{slug}/user/{user_id}/delete", rt.wrapMiddleware(
 		rt.handleAdminDeleteUser,
 		getMiddlewareForPath("/admin/committee/{slug}/user/{user_id}/delete", groups),
-		[]string{"admin_session", "admin_required"},
+		[]string{"session", "admin_required"},
 		false,
 	))
 

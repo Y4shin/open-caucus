@@ -233,9 +233,6 @@ func TestLoadConfig_Defaults(t *testing.T) {
 	if cfg.Application.Host != "0.0.0.0" {
 		t.Errorf("Host: got %q, want %q", cfg.Application.Host, "0.0.0.0")
 	}
-	if cfg.Application.AdminKey != "changeme" {
-		t.Errorf("AdminKey: got %q, want %q", cfg.Application.AdminKey, "changeme")
-	}
 }
 
 func TestLoadConfig_EnvOverrides(t *testing.T) {
@@ -244,7 +241,6 @@ func TestLoadConfig_EnvOverrides(t *testing.T) {
 		"ENVIRONMENT":  stringPtr("production"),
 		"PORT":         stringPtr("9000"),
 		"HOST":         stringPtr("127.0.0.1"),
-		"ADMIN_KEY":    stringPtr("my-secret-admin-key"),
 	})
 	defer snapshot.Restore()
 
@@ -269,9 +265,6 @@ func TestLoadConfig_EnvOverrides(t *testing.T) {
 	}
 	if cfg.Application.Host != "127.0.0.1" {
 		t.Errorf("Host: got %q, want %q", cfg.Application.Host, "127.0.0.1")
-	}
-	if cfg.Application.AdminKey != "my-secret-admin-key" {
-		t.Errorf("AdminKey: got %q, want %q", cfg.Application.AdminKey, "my-secret-admin-key")
 	}
 }
 

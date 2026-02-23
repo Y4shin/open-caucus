@@ -222,22 +222,12 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 }
 
 templ CommitteePageTemplate(input CommitteePageInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "committee.page_title", input.CommitteeName) }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-		<script src={ paths.Route.HtmxMinJs() }></script>
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate(i18n.T(ctx, "committee.page_title", input.CommitteeName), true, false,
+		ScaffoldInput{
 			Title:    input.CommitteeName,
 			Subtitle: i18n.T(ctx, "committee.dashboard_heading"),
-		}, CommitteePageContent(input))
-	</body>
-	</html>
+		},
+		CommitteePageContent(input))
 }
 
 templ CommitteePageContent(input CommitteePageInput) {

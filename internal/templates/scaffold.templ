@@ -8,6 +8,30 @@ import (
 	"github.com/invopop/ctxi18n/i18n"
 )
 
+// PageTemplate renders the full HTML page shell (DOCTYPE, head, body) around
+// a HeaderFooterScaffold. Set htmx=true to load HTMX, htmxSSE=true to also
+// load the HTMX SSE extension (which implies htmx).
+templ PageTemplate(title string, htmx bool, htmxSSE bool, scaffold ScaffoldInput, content templ.Component) {
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<title>{ title }</title>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		@GlobalStylesheetLink()
+		if htmx || htmxSSE {
+			<script src={ paths.Route.HtmxMinJs() }></script>
+		}
+		if htmxSSE {
+			<script src={ paths.Route.HtmxExtSseMinJs() }></script>
+		}
+	</head>
+	<body class={ AppShell() }>
+		@HeaderFooterScaffold(scaffold, content)
+	</body>
+	</html>
+}
+
 type Breadcrumb struct {
 	Slug string
 	URL  templ.SafeURL

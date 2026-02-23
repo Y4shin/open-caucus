@@ -98,6 +98,25 @@ css ErrorText() {
 	margin-bottom: 0.8rem;
 }
 
+css ErrorMessageLayout() {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+css ErrorMessageDismiss() {
+	flex-shrink: 0;
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0;
+	line-height: 1;
+	opacity: 0.7;
+	font-size: 1.2em;
+	color: inherit;
+}
+
 css ManageGrid() {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));

@@ -58,9 +58,7 @@ func (i *AdminDashboardInput) AdminCreateCommitteePost(ctx context.Context) stri
 // CommitteeListPartial renders just the committee list (for HTMX updates)
 templ CommitteeListPartial(input CommitteeListPartialInput) {
 	<div id="committee-list-container">
-		if input.Error != "" {
-			<div class={ ErrorText() } id="committee-error">{ input.Error }</div>
-		}
+		@ErrorMessage(input.Error)
 		<div id="committee-list">
 			if len(input.Committees) == 0 {
 				<p>{ i18n.T(ctx, "admin_dashboard.empty_state") }</p>
@@ -101,21 +99,9 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 }
 
 templ AdminDashboardTemplate(input AdminDashboardInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>{ i18n.T(ctx, "admin_dashboard.title") }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-		<script src={ paths.Route.HtmxMinJs() }></script>
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
-			Title: i18n.T(ctx, "admin_dashboard.title"),
-		}, AdminDashboardContent(input))
-	</body>
-</html>
+	@PageTemplate(i18n.T(ctx, "admin_dashboard.title"), true, false,
+		ScaffoldInput{Title: i18n.T(ctx, "admin_dashboard.title")},
+		AdminDashboardContent(input))
 }
 
 templ AdminDashboardContent(input AdminDashboardInput) {
@@ -130,15 +116,22 @@ templ AdminDashboardContent(input AdminDashboardInput) {
 			hx-swap="outerHTML"
 			hx-on::after-request="if(event.detail.successful) this.reset()"
 		>
-			<div>
-				<label for="name">{ i18n.T(ctx, "admin_dashboard.name_label") }</label>
-				<input type="text" id="name" name="name" required/>
-			</div>
-			<div>
-				<label for="slug">{ i18n.T(ctx, "admin_dashboard.slug_label") }</label>
-				<input type="text" id="slug" name="slug" required pattern="[a-z0-9\-]+"/>
-				<small>{ i18n.T(ctx, "admin_dashboard.slug_help") }</small>
-			</div>
+			@FormField(FormFieldInput{
+				ID:       "name",
+				Name:     "name",
+				Label:    i18n.T(ctx, "admin_dashboard.name_label"),
+				Type:     "text",
+				Required: true,
+			})
+			@FormField(FormFieldInput{
+				ID:      "slug",
+				Name:    "slug",
+				Label:   i18n.T(ctx, "admin_dashboard.slug_label"),
+				Type:    "text",
+				Required: true,
+				Pattern: "[a-z0-9\\-]+",
+				Hint:    i18n.T(ctx, "admin_dashboard.slug_help"),
+			})
 			<button type="submit">{ i18n.T(ctx, "admin_dashboard.create_button") }</button>
 		</form>
 	</section>

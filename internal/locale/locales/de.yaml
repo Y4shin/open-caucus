@@ -15,7 +15,8 @@ de:
 
   admin_login:
     title: "Admin-Anmeldung"
-    password_label: "Admin-Schluessel:"
+    username_label: "Benutzername:"
+    password_label: "Passwort:"
     button: "Anmelden"
 
   admin_dashboard:
@@ -43,6 +44,7 @@ de:
     add_heading: "Neuen Benutzer anlegen"
     username_label: "Benutzername:"
     password_label: "Passwort:"
+    password_hint: "Wird nur beim Erstellen eines neuen Kontos verwendet. Wird ignoriert, wenn der Benutzername bereits ein Konto hat."
     fullname_label: "Vollstaendiger Name:"
     role_label: "Rolle:"
     role_member: "Mitglied"

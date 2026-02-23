@@ -22,23 +22,13 @@ func (i *MeetingAgendaPointToolsInput) ManagePageGet(ctx context.Context) templ.
 }
 
 templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
-	<!DOCTYPE html>
-	<html>
-	<head>
-		<title>Agenda Tools: { input.AgendaPointTitle }</title>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		@GlobalStylesheetLink()
-		<script src={ paths.Route.HtmxMinJs() }></script>
-	</head>
-	<body class={ AppShell() }>
-		@HeaderFooterScaffold(ScaffoldInput{
+	@PageTemplate("Agenda Tools: "+input.AgendaPointTitle, true, false,
+		ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: "Agenda Point Tools: " + input.AgendaPointTitle,
 			BackLink: SafeURLPtr(input.ManagePageGet(ctx)),
-		}, MeetingAgendaPointToolsContent(input))
-	</body>
-	</html>
+		},
+		MeetingAgendaPointToolsContent(input))
 }
 
 templ MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) {

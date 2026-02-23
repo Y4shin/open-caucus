@@ -14,29 +14,55 @@ RETURNING *;
 -- name: DeleteCommitteeBySlug :exec
 DELETE FROM committees WHERE slug = ?;
 
--- User Management
+-- User / Membership Management
 
 -- name: ListUsersInCommittee :many
-SELECT u.* FROM users u
+SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+       u.created_at, u.updated_at, a.username
+FROM users u
+JOIN accounts a ON u.account_id = a.id
 JOIN committees c ON u.committee_id = c.id
 WHERE c.slug = ?
-ORDER BY u.username ASC LIMIT ? OFFSET ?;
+ORDER BY a.username ASC LIMIT ? OFFSET ?;
 
 -- name: CountUsersInCommittee :one
 SELECT COUNT(*) FROM users u
 JOIN committees c ON u.committee_id = c.id
 WHERE c.slug = ?;
 
--- name: CreateUser :one
-INSERT INTO users (
-    committee_id, username, password_hash, full_name,
-    quoted, role, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+-- name: CreateAccount :one
+-- Creates a new sitewide account. Caller must also create a credential row.
+INSERT INTO accounts (username, auth_method, created_at, updated_at)
+VALUES (?, 'password', datetime('now'), datetime('now'))
 RETURNING *;
 
--- name: UpdateUser :exec
+-- name: CreatePasswordCredential :one
+-- Creates a password credential for an account.
+INSERT INTO password_credentials (account_id, auth_method, password_hash, created_at, updated_at)
+VALUES (?, 'password', ?, datetime('now'), datetime('now'))
+RETURNING *;
+
+-- name: UpsertPasswordCredential :exec
+-- Inserts or updates the password credential for an account.
+INSERT INTO password_credentials (account_id, auth_method, password_hash, created_at, updated_at)
+VALUES (?, 'password', ?, datetime('now'), datetime('now'))
+ON CONFLICT (account_id) DO UPDATE
+    SET password_hash = excluded.password_hash,
+        updated_at    = datetime('now');
+
+-- name: CreateMembership :one
+-- Creates a committee membership row for an existing account.
+INSERT INTO users (account_id, committee_id, full_name, role, quoted, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+RETURNING *;
+
+-- name: SetAccountIsAdmin :exec
+UPDATE accounts SET is_admin = ?, updated_at = datetime('now') WHERE id = ?;
+
+
+-- name: UpdateMembership :exec
 UPDATE users
-SET password_hash = ?, full_name = ?, quoted = ?, role = ?, updated_at = datetime('now')
+SET full_name = ?, quoted = ?, role = ?, updated_at = datetime('now')
 WHERE id = ?;
 
 -- name: DeleteUserByID :exec
