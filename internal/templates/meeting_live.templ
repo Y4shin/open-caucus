@@ -410,6 +410,7 @@ type MeetingLiveInput struct {
 	IDString      string
 	IsChair       bool
 	CanManage     bool
+	CanModerate   bool
 	AgendaPoints  []AgendaPointItem
 	Speakers      AttendeeSpeakersListPartialInput
 }
@@ -424,6 +425,10 @@ func (i *MeetingLiveInput) SSEStreamURL(ctx context.Context) templ.SafeURL {
 
 func (i *MeetingLiveInput) ManageGet(ctx context.Context) templ.SafeURL {
 	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+}
+
+func (i *MeetingLiveInput) ModerateGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, i.IDString).MeetingModerateGet(ctx, ""))
 }
 
 func (i *MeetingLiveInput) CurrentAgendaPoint() *AgendaPointItem {
@@ -450,16 +455,22 @@ func (i *MeetingLiveInput) NextAgendaPoint() *AgendaPointItem {
 }
 
 func (i *MeetingLiveInput) ScaffoldActions(ctx context.Context) []Action {
-	if !i.CanManage {
-		return nil
+	var actions []Action
+	if i.CanModerate {
+		actions = append(actions, Action{
+			Title: i18n.T(ctx, "meeting_live.moderate_button"),
+			URL:   i.ModerateGet(ctx),
+			Kind:  "info",
+		})
 	}
-	return []Action{
-		{
+	if i.CanManage {
+		actions = append(actions, Action{
 			Title: i18n.T(ctx, "meeting_live.manage_button"),
 			URL:   i.ManageGet(ctx),
 			Kind:  "info",
-		},
+		})
 	}
+	return actions
 }
 
 templ MeetingLiveTemplate(input MeetingLiveInput) {

@@ -8,9 +8,8 @@ import (
 )
 
 type LoginPageInput struct {
-	Error     string
-	Committee string // Pre-fill on error
-	Username  string // Pre-fill on error
+	Error    string
+	Username string // Pre-fill on error
 }
 
 func (i *LoginPageInput) LoginSubmitPost(ctx context.Context) templ.SafeURL {
@@ -27,14 +26,6 @@ templ LoginPageContent(input LoginPageInput) {
 	@ErrorMessage(input.Error)
 
 	<form method="POST" action={ input.LoginSubmitPost(ctx) }>
-		@FormField(FormFieldInput{
-			ID:       "committee",
-			Name:     "committee",
-			Label:    i18n.T(ctx, "login.committee_label"),
-			Type:     "text",
-			Value:    input.Committee,
-			Required: true,
-		})
 		@FormField(FormFieldInput{
 			ID:       "username",
 			Name:     "username",

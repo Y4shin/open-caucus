@@ -32,10 +32,13 @@ type Repository interface {
 
 	// User and authentication
 	GetAccountByUsername(ctx context.Context, username string) (*model.Account, error)
+	GetAccountByID(ctx context.Context, id int64) (*model.Account, error)
 	CreateAccount(ctx context.Context, username, passwordHash string) (*model.Account, error)
 	GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error)
 	GetUserByCommitteeAndUsername(ctx context.Context, slug, username string) (*model.User, error)
 	GetUserByID(ctx context.Context, id int64) (*model.User, error)
+	GetUserMembershipByAccountIDAndSlug(ctx context.Context, accountID int64, slug string) (*model.User, error)
+	ListCommitteesByAccountID(ctx context.Context, accountID int64) ([]*model.Committee, error)
 
 	// Committee
 	GetCommitteeBySlug(ctx context.Context, slug string) (*model.Committee, error)

@@ -2,15 +2,13 @@ package middleware
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
 // manageAccess allows meeting-manage endpoints for:
 // 1) logged-in committee users with role "chairperson"
-// 2) attendee sessions that are chairpersons of the same meeting
+// 2) attendees (populated by meeting_access) that are meeting chairpersons
 func (r *Registry) manageAccess(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		sd, ok := session.GetSession(req.Context())
@@ -19,41 +17,18 @@ func (r *Registry) manageAccess(next http.Handler) http.Handler {
 			return
 		}
 
-		if sd.IsUserSession() {
-			if sd.Role != nil && *sd.Role == "chairperson" {
-				next.ServeHTTP(w, req)
-				return
-			}
-			http.Error(w, "Forbidden: chairperson role required", http.StatusForbidden)
+		// Chairperson role from committee membership (account session)
+		if cu, ok := session.GetCurrentUser(req.Context()); ok && cu.Role == "chairperson" {
+			next.ServeHTTP(w, req)
 			return
 		}
 
-		if !sd.IsAttendeeSession() || sd.MeetingID == nil || sd.IsChair == nil || !*sd.IsChair {
-			http.Error(w, "Forbidden: meeting chair attendee required", http.StatusForbidden)
-			return
-		}
-		if sd.AttendeeID == nil || r.Repository == nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+		// Chair attendee (populated by meeting_access for both account and guest sessions)
+		if ca, ok := session.GetCurrentAttendee(req.Context()); ok && ca.IsChair {
+			next.ServeHTTP(w, req)
 			return
 		}
 
-		pathParts := strings.Split(strings.TrimPrefix(req.URL.Path, "/"), "/")
-		if len(pathParts) < 4 || pathParts[0] != "committee" || pathParts[2] != "meeting" {
-			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-		meetingID, err := strconv.ParseInt(pathParts[3], 10, 64)
-		if err != nil || meetingID != *sd.MeetingID {
-			http.Error(w, "Forbidden: meeting mismatch", http.StatusForbidden)
-			return
-		}
-
-		attendee, err := r.Repository.GetAttendeeByID(req.Context(), *sd.AttendeeID)
-		if err != nil || attendee.MeetingID != meetingID || !attendee.IsChair {
-			http.Error(w, "Forbidden: meeting chair attendee required", http.StatusForbidden)
-			return
-		}
-
-		next.ServeHTTP(w, req)
+		http.Error(w, "Forbidden: meeting chair required", http.StatusForbidden)
 	})
 }

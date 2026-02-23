@@ -119,20 +119,12 @@ func (h *Handler) loadAttendeeListPartial(ctx context.Context, slug, meetingIDSt
 		return nil, fmt.Errorf("failed to load attendees: %w", err)
 	}
 
+	// showSelfSignup: only for account-session users who don't yet have an attendee record.
+	// meeting_access already checked and populated CurrentAttendee if one exists.
 	showSelfSignup := false
-	if sd, ok := session.GetSession(ctx); ok && !sd.IsExpired() {
-		switch {
-		case sd.IsAttendeeSession():
-			showSelfSignup = false
-		case sd.IsUserSession() && sd.UserID != nil:
-			_, attendeeErr := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
-			if attendeeErr != nil {
-				if strings.Contains(attendeeErr.Error(), "attendee not found") {
-					showSelfSignup = true
-				} else {
-					return nil, fmt.Errorf("failed to resolve self-signup visibility: %w", attendeeErr)
-				}
-			}
+	if sd, ok := session.GetSession(ctx); ok && !sd.IsExpired() && sd.IsAccountSession() {
+		if _, hasAttendee := session.GetCurrentAttendee(ctx); !hasAttendee {
+			showSelfSignup = true
 		}
 	}
 
@@ -240,11 +232,11 @@ func (h *Handler) ManageAttendeeSelfSignup(ctx context.Context, r *http.Request,
 		return nil, nil, fmt.Errorf("invalid meeting ID")
 	}
 
-	sessionData, ok := session.GetSession(ctx)
-	if !ok || !sessionData.IsUserSession() || sessionData.IsExpired() || sessionData.UserID == nil {
-		return nil, nil, fmt.Errorf("user session is required")
+	cu, ok := session.GetCurrentUser(ctx)
+	if !ok {
+		return nil, nil, fmt.Errorf("account session is required")
 	}
-	userID := *sessionData.UserID
+	userID := cu.UserID
 	clientID := parseClientIDFromForm(r)
 	changed := false
 

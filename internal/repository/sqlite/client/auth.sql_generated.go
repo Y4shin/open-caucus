@@ -9,6 +9,25 @@ import (
 	"context"
 )
 
+const getAccountByID = `-- name: GetAccountByID :one
+SELECT id, username, auth_method, is_admin, created_at, updated_at FROM accounts WHERE id = ?
+`
+
+// Retrieves sitewide account by ID (for session restoration)
+func (q *Queries) GetAccountByID(ctx context.Context, id int64) (Account, error) {
+	row := q.db.QueryRowContext(ctx, getAccountByID, id)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.AuthMethod,
+		&i.IsAdmin,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getAccountByUsername = `-- name: GetAccountByUsername :one
 SELECT id, username, auth_method, is_admin, created_at, updated_at FROM accounts WHERE username = ?
 `
@@ -147,4 +166,96 @@ func (q *Queries) GetUserMembershipByAccountAndCommittee(ctx context.Context, ar
 		&i.Username,
 	)
 	return i, err
+}
+
+const getUserMembershipByAccountIDAndSlug = `-- name: GetUserMembershipByAccountIDAndSlug :one
+SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+       u.created_at, u.updated_at, a.username, c.slug AS committee_slug
+FROM users u
+JOIN accounts a ON u.account_id = a.id
+JOIN committees c ON u.committee_id = c.id
+WHERE u.account_id = ? AND c.slug = ?
+`
+
+type GetUserMembershipByAccountIDAndSlugParams struct {
+	AccountID int64
+	Slug      string
+}
+
+type GetUserMembershipByAccountIDAndSlugRow struct {
+	ID            int64
+	AccountID     int64
+	CommitteeID   int64
+	FullName      string
+	Role          string
+	Quoted        bool
+	CreatedAt     string
+	UpdatedAt     string
+	Username      string
+	CommitteeSlug string
+}
+
+// Retrieves the committee membership row for an account_id+committee slug combination.
+func (q *Queries) GetUserMembershipByAccountIDAndSlug(ctx context.Context, arg GetUserMembershipByAccountIDAndSlugParams) (GetUserMembershipByAccountIDAndSlugRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserMembershipByAccountIDAndSlug, arg.AccountID, arg.Slug)
+	var i GetUserMembershipByAccountIDAndSlugRow
+	err := row.Scan(
+		&i.ID,
+		&i.AccountID,
+		&i.CommitteeID,
+		&i.FullName,
+		&i.Role,
+		&i.Quoted,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Username,
+		&i.CommitteeSlug,
+	)
+	return i, err
+}
+
+const listCommitteesByAccountID = `-- name: ListCommitteesByAccountID :many
+SELECT c.id, c.name, c.slug, c.created_at, c.updated_at
+FROM committees c
+JOIN users u ON u.committee_id = c.id
+WHERE u.account_id = ?
+ORDER BY c.name
+`
+
+type ListCommitteesByAccountIDRow struct {
+	ID        int64
+	Name      string
+	Slug      string
+	CreatedAt string
+	UpdatedAt string
+}
+
+// Lists all committees an account has a user membership in.
+func (q *Queries) ListCommitteesByAccountID(ctx context.Context, accountID int64) ([]ListCommitteesByAccountIDRow, error) {
+	rows, err := q.db.QueryContext(ctx, listCommitteesByAccountID, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListCommitteesByAccountIDRow
+	for rows.Next() {
+		var i ListCommitteesByAccountIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

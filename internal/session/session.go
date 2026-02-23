@@ -9,28 +9,23 @@ import (
 type SessionType string
 
 const (
-	SessionTypeUser     SessionType = "user"
-	SessionTypeAttendee SessionType = "attendee"
-	SessionTypeAdmin    SessionType = "admin"
+	SessionTypeAccount SessionType = "account"
+	SessionTypeGuest   SessionType = "guest"
 )
 
-// SessionData contains information about an authenticated session
-// This is the lightweight version used in request context
+// SessionData contains information about an authenticated session.
+// This is the lightweight version used in request context.
+// Identity fields (IsAdmin, CurrentUser, CurrentAttendee) are populated
+// per-request by the session and committee_access middleware via DB lookups.
 type SessionData struct {
 	SessionType SessionType
 
-	// For user sessions
-	UserID        *int64
-	CommitteeSlug *string
-	Username      *string
-	Role          *string
-	Quoted        *bool
-
-	// For attendee (guest) sessions
+	// Raw IDs from the session row
+	AccountID  *int64
 	AttendeeID *int64
-	MeetingID  *int64
-	FullName   *string
-	IsChair    *bool
+
+	// IsAdmin is populated by sessionMiddleware via GetAccountByID
+	IsAdmin bool
 
 	ExpiresAt time.Time
 }
@@ -50,6 +45,7 @@ type CurrentAttendee struct {
 	MeetingID  int64
 	FullName   string
 	IsChair    bool
+	Quoted     bool
 }
 
 // IsExpired checks if the session has expired
@@ -57,19 +53,14 @@ func (s *SessionData) IsExpired() bool {
 	return time.Now().After(s.ExpiresAt)
 }
 
-// IsUserSession returns true if this is a user session
-func (s *SessionData) IsUserSession() bool {
-	return s.SessionType == SessionTypeUser
+// IsAccountSession returns true if this is an account session
+func (s *SessionData) IsAccountSession() bool {
+	return s.SessionType == SessionTypeAccount
 }
 
-// IsAttendeeSession returns true if this is an attendee/guest session
-func (s *SessionData) IsAttendeeSession() bool {
-	return s.SessionType == SessionTypeAttendee
-}
-
-// IsAdminSession returns true if this is an admin session
-func (s *SessionData) IsAdminSession() bool {
-	return s.SessionType == SessionTypeAdmin
+// IsGuestSession returns true if this is a guest session
+func (s *SessionData) IsGuestSession() bool {
+	return s.SessionType == SessionTypeGuest
 }
 
 // Context keys for storing session data in request context
@@ -117,8 +108,8 @@ func GetCurrentAttendee(ctx context.Context) (*CurrentAttendee, bool) {
 	return attendee, ok
 }
 
-// IsAdminAuthenticated checks if the context has an active admin session.
+// IsAdminAuthenticated checks if the context has an authenticated admin account session.
 func IsAdminAuthenticated(ctx context.Context) bool {
 	sd, ok := GetSession(ctx)
-	return ok && sd.IsAdminSession()
+	return ok && sd.IsAdmin
 }

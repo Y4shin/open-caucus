@@ -1,0 +1,512 @@
+package templates
+
+import (
+	"context"
+	"strconv"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+// ModeratePageInput is the top-level input for the meeting moderate page.
+type ModeratePageInput struct {
+	CommitteeName string
+	CommitteeSlug string
+	MeetingName   string
+	IDString      string // meeting ID
+	// Left column
+	AgendaPoints  AgendaPointListPartialInput
+	HasActiveAP   bool
+	ActiveAPTitle string
+	Attachments   AttachmentListPartialInput // for active AP
+	Motions       MotionListPartialInput     // for active AP
+	// Right column (SSE-dependent)
+	Speakers  SpeakersListPartialInput
+	Attendees AttendeeListPartialInput
+}
+
+// ModerateDependentPartialInput is the SSE-refreshed right-column input.
+type ModerateDependentPartialInput struct {
+	CommitteeSlug string
+	IDString      string // meeting ID
+	Speakers      SpeakersListPartialInput
+	Attendees     AttendeeListPartialInput
+}
+
+func (i *ModeratePageInput) managePageGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+}
+
+func (i *ModeratePageInput) moderateStreamGetStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdModerateStreamRoute(i.CommitteeSlug, i.IDString).ModerateStreamGet(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) moderateAgendaPartialGetStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdModerateAgendaRoute(i.CommitteeSlug, i.IDString).ModerateAgendaPartialGet(ctx, "")
+}
+
+// ─────────────────────────────────────────────────────────
+// Compact Agenda Partial  id="moderate-agenda-compact"
+// Served by ModerateAgendaPartial GET and refreshed via htmx trigger
+// ─────────────────────────────────────────────────────────
+
+templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
+	<div
+		id="moderate-agenda-compact"
+		hx-get={ input.moderateAgendaPartialGetStr(ctx) }
+		hx-trigger="reload"
+		hx-swap="outerHTML"
+	>
+		if len(input.AgendaPoints) == 0 {
+			<p class={ ModerateEmptyState() }>No agenda points.</p>
+		} else {
+			for _, ap := range input.AgendaPoints {
+				<div
+					class={
+						ModerateAgendaItem(),
+						templ.KV(ModerateAgendaItemActive(), ap.IsActive),
+						templ.KV(ManageAgendaPointCardChild(), ap.ParentID != nil),
+					}
+				>
+					<span class={ ModerateAgendaPosition() }>{ input.AgendaPointDisplayNumber(ap) }</span>
+					<span class={ ModerateAgendaItemTitle() }>{ ap.Title }</span>
+					if !ap.IsActive {
+						<form
+							hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
+							hx-target="#agenda-point-list-container"
+							hx-swap="outerHTML"
+							hx-on::after-request="if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')"
+							class={ InlineForm() }
+						>
+							<button
+								type="submit"
+								class={ ManageAgendaActionButton() }
+								title="Activate agenda point"
+								aria-label="Activate agenda point"
+							>
+								@Icon(IconCheckCircle, "", "manage-agenda-action-icon")
+							</button>
+						</form>
+					}
+				</div>
+			}
+		}
+	</div>
+}
+
+// ─────────────────────────────────────────────────────────
+// Agenda Card — left column, top half
+// ─────────────────────────────────────────────────────────
+
+templ ModerateAgendaCard(input AgendaPointListPartialInput) {
+	<section class={ ModerateCard(), ModerateCardHalf() }>
+		<div class={ ModerateCardHeader() }>
+			<h2 class={ ModerateCardTitle() }>Agenda</h2>
+			<button
+				type="button"
+				class={ ManageAgendaActionButton() }
+				data-manage-dialog-open
+				aria-controls="moderate-agenda-edit-dialog"
+				title="Edit agenda"
+				aria-label="Edit agenda"
+			>
+				@Icon(IconSettings, "", "manage-agenda-action-icon")
+			</button>
+		</div>
+		<div class={ ModerateCardBody() }>
+			@ModerateAgendaCompactPartial(input)
+		</div>
+		<dialog id="moderate-agenda-edit-dialog" class={ ManageSpeakerAddDialog() } data-manage-dialog>
+			<div class={ ManageSpeakerAddDialogHeader() }>
+				<h3>Edit Agenda</h3>
+				<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
+			</div>
+			<div class={ ManageSpeakerAddSearchWrap() }>
+				@AgendaPointListPartial(input)
+			</div>
+		</dialog>
+	</section>
+}
+
+// ─────────────────────────────────────────────────────────
+// Tools Card — left column, bottom half
+// ─────────────────────────────────────────────────────────
+
+templ ModerateToolsCard(input ModeratePageInput) {
+	<section class={ ModerateCard(), ModerateCardHalf() }>
+		<div class={ ModerateCardHeader() }>
+			<h2 class={ ModerateCardTitle() }>Tools</h2>
+		</div>
+		<div class={ ModerateCardBody() }>
+			if !input.HasActiveAP {
+				<p class={ ModerateEmptyState() }>No active agenda point.</p>
+			} else {
+				<div>
+					<div class={ ManageCardHeaderRow() }>
+						<strong>Attachments</strong>
+						<button
+							type="button"
+							data-manage-dialog-open
+							aria-controls={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
+						>Manage Files</button>
+					</div>
+					if len(input.Attachments.Attachments) == 0 {
+						<p class={ ModerateEmptyState() }>No attachments.</p>
+					} else {
+						<ul>
+							for _, a := range input.Attachments.Attachments {
+								<li>
+									<a href={ templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)) }>
+										if a.Label != "" {
+											{ a.Label } ({ a.Filename })
+										} else {
+											{ a.Filename }
+										}
+									</a>
+								</li>
+							}
+						</ul>
+					}
+				</div>
+				<div>
+					<strong>Motions</strong>
+					if len(input.Motions.Motions) == 0 {
+						<p class={ ModerateEmptyState() }>No motions.</p>
+					} else {
+						for _, m := range input.Motions.Motions {
+							@MotionItemPartial(input.Motions.motionItemInput(&m))
+						}
+					}
+				</div>
+			}
+		</div>
+		if input.HasActiveAP {
+			<dialog
+				id={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
+				class={ ManageSpeakerAddDialog() }
+				data-manage-dialog
+			>
+				<div class={ ManageSpeakerAddDialogHeader() }>
+					<h3>{ input.ActiveAPTitle } — Attachments</h3>
+					<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
+				</div>
+				@AttachmentListPartial(input.Attachments)
+			</dialog>
+		}
+	</section>
+}
+
+// ─────────────────────────────────────────────────────────
+// Speakers Content — quick controls + rows, no settings/add
+// ─────────────────────────────────────────────────────────
+
+templ ModerateSpeakersContent(input SpeakersListPartialInput) {
+	@ErrorMessage(input.Error)
+	if input.CurrentAgendaPointID == nil {
+		<p class={ ModerateEmptyState() }>No active agenda point.</p>
+	} else {
+		<div class={ ManageSpeakersQuickControlWrap() }>
+			if current := input.CurrentSpeaker(); current != nil {
+				<form
+					hx-post={ input.SpeakerEndPostStr(ctx, current) }
+					hx-target="#speakers-list-container"
+					hx-swap="outerHTML"
+					class={ InlineForm(), ManageSpeakersQuickControlForm() }
+				>
+					<button
+						type="submit"
+						class={ ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonEnd() }
+						title="End current speech"
+						aria-label="End current speech"
+					>
+						@Icon(IconCheckCircle, "", "ui-icon--left")
+						End Speech
+					</button>
+				</form>
+			} else if next := input.NextWaitingSpeaker(); next != nil {
+				<form
+					hx-post={ input.SpeakerStartPostStr(ctx, next) }
+					hx-target="#speakers-list-container"
+					hx-swap="outerHTML"
+					class={ InlineForm(), ManageSpeakersQuickControlForm() }
+				>
+					<button
+						type="submit"
+						class={ ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonStart() }
+						title="Start next speaker"
+						aria-label="Start next speaker"
+					>
+						@Icon(IconArrowForward, "", "ui-icon--left")
+						Start Next Speaker
+					</button>
+				</form>
+			}
+		</div>
+		if len(input.Speakers) > 0 {
+			<div class={ ManageSpeakersScrollResetWrap() }>
+				<button
+					type="button"
+					class={ ManageSpeakersScrollResetButton() }
+					data-manage-speakers-reset-scroll
+					title="Scroll to active position"
+					aria-label="Scroll to active position"
+				>
+					@Icon(IconHistory, "", "ui-icon--left")
+					Scroll To Active Position
+				</button>
+			</div>
+		}
+		if len(input.Speakers) == 0 {
+			<p class={ ManageSpeakersRows() }>No speakers in the queue.</p>
+		} else {
+			<div
+				class={ LiveSpeakerList(), ManageSpeakersRows(), ManageSpeakersRowsList() }
+				data-manage-speakers-viewport
+			>
+				for _, s := range input.Speakers {
+					<div
+						class={ ManageSpeakersRowWrap() }
+						data-manage-scroll-anchor={ strconv.FormatBool(input.IsInitialScrollSpeaker(s)) }
+					>
+						@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s))
+					</div>
+				}
+			</div>
+		}
+	}
+}
+
+// ─────────────────────────────────────────────────────────
+// Speakers Card — right column, top (2/3 height)
+// Keeps id="speakers-list-container" for OOB swap compatibility
+// ─────────────────────────────────────────────────────────
+
+templ ModerateSpeakersCard(input SpeakersListPartialInput) {
+	<section class={ ModerateCard(), ModerateCardTwoThirds() }>
+		<div class={ ModerateCardHeader() }>
+			<h2 class={ ModerateCardTitle() }>Speakers</h2>
+		</div>
+		<div class={ ModerateCardBody() }>
+			<div
+				id="speakers-list-container"
+				sse-swap="manage-speakers-list-updated"
+				hx-swap="outerHTML"
+			>
+				@ModerateSpeakersContent(input)
+			</div>
+		</div>
+	</section>
+}
+
+// ─────────────────────────────────────────────────────────
+// Attendees Card — right column, bottom (1/3 height)
+// Reuses SpeakerAddCandidatesPartial for adding speakers inline
+// ─────────────────────────────────────────────────────────
+
+templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
+	<section class={ ModerateCard(), ModerateCardOneThird() }>
+		<div class={ ModerateCardHeader() }>
+			<h2 class={ ModerateCardTitle() }>Add Speaker</h2>
+		</div>
+		<div class={ ModerateCardBody(), ModerateAttendeesSection() }>
+			<div class={ ModerateSearchWrap() }>
+				<label class={ ManageSpeakersFieldLabel() } for="moderate-speaker-search">Search name or number</label>
+				<input
+					type="text"
+					id="moderate-speaker-search"
+					name="q"
+					placeholder="Type name or number"
+					hx-get={ speakers.SpeakerAddCandidatesPartialGetStr(ctx) }
+					hx-target="#speaker-add-candidates-container"
+					hx-swap="outerHTML"
+					hx-trigger="input changed delay:180ms, search"
+				/>
+			</div>
+			@SpeakerAddCandidatesPartial(speakers)
+		</div>
+	</section>
+}
+
+// ─────────────────────────────────────────────────────────
+// SSE-Dependent Partial — right column
+// Replaced entirely on "moderate-updated" SSE event
+// ─────────────────────────────────────────────────────────
+
+templ ModerateDependentPartial(input ModerateDependentPartialInput) {
+	<div
+		id="moderate-dependent-container"
+		sse-swap="moderate-updated"
+		hx-swap="outerHTML"
+		class={ ModerateCol() }
+	>
+		@ModerateSpeakersCard(input.Speakers)
+		@ModerateAttendeesCard(input.Speakers)
+	</div>
+}
+
+// ─────────────────────────────────────────────────────────
+// Full Page Template
+// ─────────────────────────────────────────────────────────
+
+templ MeetingModerateTemplate(input ModeratePageInput) {
+	@PageTemplate("Moderate: "+input.MeetingName+" - "+input.CommitteeName, false, true,
+		ScaffoldInput{
+			Title:    "Moderate: " + input.MeetingName,
+			BackLink: SafeURLPtr(input.managePageGet(ctx)),
+		},
+		MeetingModerateContent(input))
+}
+
+templ MeetingModerateContent(input ModeratePageInput) {
+	<div
+		id="moderate-sse-root"
+		hx-ext="sse"
+		data-stream-url={ input.moderateStreamGetStr(ctx) }
+		class={ ModerateGrid() }
+	>
+		<div class={ ModerateCol() }>
+			@ModerateAgendaCard(input.AgendaPoints)
+			@ModerateToolsCard(input)
+		</div>
+		@ModerateDependentPartial(ModerateDependentPartialInput{
+			CommitteeSlug: input.CommitteeSlug,
+			IDString:      input.IDString,
+			Speakers:      input.Speakers,
+			Attendees:     input.Attendees,
+		})
+	</div>
+	<script>
+		(function() {
+			function formatElapsed(totalSeconds) {
+				var mins = Math.floor(totalSeconds / 60);
+				var secs = totalSeconds % 60;
+				return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+			}
+
+			function updateSpeakingTimers() {
+				var nowSec = Math.floor(Date.now() / 1000);
+				var timers = document.querySelectorAll("[data-speaking-since]");
+				for (var i = 0; i < timers.length; i++) {
+					var el = timers[i];
+					var since = Number(el.getAttribute("data-speaking-since"));
+					if (!Number.isFinite(since) || since <= 0) { continue; }
+					var elapsed = Math.max(0, nowSec - since);
+					el.textContent = formatElapsed(elapsed);
+				}
+			}
+
+			function wireManageDialogs() {
+				document.addEventListener("click", function (event) {
+					var openBtn = event.target.closest("[data-manage-dialog-open]");
+					if (openBtn) {
+						var dialogID = openBtn.getAttribute("aria-controls");
+						var dialog = dialogID ? document.getElementById(dialogID) : null;
+						if (dialog && typeof dialog.showModal === "function") {
+							dialog.showModal();
+						}
+						return;
+					}
+					var closeBtn = event.target.closest("[data-manage-dialog-close]");
+					if (closeBtn) {
+						var closeDialog = closeBtn.closest("dialog");
+						if (closeDialog && typeof closeDialog.close === "function") {
+							closeDialog.close();
+						}
+					}
+				});
+				document.addEventListener("click", function (event) {
+					var dialog = event.target;
+					if (!(dialog instanceof HTMLDialogElement) || !dialog.hasAttribute("data-manage-dialog")) { return; }
+					var rect = dialog.getBoundingClientRect();
+					var outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+					if (outside) { dialog.close(); }
+				});
+			}
+
+			function getManageSpeakersViewport() {
+				var viewports = document.querySelectorAll("#speakers-list-container [data-manage-speakers-viewport]");
+				var best = null;
+				var bestScore = -1;
+				for (var i = 0; i < viewports.length; i++) {
+					var viewport = viewports[i];
+					var score = Math.max(viewport.scrollHeight || 0, viewport.clientHeight || 0);
+					if (score > bestScore) { bestScore = score; best = viewport; }
+				}
+				return best;
+			}
+
+			function applyManageSpeakersInitialScroll() {
+				var viewport = getManageSpeakersViewport();
+				if (!viewport) { return; }
+				var anchor = viewport.querySelector("[data-manage-scroll-anchor='true']");
+				if (anchor) {
+					var anchorTop = anchor.offsetTop - viewport.offsetTop;
+					viewport.scrollTop = Math.max(0, anchorTop + 2);
+				} else {
+					viewport.scrollTop = 0;
+				}
+				viewport.dataset.initialScrollTop = String(viewport.scrollTop);
+			}
+
+			function restoreManageSpeakersInitialScroll() {
+				var viewport = getManageSpeakersViewport();
+				if (!viewport) { return; }
+				var saved = Number(viewport.dataset.initialScrollTop);
+				if (Number.isFinite(saved)) { viewport.scrollTop = saved; return; }
+				applyManageSpeakersInitialScroll();
+			}
+
+			function wireManageSpeakersControls() {
+				document.addEventListener("click", function(event) {
+					var resetBtn = event.target.closest("[data-manage-speakers-reset-scroll]");
+					if (!resetBtn) { return; }
+					restoreManageSpeakersInitialScroll();
+				});
+			}
+
+			var root = document.getElementById("moderate-sse-root");
+			if (!root) return;
+
+			var key = "moderateClientId";
+			var clientID = sessionStorage.getItem(key);
+			if (!clientID) {
+				if (window.crypto && typeof window.crypto.randomUUID === "function") {
+					clientID = window.crypto.randomUUID();
+				} else {
+					clientID = Date.now().toString(36) + Math.random().toString(36).slice(2);
+				}
+				sessionStorage.setItem(key, clientID);
+			}
+			root.dataset.clientId = clientID;
+
+			var streamURL = root.getAttribute("data-stream-url");
+			if (!streamURL) return;
+			var separator = streamURL.indexOf("?") >= 0 ? "&" : "?";
+			root.setAttribute("sse-connect", streamURL + separator + "client_id=" + encodeURIComponent(clientID));
+			if (window.htmx && typeof window.htmx.process === "function") {
+				window.htmx.process(root);
+			}
+
+			updateSpeakingTimers();
+			applyManageSpeakersInitialScroll();
+			window.setTimeout(applyManageSpeakersInitialScroll, 40);
+			window.setInterval(updateSpeakingTimers, 1000);
+			document.addEventListener("htmx:afterSwap", function(event) {
+				updateSpeakingTimers();
+				var target = event.target;
+				if (!(target instanceof Element)) { return; }
+				if (target.id !== "speakers-list-container" && !target.closest("#speakers-list-container")) { return; }
+				window.setTimeout(applyManageSpeakersInitialScroll, 0);
+			});
+			wireManageDialogs();
+			wireManageSpeakersControls();
+
+			// Closing the agenda edit dialog reloads the compact agenda list
+			document.addEventListener("close", function(e) {
+				if (e.target && e.target.id === "moderate-agenda-edit-dialog") {
+					var compact = document.getElementById("moderate-agenda-compact");
+					if (compact && window.htmx) { htmx.trigger(compact, "reload"); }
+				}
+			}, true);
+		})();
+	</script>
+}

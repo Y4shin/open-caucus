@@ -5,10 +5,15 @@ en:
     logout: "Logout"
     logged_in_as: "Logged in as %s"
 
+  home:
+    page_title: "My Committees - Conference Tool"
+    title: "My Committees"
+    no_committees: "You are not a member of any committee."
+    admin_link: "Admin Dashboard"
+
   login:
     page_title: "Login - Conference Tool"
     title: "Conference Tool Login"
-    committee_label: "Committee:"
     username_label: "Username:"
     password_label: "Password:"
     button: "Login"
@@ -119,6 +124,7 @@ en:
 
   meeting_live:
     page_title: "%s - Live"
+    moderate_button: "Moderate"
     manage_button: "Manage"
     logged_in_as: "Logged in as: %s"
     chair: "Chair"

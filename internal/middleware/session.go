@@ -6,48 +6,51 @@ import (
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
-// sessionMiddleware extracts session data from cookies and adds it to the request context
-// This middleware does not block requests - it only adds session data if present and valid
+// sessionMiddleware extracts session data from cookies and adds it to the request context.
+// For account sessions: fetches the Account from DB to populate IsAdmin and a partial CurrentUser.
+// For guest sessions: fetches the Attendee from DB to populate CurrentAttendee.
+// This middleware does not block requests — it only adds session data if present and valid.
 func (r *Registry) sessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// Try to read session cookie
 		cookie, err := req.Cookie("session_id")
-		if err == nil && cookie.Value != "" {
-			// Validate and load session
-			sessionData, err := r.SessionManager.GetSession(req.Context(), cookie.Value)
-			if err == nil && !sessionData.IsExpired() {
-				// Add session to context
-				ctx := session.WithSession(req.Context(), sessionData)
-				if sessionData.IsUserSession() && sessionData.UserID != nil && sessionData.Username != nil && sessionData.Role != nil {
-					currentUser := &session.CurrentUser{
-						UserID:   *sessionData.UserID,
-						Username: *sessionData.Username,
-						Role:     *sessionData.Role,
-					}
-					if sessionData.CommitteeSlug != nil {
-						currentUser.CommitteeSlug = *sessionData.CommitteeSlug
-					}
-					if sessionData.Quoted != nil {
-						currentUser.Quoted = *sessionData.Quoted
-					}
-					ctx = session.WithCurrentUser(ctx, currentUser)
-				}
-				if sessionData.IsAttendeeSession() && sessionData.AttendeeID != nil && sessionData.MeetingID != nil && sessionData.FullName != nil {
-					currentAttendee := &session.CurrentAttendee{
-						AttendeeID: *sessionData.AttendeeID,
-						MeetingID:  *sessionData.MeetingID,
-						FullName:   *sessionData.FullName,
-					}
-					if sessionData.IsChair != nil {
-						currentAttendee.IsChair = *sessionData.IsChair
-					}
-					ctx = session.WithCurrentAttendee(ctx, currentAttendee)
-				}
-				req = req.WithContext(ctx)
+		if err != nil || cookie.Value == "" {
+			next.ServeHTTP(w, req)
+			return
+		}
+
+		sessionData, err := r.SessionManager.GetSession(req.Context(), cookie.Value)
+		if err != nil || sessionData.IsExpired() {
+			next.ServeHTTP(w, req)
+			return
+		}
+
+		ctx := session.WithSession(req.Context(), sessionData)
+
+		if sessionData.IsAccountSession() && sessionData.AccountID != nil {
+			account, err := r.Repository.GetAccountByID(ctx, *sessionData.AccountID)
+			if err == nil {
+				sessionData.IsAdmin = account.IsAdmin
+				ctx = session.WithCurrentUser(ctx, &session.CurrentUser{
+					Username: account.Username,
+					// CommitteeSlug, Role, Quoted, UserID filled by committee_access
+				})
 			}
 		}
 
-		// Always continue to next handler (even if no session)
+		if sessionData.IsGuestSession() && sessionData.AttendeeID != nil {
+			attendee, err := r.Repository.GetAttendeeByID(ctx, *sessionData.AttendeeID)
+			if err == nil {
+				ctx = session.WithCurrentAttendee(ctx, &session.CurrentAttendee{
+					AttendeeID: attendee.ID,
+					MeetingID:  attendee.MeetingID,
+					FullName:   attendee.FullName,
+					IsChair:    attendee.IsChair,
+					Quoted:     attendee.Quoted,
+				})
+			}
+		}
+
+		req = req.WithContext(ctx)
 		next.ServeHTTP(w, req)
 	})
 }

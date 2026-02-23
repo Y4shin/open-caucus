@@ -172,6 +172,18 @@ func (r *Repository) GetAccountByUsername(ctx context.Context, username string) 
 	return accountFromClient(&account), nil
 }
 
+// GetAccountByID retrieves a sitewide account by ID
+func (r *Repository) GetAccountByID(ctx context.Context, id int64) (*model.Account, error) {
+	account, err := r.Queries.GetAccountByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("account not found: %w", err)
+		}
+		return nil, fmt.Errorf("get account by id: %w", err)
+	}
+	return accountFromClient(&account), nil
+}
+
 // GetPasswordCredential retrieves the password credential for an account.
 func (r *Repository) GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error) {
 	cred, err := r.Queries.GetPasswordCredentialByAccountID(ctx, accountID)
@@ -223,61 +235,51 @@ func (r *Repository) GetUserByID(ctx context.Context, id int64) (*model.User, er
 	return userFromGetUserByIDRow(&row), nil
 }
 
+// GetUserMembershipByAccountIDAndSlug retrieves a committee membership by account ID and committee slug
+func (r *Repository) GetUserMembershipByAccountIDAndSlug(ctx context.Context, accountID int64, slug string) (*model.User, error) {
+	row, err := r.Queries.GetUserMembershipByAccountIDAndSlug(ctx, client.GetUserMembershipByAccountIDAndSlugParams{
+		AccountID: accountID,
+		Slug:      slug,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("get user membership by account id and slug: %w", err)
+	}
+	return userFromMembershipByAccountIDAndSlugRow(&row), nil
+}
+
+// ListCommitteesByAccountID returns all committees an account has a membership in
+func (r *Repository) ListCommitteesByAccountID(ctx context.Context, accountID int64) ([]*model.Committee, error) {
+	rows, err := r.Queries.ListCommitteesByAccountID(ctx, accountID)
+	if err != nil {
+		return nil, fmt.Errorf("list committees by account id: %w", err)
+	}
+	result := make([]*model.Committee, len(rows))
+	for i := range rows {
+		result[i] = committeeFromListByAccountIDRow(&rows[i])
+	}
+	return result, nil
+}
+
 // CreateSession stores a new session in the database
 func (r *Repository) CreateSession(ctx context.Context, session *model.Session) error {
-	var userID, attendeeID, meetingID sql.NullInt64
-	var isChair, quoted sql.NullInt64
-	var committeeSlug, username, role, fullName sql.NullString
+	var accountID, attendeeID sql.NullInt64
 
-	if session.UserID != nil {
-		userID = sql.NullInt64{Int64: *session.UserID, Valid: true}
-	}
-	if session.CommitteeSlug != nil {
-		committeeSlug = sql.NullString{String: *session.CommitteeSlug, Valid: true}
-	}
-	if session.Username != nil {
-		username = sql.NullString{String: *session.Username, Valid: true}
-	}
-	if session.Role != nil {
-		role = sql.NullString{String: *session.Role, Valid: true}
+	if session.AccountID != nil {
+		accountID = sql.NullInt64{Int64: *session.AccountID, Valid: true}
 	}
 	if session.AttendeeID != nil {
 		attendeeID = sql.NullInt64{Int64: *session.AttendeeID, Valid: true}
 	}
-	if session.MeetingID != nil {
-		meetingID = sql.NullInt64{Int64: *session.MeetingID, Valid: true}
-	}
-	if session.FullName != nil {
-		fullName = sql.NullString{String: *session.FullName, Valid: true}
-	}
-	if session.IsChair != nil {
-		v := int64(0)
-		if *session.IsChair {
-			v = 1
-		}
-		isChair = sql.NullInt64{Int64: v, Valid: true}
-	}
-	if session.Quoted != nil {
-		v := int64(0)
-		if *session.Quoted {
-			v = 1
-		}
-		quoted = sql.NullInt64{Int64: v, Valid: true}
-	}
 
 	err := r.Queries.CreateSession(ctx, client.CreateSessionParams{
-		SessionID:     session.SessionID,
-		SessionType:   string(session.SessionType),
-		UserID:        userID,
-		CommitteeSlug: committeeSlug,
-		Username:      username,
-		Role:          role,
-		Quoted:        quoted,
-		AttendeeID:    attendeeID,
-		MeetingID:     meetingID,
-		FullName:      fullName,
-		IsChair:       isChair,
-		ExpiresAt:     session.ExpiresAt.Format("2006-01-02T15:04:05.999Z"),
+		SessionID:   session.SessionID,
+		SessionType: string(session.SessionType),
+		AccountID:   accountID,
+		AttendeeID:  attendeeID,
+		ExpiresAt:   session.ExpiresAt.Format("2006-01-02T15:04:05.999Z"),
 	})
 	if err != nil {
 		return fmt.Errorf("create session: %w", err)
@@ -379,6 +381,37 @@ func userFromMembershipRow(r *client.GetUserMembershipByAccountAndCommitteeRow) 
 	}
 }
 
+func userFromMembershipByAccountIDAndSlugRow(r *client.GetUserMembershipByAccountIDAndSlugRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:            r.ID,
+		AccountID:     r.AccountID,
+		CommitteeID:   r.CommitteeID,
+		Username:      r.Username,
+		CommitteeSlug: r.CommitteeSlug,
+		FullName:      r.FullName,
+		Quoted:        r.Quoted,
+		Role:          r.Role,
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+}
+
+func committeeFromListByAccountIDRow(r *client.ListCommitteesByAccountIDRow) *model.Committee {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.Committee{
+		ID:        r.ID,
+		Name:      r.Name,
+		Slug:      r.Slug,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
+}
+
 func userFromListRow(r *client.ListUsersInCommitteeRow) *model.User {
 	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
 	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
@@ -433,34 +466,11 @@ func sessionFromClient(s *client.Session) (*model.Session, error) {
 		ExpiresAt:   expiresAt,
 	}
 
-	if s.UserID.Valid {
-		session.UserID = &s.UserID.Int64
-	}
-	if s.CommitteeSlug.Valid {
-		session.CommitteeSlug = &s.CommitteeSlug.String
-	}
-	if s.Username.Valid {
-		session.Username = &s.Username.String
-	}
-	if s.Role.Valid {
-		session.Role = &s.Role.String
-	}
-	if s.Quoted.Valid {
-		v := s.Quoted.Int64 != 0
-		session.Quoted = &v
+	if s.AccountID.Valid {
+		session.AccountID = &s.AccountID.Int64
 	}
 	if s.AttendeeID.Valid {
 		session.AttendeeID = &s.AttendeeID.Int64
-	}
-	if s.MeetingID.Valid {
-		session.MeetingID = &s.MeetingID.Int64
-	}
-	if s.FullName.Valid {
-		session.FullName = &s.FullName.String
-	}
-	if s.IsChair.Valid {
-		v := s.IsChair.Int64 != 0
-		session.IsChair = &v
 	}
 
 	return session, nil

@@ -21,14 +21,10 @@ import (
 
 // LoginPage displays the login form
 func (h *Handler) LoginPage(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *routes.ResponseMeta, error) {
-	// Check if already logged in
-	if sessionData, ok := session.GetSession(ctx); ok && !sessionData.IsExpired() {
-		// Already authenticated - redirect to their committee page
-		if sessionData.CommitteeSlug != nil {
-			meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther,
-				fmt.Sprintf("/committee/%s", *sessionData.CommitteeSlug))
-			return nil, meta, nil
-		}
+	// Already authenticated — redirect to home
+	if sd, ok := session.GetSession(ctx); ok && !sd.IsExpired() {
+		meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/home")
+		return nil, meta, nil
 	}
 
 	return &templates.LoginPageInput{}, nil, nil
@@ -43,81 +39,82 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 		}, nil, nil
 	}
 
-	committeeSlug := strings.TrimSpace(r.FormValue("committee"))
 	username := strings.TrimSpace(r.FormValue("username"))
 	password := r.FormValue("password")
 
 	// Validate inputs
-	if committeeSlug == "" || username == "" || password == "" {
+	if username == "" || password == "" {
 		return &templates.LoginPageInput{
-			Error:     "All fields are required",
-			Committee: committeeSlug,
-			Username:  username,
+			Error:    "All fields are required",
+			Username: username,
 		}, nil, nil
 	}
 
-	// Look up sitewide account and verify password
+	// Look up account and verify password
 	account, err := h.Repository.GetAccountByUsername(ctx, username)
 	if err != nil {
-		// Generic error message for security (don't reveal if account exists)
 		return &templates.LoginPageInput{
-			Error:     "Invalid credentials",
-			Committee: committeeSlug,
-			Username:  username,
+			Error:    "Invalid credentials",
+			Username: username,
 		}, nil, nil
 	}
 
 	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
 	if err != nil {
 		return &templates.LoginPageInput{
-			Error:     "Invalid credentials",
-			Committee: committeeSlug,
-			Username:  username,
+			Error:    "Invalid credentials",
+			Username: username,
 		}, nil, nil
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
 		return &templates.LoginPageInput{
-			Error:     "Invalid credentials",
-			Committee: committeeSlug,
-			Username:  username,
+			Error:    "Invalid credentials",
+			Username: username,
 		}, nil, nil
 	}
 
-	// Verify account has a membership in the requested committee
-	user, err := h.Repository.GetUserByCommitteeAndUsername(ctx, committeeSlug, username)
-	if err != nil {
-		return &templates.LoginPageInput{
-			Error:     "Invalid credentials",
-			Committee: committeeSlug,
-			Username:  username,
-		}, nil, nil
-	}
-
-	// Create session
+	// Create lean account session
 	sessionData := &session.SessionData{
-		SessionType:   session.SessionTypeUser,
-		UserID:        &user.ID,
-		CommitteeSlug: &committeeSlug,
-		Username:      &account.Username,
-		Role:          &user.Role,
-		Quoted:        &user.Quoted,
-		ExpiresAt:     time.Now().Add(24 * time.Hour),
+		SessionType: session.SessionTypeAccount,
+		AccountID:   &account.ID,
+		ExpiresAt:   time.Now().Add(24 * time.Hour),
 	}
 
-	// Store session and create cookie
 	sessionID, err := h.SessionManager.CreateSession(ctx, sessionData)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create session: %w", err)
 	}
 	cookie := h.SessionManager.CreateCookie(sessionID)
 
-	// Return redirect with cookie
 	meta := routes.NewResponseMeta().
 		WithCookie(cookie).
-		WithRedirect(http.StatusSeeOther, fmt.Sprintf("/committee/%s", committeeSlug))
+		WithRedirect(http.StatusSeeOther, "/home")
 
 	return nil, meta, nil
+}
+
+// Home shows the user's committees
+func (h *Handler) Home(ctx context.Context, r *http.Request) (*templates.HomeInput, *routes.ResponseMeta, error) {
+	sd, ok := session.GetSession(ctx)
+	if !ok || sd.AccountID == nil {
+		return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
+	}
+
+	committees, err := h.Repository.ListCommitteesByAccountID(ctx, *sd.AccountID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list committees: %w", err)
+	}
+
+	items := make([]templates.HomeCommitteeItem, len(committees))
+	for i, c := range committees {
+		items[i] = templates.HomeCommitteeItem{Slug: c.Slug, Name: c.Name}
+	}
+
+	return &templates.HomeInput{
+		Committees: items,
+		IsAdmin:    sd.IsAdmin,
+	}, nil, nil
 }
 
 // CommitteePage shows the committee dashboard
@@ -223,11 +220,9 @@ func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError s
 		return nil, fmt.Errorf("failed to load committee: %w", err)
 	}
 
-	sessionData, _ := session.GetSession(ctx)
-
 	role := ""
-	if sessionData.Role != nil {
-		role = *sessionData.Role
+	if cu, ok := session.GetCurrentUser(ctx); ok {
+		role = cu.Role
 	}
 
 	input := &templates.CommitteePageInput{

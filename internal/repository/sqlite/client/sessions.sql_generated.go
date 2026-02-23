@@ -11,40 +11,24 @@ import (
 )
 
 const createSession = `-- name: CreateSession :exec
-INSERT INTO sessions (
-    session_id, session_type, user_id, committee_slug, username, role, quoted,
-    attendee_id, meeting_id, full_name, is_chair, expires_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO sessions (session_id, session_type, account_id, attendee_id, expires_at)
+VALUES (?, ?, ?, ?, ?)
 `
 
 type CreateSessionParams struct {
-	SessionID     string
-	SessionType   string
-	UserID        sql.NullInt64
-	CommitteeSlug sql.NullString
-	Username      sql.NullString
-	Role          sql.NullString
-	Quoted        sql.NullInt64
-	AttendeeID    sql.NullInt64
-	MeetingID     sql.NullInt64
-	FullName      sql.NullString
-	IsChair       sql.NullInt64
-	ExpiresAt     string
+	SessionID   string
+	SessionType string
+	AccountID   sql.NullInt64
+	AttendeeID  sql.NullInt64
+	ExpiresAt   string
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
 	_, err := q.db.ExecContext(ctx, createSession,
 		arg.SessionID,
 		arg.SessionType,
-		arg.UserID,
-		arg.CommitteeSlug,
-		arg.Username,
-		arg.Role,
-		arg.Quoted,
+		arg.AccountID,
 		arg.AttendeeID,
-		arg.MeetingID,
-		arg.FullName,
-		arg.IsChair,
 		arg.ExpiresAt,
 	)
 	return err
@@ -69,7 +53,7 @@ func (q *Queries) DeleteSession(ctx context.Context, sessionID string) error {
 }
 
 const getSession = `-- name: GetSession :one
-SELECT session_id, session_type, user_id, committee_slug, attendee_id, meeting_id, created_at, expires_at, username, role, full_name, is_chair, quoted FROM sessions WHERE session_id = ?
+SELECT session_id, session_type, account_id, attendee_id, created_at, expires_at FROM sessions WHERE session_id = ?
 `
 
 func (q *Queries) GetSession(ctx context.Context, sessionID string) (Session, error) {
@@ -78,17 +62,10 @@ func (q *Queries) GetSession(ctx context.Context, sessionID string) (Session, er
 	err := row.Scan(
 		&i.SessionID,
 		&i.SessionType,
-		&i.UserID,
-		&i.CommitteeSlug,
+		&i.AccountID,
 		&i.AttendeeID,
-		&i.MeetingID,
 		&i.CreatedAt,
 		&i.ExpiresAt,
-		&i.Username,
-		&i.Role,
-		&i.FullName,
-		&i.IsChair,
-		&i.Quoted,
 	)
 	return i, err
 }

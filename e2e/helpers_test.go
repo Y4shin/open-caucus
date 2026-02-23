@@ -103,7 +103,7 @@ func (ts *testServer) seedCommittee(t *testing.T, name, slug string) {
 // seedUser creates a user with the given credentials in the given committee.
 func (ts *testServer) seedUser(t *testing.T, slug, username, password, fullName, role string) {
 	t.Helper()
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		t.Fatalf("hash password: %v", err)
 	}
@@ -119,7 +119,7 @@ func (ts *testServer) seedUser(t *testing.T, slug, username, password, fullName,
 // seedAdminAccount creates an account with admin privileges.
 func (ts *testServer) seedAdminAccount(t *testing.T, username, password string) {
 	t.Helper()
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		t.Fatalf("hash password for admin: %v", err)
 	}
@@ -234,5 +234,16 @@ func (ts *testServer) setAttendeeChair(t *testing.T, attendeeID int64, isChair b
 	t.Helper()
 	if err := ts.repo.SetAttendeeIsChair(context.Background(), attendeeID, isChair); err != nil {
 		t.Fatalf("set attendee %d chair=%v: %v", attendeeID, isChair, err)
+	}
+}
+
+// setMeetingModerator assigns or clears the designated moderator for a meeting.
+func (ts *testServer) setMeetingModerator(t *testing.T, slug, meetingName string, moderatorID *int64) {
+	t.Helper()
+	meetingIDStr := ts.getMeetingID(t, slug, meetingName)
+	var mid int64
+	fmt.Sscanf(meetingIDStr, "%d", &mid)
+	if err := ts.repo.SetMeetingModerator(context.Background(), mid, moderatorID); err != nil {
+		t.Fatalf("set meeting moderator: %v", err)
 	}
 }

@@ -23,7 +23,7 @@ var slugRegex = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 func (h *Handler) AdminLogin(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *routes.ResponseMeta, error) {
 	// Redirect if already logged in as admin
 	sd, ok := session.GetSession(ctx)
-	if ok && sd.IsAdminSession() {
+	if ok && !sd.IsExpired() && sd.IsAdmin {
 		meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/admin")
 		return nil, meta, nil
 	}
@@ -63,10 +63,10 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
 	}
 
-	// Create admin session
+	// Create account session (admin status comes from DB, not session type)
 	sessionData := &session.SessionData{
-		SessionType: session.SessionTypeAdmin,
-		Username:    &account.Username,
+		SessionType: session.SessionTypeAccount,
+		AccountID:   &account.ID,
 		ExpiresAt:   time.Now().Add(24 * time.Hour),
 	}
 	signedID, err := h.SessionManager.CreateSession(ctx, sessionData)

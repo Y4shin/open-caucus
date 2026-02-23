@@ -109,19 +109,12 @@ type PasswordCredential struct {
 }
 
 type Session struct {
-	SessionID     string
-	SessionType   string
-	UserID        sql.NullInt64
-	CommitteeSlug sql.NullString
-	AttendeeID    sql.NullInt64
-	MeetingID     sql.NullInt64
-	CreatedAt     string
-	ExpiresAt     string
-	Username      sql.NullString
-	Role          sql.NullString
-	FullName      sql.NullString
-	IsChair       sql.NullInt64
-	Quoted        sql.NullInt64
+	SessionID   string
+	SessionType string
+	AccountID   sql.NullInt64
+	AttendeeID  sql.NullInt64
+	CreatedAt   string
+	ExpiresAt   string
 }
 
 type SpeakersList struct {

@@ -7,11 +7,12 @@ import (
 )
 
 func CurrentDisplayName(ctx context.Context) string {
-	if user, ok := session.GetCurrentUser(ctx); ok && user.Username != "" {
-		return user.Username
-	}
+	// On meeting pages the attendee full name is more meaningful than the username.
 	if attendee, ok := session.GetCurrentAttendee(ctx); ok && attendee.FullName != "" {
 		return attendee.FullName
+	}
+	if user, ok := session.GetCurrentUser(ctx); ok && user.Username != "" {
+		return user.Username
 	}
 	return ""
 }

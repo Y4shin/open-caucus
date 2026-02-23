@@ -40,6 +40,18 @@ type ManageAttendeeListUpdatedEvent struct {
 
 func (e ManageAttendeeListUpdatedEvent) IsManageStreamEvent() {}
 
+// ModerateStreamEvent is the union type for all ModerateStream SSE events
+type ModerateStreamEvent interface {
+	IsModerateStreamEvent()
+}
+
+// ModerateUpdatedEvent represents a ModerateUpdated event
+type ModerateUpdatedEvent struct {
+	Data templates.ModerateDependentPartialInput
+}
+
+func (e ModerateUpdatedEvent) IsModerateStreamEvent() {}
+
 // AttendeeSpeakersStreamEvent is the union type for all AttendeeSpeakersStream SSE events
 type AttendeeSpeakersStreamEvent interface {
 	IsAttendeeSpeakersStreamEvent()
@@ -63,6 +75,7 @@ type Handler interface {
 	AdminCommitteeUsers(ctx context.Context, r *http.Request, params RouteParams) (*templates.AdminCommitteeUsersInput, *ResponseMeta, error)
 	AdminCreateUser(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
 	AdminDeleteUser(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
+	Home(ctx context.Context, r *http.Request) (*templates.HomeInput, *ResponseMeta, error)
 	LoginPage(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
 	LoginSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
 	CommitteePage(ctx context.Context, r *http.Request, params RouteParams) (*templates.CommitteePageInput, *ResponseMeta, error)
@@ -71,6 +84,9 @@ type Handler interface {
 	CommitteeMeetingManage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingManageInput, *ResponseMeta, error)
 	CommitteeMeetingManageJoinQR(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingJoinQRInput, *ResponseMeta, error)
 	ManageStream(ctx context.Context, r *http.Request, params RouteParams) (<-chan ManageStreamEvent, error)
+	MeetingModerate(ctx context.Context, r *http.Request, params RouteParams) (*templates.ModeratePageInput, *ResponseMeta, error)
+	ModerateAgendaPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ModerateStream(ctx context.Context, r *http.Request, params RouteParams) (<-chan ModerateStreamEvent, error)
 	ManageToggleSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageMeetingSettingsPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
 	ManageSpeakersListPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
@@ -227,6 +243,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
+	rt.mux.HandleFunc("GET /home", rt.wrapMiddleware(
+		rt.handleHome,
+		getMiddlewareForPath("/home", groups),
+		[]string{"session", "auth"},
+		false,
+	))
+
 	rt.mux.HandleFunc("GET /", rt.wrapMiddleware(
 		rt.handleLoginPage,
 		getMiddlewareForPath("/", groups),
@@ -258,259 +281,280 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}", rt.wrapMiddleware(
 		rt.handleMeetingLivePage,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}", groups),
-		[]string{"session"},
+		[]string{"session", "auth", "committee_access", "meeting_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/manage", rt.wrapMiddleware(
 		rt.handleCommitteeMeetingManage,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/manage", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/manage/join-qr", rt.wrapMiddleware(
 		rt.handleCommitteeMeetingManageJoinQR,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/manage/join-qr", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/manage/stream", rt.wrapMiddleware(
 		rt.handleManageStream,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/manage/stream", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
+		true,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/moderate", rt.wrapMiddleware(
+		rt.handleMeetingModerate,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/moderate", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/moderate/agenda", rt.wrapMiddleware(
+		rt.handleModerateAgendaPartial,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/moderate/agenda", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/moderate/stream", rt.wrapMiddleware(
+		rt.handleModerateStream,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/moderate/stream", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		true,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/signup-open", rt.wrapMiddleware(
 		rt.handleManageToggleSignupOpen,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/signup-open", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/settings/partial", rt.wrapMiddleware(
 		rt.handleManageMeetingSettingsPartial,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/settings/partial", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/speakers/partial", rt.wrapMiddleware(
 		rt.handleManageSpeakersListPartial,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speakers/partial", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/protocol-writer", rt.wrapMiddleware(
 		rt.handleManageSetProtocolWriter,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol-writer", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/protocol", rt.wrapMiddleware(
 		rt.handleMeetingProtocolPage,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol", groups),
-		[]string{"attendee_session", "attendee_required"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "attendee_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}", rt.wrapMiddleware(
 		rt.handleProtocolSaveAgendaPoint,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}", groups),
-		[]string{"attendee_session", "attendee_required"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "attendee_required"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create", rt.wrapMiddleware(
 		rt.handleManageMotionCreate,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete", rt.wrapMiddleware(
 		rt.handleManageMotionDelete,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/vote", rt.wrapMiddleware(
 		rt.handleManageMotionRecordVote,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/vote", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/blob/{blob_id}", rt.wrapMiddleware(
 		rt.handleServeBlobDownload,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/blob/{blob_id}", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/create", rt.wrapMiddleware(
 		rt.handleManageAttachmentCreate,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/create", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/delete", rt.wrapMiddleware(
 		rt.handleManageAttachmentDelete,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/delete", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/create", rt.wrapMiddleware(
 		rt.handleManageAttendeeCreate,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/create", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/self-signup", rt.wrapMiddleware(
 		rt.handleManageAttendeeSelfSignup,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/self-signup", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/delete", rt.wrapMiddleware(
 		rt.handleManageAttendeeDelete,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/delete", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair", rt.wrapMiddleware(
 		rt.handleManageAttendeeToggleChair,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/quoted", rt.wrapMiddleware(
 		rt.handleManageAttendeeToggleQuoted,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/quoted", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/recovery", rt.wrapMiddleware(
 		rt.handleManageAttendeeRecoveryPage,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/recovery", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/create", rt.wrapMiddleware(
 		rt.handleManageAgendaPointCreate,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/create", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/delete", rt.wrapMiddleware(
 		rt.handleManageAgendaPointDelete,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/delete", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/activate", rt.wrapMiddleware(
 		rt.handleManageActivateAgendaPoint,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/activate", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools", rt.wrapMiddleware(
 		rt.handleManageAgendaPointToolsPage,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/add", rt.wrapMiddleware(
 		rt.handleManageSpeakerAdd,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/add", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/speaker/add-candidates", rt.wrapMiddleware(
 		rt.handleManageSpeakerAddCandidates,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/add-candidates", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove", rt.wrapMiddleware(
 		rt.handleManageSpeakerRemove,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/start", rt.wrapMiddleware(
 		rt.handleManageSpeakerStart,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/start", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/end", rt.wrapMiddleware(
 		rt.handleManageSpeakerEnd,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/end", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/withdraw", rt.wrapMiddleware(
 		rt.handleManageSpeakerWithdraw,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/withdraw", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/priority", rt.wrapMiddleware(
 		rt.handleManageSpeakerTogglePriority,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/priority", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/quotation", rt.wrapMiddleware(
 		rt.handleManageMeetingSetQuotation,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/quotation", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/moderator", rt.wrapMiddleware(
 		rt.handleManageMeetingSetModerator,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/moderator", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/quotation", rt.wrapMiddleware(
 		rt.handleManageAgendaPointSetQuotation,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/quotation", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/moderator", rt.wrapMiddleware(
 		rt.handleManageAgendaPointSetModerator,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/moderator", groups),
-		[]string{"session", "auth", "committee_access", "manage_access"},
+		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
 		false,
 	))
 
@@ -566,28 +610,28 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/speakers/stream", rt.wrapMiddleware(
 		rt.handleAttendeeSpeakersStream,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speakers/stream", groups),
-		[]string{"session"},
+		[]string{"session", "auth", "committee_access", "meeting_access"},
 		true,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/self-add", rt.wrapMiddleware(
 		rt.handleAttendeeSpeakerSelfAdd,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/self-add", groups),
-		[]string{"session"},
+		[]string{"session", "auth", "committee_access", "meeting_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/speaker/self-yield", rt.wrapMiddleware(
 		rt.handleAttendeeSpeakerSelfYield,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speaker/self-yield", groups),
-		[]string{"session"},
+		[]string{"session", "auth", "committee_access", "meeting_access"},
 		false,
 	))
 
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/live", rt.wrapMiddleware(
 		rt.handleMeetingLiveLegacyRedirect,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/live", groups),
-		[]string{"session"},
+		[]string{"session", "auth", "committee_access", "meeting_access"},
 		false,
 	))
 
@@ -845,6 +889,31 @@ func (rt *Router) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) 
 
 	templates.UserListPartial(*input).Render(r.Context(), w)
 }
+func (rt *Router) handleHome(w http.ResponseWriter, r *http.Request) {
+	input, meta, err := rt.handler.Home(r.Context(), r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.HomeTemplate(*input).Render(r.Context(), w)
+}
 func (rt *Router) handleLoginPage(w http.ResponseWriter, r *http.Request) {
 	input, meta, err := rt.handler.LoginPage(r.Context(), r)
 	if err != nil {
@@ -1079,6 +1148,108 @@ func (rt *Router) handleManageStream(w http.ResponseWriter, r *http.Request) {
 				var buf bytes.Buffer
 				templates.ManageAttendeeDependentPartial(e.Data).Render(r.Context(), &buf)
 				fmt.Fprintf(w, "event: manage-attendee-list-updated\ndata: %s\n\n", strings.ReplaceAll(buf.String(), "\n", ""))
+				flusher.Flush()
+
+			}
+		}
+	}
+}
+func (rt *Router) handleMeetingModerate(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.MeetingModerate(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.MeetingModerateTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateAgendaPartial(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateAgendaPartial(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.ModerateAgendaCompactPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateStream(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	eventChan, err := rt.handler.ModerateStream(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case evt, ok := <-eventChan:
+			if !ok {
+				return
+			}
+			switch e := evt.(type) {
+
+			case ModerateUpdatedEvent:
+				var buf bytes.Buffer
+				templates.ModerateDependentPartial(e.Data).Render(r.Context(), &buf)
+				fmt.Fprintf(w, "event: moderate-updated\ndata: %s\n\n", strings.ReplaceAll(buf.String(), "\n", ""))
 				flusher.Flush()
 
 			}

@@ -6,9 +6,8 @@ import "time"
 type SessionType string
 
 const (
-	SessionTypeUser     SessionType = "user"
-	SessionTypeAttendee SessionType = "attendee"
-	SessionTypeAdmin    SessionType = "admin"
+	SessionTypeAccount SessionType = "account"
+	SessionTypeGuest   SessionType = "guest"
 )
 
 // Session represents an authentication session
@@ -16,18 +15,11 @@ type Session struct {
 	SessionID   string
 	SessionType SessionType
 
-	// For user sessions
-	UserID        *int64
-	CommitteeSlug *string
-	Username      *string
-	Role          *string
-	Quoted        *bool
+	// For account sessions (logged-in users)
+	AccountID *int64
 
-	// For attendee sessions
+	// For guest sessions (attendees without an account)
 	AttendeeID *int64
-	MeetingID  *int64
-	FullName   *string
-	IsChair    *bool
 
 	CreatedAt time.Time
 	ExpiresAt time.Time
@@ -38,12 +30,12 @@ func (s *Session) IsExpired() bool {
 	return time.Now().After(s.ExpiresAt)
 }
 
-// IsUserSession returns true if this is a user session
-func (s *Session) IsUserSession() bool {
-	return s.SessionType == SessionTypeUser
+// IsAccountSession returns true if this is an account session
+func (s *Session) IsAccountSession() bool {
+	return s.SessionType == SessionTypeAccount
 }
 
-// IsAttendeeSession returns true if this is an attendee session
-func (s *Session) IsAttendeeSession() bool {
-	return s.SessionType == SessionTypeAttendee
+// IsGuestSession returns true if this is a guest session
+func (s *Session) IsGuestSession() bool {
+	return s.SessionType == SessionTypeGuest
 }

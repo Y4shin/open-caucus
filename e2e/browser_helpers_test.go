@@ -69,15 +69,13 @@ func adminLogin(t *testing.T, page playwright.Page, baseURL string) {
 	}
 }
 
-// userLogin navigates to / and authenticates as the given user in the given committee.
-// It waits for the redirect to /committee/{slug}.
+// userLogin navigates to / and authenticates as the given user, then navigates to
+// /committee/{committee}. After login the server redirects to /home; this helper
+// proceeds to the requested committee page so callers land where they expect.
 func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username, password string) {
 	t.Helper()
 	if _, err := page.Goto(baseURL + "/"); err != nil {
 		t.Fatalf("goto /: %v", err)
-	}
-	if err := page.Locator("input[name=committee]").Fill(committee); err != nil {
-		t.Fatalf("fill committee: %v", err)
 	}
 	if err := page.Locator("input[name=username]").Fill(username); err != nil {
 		t.Fatalf("fill username: %v", err)
@@ -88,7 +86,10 @@ func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username,
 	if err := page.Locator("input[name=password]").Press("Enter"); err != nil {
 		t.Fatalf("submit user login: %v", err)
 	}
-	if err := page.WaitForURL(baseURL + "/committee/" + committee); err != nil {
-		t.Fatalf("wait for /committee/%s: %v", committee, err)
+	if err := page.WaitForURL(baseURL + "/home"); err != nil {
+		t.Fatalf("wait for /home after login: %v", err)
+	}
+	if _, err := page.Goto(baseURL + "/committee/" + committee); err != nil {
+		t.Fatalf("goto /committee/%s: %v", committee, err)
 	}
 }

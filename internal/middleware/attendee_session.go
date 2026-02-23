@@ -13,13 +13,13 @@ func (r *Registry) attendeeSession(next http.Handler) http.Handler {
 	return r.sessionMiddleware(next)
 }
 
-// attendeeRequired blocks requests that do not carry a valid, non-expired
-// attendee session. Non-attendee requests receive a 403 Forbidden response.
+// attendeeRequired blocks requests that do not have a CurrentAttendee in context.
+// This is satisfied by both guest sessions (set in sessionMiddleware) and account
+// sessions with an attendee record (set by meeting_access).
 func (r *Registry) attendeeRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		sessionData, ok := session.GetSession(req.Context())
-		if !ok || sessionData.IsExpired() || !sessionData.IsAttendeeSession() {
-			http.Error(w, "Forbidden: attendee session required", http.StatusForbidden)
+		if _, ok := session.GetCurrentAttendee(req.Context()); !ok {
+			http.Error(w, "Forbidden: attendee context required", http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, req)

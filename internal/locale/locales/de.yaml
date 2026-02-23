@@ -5,10 +5,15 @@ de:
     logout: "Abmelden"
     logged_in_as: "Angemeldet als %s"
 
+  home:
+    page_title: "Meine Ausschüsse - Konferenztool"
+    title: "Meine Ausschüsse"
+    no_committees: "Du bist kein Mitglied eines Ausschusses."
+    admin_link: "Admin-Dashboard"
+
   login:
     page_title: "Anmeldung - Konferenztool"
     title: "Konferenztool-Anmeldung"
-    committee_label: "Ausschuss:"
     username_label: "Benutzername:"
     password_label: "Passwort:"
     button: "Anmelden"
@@ -119,6 +124,7 @@ de:
 
   meeting_live:
     page_title: "%s - Live"
+    moderate_button: "Moderieren"
     manage_button: "Verwalten"
     logged_in_as: "Angemeldet als: %s"
     chair: "Vorsitz"

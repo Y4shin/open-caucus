@@ -33,12 +33,16 @@ func (r *Registry) Get(name string) func(http.Handler) http.Handler {
 		return r.committeeAccess
 	case "manage_access":
 		return r.manageAccess
+	case "moderate_access":
+		return r.moderateAccess
 	case "admin_required":
 		return r.adminRequired
 	case "attendee_session":
 		return r.attendeeSession
 	case "attendee_required":
 		return r.attendeeRequired
+	case "meeting_access":
+		return r.meetingAccess
 	default:
 		return r.defaultLogger(name)
 	}

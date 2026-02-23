@@ -1,0 +1,48 @@
+package templates
+
+import (
+	"context"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/invopop/ctxi18n/i18n"
+)
+
+type HomeCommitteeItem struct {
+	Slug string
+	Name string
+}
+
+type HomeInput struct {
+	Committees []HomeCommitteeItem
+	IsAdmin    bool
+}
+
+func (i *HomeInput) AdminDashboardGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.Route.AdminDashboardGet(ctx, ""))
+}
+
+templ HomeTemplate(input HomeInput) {
+	@PageTemplate(i18n.T(ctx, "home.page_title"), true, session.IsAdminAuthenticated(ctx),
+		ScaffoldInput{Title: i18n.T(ctx, "home.title")},
+		HomeContent(input))
+}
+
+templ HomeContent(input HomeInput) {
+	if len(input.Committees) == 0 {
+		<p>{ i18n.T(ctx, "home.no_committees") }</p>
+	} else {
+		<ul>
+			for _, c := range input.Committees {
+				<li>
+					<a href={ templ.URL(paths.NewCommitteeSlugRoute(c.Slug).CommitteePageGet(ctx, "")) }>{ c.Name }</a>
+				</li>
+			}
+		</ul>
+	}
+	if input.IsAdmin {
+		<p>
+			<a href={ input.AdminDashboardGet(ctx) }>{ i18n.T(ctx, "home.admin_link") }</a>
+		</p>
+	}
+}

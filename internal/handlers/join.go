@@ -34,13 +34,16 @@ func (h *Handler) MeetingJoinPage(ctx context.Context, r *http.Request, params r
 	}
 
 	sessionData, hasSession := session.GetSession(ctx)
-	isLoggedIn := hasSession && sessionData.IsUserSession() && !sessionData.IsExpired()
+	isLoggedIn := hasSession && sessionData.IsAccountSession() && !sessionData.IsExpired()
 
 	alreadySignedUp := false
-	if isLoggedIn && sessionData.UserID != nil {
-		_, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sessionData.UserID, meetingID)
+	if isLoggedIn && sessionData.AccountID != nil {
+		membership, err := h.Repository.GetUserMembershipByAccountIDAndSlug(ctx, *sessionData.AccountID, params.Slug)
 		if err == nil {
-			alreadySignedUp = true
+			_, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, membership.ID, meetingID)
+			if err == nil {
+				alreadySignedUp = true
+			}
 		}
 	}
 
@@ -60,22 +63,25 @@ func (h *Handler) MeetingJoinPage(ctx context.Context, r *http.Request, params r
 }
 
 // MeetingJoinSubmit handles signup for a registered committee member.
-// Creates an attendee row and an attendee session, then redirects to the meeting live view.
-// Idempotent: if already signed up, creates a new attendee session and redirects.
+// Creates an attendee row and redirects to the meeting live view.
+// The account session persists; meeting_access middleware finds the attendee on the next request.
+// Idempotent: if already signed up, redirects to live view directly.
 func (h *Handler) MeetingJoinSubmit(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingJoinInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid meeting ID")
 	}
 
-	sessionData, _ := session.GetSession(ctx)
-	userID := sessionData.UserID
+	cu, ok := session.GetCurrentUser(ctx)
+	if !ok {
+		return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
+	}
 
 	// Check for existing attendee row (idempotent signup)
-	attendee, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *userID, meetingID)
+	_, err = h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, cu.UserID, meetingID)
 	if err != nil {
 		// No existing row — create one
-		user, err := h.Repository.GetUserByID(ctx, *userID)
+		user, err := h.Repository.GetUserByID(ctx, cu.UserID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to load user: %w", err)
 		}
@@ -85,16 +91,16 @@ func (h *Handler) MeetingJoinSubmit(ctx context.Context, r *http.Request, params
 			return nil, nil, fmt.Errorf("failed to generate attendee secret: %w", err)
 		}
 
-		attendee, err = h.Repository.CreateAttendee(ctx, meetingID, userID, user.FullName, secret, user.Quoted)
-		if err != nil {
+		if _, err = h.Repository.CreateAttendee(ctx, meetingID, &cu.UserID, user.FullName, secret, user.Quoted); err != nil {
 			return nil, nil, fmt.Errorf("failed to create attendee: %w", err)
 		}
 	}
 
-	meta, err := h.createAttendeeSession(ctx, attendee, params.Slug, params.MeetingId)
-	if err != nil {
-		return nil, nil, err
-	}
+	// Redirect to the meeting live page; meeting_access will find the new attendee record
+	meta := routes.NewResponseMeta().WithRedirect(
+		http.StatusSeeOther,
+		fmt.Sprintf("/committee/%s/meeting/%s", params.Slug, params.MeetingId),
+	)
 	return nil, meta, nil
 }
 
@@ -188,12 +194,11 @@ func (h *Handler) AttendeeLoginPage(ctx context.Context, r *http.Request, params
 	}
 
 	// Redirect to the meeting live view if already holding a valid attendee session for this meeting
-	if sd, ok := session.GetSession(ctx); ok && sd.IsAttendeeSession() && !sd.IsExpired() {
-		if sd.MeetingID != nil && *sd.MeetingID == meetingID {
-			meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther,
-				fmt.Sprintf("/committee/%s/meeting/%s", params.Slug, params.MeetingId))
-			return nil, meta, nil
-		}
+	// (sessionMiddleware populates CurrentAttendee for guest sessions)
+	if ca, ok := session.GetCurrentAttendee(ctx); ok && ca.MeetingID == meetingID {
+		meta := routes.NewResponseMeta().WithRedirect(http.StatusSeeOther,
+			fmt.Sprintf("/committee/%s/meeting/%s", params.Slug, params.MeetingId))
+		return nil, meta, nil
 	}
 
 	committee, err := h.Repository.GetCommitteeBySlug(ctx, params.Slug)
@@ -279,50 +284,30 @@ func (h *Handler) AttendeeLoginSubmit(ctx context.Context, r *http.Request, para
 }
 
 // MeetingLivePage renders the attendee live view of a meeting.
+// Access is validated by meeting_access middleware which also populates CurrentAttendee.
 func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingLiveInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid meeting ID")
 	}
 
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd.IsExpired() {
-		return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
+	// meeting_access middleware populates CurrentAttendee when an attendee record exists.
+	// For account sessions without a record, redirect to the join page.
+	ca, ok := session.GetCurrentAttendee(ctx)
+	if !ok {
+		return nil, routes.NewResponseMeta().WithRedirect(
+			http.StatusSeeOther,
+			fmt.Sprintf("/committee/%s/meeting/%s/join", params.Slug, params.MeetingId),
+		), nil
 	}
 
-	var attendeeID int64
-	isChair := false
-	canManage := false
-
-	// A logged-in committee user can open the meeting route directly if they already have
-	// an attendee row for this meeting.
-	if sd.IsUserSession() {
-		if sd.UserID == nil {
-			return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
-		}
-		attendee, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
-		if err != nil {
-			return nil, routes.NewResponseMeta().WithRedirect(
-				http.StatusSeeOther,
-				fmt.Sprintf("/committee/%s/meeting/%s/join", params.Slug, params.MeetingId),
-			), nil
-		}
-
-		attendeeID = attendee.ID
-		isChair = attendee.IsChair
-		canManage = attendee.IsChair || (sd.Role != nil && *sd.Role == "chairperson")
-	} else {
-		if !sd.IsAttendeeSession() || sd.MeetingID == nil || *sd.MeetingID != meetingID {
-			return nil, routes.NewResponseMeta().WithRedirect(
-				http.StatusSeeOther,
-				fmt.Sprintf("/committee/%s/meeting/%s/attendee-login", params.Slug, params.MeetingId),
-			), nil
-		}
-		if sd.AttendeeID != nil {
-			attendeeID = *sd.AttendeeID
-		}
-		isChair = sd.IsChair != nil && *sd.IsChair
-		canManage = isChair
+	attendeeID := ca.AttendeeID
+	isChair := ca.IsChair
+	canManage := isChair
+	canModerate := isChair
+	if cu, cuOK := session.GetCurrentUser(ctx); cuOK && cu.Role == "chairperson" {
+		canManage = true
+		canModerate = true
 	}
 
 	committee, err := h.Repository.GetCommitteeBySlug(ctx, params.Slug)
@@ -333,6 +318,9 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+	if meeting.ModeratorID != nil && *meeting.ModeratorID == attendeeID {
+		canModerate = true
 	}
 
 	topLevelAgendaPoints, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
@@ -359,6 +347,7 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		IDString:      params.MeetingId,
 		IsChair:       isChair,
 		CanManage:     canManage,
+		CanModerate:   canModerate,
 		AgendaPoints:  buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
 		Speakers:      *speakersInput,
 	}, nil, nil
@@ -373,21 +362,18 @@ func (h *Handler) MeetingLiveLegacyRedirect(ctx context.Context, r *http.Request
 	return nil, meta, nil
 }
 
-// createAttendeeSession creates a new attendee session and returns a ResponseMeta
+// createAttendeeSession creates a new guest session and returns a ResponseMeta
 // that sets the session cookie and redirects to the meeting live view.
 func (h *Handler) createAttendeeSession(ctx context.Context, attendee *model.Attendee, slug, meetingIDStr string) (*routes.ResponseMeta, error) {
 	sd := &session.SessionData{
-		SessionType: session.SessionTypeAttendee,
+		SessionType: session.SessionTypeGuest,
 		AttendeeID:  &attendee.ID,
-		MeetingID:   &attendee.MeetingID,
-		FullName:    &attendee.FullName,
-		IsChair:     &attendee.IsChair,
 		ExpiresAt:   time.Now().Add(24 * time.Hour),
 	}
 
 	sessionID, err := h.SessionManager.CreateSession(ctx, sd)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create attendee session: %w", err)
+		return nil, fmt.Errorf("failed to create guest session: %w", err)
 	}
 
 	cookie := h.SessionManager.CreateCookie(sessionID)

@@ -120,6 +120,19 @@ routes:
 
   # ===== User Authentication Routes =====
 
+  # Home page (my committees)
+  - path: /home
+    methods:
+      - verb: GET
+        handler: Home
+        middleware:
+          - session
+          - auth
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: HomeTemplate
+          input_type: HomeInput
+
   # User Login Page
   - path: /
     methods:
@@ -182,6 +195,9 @@ routes:
         handler: MeetingLivePage
         middleware:
           - session
+          - auth
+          - committee_access
+          - meeting_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingLiveTemplate
@@ -196,6 +212,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -211,6 +228,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -227,6 +245,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         query_params:
           - client_id
@@ -237,6 +256,59 @@ routes:
               type: ManageAttendeeDependentPartial
               input_type: ManageAttendeeDependentPartialInput
 
+  # Meeting Moderate Page (condensed moderator view)
+  - path: /committee/{slug}/meeting/{meeting_id}/moderate
+    methods:
+      - verb: GET
+        handler: MeetingModerate
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingModerateTemplate
+          input_type: ModeratePageInput
+
+  # Moderate Agenda Compact Partial (refresh after agenda actions)
+  - path: /committee/{slug}/meeting/{meeting_id}/moderate/agenda
+    methods:
+      - verb: GET
+        handler: ModerateAgendaPartial
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: ModerateAgendaCompactPartial
+          input_type: AgendaPointListPartialInput
+
+  # Moderate SSE Stream
+  - path: /committee/{slug}/meeting/{meeting_id}/moderate/stream
+    methods:
+      - verb: GET
+        sse: true
+        handler: ModerateStream
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        query_params:
+          - client_id
+        events:
+          - name: ModerateUpdated
+            template:
+              package: github.com/Y4shin/conference-tool/internal/templates
+              type: ModerateDependentPartial
+              input_type: ModerateDependentPartialInput
+
   # Toggle Signup Open
   - path: /committee/{slug}/meeting/{meeting_id}/signup-open
     methods:
@@ -246,6 +318,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -261,6 +334,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -276,6 +350,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -291,6 +366,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -303,7 +379,10 @@ routes:
       - verb: GET
         handler: MeetingProtocolPage
         middleware:
-          - attendee_session
+          - session
+          - auth
+          - committee_access
+          - meeting_access
           - attendee_required
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -316,7 +395,10 @@ routes:
       - verb: POST
         handler: ProtocolSaveAgendaPoint
         middleware:
-          - attendee_session
+          - session
+          - auth
+          - committee_access
+          - meeting_access
           - attendee_required
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -332,6 +414,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -347,6 +430,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -362,6 +446,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -377,6 +462,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         raw: true
 
@@ -389,6 +475,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -404,6 +491,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -419,6 +507,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -434,6 +523,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -449,6 +539,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -464,6 +555,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -479,6 +571,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -494,6 +587,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -509,6 +603,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -524,6 +619,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -539,7 +635,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AgendaPointListPartial
@@ -554,6 +651,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -569,7 +667,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -584,7 +683,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         query_params:
           - q
         template:
@@ -601,7 +701,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -616,7 +717,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -631,7 +733,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -646,7 +749,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -661,7 +765,8 @@ routes:
           - session
           - auth
           - committee_access
-          - manage_access
+          - meeting_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -676,6 +781,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -691,6 +797,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -706,6 +813,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -721,6 +829,7 @@ routes:
           - session
           - auth
           - committee_access
+          - meeting_access
           - manage_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
@@ -817,6 +926,9 @@ routes:
         handler: AttendeeSpeakersStream
         middleware:
           - session
+          - auth
+          - committee_access
+          - meeting_access
         events:
           - name: SpeakersUpdated
             template:
@@ -831,6 +943,9 @@ routes:
         handler: AttendeeSpeakerSelfAdd
         middleware:
           - session
+          - auth
+          - committee_access
+          - meeting_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttendeeSpeakersListPartial
@@ -843,6 +958,9 @@ routes:
         handler: AttendeeSpeakerSelfYield
         middleware:
           - session
+          - auth
+          - committee_access
+          - meeting_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttendeeSpeakersListPartial
@@ -855,6 +973,9 @@ routes:
         handler: MeetingLiveLegacyRedirect
         middleware:
           - session
+          - auth
+          - committee_access
+          - meeting_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingLiveTemplate

@@ -86,27 +86,12 @@ func (h *Handler) AttendeeSpeakersStream(ctx context.Context, r *http.Request, p
 		return nil, fmt.Errorf("invalid meeting ID")
 	}
 
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd.IsExpired() {
+	// meeting_access middleware has already validated access and populated CurrentAttendee
+	ca, ok := session.GetCurrentAttendee(ctx)
+	if !ok || ca.MeetingID != meetingID {
 		return nil, fmt.Errorf("forbidden")
 	}
-
-	var attendeeID int64
-	if sd.IsUserSession() {
-		if sd.UserID == nil {
-			return nil, fmt.Errorf("forbidden")
-		}
-		attendee, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
-		if err != nil {
-			return nil, fmt.Errorf("forbidden")
-		}
-		attendeeID = attendee.ID
-	} else {
-		if !sd.IsAttendeeSession() || sd.MeetingID == nil || *sd.MeetingID != meetingID || sd.AttendeeID == nil {
-			return nil, fmt.Errorf("forbidden")
-		}
-		attendeeID = *sd.AttendeeID
-	}
+	attendeeID := ca.AttendeeID
 
 	brokerCh := h.Broker.Subscribe(ctx)
 	eventCh := make(chan routes.AttendeeSpeakersStreamEvent, 4)
@@ -165,27 +150,12 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 		return partial, nil, nil
 	}
 
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd.IsExpired() {
+	// meeting_access middleware has already validated access and populated CurrentAttendee
+	ca, ok := session.GetCurrentAttendee(ctx)
+	if !ok || ca.MeetingID != meetingID {
 		return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
 	}
-
-	var attendeeID int64
-	if sd.IsUserSession() {
-		if sd.UserID == nil {
-			return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
-		}
-		attendee, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("forbidden")
-		}
-		attendeeID = attendee.ID
-	} else {
-		if !sd.IsAttendeeSession() || sd.MeetingID == nil || *sd.MeetingID != meetingID || sd.AttendeeID == nil {
-			return nil, nil, fmt.Errorf("forbidden")
-		}
-		attendeeID = *sd.AttendeeID
-	}
+	attendeeID := ca.AttendeeID
 
 	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
 	if err != nil {
@@ -264,27 +234,12 @@ func (h *Handler) AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request,
 		return nil, nil, fmt.Errorf("invalid meeting ID")
 	}
 
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd.IsExpired() {
+	// meeting_access middleware has already validated access and populated CurrentAttendee
+	ca, ok := session.GetCurrentAttendee(ctx)
+	if !ok || ca.MeetingID != meetingID {
 		return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
 	}
-
-	var attendeeID int64
-	if sd.IsUserSession() {
-		if sd.UserID == nil {
-			return nil, routes.NewResponseMeta().WithRedirect(http.StatusSeeOther, "/"), nil
-		}
-		attendee, err := h.Repository.GetAttendeeByUserIDAndMeetingID(ctx, *sd.UserID, meetingID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("forbidden")
-		}
-		attendeeID = attendee.ID
-	} else {
-		if !sd.IsAttendeeSession() || sd.MeetingID == nil || *sd.MeetingID != meetingID || sd.AttendeeID == nil {
-			return nil, nil, fmt.Errorf("forbidden")
-		}
-		attendeeID = *sd.AttendeeID
-	}
+	attendeeID := ca.AttendeeID
 
 	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
 	if err != nil {

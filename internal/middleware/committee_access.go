@@ -7,40 +7,43 @@ import (
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
-// committeeAccess middleware ensures the user can only access their own committee's data
-// Compares the committee slug in the URL with the user's session committee
+// committeeAccess middleware ensures the user can access the requested committee.
+// For account sessions: looks up the user's membership by account_id + slug and
+// populates a full CurrentUser in context. Returns 403 if no membership found.
+// For guest sessions: passes through unchanged (meeting_access validates the meeting).
 func (r *Registry) committeeAccess(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// Get session from context (auth middleware guarantees this exists)
-		sessionData, ok := session.GetSession(req.Context())
+		sd, ok := session.GetSession(req.Context())
 		if !ok {
-			// Should never happen if auth middleware is applied first
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
 
-		// Extract slug from URL path
-		// Expected format: /committee/{slug} or /committee/{slug}/...
+		// Extract slug from URL path: /committee/{slug}/...
 		pathParts := strings.Split(strings.TrimPrefix(req.URL.Path, "/"), "/")
 		if len(pathParts) < 2 || pathParts[0] != "committee" {
-			// Not a committee path - this middleware shouldn't be applied here
 			next.ServeHTTP(w, req)
 			return
 		}
-
 		slugFromPath := pathParts[1]
 
-		// Compare with session committee slug (only for user sessions)
-		if sessionData.IsUserSession() {
-			if sessionData.CommitteeSlug == nil || slugFromPath != *sessionData.CommitteeSlug {
-				// User trying to access a different committee
-				http.Error(w, "Forbidden: You don't have access to this committee", http.StatusForbidden)
+		if sd.IsAccountSession() && sd.AccountID != nil {
+			membership, err := r.Repository.GetUserMembershipByAccountIDAndSlug(req.Context(), *sd.AccountID, slugFromPath)
+			if err != nil {
+				http.Error(w, "Forbidden: no committee membership", http.StatusForbidden)
 				return
 			}
+			ctx := session.WithCurrentUser(req.Context(), &session.CurrentUser{
+				UserID:        membership.ID,
+				Username:      membership.Username,
+				CommitteeSlug: membership.CommitteeSlug,
+				Role:          membership.Role,
+				Quoted:        membership.Quoted,
+			})
+			req = req.WithContext(ctx)
 		}
-		// Note: Attendee sessions will be validated differently (by meeting_id)
+		// Guest sessions pass through; meeting_access validates the attendee's meeting
 
-		// Access granted - continue
 		next.ServeHTTP(w, req)
 	})
 }

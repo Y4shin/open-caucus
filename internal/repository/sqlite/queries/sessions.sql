@@ -1,8 +1,6 @@
 -- name: CreateSession :exec
-INSERT INTO sessions (
-    session_id, session_type, user_id, committee_slug, username, role, quoted,
-    attendee_id, meeting_id, full_name, is_chair, expires_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO sessions (session_id, session_type, account_id, attendee_id, expires_at)
+VALUES (?, ?, ?, ?, ?);
 
 -- name: GetSession :one
 SELECT * FROM sessions WHERE session_id = ?;

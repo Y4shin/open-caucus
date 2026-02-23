@@ -40,24 +40,10 @@ func (m *Manager) CreateSession(ctx context.Context, data *SessionData) (string,
 	modelSession := &model.Session{
 		SessionID:   sessionID,
 		SessionType: model.SessionType(data.SessionType),
+		AccountID:   data.AccountID,
+		AttendeeID:  data.AttendeeID,
 		CreatedAt:   time.Now(),
 		ExpiresAt:   data.ExpiresAt,
-	}
-
-	// Copy fields based on session type
-	if data.IsUserSession() {
-		modelSession.UserID = data.UserID
-		modelSession.CommitteeSlug = data.CommitteeSlug
-		modelSession.Username = data.Username
-		modelSession.Role = data.Role
-		modelSession.Quoted = data.Quoted
-	} else if data.IsAdminSession() {
-		modelSession.Username = data.Username
-	} else {
-		modelSession.AttendeeID = data.AttendeeID
-		modelSession.MeetingID = data.MeetingID
-		modelSession.FullName = data.FullName
-		modelSession.IsChair = data.IsChair
 	}
 
 	// Store in database
@@ -159,16 +145,9 @@ func generateSessionID() string {
 // sessionDataFromModel converts model.Session to SessionData
 func sessionDataFromModel(s *model.Session) *SessionData {
 	return &SessionData{
-		SessionType:   SessionType(s.SessionType),
-		UserID:        s.UserID,
-		CommitteeSlug: s.CommitteeSlug,
-		Username:      s.Username,
-		Role:          s.Role,
-		Quoted:        s.Quoted,
-		AttendeeID:    s.AttendeeID,
-		MeetingID:     s.MeetingID,
-		FullName:      s.FullName,
-		IsChair:       s.IsChair,
-		ExpiresAt:     s.ExpiresAt,
+		SessionType: SessionType(s.SessionType),
+		AccountID:   s.AccountID,
+		AttendeeID:  s.AttendeeID,
+		ExpiresAt:   s.ExpiresAt,
 	}
 }

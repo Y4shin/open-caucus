@@ -2725,6 +2725,213 @@ func CommitteeMeetingsHeading() templ.CSSClass {
 	}
 }
 
+func ModerateGrid() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`grid-template-columns:1fr 1fr;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1 1 auto;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateGrid`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCol() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:1rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCol`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCard() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`background:linear-gradient(170deg, var(--ui-panel-bg-start), var(--ui-panel-bg-end));`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border:1px solid var(--ui-panel-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-radius:var(--ui-radius);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-shadow:inset 0 1px 0 var(--ui-panel-highlight);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`overflow:hidden;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCard`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCardHalf() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCardHalf`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCardTwoThirds() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:2;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCardTwoThirds`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCardOneThird() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCardOneThird`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCardHeader() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:space-between;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.5rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.6rem 0.85rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid var(--ui-panel-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:0 0 auto;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCardHeader`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCardTitle() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.95rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:700;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCardTitle`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateCardBody() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`overflow-y:auto;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.65rem 0.85rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateCardBody`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateAgendaItem() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.5rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:0.42rem 0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`border-bottom:1px solid var(--ui-panel-border);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateAgendaItem`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateAgendaItemActive() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`border-left:3px solid var(--ui-live-agenda-item-active-border);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding-left:0.45rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-agenda-item-active-text);`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateAgendaItemActive`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateAgendaItemTitle() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:1;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.9rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:600;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-width:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`overflow-wrap:anywhere;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateAgendaItemTitle`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateAgendaPosition() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.8rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-weight:750;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-live-agenda-position-text);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex:0 0 auto;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateAgendaPosition`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateEmptyState() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`color:var(--ui-text-muted);`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-size:0.9rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateEmptyState`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateSearchWrap() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:grid;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`gap:0.3rem;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin-bottom:0.55rem;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateSearchWrap`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
+func ModerateAttendeesSection() templ.CSSClass {
+	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
+	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`min-height:0;`)
+	templ_7745c5c3_CSSID := templ.CSSID(`ModerateAttendeesSection`, templ_7745c5c3_CSSBuilder.String())
+	return templ.ComponentCSSClass{
+		ID:    templ_7745c5c3_CSSID,
+		Class: templ.SafeCSS(`.` + templ_7745c5c3_CSSID + `{` + templ_7745c5c3_CSSBuilder.String() + `}`),
+	}
+}
+
 func CommitteeMeetingList() templ.CSSClass {
 	templ_7745c5c3_CSSBuilder := templruntime.GetBuilder()
 	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
