@@ -1,0 +1,99 @@
+package templates
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/Y4shin/conference-tool/internal/routes/paths"
+)
+
+type LiveCurrentDocInfo struct {
+	BlobID      int64
+	ContentType string
+	Filename    string
+}
+
+type LiveCurrentDocInput struct {
+	CommitteeSlug   string
+	MeetingIDString string
+	Doc             *LiveCurrentDocInfo
+}
+
+func (i *LiveCurrentDocInput) DocURL(ctx context.Context) templ.SafeURL {
+	base := paths.NewCommitteeSlugMeetingMeetingIdCurrentDocRoute(i.CommitteeSlug, i.MeetingIDString).ServeCurrentDocumentGet(ctx, "")
+	if i.Doc == nil {
+		return templ.URL(base)
+	}
+	return templ.URL(fmt.Sprintf("%s?v=%d", base, i.Doc.BlobID))
+}
+
+func isPreviewable(contentType string) bool {
+	switch contentType {
+	case "application/pdf", "image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml":
+		return true
+	default:
+		return false
+	}
+}
+
+func (i *MeetingLiveInput) toCurrentDocInput() LiveCurrentDocInput {
+	return LiveCurrentDocInput{
+		CommitteeSlug:   i.CommitteeSlug,
+		MeetingIDString: i.IDString,
+		Doc:             i.CurrentDoc,
+	}
+}
+
+func (i *AttendeeSpeakersListPartialInput) toCurrentDocInput() LiveCurrentDocInput {
+	return LiveCurrentDocInput{
+		CommitteeSlug:   i.CommitteeSlug,
+		MeetingIDString: i.IDString,
+		Doc:             i.CurrentDoc,
+	}
+}
+
+templ LiveDocButtonContent(input LiveCurrentDocInput) {
+	<button
+		id="live-doc-btn"
+		type="button"
+		class={ LiveSpeakerHistoryButton(), "live-speaker-history-button", templ.KV("live-doc-btn--hidden", input.Doc == nil) }
+		data-live-dialog-open
+		aria-controls="live-doc-modal"
+		aria-label="Open current document"
+	>
+		@Icon(IconVisibility, "", "live-agenda-dialog-icon")
+	</button>
+}
+
+templ LiveDocButtonPartial(input LiveCurrentDocInput) {
+	<div id="live-doc-btn-wrapper">
+		@LiveDocButtonContent(input)
+	</div>
+}
+
+templ LiveCurrentDocContent(input LiveCurrentDocInput) {
+	<div class="live-current-doc-content">
+		if input.Doc == nil {
+			<p class={ LiveEmptyState(), "live-doc-placeholder" }>No document currently displayed.</p>
+		} else if isPreviewable(input.Doc.ContentType) {
+			<iframe src={ input.DocURL(ctx) } class="live-doc-iframe" title={ input.Doc.Filename }></iframe>
+		} else {
+			<p>
+				@IconLabelLink(input.DocURL(ctx), IconArrowForward, input.Doc.Filename, "left")
+				<span>{ " (download to view)" }</span>
+			</p>
+		}
+	</div>
+}
+
+templ LiveCurrentDocPartial(input LiveCurrentDocInput) {
+	<div id="live-current-doc">
+		@LiveCurrentDocContent(input)
+	</div>
+}
+
+templ LiveCurrentDocModalContent(input LiveCurrentDocInput) {
+	<div id="live-current-doc-modal-content">
+		@LiveCurrentDocContent(input)
+	</div>
+}

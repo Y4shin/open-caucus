@@ -36,6 +36,7 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 	hasActiveAP := false
 	moderatorName := ""
 	var effectiveModeratorID *int64
+	var currentDoc *templates.LiveCurrentDocInfo
 
 	if meeting.CurrentAgendaPointID != nil {
 		hasActiveAP = true
@@ -44,6 +45,10 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 			return nil, fmt.Errorf("failed to load agenda point: %w", err)
 		}
 		agendaTitle = ap.Title
+		currentDoc, err = h.loadCurrentDocInfoForAgendaPoint(ctx, ap)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load current document: %w", err)
+		}
 		effectiveModeratorID = ap.ModeratorID
 		if effectiveModeratorID == nil {
 			effectiveModeratorID = meeting.ModeratorID
@@ -70,11 +75,18 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 		AgendaTitle:       agendaTitle,
 		HasActiveAP:       hasActiveAP,
 		ModeratorName:     moderatorName,
+		CurrentDoc:        currentDoc,
 	}, nil
 }
 
 // publishSpeakersUpdated broadcasts a speakers-updated SSE event scoped to a meeting.
 func (h *Handler) publishSpeakersUpdated(meetingID int64) {
+	mid := meetingID
+	h.Broker.Publish(broker.SSEEvent{Event: "speakers-updated", Data: []byte("{}"), MeetingID: &mid})
+}
+
+// publishCurrentDocumentChanged broadcasts a speakers-updated event so live view OOB updates refresh.
+func (h *Handler) publishCurrentDocumentChanged(meetingID int64) {
 	mid := meetingID
 	h.Broker.Publish(broker.SSEEvent{Event: "speakers-updated", Data: []byte("{}"), MeetingID: &mid})
 }

@@ -83,16 +83,54 @@ func TestAdminDeleteCommittee(t *testing.T) {
 	}
 }
 
-func TestAdminCreateUser(t *testing.T) {
+func TestAdminCreateAccount(t *testing.T) {
+	ts := newTestServer(t)
+	page := newPage(t)
+
+	adminLogin(t, page, ts.URL)
+
+	if err := page.Locator("a:has-text('Manage Accounts')").First().Click(); err != nil {
+		t.Fatalf("click Manage Accounts: %v", err)
+	}
+	if err := page.WaitForURL(ts.URL + "/admin/accounts"); err != nil {
+		t.Fatalf("wait for accounts page: %v", err)
+	}
+
+	urlBefore := page.URL()
+
+	if err := page.Locator("input[name=username]").Fill("newaccount"); err != nil {
+		t.Fatalf("fill username: %v", err)
+	}
+	if err := page.Locator("input[name=full_name]").Fill("New Account"); err != nil {
+		t.Fatalf("fill full_name: %v", err)
+	}
+	if err := page.Locator("input[name=password]").Fill("password123"); err != nil {
+		t.Fatalf("fill password: %v", err)
+	}
+	if err := page.Locator("#create-account-form button[type=submit]").Click(); err != nil {
+		t.Fatalf("click submit: %v", err)
+	}
+
+	if err := page.Locator("td:has-text('newaccount')").WaitFor(); err != nil {
+		t.Fatalf("expected new account in list: %v", err)
+	}
+
+	if page.URL() != urlBefore {
+		t.Errorf("HTMX swap caused unexpected navigation: before=%s after=%s", urlBefore, page.URL())
+	}
+}
+
+func TestAdminAssignAccount(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedAccount(t, "newuser", "password123", "New User")
 
 	page := newPage(t)
 	adminLogin(t, page, ts.URL)
 
-	// Navigate to the committee users page
-	if err := page.Locator("a:has-text('Manage Users')").Click(); err != nil {
-		t.Fatalf("click Manage Users: %v", err)
+	// Navigate to the committee membership page
+	if err := page.Locator("a:has-text('Assign Accounts')").Click(); err != nil {
+		t.Fatalf("click Assign Accounts: %v", err)
 	}
 	if err := page.WaitForURL(ts.URL + "/admin/committee/test-committee"); err != nil {
 		t.Fatalf("wait for committee users page: %v", err)
@@ -100,22 +138,23 @@ func TestAdminCreateUser(t *testing.T) {
 
 	urlBefore := page.URL()
 
-	// Fill the create user form
-	if err := page.Locator("input[name=username]").Fill("newuser"); err != nil {
-		t.Fatalf("fill username: %v", err)
+	// Select account and assign it to the committee
+	accountID, err := page.Locator("select[name=account_id] option:has-text('newuser')").GetAttribute("value")
+	if err != nil {
+		t.Fatalf("read account option value: %v", err)
 	}
-	if err := page.Locator("input[name=password]").Fill("password123"); err != nil {
-		t.Fatalf("fill password: %v", err)
+	if accountID == "" {
+		t.Fatalf("missing account option value for newuser")
 	}
-	if err := page.Locator("input[name=full_name]").Fill("New User"); err != nil {
-		t.Fatalf("fill full_name: %v", err)
+	if _, err := page.Locator("select[name=account_id]").SelectOption(playwright.SelectOptionValues{Values: &[]string{accountID}}); err != nil {
+		t.Fatalf("select account: %v", err)
 	}
 	roleValues := []string{"member"}
 	if _, err := page.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
 		t.Fatalf("select role: %v", err)
 	}
 	createUserForm := page.Locator("#committee-users-container form").Filter(playwright.LocatorFilterOptions{
-		Has: page.Locator("input[name=username]"),
+		Has: page.Locator("select[name=account_id]"),
 	})
 	if err := createUserForm.Locator("button[type=submit]").Click(); err != nil {
 		t.Fatalf("click submit: %v", err)
@@ -139,9 +178,9 @@ func TestAdminDeleteUser(t *testing.T) {
 	page := newPage(t)
 	adminLogin(t, page, ts.URL)
 
-	// Navigate to the committee users page
-	if err := page.Locator("a:has-text('Manage Users')").Click(); err != nil {
-		t.Fatalf("click Manage Users: %v", err)
+	// Navigate to the committee membership page
+	if err := page.Locator("a:has-text('Assign Accounts')").Click(); err != nil {
+		t.Fatalf("click Assign Accounts: %v", err)
 	}
 	if err := page.WaitForURL(ts.URL + "/admin/committee/test-committee"); err != nil {
 		t.Fatalf("wait for committee users page: %v", err)

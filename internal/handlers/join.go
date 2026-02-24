@@ -350,6 +350,7 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		CanModerate:   canModerate,
 		AgendaPoints:  buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
 		Speakers:      *speakersInput,
+		CurrentDoc:    speakersInput.CurrentDoc,
 	}, nil, nil
 }
 

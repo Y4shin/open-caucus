@@ -18,6 +18,7 @@ type AttendeeSpeakersListPartialInput struct {
 	AgendaTitle       string
 	HasActiveAP       bool
 	ModeratorName     string
+	CurrentDoc        *LiveCurrentDocInfo
 	Error             string
 }
 
@@ -300,6 +301,12 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 	<div id="live-speakers-panel-meta" hx-swap-oob="innerHTML" hidden>
 		@LiveSpeakersPanelMetaFromPartial(input)
 	</div>
+	<div id="live-current-doc-oob" hx-swap-oob="innerHTML:#live-current-doc" hidden>
+		@LiveCurrentDocContent(input.toCurrentDocInput())
+	</div>
+	<div id="live-doc-btn-oob" hx-swap-oob="innerHTML:#live-doc-btn-wrapper" hidden>
+		@LiveDocButtonContent(input.toCurrentDocInput())
+	</div>
 	if !input.HasActiveAP {
 		<p>{ i18n.T(ctx, "meeting_live.no_active_agenda") }</p>
 	}
@@ -413,6 +420,7 @@ type MeetingLiveInput struct {
 	CanModerate   bool
 	AgendaPoints  []AgendaPointItem
 	Speakers      AttendeeSpeakersListPartialInput
+	CurrentDoc    *LiveCurrentDocInfo
 }
 
 func (i *MeetingLiveInput) AttendeeLoginGet(ctx context.Context) templ.SafeURL {
@@ -560,18 +568,26 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 		<section class={ Panel(), LivePanel(), LiveAgendaPanel(), "live-agenda-panel" }>
 			<div class={ LiveAgendaSummaryHeadingRow(), "live-agenda-summary-heading-row" }>
 				<h2 class={ LiveAgendaSummaryHeading(), "live-agenda-summary-heading" }>{ i18n.T(ctx, "meeting_live.agenda_heading") }</h2>
-				<button
-					type="button"
-					class={ LiveSpeakerHistoryButton(), LiveAgendaFullButton(), "live-speaker-history-button", "live-agenda-full-button" }
-					data-live-dialog-open
-					aria-controls="agenda-full-dialog"
-					aria-label={ i18n.T(ctx, "meeting_live.agenda_full_button") }
-				>
-					@Icon(IconVisibility, "", "live-agenda-dialog-icon")
-				</button>
+				<div class="live-agenda-header-actions">
+					@LiveDocButtonPartial(input.toCurrentDocInput())
+					<button
+						type="button"
+						class={ LiveSpeakerHistoryButton(), LiveAgendaFullButton(), "live-speaker-history-button", "live-agenda-full-button" }
+						data-live-dialog-open
+						aria-controls="agenda-full-dialog"
+						aria-label={ i18n.T(ctx, "meeting_live.agenda_full_button") }
+					>
+						@Icon(IconVisibility, "", "live-agenda-dialog-icon")
+					</button>
+				</div>
 			</div>
-			<div id="live-agenda-panel-body">
-				@LiveAgendaPanelBodyFromPartial(input.Speakers)
+			<div class="live-agenda-top">
+				<div id="live-agenda-panel-body">
+					@LiveAgendaPanelBodyFromPartial(input.Speakers)
+				</div>
+			</div>
+			<div class="live-current-doc-pane">
+				@LiveCurrentDocPartial(input.toCurrentDocInput())
 			</div>
 			<dialog id="agenda-full-dialog" class={ LiveSpeakerHistoryDialog(), "live-speaker-history-dialog" } data-live-dialog>
 				<div class={ LiveSpeakerHistoryHeader(), "live-speaker-history-header" }>
@@ -590,6 +606,13 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 						}
 					</div>
 				}
+			</dialog>
+			<dialog id="live-doc-modal" class={ LiveSpeakerHistoryDialog(), "live-speaker-history-dialog" } data-live-dialog>
+				<div class={ LiveSpeakerHistoryHeader(), "live-speaker-history-header" }>
+					<h3>Current Document</h3>
+					<button type="button" class={ LiveSpeakerHistoryClose(), "live-speaker-history-close" } data-live-dialog-close>Close</button>
+				</div>
+				@LiveCurrentDocModalContent(input.toCurrentDocInput())
 			</dialog>
 		</section>
 		<section class={ Panel(), LivePanel(), LiveSpeakersPanel(), "live-speakers-panel" }>

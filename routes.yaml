@@ -50,6 +50,35 @@ routes:
           type: AdminDashboardTemplate
           input_type: AdminDashboardInput
 
+  # Admin Accounts Page
+  - path: /admin/accounts
+    methods:
+      - verb: GET
+        handler: AdminAccounts
+        middleware:
+          - session
+          - admin_required
+        query_params:
+          - page
+          - page_size
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AdminAccountsTemplate
+          input_type: AdminAccountsInput
+
+  # Create Account
+  - path: /admin/account/create
+    methods:
+      - verb: POST
+        handler: AdminCreateAccount
+        middleware:
+          - session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AccountListPartial
+          input_type: AccountListPartialInput
+
   # Create Committee
   - path: /admin/committee/create
     methods:
@@ -76,7 +105,7 @@ routes:
           type: CommitteeListPartial
           input_type: CommitteeListPartialInput
 
-  # Committee Users Page
+  # Committee Accounts Page
   - path: /admin/committee/{slug}
     methods:
       - verb: GET
@@ -92,11 +121,11 @@ routes:
           type: AdminCommitteeUsersTemplate
           input_type: AdminCommitteeUsersInput
 
-  # Create User
-  - path: /admin/committee/{slug}/user/create
+  # Assign Account to Committee
+  - path: /admin/committee/{slug}/account/assign
     methods:
       - verb: POST
-        handler: AdminCreateUser
+        handler: AdminAssignAccount
         middleware:
           - session
           - admin_required
@@ -105,8 +134,8 @@ routes:
           type: UserListPartial
           input_type: UserListPartialInput
 
-  # Delete User
-  - path: /admin/committee/{slug}/user/{user_id}/delete
+  # Delete Committee Membership
+  - path: /admin/committee/{slug}/membership/{user_id}/delete
     methods:
       - verb: POST
         handler: AdminDeleteUser
@@ -466,6 +495,18 @@ routes:
           - manage_access
         raw: true
 
+  # Current Document Preview (attendee-accessible stream target)
+  - path: /committee/{slug}/meeting/{meeting_id}/current-doc
+    methods:
+      - verb: GET
+        handler: ServeCurrentDocument
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+        raw: true
+
   # Attachment Create (upload a file and link it to an agenda point)
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/create
     methods:
@@ -497,6 +538,70 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttachmentListPartial
           input_type: AttachmentListPartialInput
+
+  # Set Current Attachment (for live document preview)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/set-current
+    methods:
+      - verb: POST
+        handler: SetCurrentAttachment
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttachmentListPartial
+          input_type: AttachmentListPartialInput
+
+  # Set Current Motion (for live document preview)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/set-current
+    methods:
+      - verb: POST
+        handler: SetCurrentMotion
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MotionListPartial
+          input_type: MotionListPartialInput
+
+  # Clear Current Document (for live document preview)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current
+    methods:
+      - verb: POST
+        handler: ClearCurrentDocument
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AttachmentListPartial
+          input_type: AttachmentListPartialInput
+
+  # Clear Current Document (motion list refresh variant)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current-motion
+    methods:
+      - verb: POST
+        handler: ClearCurrentDocumentMotion
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MotionListPartial
+          input_type: MotionListPartialInput
 
   # Attendee Create (add guest manually from manage page)
   - path: /committee/{slug}/meeting/{meeting_id}/attendee/create

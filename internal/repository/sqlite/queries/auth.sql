@@ -13,7 +13,7 @@ SELECT * FROM password_credentials WHERE account_id = ?;
 -- name: GetUserMembershipByAccountAndCommittee :one
 -- Retrieves the committee membership row for an account+committee combination,
 -- including the username from the accounts table.
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username
 FROM users u
 JOIN accounts a ON u.account_id = a.id
@@ -22,7 +22,7 @@ WHERE a.username = ? AND c.slug = ?;
 
 -- name: GetUserMembershipByAccountIDAndSlug :one
 -- Retrieves the committee membership row for an account_id+committee slug combination.
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username, c.slug AS committee_slug
 FROM users u
 JOIN accounts a ON u.account_id = a.id
@@ -43,7 +43,7 @@ SELECT * FROM committees WHERE slug = ?;
 
 -- name: GetUserByID :one
 -- Retrieves membership row by ID (for session restoration), including username from accounts
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username
 FROM users u
 JOIN accounts a ON u.account_id = a.id

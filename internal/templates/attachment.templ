@@ -24,6 +24,7 @@ type AttachmentListPartialInput struct {
 	AgendaPointIDStr string
 	AgendaPointTitle string
 	Attachments      []AttachmentItem
+	CurrentAttachmentID *int64
 	Error            string
 }
 
@@ -41,6 +42,18 @@ func (i *AttachmentListPartialInput) attachmentDeletePostStr(ctx context.Context
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdDeleteRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, a.IDString,
 	).ManageAttachmentDeletePost(ctx, "")
+}
+
+func (i *AttachmentListPartialInput) setCurrentAttachmentPostStr(ctx context.Context, attachmentIDStr string) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdAttachmentAttachmentIdSetCurrentRoute(
+		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, attachmentIDStr,
+	).SetCurrentAttachmentPost(ctx, "")
+}
+
+func (i *AttachmentListPartialInput) clearCurrentPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdClearCurrentRoute(
+		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr,
+	).ClearCurrentDocumentPost(ctx, "")
 }
 
 func (i *AttachmentListPartialInput) blobDownloadGetStr(ctx context.Context, a *AttachmentItem) string {
@@ -92,6 +105,25 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 						>
 							<button type="submit">{ i18n.T(ctx, "attachment.delete_button") }</button>
 						</form>
+						if input.CurrentAttachmentID != nil && *input.CurrentAttachmentID == a.ID {
+							<form
+								hx-post={ input.clearCurrentPostStr(ctx) }
+								hx-target={ "#" + input.containerID() }
+								hx-swap="outerHTML"
+								class={ InlineForm() }
+							>
+								<button type="submit">Clear</button>
+							</form>
+						} else {
+							<form
+								hx-post={ input.setCurrentAttachmentPostStr(ctx, a.IDString) }
+								hx-target={ "#" + input.containerID() }
+								hx-swap="outerHTML"
+								class={ InlineForm() }
+							>
+								<button type="submit">Set as Current</button>
+							</form>
+						}
 					</li>
 				}
 			</ul>

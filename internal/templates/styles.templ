@@ -2272,6 +2272,51 @@ templ GlobalStylesheetLink() {
 			margin: 0;
 		}
 
+		.live-agenda-panel {
+			display: flex;
+			flex-direction: column;
+			gap: 0.6rem;
+		}
+
+		.live-agenda-header-actions {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.4rem;
+		}
+
+		.live-agenda-top {
+			flex: 1 1 auto;
+			min-height: 0;
+		}
+
+		.live-current-doc-pane {
+			flex: 1 1 auto;
+			min-height: 11rem;
+			border-top: 1px solid var(--ui-panel-border);
+			padding-top: 0.5rem;
+		}
+
+		.live-current-doc-content {
+			height: 100%;
+		}
+
+		.live-doc-iframe {
+			display: block;
+			width: 100%;
+			height: min(46vh, 27rem);
+			border: 1px solid var(--ui-panel-border);
+			border-radius: var(--ui-radius);
+			background: #ffffff;
+		}
+
+		.live-doc-btn--hidden {
+			display: none !important;
+		}
+
+		#live-current-doc-modal-content .live-doc-iframe {
+			height: min(62vh, 34rem);
+		}
+
 		@media (min-width: 761px) {
 			.live-agenda-preview-block {
 				display: none;
@@ -2282,6 +2327,10 @@ templ GlobalStylesheetLink() {
 			}
 
 			.live-agenda-full-button {
+				display: none;
+			}
+
+			#live-doc-btn-wrapper {
 				display: none;
 			}
 		}
@@ -2506,6 +2555,10 @@ templ GlobalStylesheetLink() {
 				height: auto;
 				flex: 0 0 auto;
 				overflow: hidden;
+			}
+
+			.live-mobile-layout .live-current-doc-pane {
+				display: none;
 			}
 
 			.live-mobile-layout .live-speakers-panel {

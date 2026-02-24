@@ -168,13 +168,26 @@ templ ModerateToolsCard(input ModeratePageInput) {
 					}
 				</div>
 				<div>
-					<strong>Motions</strong>
+					<div class={ ManageCardHeaderRow() }>
+						<strong>Motions</strong>
+						<button
+							type="button"
+							data-manage-dialog-open
+							aria-controls={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
+						>Manage Motions</button>
+					</div>
 					if len(input.Motions.Motions) == 0 {
 						<p class={ ModerateEmptyState() }>No motions.</p>
 					} else {
-						for _, m := range input.Motions.Motions {
-							@MotionItemPartial(input.Motions.motionItemInput(&m))
-						}
+						<ul>
+							for _, m := range input.Motions.Motions {
+								<li>
+									<a href={ templ.URL(paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(input.CommitteeSlug, input.IDString, m.BlobIDString).ServeBlobDownloadGet(ctx, "")) }>
+										{ m.Title } ({ m.Filename })
+									</a>
+								</li>
+							}
+						</ul>
 					}
 				</div>
 			}
@@ -190,6 +203,17 @@ templ ModerateToolsCard(input ModeratePageInput) {
 					<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
 				</div>
 				@AttachmentListPartial(input.Attachments)
+			</dialog>
+			<dialog
+				id={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
+				class={ ManageSpeakerAddDialog() }
+				data-manage-dialog
+			>
+				<div class={ ManageSpeakerAddDialogHeader() }>
+					<h3>{ input.ActiveAPTitle } - Motions</h3>
+					<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
+				</div>
+				@MotionListPartial(input.Motions)
 			</dialog>
 		}
 	</section>

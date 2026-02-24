@@ -7,10 +7,11 @@ package client
 
 import (
 	"context"
+	"database/sql"
 )
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT id, username, auth_method, is_admin, created_at, updated_at FROM accounts WHERE id = ?
+SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name FROM accounts WHERE id = ?
 `
 
 // Retrieves sitewide account by ID (for session restoration)
@@ -24,12 +25,13 @@ func (q *Queries) GetAccountByID(ctx context.Context, id int64) (Account, error)
 		&i.IsAdmin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.FullName,
 	)
 	return i, err
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT id, username, auth_method, is_admin, created_at, updated_at FROM accounts WHERE username = ?
+SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name FROM accounts WHERE username = ?
 `
 
 // Retrieves sitewide account for login authentication
@@ -43,6 +45,7 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ac
 		&i.IsAdmin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.FullName,
 	)
 	return i, err
 }
@@ -86,7 +89,7 @@ func (q *Queries) GetPasswordCredentialByAccountID(ctx context.Context, accountI
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username
 FROM users u
 JOIN accounts a ON u.account_id = a.id
@@ -97,7 +100,7 @@ type GetUserByIDRow struct {
 	ID          int64
 	AccountID   int64
 	CommitteeID int64
-	FullName    string
+	FullName    sql.NullString
 	Role        string
 	Quoted      bool
 	CreatedAt   string
@@ -124,7 +127,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 }
 
 const getUserMembershipByAccountAndCommittee = `-- name: GetUserMembershipByAccountAndCommittee :one
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username
 FROM users u
 JOIN accounts a ON u.account_id = a.id
@@ -141,7 +144,7 @@ type GetUserMembershipByAccountAndCommitteeRow struct {
 	ID          int64
 	AccountID   int64
 	CommitteeID int64
-	FullName    string
+	FullName    sql.NullString
 	Role        string
 	Quoted      bool
 	CreatedAt   string
@@ -169,7 +172,7 @@ func (q *Queries) GetUserMembershipByAccountAndCommittee(ctx context.Context, ar
 }
 
 const getUserMembershipByAccountIDAndSlug = `-- name: GetUserMembershipByAccountIDAndSlug :one
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username, c.slug AS committee_slug
 FROM users u
 JOIN accounts a ON u.account_id = a.id
@@ -186,7 +189,7 @@ type GetUserMembershipByAccountIDAndSlugRow struct {
 	ID            int64
 	AccountID     int64
 	CommitteeID   int64
-	FullName      string
+	FullName      sql.NullString
 	Role          string
 	Quoted        bool
 	CreatedAt     string

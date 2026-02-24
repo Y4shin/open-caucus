@@ -34,6 +34,7 @@ type MotionListPartialInput struct {
 	AgendaPointIDStr string
 	AgendaPointTitle string
 	Motions          []MotionItem
+	CurrentMotionID  *int64
 	Error            string
 }
 
@@ -53,6 +54,7 @@ func (i *MotionListPartialInput) motionItemInput(m *MotionItem) MotionItemPartia
 		MeetingIDString:  i.MeetingIDString,
 		AgendaPointIDStr: i.AgendaPointIDStr,
 		Motion:           *m,
+		CurrentMotionID:  i.CurrentMotionID,
 	}
 }
 
@@ -62,6 +64,7 @@ type MotionItemPartialInput struct {
 	MeetingIDString  string
 	AgendaPointIDStr string
 	Motion           MotionItem
+	CurrentMotionID  *int64
 	Error            string
 }
 
@@ -89,6 +92,18 @@ func (i *MotionItemPartialInput) BlobDownloadGetStr(ctx context.Context) string 
 	return paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.Motion.BlobIDString,
 	).ServeBlobDownloadGet(ctx, "")
+}
+
+func (i *MotionItemPartialInput) SetCurrentMotionPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdSetCurrentRoute(
+		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, i.Motion.IDString,
+	).SetCurrentMotionPost(ctx, "")
+}
+
+func (i *MotionItemPartialInput) ClearCurrentPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdClearCurrentMotionRoute(
+		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr,
+	).ClearCurrentDocumentMotionPost(ctx, "")
 }
 
 templ MotionItemPartial(input MotionItemPartialInput) {
@@ -127,6 +142,25 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 		>
 			<button type="submit">{ i18n.T(ctx, "motion.delete_button") }</button>
 		</form>
+		if input.CurrentMotionID != nil && *input.CurrentMotionID == input.Motion.ID {
+			<form
+				hx-post={ input.ClearCurrentPostStr(ctx) }
+				hx-target={ "#" + input.motionListContainerID() }
+				hx-swap="outerHTML"
+				class={ InlineForm() }
+			>
+				<button type="submit">Clear</button>
+			</form>
+		} else {
+			<form
+				hx-post={ input.SetCurrentMotionPostStr(ctx) }
+				hx-target={ "#" + input.motionListContainerID() }
+				hx-swap="outerHTML"
+				class={ InlineForm() }
+			>
+				<button type="submit">Set as Current</button>
+			</form>
+		}
 	</div>
 }
 

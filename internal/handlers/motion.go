@@ -56,6 +56,7 @@ func (h *Handler) loadMotionListPartial(ctx context.Context, slug, meetingIDStr 
 		AgendaPointIDStr: apIDStr,
 		AgendaPointTitle: ap.Title,
 		Motions:          motionItems,
+		CurrentMotionID:  ap.CurrentMotionID,
 	}, nil
 }
 
@@ -125,6 +126,10 @@ func (h *Handler) ManageMotionCreate(ctx context.Context, r *http.Request, param
 
 // ManageMotionDelete removes a motion and its associated blob and file.
 func (h *Handler) ManageMotionDelete(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MotionListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
 	apID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid agenda point ID")
@@ -154,6 +159,7 @@ func (h *Handler) ManageMotionDelete(ctx context.Context, r *http.Request, param
 	}
 
 	_ = h.Storage.Delete(blob.StoragePath)
+	h.publishCurrentDocumentChanged(meetingID)
 
 	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
 	if err != nil {
@@ -207,11 +213,20 @@ func (h *Handler) ManageMotionRecordVote(ctx context.Context, r *http.Request, p
 	}
 
 	motionItem := buildMotionItem(motion, blob)
+	apID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid agenda point ID")
+	}
+	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load agenda point: %w", err)
+	}
 	return &templates.MotionItemPartialInput{
 		CommitteeSlug:    params.Slug,
 		MeetingIDString:  params.MeetingId,
 		AgendaPointIDStr: params.AgendaPointId,
 		Motion:           motionItem,
+		CurrentMotionID:  ap.CurrentMotionID,
 	}, nil, nil
 }
 

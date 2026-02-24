@@ -131,7 +131,7 @@ func TestMigrateUp_ForeignKeysEnforced(t *testing.T) {
 		t.Fatalf("failed to insert test account: %v", err)
 	}
 	_, err = repo.DB.Exec(
-		"INSERT INTO users (account_id, committee_id, full_name, role) VALUES (1, 999, 'Test', 'member')",
+		"INSERT INTO users (account_id, committee_id, role) VALUES (1, 999, 'member')",
 	)
 	if err == nil {
 		t.Error("expected foreign key violation, got nil")
@@ -148,14 +148,14 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 	// Create accounts, committee, membership, meeting, and agenda point for FK satisfaction
 	repo.DB.Exec("INSERT INTO accounts (username) VALUES ('user1')")
 	repo.DB.Exec("INSERT INTO committees (name) VALUES ('test')")
-	repo.DB.Exec("INSERT INTO users (account_id, committee_id, full_name, role) VALUES (1, 1, 'User One', 'member')")
+	repo.DB.Exec("INSERT INTO users (account_id, committee_id, role) VALUES (1, 1, 'member')")
 	repo.DB.Exec("INSERT INTO meetings (committee_id, name) VALUES (1, 'meeting1')")
 	repo.DB.Exec("INSERT INTO agenda_points (meeting_id, position, title) VALUES (1, 1, 'point1')")
 
 	// Invalid role should fail
 	repo.DB.Exec("INSERT INTO accounts (username) VALUES ('bad')")
 	_, err := repo.DB.Exec(
-		"INSERT INTO users (account_id, committee_id, full_name, role) VALUES (2, 1, 'Bad', 'admin')",
+		"INSERT INTO users (account_id, committee_id, role) VALUES (2, 1, 'admin')",
 	)
 	if err == nil {
 		t.Error("expected CHECK constraint violation for invalid role")

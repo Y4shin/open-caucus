@@ -70,10 +70,12 @@ type Handler interface {
 	AdminLoginSubmit(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *ResponseMeta, error)
 	AdminLogout(ctx context.Context, r *http.Request) (*templates.AdminLoginInput, *ResponseMeta, error)
 	AdminDashboard(ctx context.Context, r *http.Request) (*templates.AdminDashboardInput, *ResponseMeta, error)
+	AdminAccounts(ctx context.Context, r *http.Request) (*templates.AdminAccountsInput, *ResponseMeta, error)
+	AdminCreateAccount(ctx context.Context, r *http.Request) (*templates.AccountListPartialInput, *ResponseMeta, error)
 	AdminCreateCommittee(ctx context.Context, r *http.Request) (*templates.CommitteeListPartialInput, *ResponseMeta, error)
 	AdminDeleteCommittee(ctx context.Context, r *http.Request, params RouteParams) (*templates.CommitteeListPartialInput, *ResponseMeta, error)
 	AdminCommitteeUsers(ctx context.Context, r *http.Request, params RouteParams) (*templates.AdminCommitteeUsersInput, *ResponseMeta, error)
-	AdminCreateUser(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
+	AdminAssignAccount(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
 	AdminDeleteUser(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
 	Home(ctx context.Context, r *http.Request) (*templates.HomeInput, *ResponseMeta, error)
 	LoginPage(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
@@ -97,8 +99,13 @@ type Handler interface {
 	ManageMotionDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageMotionRecordVote(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionItemPartialInput, *ResponseMeta, error)
 	ServeBlobDownload(w http.ResponseWriter, r *http.Request, params RouteParams) error
+	ServeCurrentDocument(w http.ResponseWriter, r *http.Request, params RouteParams) error
 	ManageAttachmentCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
 	ManageAttachmentDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
+	SetCurrentAttachment(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
+	SetCurrentMotion(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
+	ClearCurrentDocument(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
+	ClearCurrentDocumentMotion(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageAttendeeCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeSelfSignup(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
@@ -208,6 +215,20 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
+	rt.mux.HandleFunc("GET /admin/accounts", rt.wrapMiddleware(
+		rt.handleAdminAccounts,
+		getMiddlewareForPath("/admin/accounts", groups),
+		[]string{"session", "admin_required"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /admin/account/create", rt.wrapMiddleware(
+		rt.handleAdminCreateAccount,
+		getMiddlewareForPath("/admin/account/create", groups),
+		[]string{"session", "admin_required"},
+		false,
+	))
+
 	rt.mux.HandleFunc("POST /admin/committee/create", rt.wrapMiddleware(
 		rt.handleAdminCreateCommittee,
 		getMiddlewareForPath("/admin/committee/create", groups),
@@ -229,16 +250,16 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
-	rt.mux.HandleFunc("POST /admin/committee/{slug}/user/create", rt.wrapMiddleware(
-		rt.handleAdminCreateUser,
-		getMiddlewareForPath("/admin/committee/{slug}/user/create", groups),
+	rt.mux.HandleFunc("POST /admin/committee/{slug}/account/assign", rt.wrapMiddleware(
+		rt.handleAdminAssignAccount,
+		getMiddlewareForPath("/admin/committee/{slug}/account/assign", groups),
 		[]string{"session", "admin_required"},
 		false,
 	))
 
-	rt.mux.HandleFunc("POST /admin/committee/{slug}/user/{user_id}/delete", rt.wrapMiddleware(
+	rt.mux.HandleFunc("POST /admin/committee/{slug}/membership/{user_id}/delete", rt.wrapMiddleware(
 		rt.handleAdminDeleteUser,
-		getMiddlewareForPath("/admin/committee/{slug}/user/{user_id}/delete", groups),
+		getMiddlewareForPath("/admin/committee/{slug}/membership/{user_id}/delete", groups),
 		[]string{"session", "admin_required"},
 		false,
 	))
@@ -397,6 +418,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/current-doc", rt.wrapMiddleware(
+		rt.handleServeCurrentDocument,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/current-doc", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access"},
+		false,
+	))
+
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/create", rt.wrapMiddleware(
 		rt.handleManageAttachmentCreate,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/create", groups),
@@ -408,6 +436,34 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		rt.handleManageAttachmentDelete,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/delete", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "manage_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/set-current", rt.wrapMiddleware(
+		rt.handleSetCurrentAttachment,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/attachment/{attachment_id}/set-current", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/set-current", rt.wrapMiddleware(
+		rt.handleSetCurrentMotion,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/set-current", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current", rt.wrapMiddleware(
+		rt.handleClearCurrentDocument,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current-motion", rt.wrapMiddleware(
+		rt.handleClearCurrentDocumentMotion,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current-motion", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
 
@@ -747,6 +803,56 @@ func (rt *Router) handleAdminDashboard(w http.ResponseWriter, r *http.Request) {
 
 	templates.AdminDashboardTemplate(*input).Render(r.Context(), w)
 }
+func (rt *Router) handleAdminAccounts(w http.ResponseWriter, r *http.Request) {
+	input, meta, err := rt.handler.AdminAccounts(r.Context(), r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AdminAccountsTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleAdminCreateAccount(w http.ResponseWriter, r *http.Request) {
+	input, meta, err := rt.handler.AdminCreateAccount(r.Context(), r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AccountListPartial(*input).Render(r.Context(), w)
+}
 func (rt *Router) handleAdminCreateCommittee(w http.ResponseWriter, r *http.Request) {
 	input, meta, err := rt.handler.AdminCreateCommittee(r.Context(), r)
 	if err != nil {
@@ -830,12 +936,12 @@ func (rt *Router) handleAdminCommitteeUsers(w http.ResponseWriter, r *http.Reque
 
 	templates.AdminCommitteeUsersTemplate(*input).Render(r.Context(), w)
 }
-func (rt *Router) handleAdminCreateUser(w http.ResponseWriter, r *http.Request) {
+func (rt *Router) handleAdminAssignAccount(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug: r.PathValue("slug"),
 	}
 
-	input, meta, err := rt.handler.AdminCreateUser(r.Context(), r, params)
+	input, meta, err := rt.handler.AdminAssignAccount(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -1543,6 +1649,16 @@ func (rt *Router) handleServeBlobDownload(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+func (rt *Router) handleServeCurrentDocument(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	if err := rt.handler.ServeCurrentDocument(w, r, params); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 func (rt *Router) handleManageAttachmentCreate(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug:          r.PathValue("slug"),
@@ -1605,6 +1721,132 @@ func (rt *Router) handleManageAttachmentDelete(w http.ResponseWriter, r *http.Re
 	}
 
 	templates.AttachmentListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleSetCurrentAttachment(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+		AttachmentId:  r.PathValue("attachment_id"),
+	}
+
+	input, meta, err := rt.handler.SetCurrentAttachment(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AttachmentListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleSetCurrentMotion(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+		MotionId:      r.PathValue("motion_id"),
+	}
+
+	input, meta, err := rt.handler.SetCurrentMotion(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.MotionListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleClearCurrentDocument(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ClearCurrentDocument(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AttachmentListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleClearCurrentDocumentMotion(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ClearCurrentDocumentMotion(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.MotionListPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleManageAttendeeCreate(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{

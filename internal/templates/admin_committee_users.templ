@@ -10,11 +10,12 @@ import (
 )
 
 type AdminCommitteeUsersInput struct {
-	CommitteeName string
-	CommitteeSlug string
-	Users         []UserItem
-	Pagination    pagination.Page
-	Error         string
+	CommitteeName     string
+	CommitteeSlug     string
+	Users             []UserItem
+	AssignableAccounts []AccountOption
+	Pagination        pagination.Page
+	Error             string
 }
 
 type UserItem struct {
@@ -24,6 +25,13 @@ type UserItem struct {
 	FullName string
 	Role     string
 	Quoted   bool
+}
+
+type AccountOption struct {
+	ID       int64
+	IDString string
+	Username string
+	FullName string
 }
 
 func (i *AdminCommitteeUsersInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
@@ -38,30 +46,23 @@ func (i *AdminCommitteeUsersInput) AdminDashboardGet(ctx context.Context) templ.
 	return templ.URL(paths.Route.AdminDashboardGet(ctx, ""))
 }
 
-func (i *AdminCommitteeUsersInput) AdminCreateUserPost(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewAdminCommitteeSlugUserCreateRoute(i.CommitteeSlug).AdminCreateUserPost(ctx, ""))
-}
-
-func (i *AdminCommitteeUsersInput) AdminDeleteUserPost(ctx context.Context, user *UserItem) templ.SafeURL {
-	return templ.URL(paths.NewAdminCommitteeSlugUserUserIdDeleteRoute(i.CommitteeSlug, user.IDString).AdminDeleteUserPost(ctx, ""))
-}
-
 // UserListPartialInput is the input for the HTMX-swappable user list partial.
-// It is returned directly by create/delete user mutation handlers so that both
-// the full page and the partial update share the exact same component.
+// It is returned directly by assign/delete membership handlers so both
+// full page and partial update share the same component.
 type UserListPartialInput struct {
-	CommitteeSlug string
-	Users         []UserItem
-	Pagination    pagination.Page
-	Error         string
+	CommitteeSlug      string
+	Users              []UserItem
+	AssignableAccounts []AccountOption
+	Pagination         pagination.Page
+	Error              string
 }
 
-func (i *UserListPartialInput) AdminCreateUserPostStr(ctx context.Context) string {
-	return paths.NewAdminCommitteeSlugUserCreateRoute(i.CommitteeSlug).AdminCreateUserPost(ctx, "")
+func (i *UserListPartialInput) AdminAssignAccountPostStr(ctx context.Context) string {
+	return paths.NewAdminCommitteeSlugAccountAssignRoute(i.CommitteeSlug).AdminAssignAccountPost(ctx, "")
 }
 
 func (i *UserListPartialInput) AdminDeleteUserPostStr(ctx context.Context, user *UserItem) string {
-	return paths.NewAdminCommitteeSlugUserUserIdDeleteRoute(i.CommitteeSlug, user.IDString).AdminDeleteUserPost(ctx, "")
+	return paths.NewAdminCommitteeSlugMembershipUserIdDeleteRoute(i.CommitteeSlug, user.IDString).AdminDeleteUserPost(ctx, "")
 }
 
 func (i *UserListPartialInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
@@ -78,57 +79,45 @@ func (i *UserListPartialInput) PaginationArgs(ctx context.Context) PaginationArg
 	})
 }
 
-// UserListPartial renders the add-user form and the paginated user table.
-// It is used both inside AdminCommitteeUsersTemplate and as the sole response
-// body for HTMX mutation requests (create/delete user).
 templ UserListPartial(input UserListPartialInput) {
 	<div id="committee-users-container">
 		@ErrorMessage(input.Error)
 		<section class={ Panel() }>
-			<h2>{ i18n.T(ctx, "admin_committee_users.add_heading") }</h2>
-			<form
-				hx-post={ input.AdminCreateUserPostStr(ctx) }
-				hx-target="#committee-users-container"
-				hx-swap="outerHTML"
-				hx-on::after-request="if(event.detail.successful) this.reset()"
-			>
-				@FormField(FormFieldInput{
-					ID:       "username",
-					Name:     "username",
-					Label:    i18n.T(ctx, "admin_committee_users.username_label"),
-					Type:     "text",
-					Required: true,
-				})
-				@FormField(FormFieldInput{
-					ID:       "password",
-					Name:     "password",
-					Label:    i18n.T(ctx, "admin_committee_users.password_label"),
-					Type:     "password",
-					Required: true,
-					Hint:     i18n.T(ctx, "admin_committee_users.password_hint"),
-				})
-				@FormField(FormFieldInput{
-					ID:       "full_name",
-					Name:     "full_name",
-					Label:    i18n.T(ctx, "admin_committee_users.fullname_label"),
-					Type:     "text",
-					Required: true,
-				})
-				<div>
-					<label for="role">{ i18n.T(ctx, "admin_committee_users.role_label") }</label>
-					<select id="role" name="role" required>
-						<option value="member">{ i18n.T(ctx, "admin_committee_users.role_member") }</option>
-						<option value="chairperson">{ i18n.T(ctx, "admin_committee_users.role_chairperson") }</option>
-					</select>
-				</div>
-				<div>
-					<label>
-						<input type="checkbox" name="quoted" value="true"/>
-						{ i18n.T(ctx, "admin_committee_users.quoted_label") }
-					</label>
-				</div>
-				<button type="submit">{ i18n.T(ctx, "admin_committee_users.create_button") }</button>
-			</form>
+			<h2>{ i18n.T(ctx, "admin_committee_users.assign_heading") }</h2>
+			if len(input.AssignableAccounts) == 0 {
+				<p>{ i18n.T(ctx, "admin_committee_users.no_assignable_accounts") }</p>
+			} else {
+				<form
+					hx-post={ input.AdminAssignAccountPostStr(ctx) }
+					hx-target="#committee-users-container"
+					hx-swap="outerHTML"
+					hx-on::after-request="if(event.detail.successful) this.reset()"
+				>
+					<div>
+						<label for="account_id">{ i18n.T(ctx, "admin_committee_users.account_label") }</label>
+						<select id="account_id" name="account_id" required>
+							<option value="">{ i18n.T(ctx, "admin_committee_users.account_placeholder") }</option>
+							for _, account := range input.AssignableAccounts {
+								<option value={ account.IDString }>{ account.FullName } ({ account.Username })</option>
+							}
+						</select>
+					</div>
+					<div>
+						<label for="role">{ i18n.T(ctx, "admin_committee_users.role_label") }</label>
+						<select id="role" name="role" required>
+							<option value="member">{ i18n.T(ctx, "admin_committee_users.role_member") }</option>
+							<option value="chairperson">{ i18n.T(ctx, "admin_committee_users.role_chairperson") }</option>
+						</select>
+					</div>
+					<div>
+						<label>
+							<input type="checkbox" name="quoted" value="true"/>
+							{ i18n.T(ctx, "admin_committee_users.quoted_label") }
+						</label>
+					</div>
+					<button type="submit">{ i18n.T(ctx, "admin_committee_users.assign_button") }</button>
+				</form>
+			}
 		</section>
 		<section class={ Panel() }>
 			<h2>{ i18n.T(ctx, "admin_committee_users.existing_heading") }</h2>
@@ -190,9 +179,10 @@ templ AdminCommitteeUsersTemplate(input AdminCommitteeUsersInput) {
 
 templ AdminCommitteeUsersContent(input AdminCommitteeUsersInput) {
 	@UserListPartial(UserListPartialInput{
-		CommitteeSlug: input.CommitteeSlug,
-		Users:         input.Users,
-		Pagination:    input.Pagination,
-		Error:         input.Error,
+		CommitteeSlug:      input.CommitteeSlug,
+		Users:              input.Users,
+		AssignableAccounts: input.AssignableAccounts,
+		Pagination:         input.Pagination,
+		Error:              input.Error,
 	})
 }

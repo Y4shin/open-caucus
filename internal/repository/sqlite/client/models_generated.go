@@ -15,6 +15,7 @@ type Account struct {
 	IsAdmin    bool
 	CreatedAt  string
 	UpdatedAt  string
+	FullName   sql.NullString
 }
 
 type AgendaAttachment struct {
@@ -38,6 +39,8 @@ type AgendaPoint struct {
 	GenderQuotationEnabled       sql.NullBool
 	FirstSpeakerQuotationEnabled sql.NullBool
 	ModeratorID                  sql.NullInt64
+	CurrentAttachmentID          sql.NullInt64
+	CurrentMotionID              sql.NullInt64
 }
 
 type Attendee struct {
@@ -136,7 +139,6 @@ type User struct {
 	ID          int64
 	AccountID   int64
 	CommitteeID int64
-	FullName    string
 	Role        string
 	Quoted      bool
 	CreatedAt   string

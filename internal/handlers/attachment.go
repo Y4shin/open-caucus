@@ -45,11 +45,12 @@ func (h *Handler) loadAttachmentListPartial(ctx context.Context, slug, meetingID
 	}
 
 	return &templates.AttachmentListPartialInput{
-		CommitteeSlug:    slug,
-		MeetingIDString:  meetingIDStr,
-		AgendaPointIDStr: apIDStr,
-		AgendaPointTitle: ap.Title,
-		Attachments:      items,
+		CommitteeSlug:       slug,
+		MeetingIDString:     meetingIDStr,
+		AgendaPointIDStr:    apIDStr,
+		AgendaPointTitle:    ap.Title,
+		Attachments:         items,
+		CurrentAttachmentID: ap.CurrentAttachmentID,
 	}, nil
 }
 
@@ -113,6 +114,10 @@ func (h *Handler) ManageAttachmentCreate(ctx context.Context, r *http.Request, p
 
 // ManageAttachmentDelete removes an attachment and its associated blob and stored file.
 func (h *Handler) ManageAttachmentDelete(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AttachmentListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
 	apID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
 	if err != nil {
 		return nil, nil, fmt.Errorf("invalid agenda point ID")
@@ -142,6 +147,7 @@ func (h *Handler) ManageAttachmentDelete(ctx context.Context, r *http.Request, p
 	}
 
 	_ = h.Storage.Delete(blob.StoragePath)
+	h.publishCurrentDocumentChanged(meetingID)
 
 	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
 	if err != nil {

@@ -326,6 +326,7 @@ func accountFromClient(a *client.Account) *model.Account {
 	return &model.Account{
 		ID:         a.ID,
 		Username:   a.Username,
+		FullName:   nullStringValue(a.FullName, a.Username),
 		AuthMethod: a.AuthMethod,
 		IsAdmin:    a.IsAdmin,
 		CreatedAt:  createdAt,
@@ -356,7 +357,7 @@ func userFromGetUserByIDRow(r *client.GetUserByIDRow) *model.User {
 		AccountID:   r.AccountID,
 		CommitteeID: r.CommitteeID,
 		Username:    r.Username,
-		FullName:    r.FullName,
+		FullName:    nullStringValue(r.FullName, r.Username),
 		Quoted:      r.Quoted,
 		Role:        r.Role,
 		CreatedAt:   createdAt,
@@ -373,7 +374,7 @@ func userFromMembershipRow(r *client.GetUserMembershipByAccountAndCommitteeRow) 
 		AccountID:   r.AccountID,
 		CommitteeID: r.CommitteeID,
 		Username:    r.Username,
-		FullName:    r.FullName,
+		FullName:    nullStringValue(r.FullName, r.Username),
 		Quoted:      r.Quoted,
 		Role:        r.Role,
 		CreatedAt:   createdAt,
@@ -391,7 +392,7 @@ func userFromMembershipByAccountIDAndSlugRow(r *client.GetUserMembershipByAccoun
 		CommitteeID:   r.CommitteeID,
 		Username:      r.Username,
 		CommitteeSlug: r.CommitteeSlug,
-		FullName:      r.FullName,
+		FullName:      nullStringValue(r.FullName, r.Username),
 		Quoted:        r.Quoted,
 		Role:          r.Role,
 		CreatedAt:     createdAt,
@@ -421,7 +422,7 @@ func userFromListRow(r *client.ListUsersInCommitteeRow) *model.User {
 		AccountID:   r.AccountID,
 		CommitteeID: r.CommitteeID,
 		Username:    r.Username,
-		FullName:    r.FullName,
+		FullName:    nullStringValue(r.FullName, r.Username),
 		Quoted:      r.Quoted,
 		Role:        r.Role,
 		CreatedAt:   createdAt,
@@ -577,7 +578,10 @@ func (r *Repository) CreateUser(ctx context.Context, committeeID int64, username
 			return fmt.Errorf("create user: look up account: %w", err)
 		}
 		// Account does not exist yet — create it.
-		account, err = r.Queries.CreateAccount(ctx, username)
+		account, err = r.Queries.CreateAccount(ctx, client.CreateAccountParams{
+			Username: username,
+			FullName: sql.NullString{String: fullName, Valid: fullName != ""},
+		})
 		if err != nil {
 			return fmt.Errorf("create user: create account: %w", err)
 		}
@@ -592,7 +596,6 @@ func (r *Repository) CreateUser(ctx context.Context, committeeID int64, username
 	_, err = r.Queries.CreateMembership(ctx, client.CreateMembershipParams{
 		AccountID:   account.ID,
 		CommitteeID: committeeID,
-		FullName:    fullName,
 		Role:        role,
 		Quoted:      quoted,
 	})
@@ -623,9 +626,12 @@ func (r *Repository) SetAccountIsAdmin(ctx context.Context, accountID int64, isA
 	return nil
 }
 
-// CreateAccount creates a new sitewide account with the given username and password hash.
-func (r *Repository) CreateAccount(ctx context.Context, username, passwordHash string) (*model.Account, error) {
-	account, err := r.Queries.CreateAccount(ctx, username)
+// CreateAccount creates a new sitewide account with credentials.
+func (r *Repository) CreateAccount(ctx context.Context, username, fullName, passwordHash string) (*model.Account, error) {
+	account, err := r.Queries.CreateAccount(ctx, client.CreateAccountParams{
+		Username: username,
+		FullName: sql.NullString{String: fullName, Valid: fullName != ""},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("create account: %w", err)
 	}
@@ -636,6 +642,58 @@ func (r *Repository) CreateAccount(ctx context.Context, username, passwordHash s
 		return nil, fmt.Errorf("create account credential: %w", err)
 	}
 	return accountFromClient(&account), nil
+}
+
+// AssignAccountToCommittee creates a committee membership for an existing account.
+func (r *Repository) AssignAccountToCommittee(ctx context.Context, committeeID, accountID int64, quoted bool, role string) error {
+	_, err := r.Queries.CreateMembership(ctx, client.CreateMembershipParams{
+		AccountID:   accountID,
+		CommitteeID: committeeID,
+		Role:        role,
+		Quoted:      quoted,
+	})
+	if err != nil {
+		return fmt.Errorf("assign account to committee: %w", err)
+	}
+	return nil
+}
+
+// CountAllAccounts returns the total number of accounts.
+func (r *Repository) CountAllAccounts(ctx context.Context) (int64, error) {
+	count, err := r.Queries.CountAllAccounts(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count all accounts: %w", err)
+	}
+	return count, nil
+}
+
+// ListAllAccounts returns a paginated list of accounts.
+func (r *Repository) ListAllAccounts(ctx context.Context, limit, offset int) ([]*model.Account, error) {
+	accounts, err := r.Queries.ListAllAccounts(ctx, client.ListAllAccountsParams{
+		Limit:  int64(limit),
+		Offset: int64(offset),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list all accounts: %w", err)
+	}
+	result := make([]*model.Account, len(accounts))
+	for i := range accounts {
+		result[i] = accountFromClient(&accounts[i])
+	}
+	return result, nil
+}
+
+// ListUnassignedAccountsForCommittee returns accounts without membership in the committee.
+func (r *Repository) ListUnassignedAccountsForCommittee(ctx context.Context, committeeID int64) ([]*model.Account, error) {
+	accounts, err := r.Queries.ListUnassignedAccountsForCommittee(ctx, committeeID)
+	if err != nil {
+		return nil, fmt.Errorf("list unassigned accounts for committee: %w", err)
+	}
+	result := make([]*model.Account, len(accounts))
+	for i := range accounts {
+		result[i] = accountFromClient(&accounts[i])
+	}
+	return result, nil
 }
 
 // ListMeetingsForCommittee retrieves a page of meetings for a committee by slug
@@ -885,6 +943,13 @@ func nullInt64ToPtr(n sql.NullInt64) *int64 {
 	return &n.Int64
 }
 
+func nullStringValue(n sql.NullString, fallback string) string {
+	if n.Valid && n.String != "" {
+		return n.String
+	}
+	return fallback
+}
+
 func nullBoolToPtr(n sql.NullBool) *bool {
 	if !n.Valid {
 		return nil
@@ -919,6 +984,8 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 		GenderQuotationEnabled:       nullBoolToPtr(ap.GenderQuotationEnabled),
 		FirstSpeakerQuotationEnabled: nullBoolToPtr(ap.FirstSpeakerQuotationEnabled),
 		ModeratorID:                  nullInt64ToPtr(ap.ModeratorID),
+		CurrentAttachmentID:          nullInt64ToPtr(ap.CurrentAttachmentID),
+		CurrentMotionID:              nullInt64ToPtr(ap.CurrentMotionID),
 	}
 }
 
@@ -1035,6 +1102,36 @@ func (r *Repository) SetCurrentAgendaPoint(ctx context.Context, meetingID int64,
 		ID:                   meetingID,
 	}); err != nil {
 		return fmt.Errorf("set current agenda point: %w", err)
+	}
+	return nil
+}
+
+// SetCurrentAttachment sets an agenda point's current attachment and clears current motion.
+func (r *Repository) SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error {
+	if err := r.Queries.SetCurrentAttachment(ctx, client.SetCurrentAttachmentParams{
+		CurrentAttachmentID: sql.NullInt64{Int64: attachmentID, Valid: true},
+		ID:                  agendaPointID,
+	}); err != nil {
+		return fmt.Errorf("set current attachment: %w", err)
+	}
+	return nil
+}
+
+// SetCurrentMotion sets an agenda point's current motion and clears current attachment.
+func (r *Repository) SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error {
+	if err := r.Queries.SetCurrentMotion(ctx, client.SetCurrentMotionParams{
+		CurrentMotionID: sql.NullInt64{Int64: motionID, Valid: true},
+		ID:              agendaPointID,
+	}); err != nil {
+		return fmt.Errorf("set current motion: %w", err)
+	}
+	return nil
+}
+
+// ClearCurrentDocument clears both current attachment and current motion on an agenda point.
+func (r *Repository) ClearCurrentDocument(ctx context.Context, agendaPointID int64) error {
+	if err := r.Queries.ClearCurrentDocument(ctx, agendaPointID); err != nil {
+		return fmt.Errorf("clear current document: %w", err)
 	}
 	return nil
 }

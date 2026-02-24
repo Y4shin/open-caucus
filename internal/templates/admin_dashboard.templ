@@ -55,6 +55,10 @@ func (i *AdminDashboardInput) AdminCreateCommitteePost(ctx context.Context) stri
 	return paths.Route.AdminCreateCommitteePost(ctx, "")
 }
 
+func (i *AdminDashboardInput) AdminAccountsGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.Route.AdminAccountsGet(ctx, ""))
+}
+
 // CommitteeListPartial renders just the committee list (for HTMX updates)
 templ CommitteeListPartial(input CommitteeListPartialInput) {
 	<div id="committee-list-container">
@@ -100,7 +104,16 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 
 templ AdminDashboardTemplate(input AdminDashboardInput) {
 	@PageTemplate(i18n.T(ctx, "admin_dashboard.title"), true, false,
-		ScaffoldInput{Title: i18n.T(ctx, "admin_dashboard.title")},
+		ScaffoldInput{
+			Title: i18n.T(ctx, "admin_dashboard.title"),
+			Actions: []Action{
+				{
+					Title: i18n.T(ctx, "admin_dashboard.manage_accounts_link"),
+					URL:   input.AdminAccountsGet(ctx),
+					Kind:  "info",
+				},
+			},
+		},
 		AdminDashboardContent(input))
 }
 

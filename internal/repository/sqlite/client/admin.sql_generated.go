@@ -7,7 +7,19 @@ package client
 
 import (
 	"context"
+	"database/sql"
 )
+
+const countAllAccounts = `-- name: CountAllAccounts :one
+SELECT COUNT(*) FROM accounts
+`
+
+func (q *Queries) CountAllAccounts(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countAllAccounts)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
 
 const countAllCommittees = `-- name: CountAllCommittees :one
 SELECT COUNT(*) FROM committees
@@ -34,14 +46,19 @@ func (q *Queries) CountUsersInCommittee(ctx context.Context, slug string) (int64
 }
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts (username, auth_method, created_at, updated_at)
-VALUES (?, 'password', datetime('now'), datetime('now'))
-RETURNING id, username, auth_method, is_admin, created_at, updated_at
+INSERT INTO accounts (username, full_name, auth_method, created_at, updated_at)
+VALUES (?, ?, 'password', datetime('now'), datetime('now'))
+RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name
 `
 
+type CreateAccountParams struct {
+	Username string
+	FullName sql.NullString
+}
+
 // Creates a new sitewide account. Caller must also create a credential row.
-func (q *Queries) CreateAccount(ctx context.Context, username string) (Account, error) {
-	row := q.db.QueryRowContext(ctx, createAccount, username)
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, createAccount, arg.Username, arg.FullName)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -50,6 +67,7 @@ func (q *Queries) CreateAccount(ctx context.Context, username string) (Account, 
 		&i.IsAdmin,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.FullName,
 	)
 	return i, err
 }
@@ -80,15 +98,14 @@ func (q *Queries) CreateCommitteeWithSlug(ctx context.Context, arg CreateCommitt
 }
 
 const createMembership = `-- name: CreateMembership :one
-INSERT INTO users (account_id, committee_id, full_name, role, quoted, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-RETURNING id, account_id, committee_id, full_name, role, quoted, created_at, updated_at
+INSERT INTO users (account_id, committee_id, role, quoted, created_at, updated_at)
+VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+RETURNING id, account_id, committee_id, role, quoted, created_at, updated_at
 `
 
 type CreateMembershipParams struct {
 	AccountID   int64
 	CommitteeID int64
-	FullName    string
 	Role        string
 	Quoted      bool
 }
@@ -98,7 +115,6 @@ func (q *Queries) CreateMembership(ctx context.Context, arg CreateMembershipPara
 	row := q.db.QueryRowContext(ctx, createMembership,
 		arg.AccountID,
 		arg.CommitteeID,
-		arg.FullName,
 		arg.Role,
 		arg.Quoted,
 	)
@@ -107,7 +123,6 @@ func (q *Queries) CreateMembership(ctx context.Context, arg CreateMembershipPara
 		&i.ID,
 		&i.AccountID,
 		&i.CommitteeID,
-		&i.FullName,
 		&i.Role,
 		&i.Quoted,
 		&i.CreatedAt,
@@ -171,6 +186,46 @@ func (q *Queries) GetCommitteeIDBySlug(ctx context.Context, slug string) (int64,
 	return id, err
 }
 
+const listAllAccounts = `-- name: ListAllAccounts :many
+SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name FROM accounts ORDER BY username ASC LIMIT ? OFFSET ?
+`
+
+type ListAllAccountsParams struct {
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListAllAccounts(ctx context.Context, arg ListAllAccountsParams) ([]Account, error) {
+	rows, err := q.db.QueryContext(ctx, listAllAccounts, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Account
+	for rows.Next() {
+		var i Account
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.AuthMethod,
+			&i.IsAdmin,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.FullName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listAllCommittees = `-- name: ListAllCommittees :many
 
 SELECT id, name, slug, created_at, updated_at, current_meeting_id FROM committees ORDER BY name ASC LIMIT ? OFFSET ?
@@ -212,9 +267,50 @@ func (q *Queries) ListAllCommittees(ctx context.Context, arg ListAllCommitteesPa
 	return items, nil
 }
 
+const listUnassignedAccountsForCommittee = `-- name: ListUnassignedAccountsForCommittee :many
+SELECT a.id, a.username, a.auth_method, a.is_admin, a.created_at, a.updated_at, a.full_name
+FROM accounts a
+LEFT JOIN users u
+    ON u.account_id = a.id
+   AND u.committee_id = ?
+WHERE u.id IS NULL
+ORDER BY a.username ASC
+`
+
+func (q *Queries) ListUnassignedAccountsForCommittee(ctx context.Context, committeeID int64) ([]Account, error) {
+	rows, err := q.db.QueryContext(ctx, listUnassignedAccountsForCommittee, committeeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Account
+	for rows.Next() {
+		var i Account
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.AuthMethod,
+			&i.IsAdmin,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.FullName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUsersInCommittee = `-- name: ListUsersInCommittee :many
 
-SELECT u.id, u.account_id, u.committee_id, u.full_name, u.role, u.quoted,
+SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
        u.created_at, u.updated_at, a.username
 FROM users u
 JOIN accounts a ON u.account_id = a.id
@@ -233,7 +329,7 @@ type ListUsersInCommitteeRow struct {
 	ID          int64
 	AccountID   int64
 	CommitteeID int64
-	FullName    string
+	FullName    sql.NullString
 	Role        string
 	Quoted      bool
 	CreatedAt   string
@@ -291,24 +387,18 @@ func (q *Queries) SetAccountIsAdmin(ctx context.Context, arg SetAccountIsAdminPa
 
 const updateMembership = `-- name: UpdateMembership :exec
 UPDATE users
-SET full_name = ?, quoted = ?, role = ?, updated_at = datetime('now')
+SET quoted = ?, role = ?, updated_at = datetime('now')
 WHERE id = ?
 `
 
 type UpdateMembershipParams struct {
-	FullName string
-	Quoted   bool
-	Role     string
-	ID       int64
+	Quoted bool
+	Role   string
+	ID     int64
 }
 
 func (q *Queries) UpdateMembership(ctx context.Context, arg UpdateMembershipParams) error {
-	_, err := q.db.ExecContext(ctx, updateMembership,
-		arg.FullName,
-		arg.Quoted,
-		arg.Role,
-		arg.ID,
-	)
+	_, err := q.db.ExecContext(ctx, updateMembership, arg.Quoted, arg.Role, arg.ID)
 	return err
 }
 

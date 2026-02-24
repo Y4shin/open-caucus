@@ -33,7 +33,7 @@ type Repository interface {
 	// User and authentication
 	GetAccountByUsername(ctx context.Context, username string) (*model.Account, error)
 	GetAccountByID(ctx context.Context, id int64) (*model.Account, error)
-	CreateAccount(ctx context.Context, username, passwordHash string) (*model.Account, error)
+	CreateAccount(ctx context.Context, username, fullName, passwordHash string) (*model.Account, error)
 	GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error)
 	GetUserByCommitteeAndUsername(ctx context.Context, slug, username string) (*model.User, error)
 	GetUserByID(ctx context.Context, id int64) (*model.User, error)
@@ -98,6 +98,9 @@ type Repository interface {
 	GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error)
 	DeleteAgendaPoint(ctx context.Context, id int64) error
 	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error
+	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
+	SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error
+	ClearCurrentDocument(ctx context.Context, agendaPointID int64) error
 	UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error
 	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error
 	SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error
@@ -126,8 +129,12 @@ type Repository interface {
 	ListUsersInCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.User, error)
 	CountUsersInCommittee(ctx context.Context, slug string) (int64, error)
 	CreateUser(ctx context.Context, committeeID int64, username, passwordHash, fullName string, quoted bool, role string) error
+	AssignAccountToCommittee(ctx context.Context, committeeID, accountID int64, quoted bool, role string) error
 	DeleteUserByID(ctx context.Context, id int64) error
 
 	// Admin - Account admin flag
 	SetAccountIsAdmin(ctx context.Context, accountID int64, isAdmin bool) error
+	CountAllAccounts(ctx context.Context) (int64, error)
+	ListAllAccounts(ctx context.Context, limit, offset int) ([]*model.Account, error)
+	ListUnassignedAccountsForCommittee(ctx context.Context, committeeID int64) ([]*model.Account, error)
 }

@@ -132,6 +132,110 @@ func (h *Handler) AdminDashboard(ctx context.Context, r *http.Request) (*templat
 	}, nil, nil
 }
 
+// AdminAccounts shows the account management page.
+func (h *Handler) AdminAccounts(ctx context.Context, r *http.Request) (*templates.AdminAccountsInput, *routes.ResponseMeta, error) {
+	page, pageSize := parsePaginationParams(r)
+
+	total, err := h.Repository.CountAllAccounts(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to count accounts: %w", err)
+	}
+
+	p := pagination.New(page, pageSize, total)
+
+	accounts, err := h.Repository.ListAllAccounts(ctx, p.PageSize, p.Offset)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list accounts: %w", err)
+	}
+
+	items := make([]templates.AccountItem, len(accounts))
+	for i, a := range accounts {
+		items[i] = templates.AccountItem{
+			ID:       a.ID,
+			Username: a.Username,
+			FullName: a.FullName,
+			IsAdmin:  a.IsAdmin,
+		}
+	}
+
+	return &templates.AdminAccountsInput{
+		Accounts:   items,
+		Pagination: p,
+	}, nil, nil
+}
+
+// buildAccountListPartialInput builds the account list partial after mutations.
+func (h *Handler) buildAccountListPartialInput(ctx context.Context, formError string) (*templates.AccountListPartialInput, error) {
+	total, err := h.Repository.CountAllAccounts(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count accounts: %w", err)
+	}
+
+	p := pagination.New(1, pagination.DefaultPageSize, total)
+
+	accounts, err := h.Repository.ListAllAccounts(ctx, p.PageSize, p.Offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list accounts: %w", err)
+	}
+
+	items := make([]templates.AccountItem, len(accounts))
+	for i, a := range accounts {
+		items[i] = templates.AccountItem{
+			ID:       a.ID,
+			Username: a.Username,
+			FullName: a.FullName,
+			IsAdmin:  a.IsAdmin,
+		}
+	}
+
+	return &templates.AccountListPartialInput{
+		Accounts:   items,
+		Pagination: p,
+		Error:      formError,
+	}, nil
+}
+
+// AdminCreateAccount creates a new account and returns updated account list partial.
+func (h *Handler) AdminCreateAccount(ctx context.Context, r *http.Request) (*templates.AccountListPartialInput, *routes.ResponseMeta, error) {
+	if err := r.ParseForm(); err != nil {
+		input, err := h.buildAccountListPartialInput(ctx, "Invalid form submission")
+		if err != nil {
+			return nil, nil, err
+		}
+		return input, nil, nil
+	}
+
+	username := strings.TrimSpace(r.FormValue("username"))
+	fullName := strings.TrimSpace(r.FormValue("full_name"))
+	password := r.FormValue("password")
+	if username == "" || fullName == "" || password == "" {
+		input, err := h.buildAccountListPartialInput(ctx, "All fields are required")
+		if err != nil {
+			return nil, nil, err
+		}
+		return input, nil, nil
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	if _, err := h.Repository.CreateAccount(ctx, username, fullName, string(hashedPassword)); err != nil {
+		input, loadErr := h.buildAccountListPartialInput(ctx, fmt.Sprintf("Failed to create account: %v", err))
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	input, err := h.buildAccountListPartialInput(ctx, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
+
 // listAllCommitteesForPartial fetches all committees for the HTMX partial (no pagination).
 func (h *Handler) listAllCommitteesForPartial(ctx context.Context) ([]templates.CommitteeItem, error) {
 	// Use a high limit — the partial doesn't support pagination.
@@ -235,11 +339,26 @@ func (h *Handler) AdminCommitteeUsers(ctx context.Context, r *http.Request, para
 		}
 	}
 
+	assignable, err := h.Repository.ListUnassignedAccountsForCommittee(ctx, committee.ID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to list assignable accounts: %w", err)
+	}
+	assignableItems := make([]templates.AccountOption, len(assignable))
+	for i, a := range assignable {
+		assignableItems[i] = templates.AccountOption{
+			ID:       a.ID,
+			IDString: fmt.Sprintf("%d", a.ID),
+			Username: a.Username,
+			FullName: a.FullName,
+		}
+	}
+
 	return &templates.AdminCommitteeUsersInput{
-		CommitteeName: committee.Name,
-		CommitteeSlug: committee.Slug,
-		Users:         items,
-		Pagination:    p,
+		CommitteeName:      committee.Name,
+		CommitteeSlug:      committee.Slug,
+		Users:              items,
+		AssignableAccounts: assignableItems,
+		Pagination:         p,
 	}, nil, nil
 }
 
@@ -263,16 +382,35 @@ func (h *Handler) buildUserListPartialInput(ctx context.Context, slug, formError
 		items[i] = templates.UserItem{ID: u.ID, IDString: fmt.Sprintf("%d", u.ID), Username: u.Username, FullName: u.FullName, Role: u.Role, Quoted: u.Quoted}
 	}
 
+	committeeID, err := h.Repository.GetCommitteeIDBySlug(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get committee ID: %w", err)
+	}
+	assignable, err := h.Repository.ListUnassignedAccountsForCommittee(ctx, committeeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list assignable accounts: %w", err)
+	}
+	assignableItems := make([]templates.AccountOption, len(assignable))
+	for i, a := range assignable {
+		assignableItems[i] = templates.AccountOption{
+			ID:       a.ID,
+			IDString: fmt.Sprintf("%d", a.ID),
+			Username: a.Username,
+			FullName: a.FullName,
+		}
+	}
+
 	return &templates.UserListPartialInput{
-		CommitteeSlug: slug,
-		Users:         items,
-		Pagination:    p,
-		Error:         formError,
+		CommitteeSlug:      slug,
+		Users:              items,
+		AssignableAccounts: assignableItems,
+		Pagination:         p,
+		Error:              formError,
 	}, nil
 }
 
-// AdminCreateUser creates a new user in a committee and returns the updated user list partial.
-func (h *Handler) AdminCreateUser(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.UserListPartialInput, *routes.ResponseMeta, error) {
+// AdminAssignAccount assigns an existing account to a committee.
+func (h *Handler) AdminAssignAccount(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.UserListPartialInput, *routes.ResponseMeta, error) {
 	slug := params.Slug
 
 	if err := r.ParseForm(); err != nil {
@@ -283,13 +421,11 @@ func (h *Handler) AdminCreateUser(ctx context.Context, r *http.Request, params r
 		return input, nil, nil
 	}
 
-	username := strings.TrimSpace(r.FormValue("username"))
-	password := r.FormValue("password")
-	fullName := strings.TrimSpace(r.FormValue("full_name"))
+	accountIDStr := strings.TrimSpace(r.FormValue("account_id"))
 	role := r.FormValue("role")
 	quoted := r.FormValue("quoted") == "true"
 
-	if username == "" || password == "" || fullName == "" || role == "" {
+	if accountIDStr == "" || role == "" {
 		input, err := h.buildUserListPartialInput(ctx, slug, "All fields are required")
 		if err != nil {
 			return nil, nil, err
@@ -297,9 +433,13 @@ func (h *Handler) AdminCreateUser(ctx context.Context, r *http.Request, params r
 		return input, nil, nil
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	accountID, err := strconv.ParseInt(accountIDStr, 10, 64)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to hash password: %w", err)
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Invalid account selection")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
 	}
 
 	committeeID, err := h.Repository.GetCommitteeIDBySlug(ctx, slug)
@@ -307,8 +447,8 @@ func (h *Handler) AdminCreateUser(ctx context.Context, r *http.Request, params r
 		return nil, nil, fmt.Errorf("failed to get committee ID: %w", err)
 	}
 
-	if err := h.Repository.CreateUser(ctx, committeeID, username, string(hashedPassword), fullName, quoted, role); err != nil {
-		input, loadErr := h.buildUserListPartialInput(ctx, slug, fmt.Sprintf("Failed to create user: %v", err))
+	if err := h.Repository.AssignAccountToCommittee(ctx, committeeID, accountID, quoted, role); err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, fmt.Sprintf("Failed to assign account: %v", err))
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}

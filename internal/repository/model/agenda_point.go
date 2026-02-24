@@ -12,4 +12,6 @@ type AgendaPoint struct {
 	GenderQuotationEnabled       *bool  // nil = inherit from meeting
 	FirstSpeakerQuotationEnabled *bool  // nil = inherit from meeting
 	ModeratorID                  *int64 // nil if not set
+	CurrentAttachmentID          *int64
+	CurrentMotionID              *int64
 }

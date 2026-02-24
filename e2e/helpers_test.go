@@ -123,12 +123,24 @@ func (ts *testServer) seedAdminAccount(t *testing.T, username, password string) 
 	if err != nil {
 		t.Fatalf("hash password for admin: %v", err)
 	}
-	account, err := ts.repo.CreateAccount(context.Background(), username, string(hash))
+	account, err := ts.repo.CreateAccount(context.Background(), username, username, string(hash))
 	if err != nil {
 		t.Fatalf("create admin account %q: %v", username, err)
 	}
 	if err := ts.repo.SetAccountIsAdmin(context.Background(), account.ID, true); err != nil {
 		t.Fatalf("set admin flag for %q: %v", username, err)
+	}
+}
+
+// seedAccount creates a non-admin account.
+func (ts *testServer) seedAccount(t *testing.T, username, password, fullName string) {
+	t.Helper()
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		t.Fatalf("hash password for account: %v", err)
+	}
+	if _, err := ts.repo.CreateAccount(context.Background(), username, fullName, string(hash)); err != nil {
+		t.Fatalf("create account %q: %v", username, err)
 	}
 }
 

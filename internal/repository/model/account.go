@@ -6,6 +6,7 @@ import "time"
 type Account struct {
 	ID         int64
 	Username   string
+	FullName   string
 	AuthMethod string
 	IsAdmin    bool
 	CreatedAt  time.Time

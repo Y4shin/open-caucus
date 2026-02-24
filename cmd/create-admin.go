@@ -57,7 +57,7 @@ If the account already exists, its password is not changed.`,
 				return fmt.Errorf("hash password: %w", err)
 			}
 
-			account, err = repo.CreateAccount(ctx, username, string(hash))
+			account, err = repo.CreateAccount(ctx, username, username, string(hash))
 			if err != nil {
 				return fmt.Errorf("create account: %w", err)
 			}
