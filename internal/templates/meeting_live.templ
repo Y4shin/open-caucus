@@ -176,10 +176,10 @@ func (i *AttendeeSpeakersListPartialInput) NextAgendaPoint() *AgendaPointItem {
 }
 
 templ LiveAgendaPanelBodyFromPartial(input AttendeeSpeakersListPartialInput) {
-	<div class={ LiveAgendaPreviewBlock(), "live-agenda-preview-block" }>
-		<div class={ LiveAgendaPreviewRow() }>
-			<span class={ LiveAgendaPreviewLabel() }>{ i18n.T(ctx, "meeting_live.current_item") }</span>
-			<span class={ LiveAgendaPreviewValue() }>
+	<div class={ "live-agenda-preview-block", "live-agenda-preview-block" }>
+		<div class={ "live-agenda-preview-row" }>
+			<span class={ "live-agenda-preview-label" }>{ i18n.T(ctx, "meeting_live.current_item") }</span>
+			<span class={ "live-agenda-preview-value" }>
 				if current := input.CurrentAgendaPoint(); current != nil {
 					{ current.Title }
 				} else {
@@ -187,9 +187,9 @@ templ LiveAgendaPanelBodyFromPartial(input AttendeeSpeakersListPartialInput) {
 				}
 			</span>
 		</div>
-		<div class={ LiveAgendaPreviewRow() }>
-			<span class={ LiveAgendaPreviewLabel() }>{ i18n.T(ctx, "meeting_live.next_item") }</span>
-			<span class={ LiveAgendaPreviewValue() }>
+		<div class={ "live-agenda-preview-row" }>
+			<span class={ "live-agenda-preview-label" }>{ i18n.T(ctx, "meeting_live.next_item") }</span>
+			<span class={ "live-agenda-preview-value" }>
 				if next := input.NextAgendaPoint(); next != nil {
 					{ next.Title }
 				} else {
@@ -198,15 +198,15 @@ templ LiveAgendaPanelBodyFromPartial(input AttendeeSpeakersListPartialInput) {
 			</span>
 		</div>
 	</div>
-	<div class={ LiveAgendaInlineList(), "live-agenda-inline-list" }>
+	<div class={ "live-agenda-inline-list", "live-agenda-inline-list" }>
 		if len(input.AgendaPoints) == 0 {
-			<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
+			<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
 		} else {
-			<div class={ LiveAgendaList(), "live-agenda-list" }>
+			<div class={ "live-agenda-list", "live-agenda-list" }>
 				for _, ap := range input.AgendaPoints {
-					<div class={ LiveAgendaItem(), "live-agenda-item", templ.KV(LiveAgendaItemActive(), ap.IsActive), templ.KV(LiveAgendaSubPoint(), ap.ParentID != nil) }>
-						<span class={ LiveAgendaPosition() }>{ ap.Position }</span>
-						<span class={ LiveAgendaTitle() }>{ ap.Title }</span>
+					<div class={ "live-agenda-item", "live-agenda-item", templ.KV("live-agenda-item-active", ap.IsActive), templ.KV("live-agenda-sub-point", ap.ParentID != nil) }>
+						<span class={ "live-agenda-position" }>{ ap.Position }</span>
+						<span class={ "live-agenda-title" }>{ ap.Title }</span>
 					</div>
 				}
 			</div>
@@ -216,8 +216,8 @@ templ LiveAgendaPanelBodyFromPartial(input AttendeeSpeakersListPartialInput) {
 
 templ LiveSpeakersPanelMetaFromPartial(input AttendeeSpeakersListPartialInput) {
 	if input.ModeratorName != "" {
-		<div class={ LiveSpeakersPanelMeta() }>
-			<span class={ LiveBadge(), LiveBadgeModerator() } data-testid="live-moderator-badge">
+		<div class={ "live-speakers-panel-meta" }>
+			<span class={ "live-badge", "live-badge-moderator" } data-testid="live-moderator-badge">
 				{ i18n.T(ctx, "meeting_live.moderator_badge", input.ModeratorName) }
 			</span>
 		</div>
@@ -226,10 +226,10 @@ templ LiveSpeakersPanelMetaFromPartial(input AttendeeSpeakersListPartialInput) {
 
 templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, variant LiveSpeakerCardVariant, actions []LiveSpeakerAction) {
 	<div
-		class={ LiveSpeakerItem(), "live-speaker-row", input.rowClass(s), templ.KV(LiveSpeakerRowDone(), variant == LiveSpeakerCardDone), templ.KV("live-speaker-row-done", variant == LiveSpeakerCardDone) }
+		class={ "live-speaker-item", "live-speaker-row", input.rowClass(s), templ.KV("live-speaker-row-done", variant == LiveSpeakerCardDone), templ.KV("live-speaker-row-done", variant == LiveSpeakerCardDone) }
 		data-testid="live-speaker-item"
 	>
-		<div class={ LiveSpeakerOrder(), "live-speaker-order" }>
+		<div class={ "live-speaker-order", "live-speaker-order" }>
 			if variant == LiveSpeakerCardSpeaking {
 				<span class="ui-icon live-speaking-marker-icon" aria-hidden="true"></span>
 			} else if variant == LiveSpeakerCardWaiting {
@@ -238,47 +238,47 @@ templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, var
 				{ strconv.FormatInt(input.DoneDisplayNumber(s), 10) }
 			}
 		</div>
-		<div class={ LiveSpeakerMain(), "live-speaker-main" }>
-			<div class={ LiveSpeakerTitleRow(), "live-speaker-title-row" }>
-				<div class={ LiveSpeakerName(), "live-speaker-name" } data-testid="live-speaker-name">{ s.AttendeeName }</div>
+		<div class={ "live-speaker-main", "live-speaker-main" }>
+			<div class={ "live-speaker-title-row", "live-speaker-title-row" }>
+				<div class={ "live-speaker-name", "live-speaker-name" } data-testid="live-speaker-name">{ s.AttendeeName }</div>
 				if variant == LiveSpeakerCardSpeaking && s.SpeakingSinceUnix > 0 {
-					<span class={ LiveSpeakingTimer(), "live-speaking-timer" } data-speaking-since={ strconv.FormatInt(s.SpeakingSinceUnix, 10) }>00:00</span>
+					<span class={ "live-speaking-timer", "live-speaking-timer" } data-speaking-since={ strconv.FormatInt(s.SpeakingSinceUnix, 10) }>00:00</span>
 				} else if variant == LiveSpeakerCardDone && s.DoneDurationLabel != "" {
-					<span class={ LiveSpeakingTimer(), "live-speaking-timer" }>{ s.DoneDurationLabel }</span>
+					<span class={ "live-speaking-timer", "live-speaking-timer" }>{ s.DoneDurationLabel }</span>
 				}
 			</div>
-			<div class={ LiveSpeakerMetaRow(), "live-speaker-meta-row" }>
-				<div class={ LiveBadgeRow(), "live-badge-row" }>
+			<div class={ "live-speaker-meta-row", "live-speaker-meta-row" }>
+				<div class={ "live-badge-row", "live-badge-row" }>
 					if s.Type == "ropm" {
-						<span class={ LiveBadge(), LiveBadgeROPM(), "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_ropm") }</span>
+						<span class={ "live-badge", "live-badge-ropm", "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_ropm") }</span>
 					}
 					if s.GenderQuoted {
-						<span class={ LiveBadge(), LiveBadgeQuoted(), QuotedStatusChip(), "live-badge", "quoted-status-chip" }>
+						<span class={ "live-badge", "live-badge-quoted", "quoted-status-chip", "live-badge", "quoted-status-chip" }>
 							@Icon(IconTransgender, "", "quoted-status-chip-icon")
 							{ "-" + i18n.T(ctx, "meeting_live.badge_quoted") }
 						</span>
 					}
 					if s.FirstSpeaker {
-						<span class={ LiveBadge(), LiveBadgeFirst(), "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_first") }</span>
+						<span class={ "live-badge", "live-badge-first", "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_first") }</span>
 					}
 					if s.Priority {
-						<span class={ LiveBadge(), LiveBadgePriority(), "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_priority") }</span>
+						<span class={ "live-badge", "live-badge-priority", "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_priority") }</span>
 					}
 				</div>
 			</div>
 			if len(actions) > 0 {
-				<div class={ LiveSpeakerActionRow(), "live-speaker-action-row" }>
+				<div class={ "live-speaker-action-row", "live-speaker-action-row" }>
 					for _, action := range actions {
 						<form
 							hx-post={ action.PostURL }
 							hx-target={ action.Target }
 							hx-swap={ action.Swap }
 							hx-confirm={ action.Confirm }
-							class={ LiveSpeakerActionForm(), "live-speaker-action-form" }
+							class={ "live-speaker-action-form", "live-speaker-action-form" }
 						>
 							<button
 								type="submit"
-								class={ LiveSpeakerActionButton(), "live-speaker-action-button", templ.KV(LiveSpeakerActionButtonDanger(), action.Danger), templ.KV("live-speaker-action-button-danger", action.Danger) }
+								class={ "live-speaker-action-button", "live-speaker-action-button", templ.KV("live-speaker-action-button-danger", action.Danger), templ.KV("live-speaker-action-button-danger", action.Danger) }
 								aria-label={ action.Title }
 								title={ action.Title }
 							>
@@ -311,14 +311,14 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 		<p>{ i18n.T(ctx, "meeting_live.no_active_agenda") }</p>
 	}
 	if input.HasActiveAP {
-		<div class={ LiveSpeakersCardContent(), "live-speakers-card-content" }>
-			<div class={ LiveSpeakersListShell(), "live-speakers-list-shell" }>
-				<div class={ LiveSpeakersListViewport(), "live-speakers-list-viewport" }>
+		<div class={ "live-speakers-card-content", "live-speakers-card-content" }>
+			<div class={ "live-speakers-list-shell", "live-speakers-list-shell" }>
+				<div class={ "live-speakers-list-viewport", "live-speakers-list-viewport" }>
 				@ErrorMessage(input.Error)
 				if len(input.ActiveSpeakers()) == 0 {
-					<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
+					<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
 				} else {
-					<div class={ LiveSpeakerList(), "live-speaker-list" }>
+					<div class={ "live-speaker-list", "live-speaker-list" }>
 						for _, s := range input.ActiveSpeakers() {
 							@LiveSpeakerCard(input, s, input.CardVariant(s), nil)
 						}
@@ -326,17 +326,17 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 				}
 				</div>
 			</div>
-			<div class={ LiveSelfAddRow(), "live-self-add-row" }>
+			<div class={ "live-self-add-row", "live-self-add-row" }>
 				if input.IsCurrentAttendeeSpeaking() {
 					<form
 						hx-post={ input.SelfYieldPostStr(ctx) }
 						hx-target="#attendee-speakers-list"
 						hx-swap="innerHTML"
-						class={ LiveSelfAddForm(), "live-self-add-form" }
+						class={ "live-self-add-form", "live-self-add-form" }
 					>
 						<button
 							type="submit"
-							class={ LiveSelfAddButton(), LiveSelfAddButtonDanger(), "live-self-add-button", "live-self-add-button-danger" }
+							class={ "live-self-add-button", "live-self-add-button-danger", "live-self-add-button", "live-self-add-button-danger" }
 							data-testid="live-self-yield"
 							aria-label={ i18n.T(ctx, "meeting_live.yield_speech") }
 							title={ i18n.T(ctx, "meeting_live.yield_speech") }
@@ -349,12 +349,12 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 						hx-post={ input.SelfAddPostStr(ctx) }
 						hx-target="#attendee-speakers-list"
 						hx-swap="innerHTML"
-						class={ LiveSelfAddForm(), LiveSelfAddFormRopm(), "live-self-add-form", "live-self-add-form-ropm" }
+						class={ "live-self-add-form", "live-self-add-form-ropm", "live-self-add-form", "live-self-add-form-ropm" }
 					>
 						<input type="hidden" name="type" value="ropm"/>
 						<button
 							type="submit"
-							class={ LiveSelfAddButton(), LiveSelfAddButtonWarning(), "live-self-add-button", "live-self-add-button-warning" }
+							class={ "live-self-add-button", "live-self-add-button-warning", "live-self-add-button", "live-self-add-button-warning" }
 							data-testid="live-add-self-ropm"
 							aria-label={ i18n.T(ctx, "meeting_live.add_self_ropm") }
 							title={ i18n.T(ctx, "meeting_live.add_self_ropm") }
@@ -367,12 +367,12 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 						hx-post={ input.SelfAddPostStr(ctx) }
 						hx-target="#attendee-speakers-list"
 						hx-swap="innerHTML"
-						class={ LiveSelfAddForm(), LiveSelfAddFormRegular(), "live-self-add-form", "live-self-add-form-regular" }
+						class={ "live-self-add-form", "live-self-add-form-regular", "live-self-add-form", "live-self-add-form-regular" }
 					>
 						<input type="hidden" name="type" value="regular"/>
 						<button
 							type="submit"
-							class={ LiveSelfAddButton(), "live-self-add-button" }
+							class={ "live-self-add-button", "live-self-add-button" }
 							data-testid="live-add-self-regular"
 							aria-label={ i18n.T(ctx, "meeting_live.add_self_regular") }
 							title={ i18n.T(ctx, "meeting_live.add_self_regular") }
@@ -383,15 +383,15 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 					</form>
 				}
 			</div>
-			<dialog id="speaker-history-dialog" class={ LiveSpeakerHistoryDialog(), "live-speaker-history-dialog" } data-live-dialog>
-				<div class={ LiveSpeakerHistoryHeader(), "live-speaker-history-header" }>
+			<dialog id="speaker-history-dialog" class={ "live-speaker-history-dialog", "live-speaker-history-dialog" } data-live-dialog>
+				<div class={ "live-speaker-history-header", "live-speaker-history-header" }>
 					<h3>{ i18n.T(ctx, "meeting_live.speaker_history_title") }</h3>
-					<button type="button" class={ LiveSpeakerHistoryClose(), "live-speaker-history-close" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.speaker_history_close") }</button>
+					<button type="button" class={ "live-speaker-history-close", "live-speaker-history-close" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.speaker_history_close") }</button>
 				</div>
 				if len(input.HistorySpeakers()) == 0 {
-					<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.speaker_history_empty") }</p>
+					<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.speaker_history_empty") }</p>
 				} else {
-					<div class={ LiveSpeakerList(), LiveSpeakerHistoryList(), "live-speaker-list", "live-speaker-history-list" }>
+					<div class={ "live-speaker-list", "live-speaker-history-list", "live-speaker-list", "live-speaker-history-list" }>
 						for _, s := range input.HistorySpeakers() {
 							@LiveSpeakerCard(input, s, input.CardVariant(s), nil)
 						}
@@ -553,7 +553,7 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 			})();
 		</script>
 	</head>
-	<body class={ AppShell(), LiveBody() }>
+	<body class={ "app-shell min-h-screen flex flex-col bg-base-200 text-base-content", "live-body" }>
 		@HeaderFooterScaffold(ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: input.CommitteeName,
@@ -564,15 +564,15 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 }
 
 templ MeetingLiveContent(input MeetingLiveInput) {
-	<div class={ LiveGrid(), "live-mobile-layout" }>
-		<section class={ Panel(), LivePanel(), LiveAgendaPanel(), "live-agenda-panel" }>
-			<div class={ LiveAgendaSummaryHeadingRow(), "live-agenda-summary-heading-row" }>
-				<h2 class={ LiveAgendaSummaryHeading(), "live-agenda-summary-heading" }>{ i18n.T(ctx, "meeting_live.agenda_heading") }</h2>
+	<div class={ "live-grid", "live-mobile-layout" }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "live-panel", "live-agenda-panel", "live-agenda-panel" }>
+			<div class={ "live-agenda-summary-heading-row", "live-agenda-summary-heading-row" }>
+				<h2 class={ "live-agenda-summary-heading", "live-agenda-summary-heading" }>{ i18n.T(ctx, "meeting_live.agenda_heading") }</h2>
 				<div class="live-agenda-header-actions">
 					@LiveDocButtonPartial(input.toCurrentDocInput())
 					<button
 						type="button"
-						class={ LiveSpeakerHistoryButton(), LiveAgendaFullButton(), "live-speaker-history-button", "live-agenda-full-button" }
+						class={ "live-speaker-history-button", "live-agenda-full-button", "live-speaker-history-button", "live-agenda-full-button" }
 						data-live-dialog-open
 						aria-controls="agenda-full-dialog"
 						aria-label={ i18n.T(ctx, "meeting_live.agenda_full_button") }
@@ -589,38 +589,38 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 			<div class="live-current-doc-pane">
 				@LiveCurrentDocPartial(input.toCurrentDocInput())
 			</div>
-			<dialog id="agenda-full-dialog" class={ LiveSpeakerHistoryDialog(), "live-speaker-history-dialog" } data-live-dialog>
-				<div class={ LiveSpeakerHistoryHeader(), "live-speaker-history-header" }>
+			<dialog id="agenda-full-dialog" class={ "live-speaker-history-dialog", "live-speaker-history-dialog" } data-live-dialog>
+				<div class={ "live-speaker-history-header", "live-speaker-history-header" }>
 					<h3>{ i18n.T(ctx, "meeting_live.agenda_full_title") }</h3>
-					<button type="button" class={ LiveSpeakerHistoryClose(), "live-speaker-history-close" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.agenda_full_close") }</button>
+					<button type="button" class={ "live-speaker-history-close", "live-speaker-history-close" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.agenda_full_close") }</button>
 				</div>
 				if len(input.AgendaPoints) == 0 {
-					<p class={ LiveEmptyState() }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
+					<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
 				} else {
-					<div class={ LiveAgendaList(), "live-agenda-list" }>
+					<div class={ "live-agenda-list", "live-agenda-list" }>
 						for _, ap := range input.AgendaPoints {
-							<div class={ LiveAgendaItem(), "live-agenda-item", templ.KV(LiveAgendaItemActive(), ap.IsActive), templ.KV(LiveAgendaSubPoint(), ap.ParentID != nil) }>
-								<span class={ LiveAgendaPosition() }>{ ap.Position }</span>
-								<span class={ LiveAgendaTitle() }>{ ap.Title }</span>
+							<div class={ "live-agenda-item", "live-agenda-item", templ.KV("live-agenda-item-active", ap.IsActive), templ.KV("live-agenda-sub-point", ap.ParentID != nil) }>
+								<span class={ "live-agenda-position" }>{ ap.Position }</span>
+								<span class={ "live-agenda-title" }>{ ap.Title }</span>
 							</div>
 						}
 					</div>
 				}
 			</dialog>
-			<dialog id="live-doc-modal" class={ LiveSpeakerHistoryDialog(), "live-speaker-history-dialog" } data-live-dialog>
-				<div class={ LiveSpeakerHistoryHeader(), "live-speaker-history-header" }>
+			<dialog id="live-doc-modal" class={ "live-speaker-history-dialog", "live-speaker-history-dialog" } data-live-dialog>
+				<div class={ "live-speaker-history-header", "live-speaker-history-header" }>
 					<h3>Current Document</h3>
-					<button type="button" class={ LiveSpeakerHistoryClose(), "live-speaker-history-close" } data-live-dialog-close>Close</button>
+					<button type="button" class={ "live-speaker-history-close", "live-speaker-history-close" } data-live-dialog-close>Close</button>
 				</div>
 				@LiveCurrentDocModalContent(input.toCurrentDocInput())
 			</dialog>
 		</section>
-		<section class={ Panel(), LivePanel(), LiveSpeakersPanel(), "live-speakers-panel" }>
-			<div class={ LiveSpeakersHeadingRow(), "live-speakers-heading-row" }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "live-panel", "live-speakers-panel", "live-speakers-panel" }>
+			<div class={ "live-speakers-heading-row", "live-speakers-heading-row" }>
 				<h2>{ i18n.T(ctx, "meeting_live.speakers_heading") }</h2>
 				<button
 					type="button"
-					class={ LiveSpeakerHistoryButton(), "live-speaker-history-button" }
+					class={ "live-speaker-history-button", "live-speaker-history-button" }
 					data-live-dialog-open
 					aria-controls="speaker-history-dialog"
 					aria-label={ i18n.T(ctx, "meeting_live.speaker_history_button") }
@@ -631,7 +631,7 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 			<div id="live-speakers-panel-meta">
 				@LiveSpeakersPanelMetaFromPartial(input.Speakers)
 			</div>
-			<div class={ LiveSpeakersSSE(), "live-speakers-sse" } hx-ext="sse" sse-connect={ string(input.SSEStreamURL(ctx)) }>
+			<div class={ "live-speakers-sse", "live-speakers-sse" } hx-ext="sse" sse-connect={ string(input.SSEStreamURL(ctx)) }>
 				<div id="attendee-speakers-list" sse-swap="speakers-updated">
 					@AttendeeSpeakersListPartial(input.Speakers)
 				</div>

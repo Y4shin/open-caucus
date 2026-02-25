@@ -53,7 +53,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{LanguageSwitcherWrap(), templ.KV("language-switcher--compact", compact)}
+		var templ_7745c5c3_Var2 = []any{"language-switcher-wrap join", templ.KV("language-switcher--compact", compact)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -88,7 +88,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 = []any{InlineForm()}
+		var templ_7745c5c3_Var5 = []any{"inline-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -123,7 +123,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var8 = []any{LanguageSwitcherLink(), "language-switcher-link-button", templ.KV("language-switcher-link--active", currentUILocale(ctx) == "en")}
+		var templ_7745c5c3_Var8 = []any{"language-switcher-link btn btn-sm", "language-switcher-link-button", templ.KV("language-switcher-link--active", currentUILocale(ctx) == "en")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -148,7 +148,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "language_switcher.en_button"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `language_switcher.templ`, Line: 32, Col: 209}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `language_switcher.templ`, Line: 32, Col: 222}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -158,7 +158,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var11 = []any{InlineForm()}
+		var templ_7745c5c3_Var11 = []any{"inline-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var11...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -193,7 +193,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var14 = []any{LanguageSwitcherLink(), "language-switcher-link-button", templ.KV("language-switcher-link--active", currentUILocale(ctx) == "de")}
+		var templ_7745c5c3_Var14 = []any{"language-switcher-link btn btn-sm", "language-switcher-link-button", templ.KV("language-switcher-link--active", currentUILocale(ctx) == "de")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -218,7 +218,7 @@ func languageSwitcherWithMode(prefix string, compact bool) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "language_switcher.de_button"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `language_switcher.templ`, Line: 36, Col: 209}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `language_switcher.templ`, Line: 36, Col: 222}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {

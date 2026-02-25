@@ -64,7 +64,7 @@ templ ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) {
 			hx-target={ "#ap-protocol-" + input.AgendaPoint.IDString }
 			hx-swap="outerHTML"
 		>
-			<textarea name="protocol" rows="6" class={ FullWidthField() }>{ input.AgendaPoint.Protocol }</textarea>
+			<textarea name="protocol" rows="6" class={ "full-width-field w-full max-w-full" }>{ input.AgendaPoint.Protocol }</textarea>
 			<button type="submit">{ i18n.T(ctx, "meeting_protocol.save_button") }</button>
 		</form>
 	</div>
@@ -84,7 +84,7 @@ templ MeetingProtocolContent(input MeetingProtocolInput) {
 		<p>{ i18n.T(ctx, "meeting_protocol.empty_state") }</p>
 	} else {
 		for _, ap := range input.AgendaPoints {
-			<section class={ Panel() }>
+			<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 				<h2>{ strconv.FormatInt(ap.Position, 10) }. { ap.Title }</h2>
 				@ProtocolAgendaPointPartial(input.agendaPointPartialInput(ap))
 			</section>

@@ -114,25 +114,25 @@ templ SignupToggleField(id string, name string, label string, checked bool, wrap
 templ MeetingListPartial(input MeetingListPartialInput) {
 	<div id="meeting-list-container" class="meeting-list-grid">
 		if input.FormError != "" {
-			<p class={ ErrorText(), "meeting-list-error-row" }>{ input.FormError }</p>
+			<p class={ "error-text alert alert-error", "meeting-list-error-row" }>{ input.FormError }</p>
 		}
 		<div class="committee-section-stack committee-section-create">
 			<div class="committee-section-inner">
 				<h3>{ i18n.T(ctx, "committee.create_meeting_heading") }</h3>
 				<form
-					class={ CommitteeMeetingCreateForm(), "committee-create-layout" }
+					class={ "committee-meeting-create-form", "committee-create-layout" }
 					hx-post={ input.CommitteeCreateMeetingPostStr(ctx) }
 					hx-target="#meeting-list-container"
 					hx-swap="outerHTML"
 					hx-on::after-request="if(event.detail.successful) this.reset()"
 				>
-					<div class={ CommitteeField(), "committee-create-name" }>
-						<label class={ CommitteeFieldLabel() } for="name">{ i18n.T(ctx, "committee.name_label") }</label>
-						<input class={ CommitteeFieldControl() } type="text" id="name" name="name" required/>
+					<div class={ "committee-field", "committee-create-name" }>
+						<label class={ "committee-field-label" } for="name">{ i18n.T(ctx, "committee.name_label") }</label>
+						<input class={ "committee-field-control" } type="text" id="name" name="name" required/>
 					</div>
-					<div class={ CommitteeField(), "committee-create-description" }>
-						<label class={ CommitteeFieldLabel(), CommitteeFieldLabelTextarea() } for="description">{ i18n.T(ctx, "committee.description_label") }</label>
-						<textarea class={ CommitteeFieldControl(), CommitteeFieldTextarea() } id="description" name="description"></textarea>
+					<div class={ "committee-field", "committee-create-description" }>
+						<label class={ "committee-field-label", "committee-field-label-textarea" } for="description">{ i18n.T(ctx, "committee.description_label") }</label>
+						<textarea class={ "committee-field-control", "committee-field-textarea" } id="description" name="description"></textarea>
 					</div>
 					<div class="committee-create-signup">
 						@SignupToggleField("signup_open", "signup_open", i18n.T(ctx, "committee.signup_label"), false, "")
@@ -145,43 +145,43 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 		</div>
 		<div class="committee-section-stack committee-section-existing">
 			<div class="committee-section-inner">
-				<h3 class={ CommitteeMeetingsHeading() }>{ i18n.T(ctx, "committee.existing_meetings_heading") }</h3>
+				<h3 class={ "committee-meetings-heading" }>{ i18n.T(ctx, "committee.existing_meetings_heading") }</h3>
 				if len(input.Meetings) == 0 {
 					<p>{ i18n.T(ctx, "committee.empty_state") }</p>
 				} else {
-					<div class={ CommitteeMeetingList() }>
+					<div class={ "committee-meeting-list" }>
 						for _, m := range input.Meetings {
-							<article class={ CommitteeMeetingCard() }>
-								<div class={ CommitteeMeetingMain() }>
-									<h4 class={ CommitteeMeetingTitle() }>{ m.Name }</h4>
+							<article class={ "committee-meeting-card" }>
+								<div class={ "committee-meeting-main" }>
+									<h4 class={ "committee-meeting-title" }>{ m.Name }</h4>
 									if m.Description != "" {
-										<p class={ CommitteeMeetingDescription() }>{ m.Description }</p>
+										<p class={ "committee-meeting-description" }>{ m.Description }</p>
 									} else {
-										<p class={ CommitteeMeetingDescription() }>No description provided.</p>
+										<p class={ "committee-meeting-description" }>No description provided.</p>
 									}
 								</div>
-								<div class={ CommitteeMeetingAside() }>
-									<div class={ CommitteeMeetingChips() }>
+								<div class={ "committee-meeting-aside" }>
+									<div class={ "committee-meeting-chips" }>
 										if m.SignupOpen {
-											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipPositive() }>{ i18n.T(ctx, "committee.signup_open_chip") }</span>
+											<span class={ "committee-meeting-chip", "committee-meeting-chip-positive" }>{ i18n.T(ctx, "committee.signup_open_chip") }</span>
 										} else {
-											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipNegative() }>{ i18n.T(ctx, "committee.signup_closed_chip") }</span>
+											<span class={ "committee-meeting-chip", "committee-meeting-chip-negative" }>{ i18n.T(ctx, "committee.signup_closed_chip") }</span>
 										}
 										if m.IsActive {
-											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipPositive() }>{ i18n.T(ctx, "committee.col_active") }: { i18n.T(ctx, "common.yes") }</span>
+											<span class={ "committee-meeting-chip", "committee-meeting-chip-positive" }>{ i18n.T(ctx, "committee.col_active") }: { i18n.T(ctx, "common.yes") }</span>
 										} else {
-											<span class={ CommitteeMeetingChip(), CommitteeMeetingChipNegative() }>{ i18n.T(ctx, "committee.col_active") }: { i18n.T(ctx, "common.no") }</span>
+											<span class={ "committee-meeting-chip", "committee-meeting-chip-negative" }>{ i18n.T(ctx, "committee.col_active") }: { i18n.T(ctx, "common.no") }</span>
 										}
 									</div>
-									<div class={ CommitteeMeetingActions() }>
-										<a href={ input.MeetingViewGet(ctx, &m) } class={ CommitteeIconActionButton() } title={ i18n.T(ctx, "committee.view_link") } aria-label={ i18n.T(ctx, "committee.view_link") }>
+									<div class={ "committee-meeting-actions" }>
+										<a href={ input.MeetingViewGet(ctx, &m) } class={ "committee-icon-action-button" } title={ i18n.T(ctx, "committee.view_link") } aria-label={ i18n.T(ctx, "committee.view_link") }>
 											@Icon(IconVisibility, "", "committee-action-icon")
 										</a>
-										<a href={ input.MeetingManageGet(ctx, &m) } class={ CommitteeIconActionButton() } title={ i18n.T(ctx, "committee.manage_link") } aria-label={ i18n.T(ctx, "committee.manage_link") }>
+										<a href={ input.MeetingManageGet(ctx, &m) } class={ "committee-icon-action-button" } title={ i18n.T(ctx, "committee.manage_link") } aria-label={ i18n.T(ctx, "committee.manage_link") }>
 											@Icon(IconSettings, "", "committee-action-icon")
 										</a>
 										if m.IsActive {
-											<button class={ CommitteeIconActionButton() } type="button" disabled title={ i18n.T(ctx, "committee.activate_button") } aria-label={ i18n.T(ctx, "committee.activate_button") }>
+											<button class={ "committee-icon-action-button" } type="button" disabled title={ i18n.T(ctx, "committee.activate_button") } aria-label={ i18n.T(ctx, "committee.activate_button") }>
 												@Icon(IconCheckCircle, "", "committee-action-icon")
 											</button>
 										} else {
@@ -189,9 +189,9 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 												hx-post={ input.MeetingActivatePostStr(ctx, &m) }
 												hx-target="#meeting-list-container"
 												hx-swap="outerHTML"
-												class={ InlineForm() }
+												class={ "inline-form" }
 											>
-												<button class={ CommitteeIconActionButton() } type="submit" title={ i18n.T(ctx, "committee.activate_button") } aria-label={ i18n.T(ctx, "committee.activate_button") }>
+												<button class={ "committee-icon-action-button" } type="submit" title={ i18n.T(ctx, "committee.activate_button") } aria-label={ i18n.T(ctx, "committee.activate_button") }>
 													@Icon(IconCheckCircle, "", "committee-action-icon")
 												</button>
 											</form>
@@ -201,9 +201,9 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 											hx-target="#meeting-list-container"
 											hx-swap="outerHTML"
 											hx-confirm={ i18n.T(ctx, "committee.delete_confirm") }
-											class={ InlineForm() }
+											class={ "inline-form" }
 										>
-											<button class={ CommitteeIconActionButton(), CommitteeIconActionDanger() } type="submit" title={ i18n.T(ctx, "committee.delete_button") } aria-label={ i18n.T(ctx, "committee.delete_button") }>
+											<button class={ "committee-icon-action-button", "committee-icon-action-danger" } type="submit" title={ i18n.T(ctx, "committee.delete_button") } aria-label={ i18n.T(ctx, "committee.delete_button") }>
 												@Icon(IconDelete, "", "committee-action-icon")
 											</button>
 										</form>
@@ -212,7 +212,7 @@ templ MeetingListPartial(input MeetingListPartialInput) {
 							</article>
 						}
 					</div>
-					<div class={ CenteredPaginationWrap() }>
+					<div class={ "centered-pagination-wrap" }>
 						@Pagination(input.PaginationArgs(ctx))
 					</div>
 				}
@@ -234,7 +234,7 @@ templ CommitteePageContent(input CommitteePageInput) {
 	<p>{ i18n.T(ctx, "committee.welcome") }</p>
 
 	if CurrentUserRole(ctx) == "chairperson" {
-		<section class={ Panel() }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 			<h2>{ i18n.T(ctx, "committee.meetings_heading") }</h2>
 			@MeetingListPartial(MeetingListPartialInput{
 				CommitteeSlug: input.CommitteeSlug,

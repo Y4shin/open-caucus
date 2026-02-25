@@ -40,7 +40,18 @@ tasks:
   generate:
     desc: Generate all code (routes, templates, database client)
     cmds:
+      - task: css:build
       - go generate ./...
+
+  css:build:
+    desc: Build Tailwind + DaisyUI stylesheet
+    cmds:
+      - npm run build:css
+
+  css:watch:
+    desc: Watch and rebuild Tailwind + DaisyUI stylesheet
+    cmds:
+      - npm run watch:css
 
   generate:routes:
     desc: Generate routing code from routes.yaml
@@ -146,6 +157,7 @@ tasks:
     desc: Download dependencies
     cmds:
       - go mod download
+      - npm install
 
   deps:tidy:
     desc: Tidy go.mod and go.sum

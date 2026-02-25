@@ -355,7 +355,7 @@ func AttachmentListPartial(input AttachmentListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var20 = []any{InlineForm()}
+				var templ_7745c5c3_Var20 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var20...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -430,7 +430,7 @@ func AttachmentListPartial(input AttachmentListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if input.CurrentAttachmentID != nil && *input.CurrentAttachmentID == a.ID {
-					var templ_7745c5c3_Var26 = []any{InlineForm()}
+					var templ_7745c5c3_Var26 = []any{"inline-form"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var26...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -479,7 +479,7 @@ func AttachmentListPartial(input AttachmentListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var30 = []any{InlineForm()}
+					var templ_7745c5c3_Var30 = []any{"inline-form"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var30...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err

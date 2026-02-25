@@ -571,7 +571,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 = []any{ManageAttendeeControls(), "manage-attendee-controls"}
+		var templ_7745c5c3_Var2 = []any{"manage-attendee-controls", "manage-attendee-controls"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -593,7 +593,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var4 = []any{ManageAttendeeAddGuestForm(), "manage-attendee-add-guest-form"}
+		var templ_7745c5c3_Var4 = []any{"manage-attendee-add-guest-form", "manage-attendee-add-guest-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var4...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -628,7 +628,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var7 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+		var templ_7745c5c3_Var7 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -650,7 +650,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var9 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+		var templ_7745c5c3_Var9 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -672,7 +672,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var11 = []any{ManageAttendeeActionRow(), "manage-attendee-action-row"}
+		var templ_7745c5c3_Var11 = []any{"manage-attendee-action-row", "manage-attendee-action-row"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var11...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -694,7 +694,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 = []any{InlineForm(), ManageAttendeeSignupSwitch(), "manage-attendee-signup-switch"}
+		var templ_7745c5c3_Var13 = []any{"inline-form", "manage-attendee-signup-switch", "manage-attendee-signup-switch"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -751,7 +751,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.ShowSelfSignup {
-			var templ_7745c5c3_Var17 = []any{InlineForm()}
+			var templ_7745c5c3_Var17 = []any{"inline-form"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -786,7 +786,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var20 = []any{ManageAttendeeIconButton(), "manage-attendee-icon-button"}
+			var templ_7745c5c3_Var20 = []any{"manage-attendee-icon-button", "manage-attendee-icon-button"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var20...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -827,7 +827,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var22 = []any{ManageAttendeeGrid(), "manage-attendee-grid"}
+			var templ_7745c5c3_Var22 = []any{"manage-attendee-grid", "manage-attendee-grid"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var22...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -850,7 +850,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, a := range input.Attendees {
-				var templ_7745c5c3_Var24 = []any{ManageAttendeeCard(), "manage-attendee-card"}
+				var templ_7745c5c3_Var24 = []any{"manage-attendee-card", "manage-attendee-card"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -872,7 +872,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var26 = []any{ManageAttendeeCardHead(), "manage-attendee-card-head"}
+				var templ_7745c5c3_Var26 = []any{"manage-attendee-card-head", "manage-attendee-card-head"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var26...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -894,7 +894,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var28 = []any{ManageAttendeeNumber(), "manage-attendee-number"}
+				var templ_7745c5c3_Var28 = []any{"manage-attendee-number", "manage-attendee-number"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var28...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -919,7 +919,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(a.AttendeeNumber, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 594, Col: 114}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 594, Col: 116}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -929,7 +929,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var31 = []any{ManageAttendeeNameRow(), "manage-attendee-name-row"}
+				var templ_7745c5c3_Var31 = []any{"manage-attendee-name-row", "manage-attendee-name-row"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var31...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -951,7 +951,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var33 = []any{ManageAttendeeName(), "manage-attendee-name"}
+				var templ_7745c5c3_Var33 = []any{"manage-attendee-name", "manage-attendee-name"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var33...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -976,7 +976,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 596, Col: 81}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 596, Col: 83}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -987,7 +987,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if a.IsGuest || a.IsChair || a.Quoted {
-					var templ_7745c5c3_Var36 = []any{ManageAttendeeMeta(), "manage-attendee-meta"}
+					var templ_7745c5c3_Var36 = []any{"manage-attendee-meta", "manage-attendee-meta"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var36...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1010,7 +1010,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 					if a.IsGuest {
-						var templ_7745c5c3_Var38 = []any{ManageAttendeeMetaChip(), "manage-attendee-meta-chip"}
+						var templ_7745c5c3_Var38 = []any{"manage-attendee-meta-chip", "manage-attendee-meta-chip"}
 						templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -1034,7 +1034,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 						}
 					}
 					if a.IsChair {
-						var templ_7745c5c3_Var40 = []any{ManageAttendeeMetaChip(), "manage-attendee-meta-chip", ManageAttendeeMetaChipChair()}
+						var templ_7745c5c3_Var40 = []any{"manage-attendee-meta-chip", "manage-attendee-meta-chip", "manage-attendee-meta-chip-chair"}
 						templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var40...)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -1058,7 +1058,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 						}
 					}
 					if a.Quoted {
-						var templ_7745c5c3_Var42 = []any{ManageAttendeeMetaChip(), QuotedStatusChip(), "manage-attendee-meta-chip", "quoted-status-chip"}
+						var templ_7745c5c3_Var42 = []any{"manage-attendee-meta-chip", "quoted-status-chip", "manage-attendee-meta-chip", "quoted-status-chip"}
 						templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var42...)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
@@ -1107,7 +1107,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var45 = []any{ManageAttendeeCardActions(), "manage-attendee-card-actions"}
+				var templ_7745c5c3_Var45 = []any{"manage-attendee-card-actions", "manage-attendee-card-actions"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var45...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1129,7 +1129,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var47 = []any{InlineForm()}
+				var templ_7745c5c3_Var47 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var47...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1164,7 +1164,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var50 = []any{ManageAttendeeIconButton(), "manage-attendee-icon-button", templ.KV(ManageAttendeeIconButtonOn(), a.IsChair)}
+				var templ_7745c5c3_Var50 = []any{"manage-attendee-icon-button", "manage-attendee-icon-button", templ.KV("manage-attendee-icon-button-on", a.IsChair)}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var50...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1221,7 +1221,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if a.IsGuest {
-					var templ_7745c5c3_Var54 = []any{InlineForm()}
+					var templ_7745c5c3_Var54 = []any{"inline-form"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var54...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1256,7 +1256,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var57 = []any{ManageAttendeeIconButton(), "manage-attendee-icon-button", templ.KV(ManageAttendeeIconButtonOn(), a.Quoted)}
+					var templ_7745c5c3_Var57 = []any{"manage-attendee-icon-button", "manage-attendee-icon-button", templ.KV("manage-attendee-icon-button-on", a.Quoted)}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var57...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1319,7 +1319,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var61 = []any{ManageAttendeeIconButton(), "manage-attendee-icon-button"}
+					var templ_7745c5c3_Var61 = []any{"manage-attendee-icon-button", "manage-attendee-icon-button"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var61...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1363,7 +1363,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				var templ_7745c5c3_Var64 = []any{InlineForm()}
+				var templ_7745c5c3_Var64 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var64...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1398,7 +1398,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var67 = []any{ManageAttendeeIconButton(), ManageAttendeeIconButtonDanger(), "manage-attendee-icon-button", "manage-attendee-icon-button-danger"}
+				var templ_7745c5c3_Var67 = []any{"manage-attendee-icon-button", "manage-attendee-icon-button-danger", "manage-attendee-icon-button", "manage-attendee-icon-button-danger"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var67...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1537,7 +1537,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 			templ_7745c5c3_Var71 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var72 = []any{ManageSettings(), "manage-settings"}
+		var templ_7745c5c3_Var72 = []any{"manage-settings", "manage-settings"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var72...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1559,7 +1559,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var74 = []any{ManageSettingsSection(), "manage-settings-section"}
+		var templ_7745c5c3_Var74 = []any{"manage-settings-section", "manage-settings-section"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var74...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1581,7 +1581,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var76 = []any{ManageSettingsSectionTitle(), "manage-settings-section-title"}
+		var templ_7745c5c3_Var76 = []any{"manage-settings-section-title", "manage-settings-section-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var76...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1603,7 +1603,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var78 = []any{ManageSettingsForm(), "manage-settings-form"}
+		var templ_7745c5c3_Var78 = []any{"manage-settings-form", "manage-settings-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var78...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1694,7 +1694,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var83 = []any{ManageSettingsSection(), "manage-settings-section"}
+		var templ_7745c5c3_Var83 = []any{"manage-settings-section", "manage-settings-section"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var83...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1716,7 +1716,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var85 = []any{ManageSettingsSectionTitle(), "manage-settings-section-title"}
+		var templ_7745c5c3_Var85 = []any{"manage-settings-section-title", "manage-settings-section-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var85...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1738,7 +1738,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var87 = []any{ManageSettingsFormGrid(), "manage-settings-form-grid"}
+		var templ_7745c5c3_Var87 = []any{"manage-settings-form-grid", "manage-settings-form-grid"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var87...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1773,7 +1773,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var90 = []any{ManageSettingsField(), "manage-settings-field"}
+		var templ_7745c5c3_Var90 = []any{"manage-settings-field", "manage-settings-field"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var90...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1815,7 +1815,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var92 = []any{ManageSettingsField(), "manage-settings-field"}
+		var templ_7745c5c3_Var92 = []any{"manage-settings-field", "manage-settings-field"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var92...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1857,7 +1857,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var94 = []any{ManageSettingsSection(), "manage-settings-section"}
+		var templ_7745c5c3_Var94 = []any{"manage-settings-section", "manage-settings-section"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var94...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1879,7 +1879,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var96 = []any{ManageSettingsSectionTitle(), "manage-settings-section-title"}
+		var templ_7745c5c3_Var96 = []any{"manage-settings-section-title", "manage-settings-section-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var96...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1901,7 +1901,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var98 = []any{ManageSettingsForm(), "manage-settings-form"}
+		var templ_7745c5c3_Var98 = []any{"manage-settings-form", "manage-settings-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var98...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2017,7 +2017,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			templ_7745c5c3_Var103 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var104 = []any{ManageAgendaLayout(), "manage-agenda-layout"}
+		var templ_7745c5c3_Var104 = []any{"manage-agenda-layout", "manage-agenda-layout"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var104...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2043,7 +2043,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var106 = []any{ManageAgendaAddSection(), "manage-agenda-add-section"}
+		var templ_7745c5c3_Var106 = []any{"manage-agenda-add-section", "manage-agenda-add-section"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var106...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2065,7 +2065,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var108 = []any{ManageAgendaSectionTitle(), "manage-agenda-section-title"}
+		var templ_7745c5c3_Var108 = []any{"manage-agenda-section-title", "manage-agenda-section-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var108...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2087,7 +2087,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var110 = []any{ManageAgendaAddForm(), "manage-agenda-add-form"}
+		var templ_7745c5c3_Var110 = []any{"manage-agenda-add-form", "manage-agenda-add-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var110...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2122,7 +2122,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var113 = []any{ManageAgendaField(), ManageAgendaFieldWide(), "manage-agenda-field", "manage-agenda-field-wide"}
+		var templ_7745c5c3_Var113 = []any{"manage-agenda-field", "manage-agenda-field-wide", "manage-agenda-field", "manage-agenda-field-wide"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var113...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2144,7 +2144,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var115 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+		var templ_7745c5c3_Var115 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var115...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2166,7 +2166,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var117 = []any{ManageAgendaField(), "manage-agenda-field"}
+		var templ_7745c5c3_Var117 = []any{"manage-agenda-field", "manage-agenda-field"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var117...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2188,7 +2188,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var119 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+		var templ_7745c5c3_Var119 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var119...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2246,7 +2246,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var123 = []any{ManageAgendaSubmitButton(), "manage-agenda-submit-button"}
+		var templ_7745c5c3_Var123 = []any{"manage-agenda-submit-button", "manage-agenda-submit-button"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var123...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -2277,7 +2277,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(input.AgendaPoints) == 0 {
-			var templ_7745c5c3_Var125 = []any{ManageAgendaEmptyState(), "manage-agenda-empty-state"}
+			var templ_7745c5c3_Var125 = []any{"manage-agenda-empty-state", "manage-agenda-empty-state"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var125...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2300,7 +2300,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var127 = []any{ManageAgendaList(), "manage-agenda-list"}
+			var templ_7745c5c3_Var127 = []any{"manage-agenda-list", "manage-agenda-list"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var127...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2323,7 +2323,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, ap := range input.AgendaPoints {
-				var templ_7745c5c3_Var129 = []any{ManageAgendaPointCard(), "manage-agenda-point-card", templ.KV(ManageAgendaPointCardActive(), ap.IsActive), templ.KV(ManageAgendaPointCardChild(), ap.ParentID != nil)}
+				var templ_7745c5c3_Var129 = []any{"manage-agenda-point-card", "manage-agenda-point-card", templ.KV("manage-agenda-point-card-active", ap.IsActive), templ.KV("manage-agenda-point-card-child", ap.ParentID != nil)}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var129...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2345,7 +2345,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var131 = []any{ManageAgendaPointHeader(), "manage-agenda-point-header"}
+				var templ_7745c5c3_Var131 = []any{"manage-agenda-point-header", "manage-agenda-point-header"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var131...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2367,7 +2367,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var133 = []any{ManageAgendaPointPosition(), "manage-agenda-point-position"}
+				var templ_7745c5c3_Var133 = []any{"manage-agenda-point-position", "manage-agenda-point-position"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var133...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2392,7 +2392,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var135 string
 				templ_7745c5c3_Var135, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointDisplayNumber(ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 814, Col: 119}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 814, Col: 122}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var135))
 				if templ_7745c5c3_Err != nil {
@@ -2402,7 +2402,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var136 = []any{ManageAgendaPointTitleWrap(), "manage-agenda-point-title-wrap"}
+				var templ_7745c5c3_Var136 = []any{"manage-agenda-point-title-wrap", "manage-agenda-point-title-wrap"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var136...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2424,7 +2424,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var138 = []any{ManageAgendaPointTitle(), "manage-agenda-point-title"}
+				var templ_7745c5c3_Var138 = []any{"manage-agenda-point-title", "manage-agenda-point-title"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var138...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2449,7 +2449,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var140 string
 				templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.JoinStringErrs(ap.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 816, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 816, Col: 90}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var140))
 				if templ_7745c5c3_Err != nil {
@@ -2459,7 +2459,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var141 = []any{ManageAgendaPointBadges(), "manage-agenda-point-badges"}
+				var templ_7745c5c3_Var141 = []any{"manage-agenda-point-badges", "manage-agenda-point-badges"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var141...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2482,7 +2482,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if ap.ParentID != nil {
-					var templ_7745c5c3_Var143 = []any{ManageAgendaPointBadge(), "manage-agenda-point-badge"}
+					var templ_7745c5c3_Var143 = []any{"manage-agenda-point-badge", "manage-agenda-point-badge"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var143...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -2506,7 +2506,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					}
 				}
 				if ap.IsActive {
-					var templ_7745c5c3_Var145 = []any{ManageAgendaPointBadge(), "manage-agenda-point-badge", ManageAgendaPointBadgeActive(), "manage-agenda-point-badge-active"}
+					var templ_7745c5c3_Var145 = []any{"manage-agenda-point-badge", "manage-agenda-point-badge", "manage-agenda-point-badge-active", "manage-agenda-point-badge-active"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var145...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -2533,7 +2533,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var147 = []any{ManageAgendaPointActions(), "manage-agenda-point-actions"}
+				var templ_7745c5c3_Var147 = []any{"manage-agenda-point-actions", "manage-agenda-point-actions"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var147...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2556,7 +2556,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if !ap.IsActive {
-					var templ_7745c5c3_Var149 = []any{InlineForm()}
+					var templ_7745c5c3_Var149 = []any{"inline-form"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var149...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -2591,7 +2591,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var152 = []any{ManageAgendaActionButton(), "manage-agenda-action-button"}
+					var templ_7745c5c3_Var152 = []any{"manage-agenda-action-button", "manage-agenda-action-button"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var152...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -2622,7 +2622,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				var templ_7745c5c3_Var154 = []any{ManageAgendaActionButton(), "manage-agenda-action-button"}
+				var templ_7745c5c3_Var154 = []any{"manage-agenda-action-button", "manage-agenda-action-button"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var154...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2665,7 +2665,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var157 = []any{InlineForm()}
+				var templ_7745c5c3_Var157 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var157...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2700,7 +2700,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var160 = []any{ManageAgendaActionButton(), ManageAgendaActionButtonDanger(), "manage-agenda-action-button", "manage-agenda-action-button-danger"}
+				var templ_7745c5c3_Var160 = []any{"manage-agenda-action-button", "manage-agenda-action-button-danger", "manage-agenda-action-button", "manage-agenda-action-button-danger"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var160...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -2849,7 +2849,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var165 = []any{ManageSpeakersSettings(), "manage-speakers-settings"}
+			var templ_7745c5c3_Var165 = []any{"manage-speakers-settings", "manage-speakers-settings"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var165...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2871,7 +2871,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var167 = []any{ManageSpeakersSection(), "manage-speakers-section"}
+			var templ_7745c5c3_Var167 = []any{"manage-speakers-section", "manage-speakers-section"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var167...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2893,7 +2893,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var169 = []any{ManageSpeakersSectionTitle(), "manage-speakers-section-title"}
+			var templ_7745c5c3_Var169 = []any{"manage-speakers-section-title", "manage-speakers-section-title"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var169...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2915,7 +2915,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var171 = []any{ManageSpeakersSettingsFormGrid(), "manage-speakers-settings-form-grid"}
+			var templ_7745c5c3_Var171 = []any{"manage-speakers-settings-form-grid", "manage-speakers-settings-form-grid"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var171...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2950,7 +2950,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var174 = []any{ManageSpeakersField(), "manage-speakers-field"}
+			var templ_7745c5c3_Var174 = []any{"manage-speakers-field", "manage-speakers-field"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var174...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -2972,7 +2972,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var176 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+			var templ_7745c5c3_Var176 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var176...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3024,7 +3024,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var178 = []any{ManageSpeakersField(), "manage-speakers-field"}
+			var templ_7745c5c3_Var178 = []any{"manage-speakers-field", "manage-speakers-field"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var178...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3046,7 +3046,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var180 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+			var templ_7745c5c3_Var180 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var180...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3098,7 +3098,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var182 = []any{ManageSpeakersEffective(), "manage-speakers-effective"}
+			var templ_7745c5c3_Var182 = []any{"manage-speakers-effective", "manage-speakers-effective"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var182...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3120,7 +3120,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var184 = []any{ManageSpeakersEffectiveChip(), "manage-speakers-effective-chip", templ.KV(ManageSpeakersEffectiveChipOn(), input.EffectiveGenderQuotation), templ.KV(ManageSpeakersEffectiveChipOff(), !input.EffectiveGenderQuotation)}
+			var templ_7745c5c3_Var184 = []any{"manage-speakers-effective-chip", "manage-speakers-effective-chip", templ.KV("manage-speakers-effective-chip-on", input.EffectiveGenderQuotation), templ.KV("manage-speakers-effective-chip-off", !input.EffectiveGenderQuotation)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var184...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3157,7 +3157,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var186 = []any{ManageSpeakersEffectiveChip(), "manage-speakers-effective-chip", templ.KV(ManageSpeakersEffectiveChipOn(), input.EffectiveFirstSpeakerQuotation), templ.KV(ManageSpeakersEffectiveChipOff(), !input.EffectiveFirstSpeakerQuotation)}
+			var templ_7745c5c3_Var186 = []any{"manage-speakers-effective-chip", "manage-speakers-effective-chip", templ.KV("manage-speakers-effective-chip-on", input.EffectiveFirstSpeakerQuotation), templ.KV("manage-speakers-effective-chip-off", !input.EffectiveFirstSpeakerQuotation)}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var186...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3194,7 +3194,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var188 = []any{ManageSpeakersSection(), "manage-speakers-section"}
+			var templ_7745c5c3_Var188 = []any{"manage-speakers-section", "manage-speakers-section"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var188...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3216,7 +3216,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var190 = []any{ManageSpeakersSectionTitle(), "manage-speakers-section-title"}
+			var templ_7745c5c3_Var190 = []any{"manage-speakers-section-title", "manage-speakers-section-title"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var190...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3238,7 +3238,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var192 = []any{ManageSpeakersSettingsForm(), "manage-speakers-settings-form"}
+			var templ_7745c5c3_Var192 = []any{"manage-speakers-settings-form", "manage-speakers-settings-form"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var192...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3329,7 +3329,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var197 = []any{ManageSpeakersSection(), "manage-speakers-section"}
+			var templ_7745c5c3_Var197 = []any{"manage-speakers-section", "manage-speakers-section"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var197...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3351,7 +3351,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var199 = []any{ManageSpeakersSectionTitle(), "manage-speakers-section-title"}
+			var templ_7745c5c3_Var199 = []any{"manage-speakers-section-title", "manage-speakers-section-title"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var199...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3373,7 +3373,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var201 = []any{ManageSpeakerAddOpenButton(), "manage-speaker-add-open-button"}
+			var templ_7745c5c3_Var201 = []any{"manage-speaker-add-open-button", "manage-speaker-add-open-button"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var201...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3403,7 +3403,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var203 = []any{ManageSpeakersQuickControlWrap(), "manage-speakers-quick-control-wrap"}
+			var templ_7745c5c3_Var203 = []any{"manage-speakers-quick-control-wrap", "manage-speakers-quick-control-wrap"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var203...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3426,7 +3426,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if current := input.CurrentSpeaker(); current != nil {
-				var templ_7745c5c3_Var205 = []any{InlineForm(), ManageSpeakersQuickControlForm(), "manage-speakers-quick-control-form"}
+				var templ_7745c5c3_Var205 = []any{"inline-form", "manage-speakers-quick-control-form", "manage-speakers-quick-control-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var205...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3461,7 +3461,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var208 = []any{ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonEnd(), "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end"}
+				var templ_7745c5c3_Var208 = []any{"manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end", "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var208...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3492,7 +3492,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else if next := input.NextWaitingSpeaker(); next != nil {
-				var templ_7745c5c3_Var210 = []any{InlineForm(), ManageSpeakersQuickControlForm(), "manage-speakers-quick-control-form"}
+				var templ_7745c5c3_Var210 = []any{"inline-form", "manage-speakers-quick-control-form", "manage-speakers-quick-control-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var210...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3527,7 +3527,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var213 = []any{ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonStart(), "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start"}
+				var templ_7745c5c3_Var213 = []any{"manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start", "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var213...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3563,7 +3563,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Speakers) > 0 {
-				var templ_7745c5c3_Var215 = []any{ManageSpeakersScrollResetWrap(), "manage-speakers-scroll-reset-wrap"}
+				var templ_7745c5c3_Var215 = []any{"manage-speakers-scroll-reset-wrap", "manage-speakers-scroll-reset-wrap"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var215...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3585,7 +3585,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var217 = []any{ManageSpeakersScrollResetButton(), "manage-speakers-scroll-reset-button"}
+				var templ_7745c5c3_Var217 = []any{"manage-speakers-scroll-reset-button", "manage-speakers-scroll-reset-button"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var217...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3621,7 +3621,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Speakers) == 0 {
-				var templ_7745c5c3_Var219 = []any{ManageSpeakersRows(), "manage-speakers-rows"}
+				var templ_7745c5c3_Var219 = []any{"manage-speakers-rows", "manage-speakers-rows"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var219...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3644,7 +3644,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				var templ_7745c5c3_Var221 = []any{LiveSpeakerList(), ManageSpeakersRows(), ManageSpeakersRowsList(), "live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list"}
+				var templ_7745c5c3_Var221 = []any{"live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list", "live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var221...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3667,7 +3667,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				for _, s := range input.Speakers {
-					var templ_7745c5c3_Var223 = []any{ManageSpeakersRowWrap(), "manage-speakers-row-wrap"}
+					var templ_7745c5c3_Var223 = []any{"manage-speakers-row-wrap", "manage-speakers-row-wrap"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var223...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -3720,7 +3720,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var226 = []any{ManageSpeakerAddDialog(), "manage-speaker-add-dialog"}
+			var templ_7745c5c3_Var226 = []any{"manage-speaker-add-dialog", "manage-speaker-add-dialog"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var226...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3742,7 +3742,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var228 = []any{ManageSpeakerAddDialogHeader(), "manage-speaker-add-dialog-header"}
+			var templ_7745c5c3_Var228 = []any{"manage-speaker-add-dialog-header", "manage-speaker-add-dialog-header"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var228...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3764,7 +3764,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var230 = []any{ManageSpeakerAddDialogClose(), "manage-speaker-add-dialog-close"}
+			var templ_7745c5c3_Var230 = []any{"manage-speaker-add-dialog-close", "manage-speaker-add-dialog-close"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var230...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3786,7 +3786,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var232 = []any{ManageSpeakerAddSearchWrap(), "manage-speaker-add-search-wrap"}
+			var templ_7745c5c3_Var232 = []any{"manage-speaker-add-search-wrap", "manage-speaker-add-search-wrap"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var232...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3808,7 +3808,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var234 = []any{ManageSpeakersFieldLabel(), "manage-speakers-field-label"}
+			var templ_7745c5c3_Var234 = []any{"manage-speakers-field-label", "manage-speakers-field-label"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var234...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3890,7 +3890,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 			templ_7745c5c3_Var238 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var239 = []any{ManageSpeakerCandidateGrid(), "manage-speaker-candidate-grid"}
+		var templ_7745c5c3_Var239 = []any{"manage-speaker-candidate-grid", "manage-speaker-candidate-grid"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var239...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -3913,7 +3913,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 			return templ_7745c5c3_Err
 		}
 		if len(input.FilteredSpeakerCandidates()) == 0 {
-			var templ_7745c5c3_Var241 = []any{LiveEmptyState()}
+			var templ_7745c5c3_Var241 = []any{"live-empty-state"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var241...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -3937,7 +3937,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 			}
 		} else {
 			for _, a := range input.FilteredSpeakerCandidates() {
-				var templ_7745c5c3_Var243 = []any{ManageSpeakerCandidateCard(), "manage-speaker-candidate-card"}
+				var templ_7745c5c3_Var243 = []any{"manage-speaker-candidate-card", "manage-speaker-candidate-card"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var243...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3959,7 +3959,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var245 = []any{ManageSpeakerCandidateHeader(), "manage-speaker-candidate-header"}
+				var templ_7745c5c3_Var245 = []any{"manage-speaker-candidate-header", "manage-speaker-candidate-header"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var245...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -3981,7 +3981,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var247 = []any{ManageSpeakerCandidateNumber(), "manage-speaker-candidate-number"}
+				var templ_7745c5c3_Var247 = []any{"manage-speaker-candidate-number", "manage-speaker-candidate-number"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var247...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4006,7 +4006,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var249 string
 				templ_7745c5c3_Var249, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(a.AttendeeNumber, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1088, Col: 129}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1088, Col: 132}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var249))
 				if templ_7745c5c3_Err != nil {
@@ -4016,7 +4016,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var250 = []any{ManageSpeakerCandidateName(), "manage-speaker-candidate-name"}
+				var templ_7745c5c3_Var250 = []any{"manage-speaker-candidate-name", "manage-speaker-candidate-name"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var250...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4041,7 +4041,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var252 string
 				templ_7745c5c3_Var252, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1089, Col: 95}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1089, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var252))
 				if templ_7745c5c3_Err != nil {
@@ -4051,7 +4051,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var253 = []any{ManageSpeakerCandidateActions(), "manage-speaker-candidate-actions"}
+				var templ_7745c5c3_Var253 = []any{"manage-speaker-candidate-actions", "manage-speaker-candidate-actions"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var253...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4073,7 +4073,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var255 = []any{InlineForm()}
+				var templ_7745c5c3_Var255 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var255...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4121,7 +4121,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var259 = []any{ManageSpeakerCandidateButton(), "manage-speaker-candidate-button"}
+				var templ_7745c5c3_Var259 = []any{"manage-speaker-candidate-button", "manage-speaker-candidate-button"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var259...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4161,7 +4161,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var261 = []any{InlineForm()}
+				var templ_7745c5c3_Var261 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var261...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4209,7 +4209,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var265 = []any{ManageSpeakerCandidateButton(), ManageSpeakerCandidateButtonRopm(), "manage-speaker-candidate-button", "manage-speaker-candidate-button-ropm"}
+				var templ_7745c5c3_Var265 = []any{"manage-speaker-candidate-button", "manage-speaker-candidate-button-ropm", "manage-speaker-candidate-button", "manage-speaker-candidate-button-ropm"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var265...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -4280,7 +4280,7 @@ func ManageAttendeeDependentPartial(input ManageAttendeeDependentPartialInput) t
 			templ_7745c5c3_Var267 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var268 = []any{ManageGridSlice()}
+		var templ_7745c5c3_Var268 = []any{"manage-grid-slice"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var268...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4343,7 +4343,7 @@ func ManageMeetingSettingsCard(input MeetingSettingsPartialInput) templ.Componen
 			templ_7745c5c3_Var270 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var271 = []any{Panel(), ManageCard(), ManageSettingsCard(), "manage-card", "manage-settings-card"}
+		var templ_7745c5c3_Var271 = []any{"panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "manage-card", "manage-settings-card", "manage-card", "manage-settings-card"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var271...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4365,7 +4365,7 @@ func ManageMeetingSettingsCard(input MeetingSettingsPartialInput) templ.Componen
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var273 = []any{ManageCardTitle(), "manage-card-title"}
+		var templ_7745c5c3_Var273 = []any{"manage-card-title", "manage-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var273...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4420,7 +4420,7 @@ func ManageSpeakersListCard(input SpeakersListPartialInput) templ.Component {
 			templ_7745c5c3_Var275 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var276 = []any{Panel(), ManageCard(), "manage-card"}
+		var templ_7745c5c3_Var276 = []any{"panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "manage-card", "manage-card"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var276...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4442,7 +4442,7 @@ func ManageSpeakersListCard(input SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var278 = []any{ManageCardTitle(), "manage-card-title"}
+		var templ_7745c5c3_Var278 = []any{"manage-card-title", "manage-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var278...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4497,7 +4497,7 @@ func ManageAttendeesCard(input AttendeeListPartialInput) templ.Component {
 			templ_7745c5c3_Var280 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var281 = []any{Panel(), ManageCard(), "manage-card"}
+		var templ_7745c5c3_Var281 = []any{"panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "manage-card", "manage-card"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var281...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4519,7 +4519,7 @@ func ManageAttendeesCard(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var283 = []any{ManageCardHeaderRow(), "manage-card-header-row"}
+		var templ_7745c5c3_Var283 = []any{"manage-card-header-row", "manage-card-header-row"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var283...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4541,7 +4541,7 @@ func ManageAttendeesCard(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var285 = []any{ManageCardTitle(), "manage-card-title"}
+		var templ_7745c5c3_Var285 = []any{"manage-card-title", "manage-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var285...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4563,7 +4563,7 @@ func ManageAttendeesCard(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var287 = []any{ManageAttendeeIconButton(), "manage-attendee-icon-button"}
+		var templ_7745c5c3_Var287 = []any{"manage-attendee-icon-button", "manage-attendee-icon-button"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var287...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4639,7 +4639,7 @@ func ManageAgendaPointsCard(input AgendaPointListPartialInput) templ.Component {
 			templ_7745c5c3_Var290 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var291 = []any{Panel(), ManageCard(), "manage-card"}
+		var templ_7745c5c3_Var291 = []any{"panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "manage-card", "manage-card"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var291...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4661,7 +4661,7 @@ func ManageAgendaPointsCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var293 = []any{ManageCardTitle(), "manage-card-title"}
+		var templ_7745c5c3_Var293 = []any{"manage-card-title", "manage-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var293...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -4767,7 +4767,7 @@ func MeetingManageContent(input MeetingManageInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var298 = []any{ManageGrid()}
+		var templ_7745c5c3_Var298 = []any{"manage-grid"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var298...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

@@ -95,7 +95,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 			return templ_7745c5c3_Err
 		}
 		if len(input.AgendaPoints) == 0 {
-			var templ_7745c5c3_Var3 = []any{ModerateEmptyState()}
+			var templ_7745c5c3_Var3 = []any{"moderate-empty-state"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -119,9 +119,9 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 			}
 		} else {
 			for _, ap := range input.AgendaPoints {
-				var templ_7745c5c3_Var5 = []any{ModerateAgendaItem(),
-					templ.KV(ModerateAgendaItemActive(), ap.IsActive),
-					templ.KV(ManageAgendaPointCardChild(), ap.ParentID != nil),
+				var templ_7745c5c3_Var5 = []any{"moderate-agenda-item",
+					templ.KV("moderate-agenda-item-active", ap.IsActive),
+					templ.KV("manage-agenda-point-card-child", ap.ParentID != nil),
 				}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 				if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var7 = []any{ModerateAgendaPosition()}
+				var templ_7745c5c3_Var7 = []any{"moderate-agenda-position"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -169,7 +169,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 				var templ_7745c5c3_Var9 string
 				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointDisplayNumber(ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 70, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 70, Col: 84}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 				if templ_7745c5c3_Err != nil {
@@ -179,7 +179,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var10 = []any{ModerateAgendaItemTitle()}
+				var templ_7745c5c3_Var10 = []any{"moderate-agenda-item-title"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var10...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -204,7 +204,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 				var templ_7745c5c3_Var12 string
 				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(ap.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 71, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 71, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
@@ -215,7 +215,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 					return templ_7745c5c3_Err
 				}
 				if !ap.IsActive {
-					var templ_7745c5c3_Var13 = []any{InlineForm()}
+					var templ_7745c5c3_Var13 = []any{"inline-form"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -250,7 +250,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var16 = []any{ManageAgendaActionButton()}
+					var templ_7745c5c3_Var16 = []any{"manage-agenda-action-button"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var16...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -319,7 +319,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 			templ_7745c5c3_Var18 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var19 = []any{ModerateCard(), ModerateCardHalf()}
+		var templ_7745c5c3_Var19 = []any{"moderate-card", "moderate-card-half"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var19...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -341,7 +341,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var21 = []any{ModerateCardHeader()}
+		var templ_7745c5c3_Var21 = []any{"moderate-card-header"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var21...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -363,7 +363,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var23 = []any{ModerateCardTitle()}
+		var templ_7745c5c3_Var23 = []any{"moderate-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var23...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -385,7 +385,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var25 = []any{ManageAgendaActionButton()}
+		var templ_7745c5c3_Var25 = []any{"manage-agenda-action-button"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var25...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -415,7 +415,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var27 = []any{ModerateCardBody()}
+		var templ_7745c5c3_Var27 = []any{"moderate-card-body"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var27...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -445,7 +445,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var29 = []any{ManageSpeakerAddDialog()}
+		var templ_7745c5c3_Var29 = []any{"manage-speaker-add-dialog"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var29...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -467,7 +467,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var31 = []any{ManageSpeakerAddDialogHeader()}
+		var templ_7745c5c3_Var31 = []any{"manage-speaker-add-dialog-header"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var31...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -489,7 +489,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var33 = []any{ManageSpeakerAddDialogClose()}
+		var templ_7745c5c3_Var33 = []any{"manage-speaker-add-dialog-close"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var33...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -511,7 +511,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var35 = []any{ManageSpeakerAddSearchWrap()}
+		var templ_7745c5c3_Var35 = []any{"manage-speaker-add-search-wrap"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var35...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -569,7 +569,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			templ_7745c5c3_Var37 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var38 = []any{ModerateCard(), ModerateCardHalf()}
+		var templ_7745c5c3_Var38 = []any{"moderate-card", "moderate-card-half"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -591,7 +591,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var40 = []any{ModerateCardHeader()}
+		var templ_7745c5c3_Var40 = []any{"moderate-card-header"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var40...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -613,7 +613,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var42 = []any{ModerateCardTitle()}
+		var templ_7745c5c3_Var42 = []any{"moderate-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var42...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -635,7 +635,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var44 = []any{ModerateCardBody()}
+		var templ_7745c5c3_Var44 = []any{"moderate-card-body"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var44...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -658,7 +658,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if !input.HasActiveAP {
-			var templ_7745c5c3_Var46 = []any{ModerateEmptyState()}
+			var templ_7745c5c3_Var46 = []any{"moderate-empty-state"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var46...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -685,7 +685,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var48 = []any{ManageCardHeaderRow()}
+			var templ_7745c5c3_Var48 = []any{"manage-card-header-row"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var48...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -721,7 +721,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Attachments.Attachments) == 0 {
-				var templ_7745c5c3_Var51 = []any{ModerateEmptyState()}
+				var templ_7745c5c3_Var51 = []any{"moderate-empty-state"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var51...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -818,7 +818,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var57 = []any{ManageCardHeaderRow()}
+			var templ_7745c5c3_Var57 = []any{"manage-card-header-row"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var57...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -854,7 +854,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Motions.Motions) == 0 {
-				var templ_7745c5c3_Var60 = []any{ModerateEmptyState()}
+				var templ_7745c5c3_Var60 = []any{"moderate-empty-state"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var60...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -941,7 +941,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.HasActiveAP {
-			var templ_7745c5c3_Var65 = []any{ManageSpeakerAddDialog()}
+			var templ_7745c5c3_Var65 = []any{"manage-speaker-add-dialog"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var65...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -976,7 +976,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var68 = []any{ManageSpeakerAddDialogHeader()}
+			var templ_7745c5c3_Var68 = []any{"manage-speaker-add-dialog-header"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var68...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1011,7 +1011,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var71 = []any{ManageSpeakerAddDialogClose()}
+			var templ_7745c5c3_Var71 = []any{"manage-speaker-add-dialog-close"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var71...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1041,7 +1041,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var73 = []any{ManageSpeakerAddDialog()}
+			var templ_7745c5c3_Var73 = []any{"manage-speaker-add-dialog"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var73...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1076,7 +1076,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var76 = []any{ManageSpeakerAddDialogHeader()}
+			var templ_7745c5c3_Var76 = []any{"manage-speaker-add-dialog-header"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var76...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1111,7 +1111,7 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var79 = []any{ManageSpeakerAddDialogClose()}
+			var templ_7745c5c3_Var79 = []any{"manage-speaker-add-dialog-close"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var79...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1179,7 +1179,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.CurrentAgendaPointID == nil {
-			var templ_7745c5c3_Var82 = []any{ModerateEmptyState()}
+			var templ_7745c5c3_Var82 = []any{"moderate-empty-state"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var82...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1202,7 +1202,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var84 = []any{ManageSpeakersQuickControlWrap()}
+			var templ_7745c5c3_Var84 = []any{"manage-speakers-quick-control-wrap"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var84...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1225,7 +1225,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if current := input.CurrentSpeaker(); current != nil {
-				var templ_7745c5c3_Var86 = []any{InlineForm(), ManageSpeakersQuickControlForm()}
+				var templ_7745c5c3_Var86 = []any{"inline-form", "manage-speakers-quick-control-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var86...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1260,7 +1260,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var89 = []any{ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonEnd()}
+				var templ_7745c5c3_Var89 = []any{"manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var89...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1291,7 +1291,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else if next := input.NextWaitingSpeaker(); next != nil {
-				var templ_7745c5c3_Var91 = []any{InlineForm(), ManageSpeakersQuickControlForm()}
+				var templ_7745c5c3_Var91 = []any{"inline-form", "manage-speakers-quick-control-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var91...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1326,7 +1326,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var94 = []any{ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonStart()}
+				var templ_7745c5c3_Var94 = []any{"manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var94...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1362,7 +1362,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Speakers) > 0 {
-				var templ_7745c5c3_Var96 = []any{ManageSpeakersScrollResetWrap()}
+				var templ_7745c5c3_Var96 = []any{"manage-speakers-scroll-reset-wrap"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var96...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1384,7 +1384,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var98 = []any{ManageSpeakersScrollResetButton()}
+				var templ_7745c5c3_Var98 = []any{"manage-speakers-scroll-reset-button"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var98...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1420,7 +1420,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Speakers) == 0 {
-				var templ_7745c5c3_Var100 = []any{ManageSpeakersRows()}
+				var templ_7745c5c3_Var100 = []any{"manage-speakers-rows"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var100...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1443,7 +1443,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				var templ_7745c5c3_Var102 = []any{LiveSpeakerList(), ManageSpeakersRows(), ManageSpeakersRowsList()}
+				var templ_7745c5c3_Var102 = []any{"live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var102...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1466,7 +1466,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				for _, s := range input.Speakers {
-					var templ_7745c5c3_Var104 = []any{ManageSpeakersRowWrap()}
+					var templ_7745c5c3_Var104 = []any{"manage-speakers-row-wrap"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var104...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1545,7 +1545,7 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 			templ_7745c5c3_Var107 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var108 = []any{ModerateCard(), ModerateCardTwoThirds()}
+		var templ_7745c5c3_Var108 = []any{"moderate-card", "moderate-card-two-thirds"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var108...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1567,7 +1567,7 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var110 = []any{ModerateCardHeader()}
+		var templ_7745c5c3_Var110 = []any{"moderate-card-header"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var110...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1589,7 +1589,7 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var112 = []any{ModerateCardTitle()}
+		var templ_7745c5c3_Var112 = []any{"moderate-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var112...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1611,7 +1611,7 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var114 = []any{ModerateCardBody()}
+		var templ_7745c5c3_Var114 = []any{"moderate-card-body"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var114...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1670,7 +1670,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 			templ_7745c5c3_Var116 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var117 = []any{ModerateCard(), ModerateCardOneThird()}
+		var templ_7745c5c3_Var117 = []any{"moderate-card", "moderate-card-one-third"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var117...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1692,7 +1692,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var119 = []any{ModerateCardHeader()}
+		var templ_7745c5c3_Var119 = []any{"moderate-card-header"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var119...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1714,7 +1714,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var121 = []any{ModerateCardTitle()}
+		var templ_7745c5c3_Var121 = []any{"moderate-card-title"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var121...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1736,7 +1736,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var123 = []any{ModerateCardBody(), ModerateAttendeesSection()}
+		var templ_7745c5c3_Var123 = []any{"moderate-card-body", "moderate-attendees-section"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var123...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1758,7 +1758,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var125 = []any{ModerateSearchWrap()}
+		var templ_7745c5c3_Var125 = []any{"moderate-search-wrap"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var125...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1780,7 +1780,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var127 = []any{ManageSpeakersFieldLabel()}
+		var templ_7745c5c3_Var127 = []any{"manage-speakers-field-label"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var127...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1852,7 +1852,7 @@ func ModerateDependentPartial(input ModerateDependentPartialInput) templ.Compone
 			templ_7745c5c3_Var130 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var131 = []any{ModerateCol()}
+		var templ_7745c5c3_Var131 = []any{"moderate-col"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var131...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1948,7 +1948,7 @@ func MeetingModerateContent(input ModeratePageInput) templ.Component {
 			templ_7745c5c3_Var134 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var135 = []any{ModerateGrid()}
+		var templ_7745c5c3_Var135 = []any{"moderate-grid"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var135...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1983,7 +1983,7 @@ func MeetingModerateContent(input ModeratePageInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var138 = []any{ModerateCol()}
+		var templ_7745c5c3_Var138 = []any{"moderate-col"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var138...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

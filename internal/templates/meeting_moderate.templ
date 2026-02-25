@@ -57,29 +57,29 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 		hx-swap="outerHTML"
 	>
 		if len(input.AgendaPoints) == 0 {
-			<p class={ ModerateEmptyState() }>No agenda points.</p>
+			<p class={ "moderate-empty-state" }>No agenda points.</p>
 		} else {
 			for _, ap := range input.AgendaPoints {
 				<div
 					class={
-						ModerateAgendaItem(),
-						templ.KV(ModerateAgendaItemActive(), ap.IsActive),
-						templ.KV(ManageAgendaPointCardChild(), ap.ParentID != nil),
+						"moderate-agenda-item",
+						templ.KV("moderate-agenda-item-active", ap.IsActive),
+						templ.KV("manage-agenda-point-card-child", ap.ParentID != nil),
 					}
 				>
-					<span class={ ModerateAgendaPosition() }>{ input.AgendaPointDisplayNumber(ap) }</span>
-					<span class={ ModerateAgendaItemTitle() }>{ ap.Title }</span>
+					<span class={ "moderate-agenda-position" }>{ input.AgendaPointDisplayNumber(ap) }</span>
+					<span class={ "moderate-agenda-item-title" }>{ ap.Title }</span>
 					if !ap.IsActive {
 						<form
 							hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
 							hx-target="#agenda-point-list-container"
 							hx-swap="outerHTML"
 							hx-on::after-request="if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')"
-							class={ InlineForm() }
+							class={ "inline-form" }
 						>
 							<button
 								type="submit"
-								class={ ManageAgendaActionButton() }
+								class={ "manage-agenda-action-button" }
 								title="Activate agenda point"
 								aria-label="Activate agenda point"
 							>
@@ -98,12 +98,12 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 // ─────────────────────────────────────────────────────────
 
 templ ModerateAgendaCard(input AgendaPointListPartialInput) {
-	<section class={ ModerateCard(), ModerateCardHalf() }>
-		<div class={ ModerateCardHeader() }>
-			<h2 class={ ModerateCardTitle() }>Agenda</h2>
+	<section class={ "moderate-card", "moderate-card-half" }>
+		<div class={ "moderate-card-header" }>
+			<h2 class={ "moderate-card-title" }>Agenda</h2>
 			<button
 				type="button"
-				class={ ManageAgendaActionButton() }
+				class={ "manage-agenda-action-button" }
 				data-manage-dialog-open
 				aria-controls="moderate-agenda-edit-dialog"
 				title="Edit agenda"
@@ -112,15 +112,15 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 				@Icon(IconSettings, "", "manage-agenda-action-icon")
 			</button>
 		</div>
-		<div class={ ModerateCardBody() }>
+		<div class={ "moderate-card-body" }>
 			@ModerateAgendaCompactPartial(input)
 		</div>
-		<dialog id="moderate-agenda-edit-dialog" class={ ManageSpeakerAddDialog() } data-manage-dialog>
-			<div class={ ManageSpeakerAddDialogHeader() }>
+		<dialog id="moderate-agenda-edit-dialog" class={ "manage-speaker-add-dialog" } data-manage-dialog>
+			<div class={ "manage-speaker-add-dialog-header" }>
 				<h3>Edit Agenda</h3>
-				<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
+				<button type="button" class={ "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
 			</div>
-			<div class={ ManageSpeakerAddSearchWrap() }>
+			<div class={ "manage-speaker-add-search-wrap" }>
 				@AgendaPointListPartial(input)
 			</div>
 		</dialog>
@@ -132,16 +132,16 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 // ─────────────────────────────────────────────────────────
 
 templ ModerateToolsCard(input ModeratePageInput) {
-	<section class={ ModerateCard(), ModerateCardHalf() }>
-		<div class={ ModerateCardHeader() }>
-			<h2 class={ ModerateCardTitle() }>Tools</h2>
+	<section class={ "moderate-card", "moderate-card-half" }>
+		<div class={ "moderate-card-header" }>
+			<h2 class={ "moderate-card-title" }>Tools</h2>
 		</div>
-		<div class={ ModerateCardBody() }>
+		<div class={ "moderate-card-body" }>
 			if !input.HasActiveAP {
-				<p class={ ModerateEmptyState() }>No active agenda point.</p>
+				<p class={ "moderate-empty-state" }>No active agenda point.</p>
 			} else {
 				<div>
-					<div class={ ManageCardHeaderRow() }>
+					<div class={ "manage-card-header-row" }>
 						<strong>Attachments</strong>
 						<button
 							type="button"
@@ -150,7 +150,7 @@ templ ModerateToolsCard(input ModeratePageInput) {
 						>Manage Files</button>
 					</div>
 					if len(input.Attachments.Attachments) == 0 {
-						<p class={ ModerateEmptyState() }>No attachments.</p>
+						<p class={ "moderate-empty-state" }>No attachments.</p>
 					} else {
 						<ul>
 							for _, a := range input.Attachments.Attachments {
@@ -168,7 +168,7 @@ templ ModerateToolsCard(input ModeratePageInput) {
 					}
 				</div>
 				<div>
-					<div class={ ManageCardHeaderRow() }>
+					<div class={ "manage-card-header-row" }>
 						<strong>Motions</strong>
 						<button
 							type="button"
@@ -177,7 +177,7 @@ templ ModerateToolsCard(input ModeratePageInput) {
 						>Manage Motions</button>
 					</div>
 					if len(input.Motions.Motions) == 0 {
-						<p class={ ModerateEmptyState() }>No motions.</p>
+						<p class={ "moderate-empty-state" }>No motions.</p>
 					} else {
 						<ul>
 							for _, m := range input.Motions.Motions {
@@ -195,23 +195,23 @@ templ ModerateToolsCard(input ModeratePageInput) {
 		if input.HasActiveAP {
 			<dialog
 				id={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
-				class={ ManageSpeakerAddDialog() }
+				class={ "manage-speaker-add-dialog" }
 				data-manage-dialog
 			>
-				<div class={ ManageSpeakerAddDialogHeader() }>
+				<div class={ "manage-speaker-add-dialog-header" }>
 					<h3>{ input.ActiveAPTitle } — Attachments</h3>
-					<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
+					<button type="button" class={ "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
 				</div>
 				@AttachmentListPartial(input.Attachments)
 			</dialog>
 			<dialog
 				id={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
-				class={ ManageSpeakerAddDialog() }
+				class={ "manage-speaker-add-dialog" }
 				data-manage-dialog
 			>
-				<div class={ ManageSpeakerAddDialogHeader() }>
+				<div class={ "manage-speaker-add-dialog-header" }>
 					<h3>{ input.ActiveAPTitle } - Motions</h3>
-					<button type="button" class={ ManageSpeakerAddDialogClose() } data-manage-dialog-close>Close</button>
+					<button type="button" class={ "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
 				</div>
 				@MotionListPartial(input.Motions)
 			</dialog>
@@ -226,19 +226,19 @@ templ ModerateToolsCard(input ModeratePageInput) {
 templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 	@ErrorMessage(input.Error)
 	if input.CurrentAgendaPointID == nil {
-		<p class={ ModerateEmptyState() }>No active agenda point.</p>
+		<p class={ "moderate-empty-state" }>No active agenda point.</p>
 	} else {
-		<div class={ ManageSpeakersQuickControlWrap() }>
+		<div class={ "manage-speakers-quick-control-wrap" }>
 			if current := input.CurrentSpeaker(); current != nil {
 				<form
 					hx-post={ input.SpeakerEndPostStr(ctx, current) }
 					hx-target="#speakers-list-container"
 					hx-swap="outerHTML"
-					class={ InlineForm(), ManageSpeakersQuickControlForm() }
+					class={ "inline-form", "manage-speakers-quick-control-form" }
 				>
 					<button
 						type="submit"
-						class={ ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonEnd() }
+						class={ "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end" }
 						title="End current speech"
 						aria-label="End current speech"
 					>
@@ -251,11 +251,11 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 					hx-post={ input.SpeakerStartPostStr(ctx, next) }
 					hx-target="#speakers-list-container"
 					hx-swap="outerHTML"
-					class={ InlineForm(), ManageSpeakersQuickControlForm() }
+					class={ "inline-form", "manage-speakers-quick-control-form" }
 				>
 					<button
 						type="submit"
-						class={ ManageSpeakersQuickControlButton(), ManageSpeakersQuickControlButtonStart() }
+						class={ "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start" }
 						title="Start next speaker"
 						aria-label="Start next speaker"
 					>
@@ -266,10 +266,10 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 			}
 		</div>
 		if len(input.Speakers) > 0 {
-			<div class={ ManageSpeakersScrollResetWrap() }>
+			<div class={ "manage-speakers-scroll-reset-wrap" }>
 				<button
 					type="button"
-					class={ ManageSpeakersScrollResetButton() }
+					class={ "manage-speakers-scroll-reset-button" }
 					data-manage-speakers-reset-scroll
 					title="Scroll to active position"
 					aria-label="Scroll to active position"
@@ -280,15 +280,15 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 			</div>
 		}
 		if len(input.Speakers) == 0 {
-			<p class={ ManageSpeakersRows() }>No speakers in the queue.</p>
+			<p class={ "manage-speakers-rows" }>No speakers in the queue.</p>
 		} else {
 			<div
-				class={ LiveSpeakerList(), ManageSpeakersRows(), ManageSpeakersRowsList() }
+				class={ "live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list" }
 				data-manage-speakers-viewport
 			>
 				for _, s := range input.Speakers {
 					<div
-						class={ ManageSpeakersRowWrap() }
+						class={ "manage-speakers-row-wrap" }
 						data-manage-scroll-anchor={ strconv.FormatBool(input.IsInitialScrollSpeaker(s)) }
 					>
 						@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s))
@@ -305,11 +305,11 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 // ─────────────────────────────────────────────────────────
 
 templ ModerateSpeakersCard(input SpeakersListPartialInput) {
-	<section class={ ModerateCard(), ModerateCardTwoThirds() }>
-		<div class={ ModerateCardHeader() }>
-			<h2 class={ ModerateCardTitle() }>Speakers</h2>
+	<section class={ "moderate-card", "moderate-card-two-thirds" }>
+		<div class={ "moderate-card-header" }>
+			<h2 class={ "moderate-card-title" }>Speakers</h2>
 		</div>
-		<div class={ ModerateCardBody() }>
+		<div class={ "moderate-card-body" }>
 			<div
 				id="speakers-list-container"
 				sse-swap="manage-speakers-list-updated"
@@ -327,13 +327,13 @@ templ ModerateSpeakersCard(input SpeakersListPartialInput) {
 // ─────────────────────────────────────────────────────────
 
 templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
-	<section class={ ModerateCard(), ModerateCardOneThird() }>
-		<div class={ ModerateCardHeader() }>
-			<h2 class={ ModerateCardTitle() }>Add Speaker</h2>
+	<section class={ "moderate-card", "moderate-card-one-third" }>
+		<div class={ "moderate-card-header" }>
+			<h2 class={ "moderate-card-title" }>Add Speaker</h2>
 		</div>
-		<div class={ ModerateCardBody(), ModerateAttendeesSection() }>
-			<div class={ ModerateSearchWrap() }>
-				<label class={ ManageSpeakersFieldLabel() } for="moderate-speaker-search">Search name or number</label>
+		<div class={ "moderate-card-body", "moderate-attendees-section" }>
+			<div class={ "moderate-search-wrap" }>
+				<label class={ "manage-speakers-field-label" } for="moderate-speaker-search">Search name or number</label>
 				<input
 					type="text"
 					id="moderate-speaker-search"
@@ -360,7 +360,7 @@ templ ModerateDependentPartial(input ModerateDependentPartialInput) {
 		id="moderate-dependent-container"
 		sse-swap="moderate-updated"
 		hx-swap="outerHTML"
-		class={ ModerateCol() }
+		class={ "moderate-col" }
 	>
 		@ModerateSpeakersCard(input.Speakers)
 		@ModerateAttendeesCard(input.Speakers)
@@ -385,9 +385,9 @@ templ MeetingModerateContent(input ModeratePageInput) {
 		id="moderate-sse-root"
 		hx-ext="sse"
 		data-stream-url={ input.moderateStreamGetStr(ctx) }
-		class={ ModerateGrid() }
+		class={ "moderate-grid" }
 	>
-		<div class={ ModerateCol() }>
+		<div class={ "moderate-col" }>
 			@ModerateAgendaCard(input.AgendaPoints)
 			@ModerateToolsCard(input)
 		</div>

@@ -67,7 +67,7 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 			if len(input.Committees) == 0 {
 				<p>{ i18n.T(ctx, "admin_dashboard.empty_state") }</p>
 			} else {
-				<table class={ DataTable() }>
+				<table class={ "data-table table table-zebra w-full" }>
 					<thead>
 						<tr>
 							<th>{ i18n.T(ctx, "admin_dashboard.col_name") }</th>
@@ -88,7 +88,7 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 										hx-target="#committee-list-container"
 										hx-swap="outerHTML"
 										hx-confirm={ i18n.T(ctx, "admin_dashboard.delete_confirm") }
-										class={ InlineForm() }
+										class={ "inline-form" }
 									>
 										<button type="submit">{ i18n.T(ctx, "admin_dashboard.delete_button") }</button>
 									</form>
@@ -120,7 +120,7 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 templ AdminDashboardContent(input AdminDashboardInput) {
 	<h2>{ i18n.T(ctx, "admin_dashboard.committees_heading") }</h2>
 
-	<section class={ Panel() }>
+	<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 		<h3>{ i18n.T(ctx, "admin_dashboard.add_committee_heading") }</h3>
 		<form
 			id="create-committee-form"
@@ -149,10 +149,10 @@ templ AdminDashboardContent(input AdminDashboardInput) {
 		</form>
 	</section>
 
-	<section class={ Panel() }>
+	<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 		<h3>{ i18n.T(ctx, "admin_dashboard.existing_heading") }</h3>
 		@CommitteeListPartial(CommitteeListPartialInput{Committees: input.Committees, Error: input.Error})
-		<div class={ CenteredPaginationWrap() }>
+		<div class={ "centered-pagination-wrap" }>
 			@Pagination(input.PaginationArgs(ctx))
 		</div>
 	</section>

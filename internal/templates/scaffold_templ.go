@@ -103,7 +103,7 @@ func PageTemplate(title string, htmx bool, htmxSSE bool, scaffold ScaffoldInput,
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 = []any{AppShell()}
+		var templ_7745c5c3_Var5 = []any{"app-shell min-h-screen flex flex-col bg-base-200 text-base-content"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -192,7 +192,7 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var8 = []any{PageHeader(), "scaffold-header"}
+		var templ_7745c5c3_Var8 = []any{"page-header border-b border-base-300 bg-base-100/95", "scaffold-header"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -637,7 +637,7 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var32 = []any{PageMain()}
+		var templ_7745c5c3_Var32 = []any{"page-main w-full max-w-screen-xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden p-5"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var32...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -667,7 +667,7 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var34 = []any{PageFooter(), "scaffold-footer"}
+		var templ_7745c5c3_Var34 = []any{"page-footer w-full max-w-screen-xl mx-auto px-5 pb-5", "scaffold-footer"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var34...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

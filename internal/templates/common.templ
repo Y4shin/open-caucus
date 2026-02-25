@@ -14,14 +14,14 @@ func errorTimeoutStr(timeoutMs []int) string {
 templ ErrorMessage(message string, timeoutMs ...int) {
 	if message != "" {
 		<div
-			class={ ErrorText(), ErrorMessageLayout() }
+			class={ "error-text alert alert-error", "error-message-layout" }
 			data-error-message
 			data-error-timeout={ errorTimeoutStr(timeoutMs) }
 		>
 			<span>{ message }</span>
 			<button
 				type="button"
-				class={ ErrorMessageDismiss() }
+				class={ "error-message-dismiss" }
 				onclick="var p=this.closest('[data-error-message]');if(p)p.remove()"
 				aria-label="Dismiss"
 			>&#x00D7;</button>

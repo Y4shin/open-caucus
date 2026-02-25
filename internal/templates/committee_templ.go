@@ -244,7 +244,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.FormError != "" {
-			var templ_7745c5c3_Var9 = []any{ErrorText(), "meeting-list-error-row"}
+			var templ_7745c5c3_Var9 = []any{"error-text alert alert-error", "meeting-list-error-row"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -269,7 +269,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(input.FormError)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 117, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 117, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -297,7 +297,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var13 = []any{CommitteeMeetingCreateForm(), "committee-create-layout"}
+		var templ_7745c5c3_Var13 = []any{"committee-meeting-create-form", "committee-create-layout"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -332,7 +332,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var16 = []any{CommitteeField(), "committee-create-name"}
+		var templ_7745c5c3_Var16 = []any{"committee-field", "committee-create-name"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var16...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -354,7 +354,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var18 = []any{CommitteeFieldLabel()}
+		var templ_7745c5c3_Var18 = []any{"committee-field-label"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var18...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -379,7 +379,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.name_label"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 130, Col: 93}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 130, Col: 95}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -389,7 +389,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var21 = []any{CommitteeFieldControl()}
+		var templ_7745c5c3_Var21 = []any{"committee-field-control"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var21...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -411,7 +411,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var23 = []any{CommitteeField(), "committee-create-description"}
+		var templ_7745c5c3_Var23 = []any{"committee-field", "committee-create-description"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var23...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -433,7 +433,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var25 = []any{CommitteeFieldLabel(), CommitteeFieldLabelTextarea()}
+		var templ_7745c5c3_Var25 = []any{"committee-field-label", "committee-field-label-textarea"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var25...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -458,7 +458,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		var templ_7745c5c3_Var27 string
 		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.description_label"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 134, Col: 138}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 134, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 		if templ_7745c5c3_Err != nil {
@@ -468,7 +468,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var28 = []any{CommitteeFieldControl(), CommitteeFieldTextarea()}
+		var templ_7745c5c3_Var28 = []any{"committee-field-control", "committee-field-textarea"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var28...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -511,7 +511,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var31 = []any{CommitteeMeetingsHeading()}
+		var templ_7745c5c3_Var31 = []any{"committee-meetings-heading"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var31...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -536,7 +536,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 		var templ_7745c5c3_Var33 string
 		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.existing_meetings_heading"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 148, Col: 97}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 148, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
@@ -565,7 +565,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var35 = []any{CommitteeMeetingList()}
+			var templ_7745c5c3_Var35 = []any{"committee-meeting-list"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var35...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -588,7 +588,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, m := range input.Meetings {
-				var templ_7745c5c3_Var37 = []any{CommitteeMeetingCard()}
+				var templ_7745c5c3_Var37 = []any{"committee-meeting-card"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var37...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -610,7 +610,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var39 = []any{CommitteeMeetingMain()}
+				var templ_7745c5c3_Var39 = []any{"committee-meeting-main"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var39...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -632,7 +632,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var41 = []any{CommitteeMeetingTitle()}
+				var templ_7745c5c3_Var41 = []any{"committee-meeting-title"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var41...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -657,7 +657,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var43 string
 				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(m.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 156, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 156, Col: 57}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 				if templ_7745c5c3_Err != nil {
@@ -668,7 +668,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if m.Description != "" {
-					var templ_7745c5c3_Var44 = []any{CommitteeMeetingDescription()}
+					var templ_7745c5c3_Var44 = []any{"committee-meeting-description"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var44...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -693,7 +693,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var46 string
 					templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(m.Description)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 158, Col: 68}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 158, Col: 70}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 					if templ_7745c5c3_Err != nil {
@@ -704,7 +704,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var47 = []any{CommitteeMeetingDescription()}
+					var templ_7745c5c3_Var47 = []any{"committee-meeting-description"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var47...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -731,7 +731,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var49 = []any{CommitteeMeetingAside()}
+				var templ_7745c5c3_Var49 = []any{"committee-meeting-aside"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var49...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -753,7 +753,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var51 = []any{CommitteeMeetingChips()}
+				var templ_7745c5c3_Var51 = []any{"committee-meeting-chips"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var51...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -776,7 +776,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if m.SignupOpen {
-					var templ_7745c5c3_Var53 = []any{CommitteeMeetingChip(), CommitteeMeetingChipPositive()}
+					var templ_7745c5c3_Var53 = []any{"committee-meeting-chip", "committee-meeting-chip-positive"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var53...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -801,7 +801,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var55 string
 					templ_7745c5c3_Var55, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.signup_open_chip"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 166, Col: 125}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 166, Col: 130}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var55))
 					if templ_7745c5c3_Err != nil {
@@ -812,7 +812,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var56 = []any{CommitteeMeetingChip(), CommitteeMeetingChipNegative()}
+					var templ_7745c5c3_Var56 = []any{"committee-meeting-chip", "committee-meeting-chip-negative"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var56...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -837,7 +837,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var58 string
 					templ_7745c5c3_Var58, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.signup_closed_chip"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 168, Col: 127}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 168, Col: 132}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var58))
 					if templ_7745c5c3_Err != nil {
@@ -849,7 +849,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					}
 				}
 				if m.IsActive {
-					var templ_7745c5c3_Var59 = []any{CommitteeMeetingChip(), CommitteeMeetingChipPositive()}
+					var templ_7745c5c3_Var59 = []any{"committee-meeting-chip", "committee-meeting-chip-positive"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var59...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -874,7 +874,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var61 string
 					templ_7745c5c3_Var61, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.col_active"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 171, Col: 119}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 171, Col: 124}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var61))
 					if templ_7745c5c3_Err != nil {
@@ -887,7 +887,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var62 string
 					templ_7745c5c3_Var62, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.yes"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 171, Col: 150}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 171, Col: 155}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var62))
 					if templ_7745c5c3_Err != nil {
@@ -898,7 +898,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var63 = []any{CommitteeMeetingChip(), CommitteeMeetingChipNegative()}
+					var templ_7745c5c3_Var63 = []any{"committee-meeting-chip", "committee-meeting-chip-negative"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var63...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -923,7 +923,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var65 string
 					templ_7745c5c3_Var65, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.col_active"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 173, Col: 119}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 173, Col: 124}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var65))
 					if templ_7745c5c3_Err != nil {
@@ -936,7 +936,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var66 string
 					templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.no"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 173, Col: 149}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 173, Col: 154}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 					if templ_7745c5c3_Err != nil {
@@ -951,7 +951,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var67 = []any{CommitteeMeetingActions()}
+				var templ_7745c5c3_Var67 = []any{"committee-meeting-actions"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var67...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -973,7 +973,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var69 = []any{CommitteeIconActionButton()}
+				var templ_7745c5c3_Var69 = []any{"committee-icon-action-button"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var69...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1011,7 +1011,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var72 string
 				templ_7745c5c3_Var72, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.view_link"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 177, Col: 132}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 177, Col: 135}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var72))
 				if templ_7745c5c3_Err != nil {
@@ -1024,7 +1024,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var73 string
 				templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.view_link"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 177, Col: 182}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 177, Col: 185}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 				if templ_7745c5c3_Err != nil {
@@ -1042,7 +1042,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var74 = []any{CommitteeIconActionButton()}
+				var templ_7745c5c3_Var74 = []any{"committee-icon-action-button"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var74...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1080,7 +1080,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.manage_link"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 180, Col: 136}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 180, Col: 139}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 				if templ_7745c5c3_Err != nil {
@@ -1093,7 +1093,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.manage_link"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 180, Col: 188}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 180, Col: 191}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -1112,7 +1112,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if m.IsActive {
-					var templ_7745c5c3_Var79 = []any{CommitteeIconActionButton()}
+					var templ_7745c5c3_Var79 = []any{"committee-icon-action-button"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var79...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1137,7 +1137,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var81 string
 					templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.activate_button"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 184, Col: 128}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 184, Col: 131}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 					if templ_7745c5c3_Err != nil {
@@ -1150,7 +1150,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var82 string
 					templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.activate_button"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 184, Col: 184}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 184, Col: 187}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 					if templ_7745c5c3_Err != nil {
@@ -1169,7 +1169,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var83 = []any{InlineForm()}
+					var templ_7745c5c3_Var83 = []any{"inline-form"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var83...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1204,7 +1204,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var86 = []any{CommitteeIconActionButton()}
+					var templ_7745c5c3_Var86 = []any{"committee-icon-action-button"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var86...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -1229,7 +1229,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var88 string
 					templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.activate_button"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 194, Col: 120}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 194, Col: 123}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 					if templ_7745c5c3_Err != nil {
@@ -1242,7 +1242,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 					var templ_7745c5c3_Var89 string
 					templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.activate_button"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 194, Col: 176}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 194, Col: 179}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 					if templ_7745c5c3_Err != nil {
@@ -1261,7 +1261,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				var templ_7745c5c3_Var90 = []any{InlineForm()}
+				var templ_7745c5c3_Var90 = []any{"inline-form"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var90...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1309,7 +1309,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var94 = []any{CommitteeIconActionButton(), CommitteeIconActionDanger()}
+				var templ_7745c5c3_Var94 = []any{"committee-icon-action-button", "committee-icon-action-danger"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var94...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -1334,7 +1334,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var96 string
 				templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.delete_button"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 206, Col: 146}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 206, Col: 152}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 				if templ_7745c5c3_Err != nil {
@@ -1347,7 +1347,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 				var templ_7745c5c3_Var97 string
 				templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "committee.delete_button"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 206, Col: 200}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `committee.templ`, Line: 206, Col: 206}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 				if templ_7745c5c3_Err != nil {
@@ -1370,7 +1370,7 @@ func MeetingListPartial(input MeetingListPartialInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var98 = []any{CenteredPaginationWrap()}
+			var templ_7745c5c3_Var98 = []any{"centered-pagination-wrap"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var98...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1482,7 +1482,7 @@ func CommitteePageContent(input CommitteePageInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if CurrentUserRole(ctx) == "chairperson" {
-			var templ_7745c5c3_Var103 = []any{Panel()}
+			var templ_7745c5c3_Var103 = []any{"panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var103...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

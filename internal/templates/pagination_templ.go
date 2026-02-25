@@ -81,7 +81,7 @@ func Pagination(args PaginationArgs) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{PaginationNav()}
+		var templ_7745c5c3_Var2 = []any{"pagination-nav"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -146,7 +146,7 @@ func Pagination(args PaginationArgs) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(args.PrevPages) > 0 && args.PrevPages[0] > args.FirstPage+1 {
-				var templ_7745c5c3_Var6 = []any{PaginationEllipsis()}
+				var templ_7745c5c3_Var6 = []any{"pagination-ellipsis"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -254,7 +254,7 @@ func Pagination(args PaginationArgs) templ.Component {
 		if args.LastPage > 0 {
 			if len(args.NextPages) > 0 {
 				if args.NextPages[len(args.NextPages)-1]+1 < args.LastPage {
-					var templ_7745c5c3_Var13 = []any{PaginationEllipsis()}
+					var templ_7745c5c3_Var13 = []any{"pagination-ellipsis"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -278,7 +278,7 @@ func Pagination(args PaginationArgs) templ.Component {
 					}
 				}
 			} else if args.CurrentPage+1 < args.LastPage {
-				var templ_7745c5c3_Var15 = []any{PaginationEllipsis()}
+				var templ_7745c5c3_Var15 = []any{"pagination-ellipsis"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

@@ -14,8 +14,6 @@ import (
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
-	"github.com/Y4shin/conference-tool/internal/templates"
-	"github.com/a-h/templ"
 	"github.com/spf13/cobra"
 )
 
@@ -103,12 +101,11 @@ var serveCmd = &cobra.Command{
 			Default:   "en",
 			Supported: []string{"en", "de"},
 		})
-		handlerWithCSS := templ.NewCSSMiddleware(handlerWithLocale, templates.GlobalCSSClasses()...)
 
 		addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
 		log.Printf("Starting server on %s", addr)
 
-		return http.ListenAndServe(addr, handlerWithCSS)
+		return http.ListenAndServe(addr, handlerWithLocale)
 	},
 }
 

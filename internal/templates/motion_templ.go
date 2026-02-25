@@ -318,7 +318,7 @@ func MotionItemPartial(input MotionItemPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var15 = []any{InlineForm()}
+			var templ_7745c5c3_Var15 = []any{"inline-form"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -432,7 +432,7 @@ func MotionItemPartial(input MotionItemPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		var templ_7745c5c3_Var24 = []any{InlineForm()}
+		var templ_7745c5c3_Var24 = []any{"inline-form"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -507,7 +507,7 @@ func MotionItemPartial(input MotionItemPartialInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.CurrentMotionID != nil && *input.CurrentMotionID == input.Motion.ID {
-			var templ_7745c5c3_Var30 = []any{InlineForm()}
+			var templ_7745c5c3_Var30 = []any{"inline-form"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var30...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -556,7 +556,7 @@ func MotionItemPartial(input MotionItemPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			var templ_7745c5c3_Var34 = []any{InlineForm()}
+			var templ_7745c5c3_Var34 = []any{"inline-form"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var34...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

@@ -26,7 +26,7 @@ templ PageTemplate(title string, htmx bool, htmxSSE bool, scaffold ScaffoldInput
 			<script src={ paths.Route.HtmxExtSseMinJs() }></script>
 		}
 	</head>
-	<body class={ AppShell() }>
+	<body class={ "app-shell min-h-screen flex flex-col bg-base-200 text-base-content" }>
 		@HeaderFooterScaffold(scaffold, content)
 	</body>
 	</html>
@@ -67,7 +67,7 @@ func scaffoldActionKindClass(kind string) string {
 }
 
 templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
-	<header class={ PageHeader(), "scaffold-header" }>
+	<header class={ "page-header border-b border-base-300 bg-base-100/95", "scaffold-header" }>
 		<div class="scaffold-top-row">
 			<div class="scaffold-title-col">
 				<div class="scaffold-title-row">
@@ -153,10 +153,10 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 			</nav>
 		}
 	</header>
-	<main class={ PageMain() }>
+	<main class={ "page-main w-full max-w-screen-xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden p-5" }>
 		@content
 	</main>
-	<footer class={ PageFooter(), "scaffold-footer" }>
+	<footer class={ "page-footer w-full max-w-screen-xl mx-auto px-5 pb-5", "scaffold-footer" }>
 		<div class="scaffold-footer-inner">
 			<div class="scaffold-footer-left"></div>
 			<div class="scaffold-footer-center">

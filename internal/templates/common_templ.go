@@ -41,7 +41,7 @@ func ErrorMessage(message string, timeoutMs ...int) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if message != "" {
-			var templ_7745c5c3_Var2 = []any{ErrorText(), ErrorMessageLayout()}
+			var templ_7745c5c3_Var2 = []any{"error-text alert alert-error", "error-message-layout"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -89,7 +89,7 @@ func ErrorMessage(message string, timeoutMs ...int) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var6 = []any{ErrorMessageDismiss()}
+			var templ_7745c5c3_Var6 = []any{"error-message-dismiss"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

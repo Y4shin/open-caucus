@@ -67,7 +67,7 @@ func (i *AccountListPartialInput) PaginationArgs(ctx context.Context) Pagination
 templ AccountListPartial(input AccountListPartialInput) {
 	<div id="account-list-container">
 		@ErrorMessage(input.Error)
-		<section class={ Panel() }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 			<h2>{ i18n.T(ctx, "admin_accounts.add_heading") }</h2>
 			<form
 				id="create-account-form"
@@ -100,12 +100,12 @@ templ AccountListPartial(input AccountListPartialInput) {
 				<button type="submit">{ i18n.T(ctx, "admin_accounts.create_button") }</button>
 			</form>
 		</section>
-		<section class={ Panel() }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 			<h2>{ i18n.T(ctx, "admin_accounts.existing_heading") }</h2>
 			if len(input.Accounts) == 0 {
 				<p>{ i18n.T(ctx, "admin_accounts.empty_state") }</p>
 			} else {
-				<table class={ DataTable() }>
+				<table class={ "data-table table table-zebra w-full" }>
 					<thead>
 						<tr>
 							<th>{ i18n.T(ctx, "admin_accounts.col_username") }</th>

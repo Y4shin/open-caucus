@@ -81,7 +81,7 @@ func LiveDocButtonContent(input LiveCurrentDocInput) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{LiveSpeakerHistoryButton(), "live-speaker-history-button", templ.KV("live-doc-btn--hidden", input.Doc == nil)}
+		var templ_7745c5c3_Var2 = []any{"live-speaker-history-button", "live-speaker-history-button", templ.KV("live-doc-btn--hidden", input.Doc == nil)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -178,7 +178,7 @@ func LiveCurrentDocContent(input LiveCurrentDocInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.Doc == nil {
-			var templ_7745c5c3_Var6 = []any{LiveEmptyState(), "live-doc-placeholder"}
+			var templ_7745c5c3_Var6 = []any{"live-empty-state", "live-doc-placeholder"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err

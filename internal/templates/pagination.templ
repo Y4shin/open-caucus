@@ -53,7 +53,7 @@ func BuildPaginationArgs(p pagination.Page, pageURL func(page uint32) templ.Safe
 }
 
 templ Pagination(args PaginationArgs) {
-	<nav class={ PaginationNav() }>
+	<nav class={ "pagination-nav" }>
 		if args.PrevPage > 0 {
 			@IconLabelLink(args.PageURL(args.PrevPage), IconChevronLeft, i18n.T(ctx, "pagination.previous"), "left")
 		} else {
@@ -63,7 +63,7 @@ templ Pagination(args PaginationArgs) {
 		if args.FirstPage > 0 {
 			<a href={ args.PageURL(args.FirstPage) }>{ strconv.FormatUint(uint64(args.FirstPage), 10) }</a>
 			if len(args.PrevPages) > 0 && args.PrevPages[0] > args.FirstPage+1 {
-				<span class={ PaginationEllipsis() }>...</span>
+				<span class={ "pagination-ellipsis" }>...</span>
 			}
 		}
 
@@ -80,10 +80,10 @@ templ Pagination(args PaginationArgs) {
 		if args.LastPage > 0 {
 			if len(args.NextPages) > 0 {
 				if args.NextPages[len(args.NextPages)-1]+1 < args.LastPage {
-					<span class={ PaginationEllipsis() }>...</span>
+					<span class={ "pagination-ellipsis" }>...</span>
 				}
 			} else if args.CurrentPage+1 < args.LastPage {
-				<span class={ PaginationEllipsis() }>...</span>
+				<span class={ "pagination-ellipsis" }>...</span>
 			}
 			<a href={ args.PageURL(args.LastPage) }>{ strconv.FormatUint(uint64(args.LastPage), 10) }</a>
 		}

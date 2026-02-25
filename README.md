@@ -42,6 +42,7 @@ A web application built with Go, HTMX, and Templ featuring type-safe routing thr
 ### Prerequisites
 
 - Go 1.25.5 or later
+- Node.js 20+ (for Tailwind CSS/DaisyUI build)
 - The project uses Go tools (templ, air, sqlc) which are automatically managed via `go.mod`
 - (Optional) [Task](https://taskfile.dev/) for running common development tasks
 
@@ -60,6 +61,7 @@ A web application built with Go, HTMX, and Templ featuring type-safe routing thr
 
    # Or manually
    go mod download
+   npm install
    go generate ./...
    ```
 
@@ -68,10 +70,12 @@ A web application built with Go, HTMX, and Templ featuring type-safe routing thr
 ```bash
 # Using Task (recommended)
 task dev              # Start with hot reload
+task css:watch        # Run in a second terminal for CSS rebuilds
 task run              # Run directly
 
 # Or manually
 go tool air           # Start with hot reload
+npm run watch:css     # Run in a second terminal for CSS rebuilds
 go run . serve        # Run directly
 ```
 
@@ -322,6 +326,8 @@ The project uses [Taskfile](https://taskfile.dev/) for common development tasks.
 
 Key tasks:
 - `task dev` - Run with hot reload
+- `task css:watch` - Watch and rebuild Tailwind + DaisyUI CSS
+- `task css:build` - Build Tailwind + DaisyUI CSS once
 - `task test` - Run tests
 - `task generate` - Generate all code
 - `task check` - Run all code quality checks
@@ -336,11 +342,13 @@ The project uses `go generate` for code generation:
 ```bash
 # Using Task (recommended)
 task generate              # All code generation
+task css:build             # Stylesheet only
 task generate:routes       # Routes only
 task generate:templates    # Templates only
 task generate:db          # Database client only
 
 # Or manually
+npm run build:css                    # Stylesheet
 go generate ./...                      # All
 go generate ./internal/routes          # Routes
 go generate ./internal/templates       # Templates

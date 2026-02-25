@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/a-h/templ"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
@@ -23,7 +22,6 @@ import (
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
-	"github.com/Y4shin/conference-tool/internal/templates"
 )
 
 const (
@@ -75,7 +73,6 @@ func newTestServer(t *testing.T) *testServer {
 		Default:   "en",
 		Supported: []string{"en"},
 	})
-	handler = templ.NewCSSMiddleware(handler, templates.GlobalCSSClasses()...)
 	ts := httptest.NewServer(handler)
 
 	t.Cleanup(func() {

@@ -124,7 +124,7 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 				hx-post={ input.MotionVotePostStr(ctx) }
 				hx-target={ "#" + input.containerID() }
 				hx-swap="outerHTML"
-				class={ InlineForm() }
+				class={ "inline-form" }
 			>
 				<label>{ i18n.T(ctx, "motion.vote_for_label") } <input type="number" name="votes_for" min="0" required/></label>
 				<label>{ i18n.T(ctx, "motion.vote_against_label") } <input type="number" name="votes_against" min="0" required/></label>
@@ -138,7 +138,7 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 			hx-target={ "#" + input.motionListContainerID() }
 			hx-swap="outerHTML"
 			hx-confirm={ i18n.T(ctx, "motion.delete_confirm") }
-			class={ InlineForm() }
+			class={ "inline-form" }
 		>
 			<button type="submit">{ i18n.T(ctx, "motion.delete_button") }</button>
 		</form>
@@ -147,7 +147,7 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 				hx-post={ input.ClearCurrentPostStr(ctx) }
 				hx-target={ "#" + input.motionListContainerID() }
 				hx-swap="outerHTML"
-				class={ InlineForm() }
+				class={ "inline-form" }
 			>
 				<button type="submit">Clear</button>
 			</form>
@@ -156,7 +156,7 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 				hx-post={ input.SetCurrentMotionPostStr(ctx) }
 				hx-target={ "#" + input.motionListContainerID() }
 				hx-swap="outerHTML"
-				class={ InlineForm() }
+				class={ "inline-form" }
 			>
 				<button type="submit">Set as Current</button>
 			</form>

@@ -82,7 +82,7 @@ func (i *UserListPartialInput) PaginationArgs(ctx context.Context) PaginationArg
 templ UserListPartial(input UserListPartialInput) {
 	<div id="committee-users-container">
 		@ErrorMessage(input.Error)
-		<section class={ Panel() }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 			<h2>{ i18n.T(ctx, "admin_committee_users.assign_heading") }</h2>
 			if len(input.AssignableAccounts) == 0 {
 				<p>{ i18n.T(ctx, "admin_committee_users.no_assignable_accounts") }</p>
@@ -119,12 +119,12 @@ templ UserListPartial(input UserListPartialInput) {
 				</form>
 			}
 		</section>
-		<section class={ Panel() }>
+		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
 			<h2>{ i18n.T(ctx, "admin_committee_users.existing_heading") }</h2>
 			if len(input.Users) == 0 {
 				<p>{ i18n.T(ctx, "admin_committee_users.empty_state") }</p>
 			} else {
-				<table class={ DataTable() }>
+				<table class={ "data-table table table-zebra w-full" }>
 					<thead>
 						<tr>
 							<th>{ i18n.T(ctx, "admin_committee_users.col_username") }</th>
@@ -153,7 +153,7 @@ templ UserListPartial(input UserListPartialInput) {
 										hx-target="#committee-users-container"
 										hx-swap="outerHTML"
 										hx-confirm={ i18n.T(ctx, "admin_committee_users.delete_confirm") }
-										class={ InlineForm() }
+										class={ "inline-form" }
 									>
 										<button type="submit">{ i18n.T(ctx, "admin_committee_users.delete_button") }</button>
 									</form>

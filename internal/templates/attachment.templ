@@ -101,7 +101,7 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 							hx-target={ "#" + input.containerID() }
 							hx-swap="outerHTML"
 							hx-confirm={ i18n.T(ctx, "attachment.delete_confirm") }
-							class={ InlineForm() }
+							class={ "inline-form" }
 						>
 							<button type="submit">{ i18n.T(ctx, "attachment.delete_button") }</button>
 						</form>
@@ -110,7 +110,7 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 								hx-post={ input.clearCurrentPostStr(ctx) }
 								hx-target={ "#" + input.containerID() }
 								hx-swap="outerHTML"
-								class={ InlineForm() }
+								class={ "inline-form" }
 							>
 								<button type="submit">Clear</button>
 							</form>
@@ -119,7 +119,7 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 								hx-post={ input.setCurrentAttachmentPostStr(ctx, a.IDString) }
 								hx-target={ "#" + input.containerID() }
 								hx-swap="outerHTML"
-								class={ InlineForm() }
+								class={ "inline-form" }
 							>
 								<button type="submit">Set as Current</button>
 							</form>
