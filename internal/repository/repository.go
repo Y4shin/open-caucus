@@ -65,7 +65,7 @@ type Repository interface {
 	CountMeetingsForCommittee(ctx context.Context, slug string) (int64, error)
 	CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error
 	DeleteMeeting(ctx context.Context, id int64) error
-	SetActiveMeeting(ctx context.Context, slug string, meetingID int64) error
+	SetActiveMeeting(ctx context.Context, slug string, meetingID *int64) error
 	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
 	SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error
 	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error

@@ -32,12 +32,12 @@ templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
 }
 
 templ MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) {
-	<div class={ "manage-grid" }>
-		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
+	<div class={ "manage-grid grid gap-4 lg:grid-cols-2" }>
+		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 			<h2>Attachments</h2>
 			@AttachmentListPartial(input.Attachments)
 		</section>
-		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
+		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 			<h2>Motions</h2>
 			@MotionListPartial(input.Motions)
 		</section>

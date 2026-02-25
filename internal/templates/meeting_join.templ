@@ -68,13 +68,13 @@ templ MeetingJoinContent(input MeetingJoinInput) {
 	if input.AlreadySignedUp {
 		<p>{ i18n.T(ctx, "meeting_join.already_signed_up") }</p>
 		<form method="POST" action={ input.JoinSubmitPost(ctx) }>
-			<button type="submit">{ i18n.T(ctx, "meeting_join.enter_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "meeting_join.enter_button") }</button>
 		</form>
 	} else if input.IsLoggedIn {
 		<h3>{ i18n.T(ctx, "meeting_join.signup_heading") }</h3>
 		<p>{ i18n.T(ctx, "meeting_join.member_logged_in") }</p>
 		<form method="POST" action={ input.JoinSubmitPost(ctx) }>
-			<button type="submit">{ i18n.T(ctx, "meeting_join.signup_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "meeting_join.signup_button") }</button>
 		</form>
 	} else if input.SignupOpen {
 		<h3>{ i18n.T(ctx, "meeting_join.guest_heading") }</h3>
@@ -88,17 +88,17 @@ templ MeetingJoinContent(input MeetingJoinInput) {
 			})
 			<div>
 				<label for="guest_gender_quoted">{ i18n.T(ctx, "meeting_join.quoted_label") }</label>
-				<input type="checkbox" id="guest_gender_quoted" name="gender_quoted" value="true"/>
+				<input class="checkbox checkbox-sm" type="checkbox" id="guest_gender_quoted" name="gender_quoted" value="true"/>
 			</div>
 			if input.PrefilledMeetingSecret != "" {
 				<input type="hidden" name="meeting_secret" value={ input.PrefilledMeetingSecret }/>
 			} else {
 				<div>
 					<label for="meeting_secret">{ i18n.T(ctx, "meeting_join.meeting_secret_label") }</label>
-					<input type="password" id="meeting_secret" name="meeting_secret" required autocomplete="off"/>
+					<input class="input input-bordered input-sm" type="password" id="meeting_secret" name="meeting_secret" required autocomplete="off"/>
 				</div>
 			}
-			<button type="submit">{ i18n.T(ctx, "meeting_join.guest_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "meeting_join.guest_button") }</button>
 		</form>
 	} else {
 		<p>{ i18n.T(ctx, "meeting_join.signup_closed") }</p>

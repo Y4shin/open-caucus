@@ -281,7 +281,7 @@ func TestGuestSignup_PublishesManageSSE(t *testing.T) {
 		t.Fatalf("expected redirect to /live after guest signup: %v", err)
 	}
 
-	if err := managePage.Locator("#attendee-list-container .manage-attendee-card:has-text('Guest Via Join')").WaitFor(); err != nil {
+	if err := managePage.Locator("#attendee-list-container [data-testid='manage-attendee-card']:has-text('Guest Via Join')").WaitFor(); err != nil {
 		t.Fatalf("expected attendee propagated to manage page via SSE: %v", err)
 	}
 }
@@ -319,13 +319,13 @@ func TestGuestSignup_Quoted_SetsSpeakerQuotedBadge(t *testing.T) {
 	if err := page.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
 		t.Fatalf("click self-add regular: %v", err)
 	}
-	row := page.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+	row := page.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Quoted Via Join",
 	})
 	if err := row.WaitFor(); err != nil {
 		t.Fatalf("expected quoted guest row in live speakers list: %v", err)
 	}
-	if err := row.Locator(".live-badge:has-text('Quoted')").WaitFor(); err != nil {
+	if err := row.Locator("[data-testid='live-speaker-quoted-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected quoted badge in guest speaker row: %v", err)
 	}
 }
@@ -355,3 +355,4 @@ func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
 		t.Fatalf("expected join URL with meeting_secret query param, got: %v", href)
 	}
 }
+

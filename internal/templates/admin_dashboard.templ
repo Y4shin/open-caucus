@@ -37,6 +37,11 @@ type CommitteeListPartialInput struct {
 	Error      string
 }
 
+func (i *AdminDashboardInput) ParentUrl(ctx context.Context) *templ.SafeURL {
+	res := templ.URL(paths.Route.HomeGet(ctx, ""))
+	return &res
+}
+
 func (i *AdminDashboardInput) PageURL(ctx context.Context, page uint32) templ.SafeURL {
 	q := paths.AdminDashboardGetQueryParams{Page: strconv.FormatUint(uint64(page), 10)}
 	if i.Pagination.PageSize != pagination.DefaultPageSize {
@@ -88,9 +93,9 @@ templ CommitteeListPartial(input CommitteeListPartialInput) {
 										hx-target="#committee-list-container"
 										hx-swap="outerHTML"
 										hx-confirm={ i18n.T(ctx, "admin_dashboard.delete_confirm") }
-										class={ "inline-form" }
+										class={ "inline-form inline" }
 									>
-										<button type="submit">{ i18n.T(ctx, "admin_dashboard.delete_button") }</button>
+										<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "admin_dashboard.delete_button") }</button>
 									</form>
 								</td>
 							</tr>
@@ -113,6 +118,7 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 					Kind:  "info",
 				},
 			},
+			BackLink: input.ParentUrl(ctx),
 		},
 		AdminDashboardContent(input))
 }
@@ -120,7 +126,7 @@ templ AdminDashboardTemplate(input AdminDashboardInput) {
 templ AdminDashboardContent(input AdminDashboardInput) {
 	<h2>{ i18n.T(ctx, "admin_dashboard.committees_heading") }</h2>
 
-	<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
+	<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 		<h3>{ i18n.T(ctx, "admin_dashboard.add_committee_heading") }</h3>
 		<form
 			id="create-committee-form"
@@ -145,14 +151,14 @@ templ AdminDashboardContent(input AdminDashboardInput) {
 				Pattern: "[a-z0-9\\-]+",
 				Hint:    i18n.T(ctx, "admin_dashboard.slug_help"),
 			})
-			<button type="submit">{ i18n.T(ctx, "admin_dashboard.create_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "admin_dashboard.create_button") }</button>
 		</form>
 	</section>
 
-	<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
+	<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 		<h3>{ i18n.T(ctx, "admin_dashboard.existing_heading") }</h3>
 		@CommitteeListPartial(CommitteeListPartialInput{Committees: input.Committees, Error: input.Error})
-		<div class={ "centered-pagination-wrap" }>
+		<div class={ "centered-pagination-wrap flex justify-center" }>
 			@Pagination(input.PaginationArgs(ctx))
 		</div>
 	</section>

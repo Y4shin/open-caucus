@@ -81,7 +81,7 @@ func LiveDocButtonContent(input LiveCurrentDocInput) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{"live-speaker-history-button", "live-speaker-history-button", templ.KV("live-doc-btn--hidden", input.Doc == nil)}
+		var templ_7745c5c3_Var2 = []any{"live-speaker-history-button btn btn-sm btn-outline", "live-speaker-history-button btn btn-sm btn-outline", templ.KV("live-doc-btn--hidden", input.Doc == nil)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -178,7 +178,7 @@ func LiveCurrentDocContent(input LiveCurrentDocInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.Doc == nil {
-			var templ_7745c5c3_Var6 = []any{"live-empty-state", "live-doc-placeholder"}
+			var templ_7745c5c3_Var6 = []any{"live-empty-state text-base-content/70", "live-doc-placeholder"}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -214,14 +214,14 @@ func LiveCurrentDocContent(input LiveCurrentDocInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" class=\"live-doc-iframe\" title=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" class=\"live-doc-iframe w-full rounded-box border border-base-300 bg-white\" title=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(input.Doc.Filename)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `live_current_doc.templ`, Line: 79, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `live_current_doc.templ`, Line: 79, Col: 138}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {

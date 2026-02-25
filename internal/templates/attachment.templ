@@ -75,13 +75,13 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 		>
 			<div>
 				<label for={ "attachment-label-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "attachment.label_label") }</label>
-				<input type="text" id={ "attachment-label-" + input.AgendaPointIDStr } name="label"/>
+				<input class="input input-bordered input-sm" type="text" id={ "attachment-label-" + input.AgendaPointIDStr } name="label"/>
 			</div>
 			<div>
 				<label for={ "attachment-file-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "attachment.file_label") }</label>
-				<input type="file" id={ "attachment-file-" + input.AgendaPointIDStr } name="file" required/>
+				<input class="file-input file-input-bordered file-input-sm" type="file" id={ "attachment-file-" + input.AgendaPointIDStr } name="file" required/>
 			</div>
-			<button type="submit">{ i18n.T(ctx, "attachment.upload_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "attachment.upload_button") }</button>
 		</form>
 		if len(input.Attachments) == 0 {
 			<p>{ i18n.T(ctx, "attachment.empty_state") }</p>
@@ -101,27 +101,27 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 							hx-target={ "#" + input.containerID() }
 							hx-swap="outerHTML"
 							hx-confirm={ i18n.T(ctx, "attachment.delete_confirm") }
-							class={ "inline-form" }
+							class={ "inline-form inline" }
 						>
-							<button type="submit">{ i18n.T(ctx, "attachment.delete_button") }</button>
+							<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "attachment.delete_button") }</button>
 						</form>
 						if input.CurrentAttachmentID != nil && *input.CurrentAttachmentID == a.ID {
 							<form
 								hx-post={ input.clearCurrentPostStr(ctx) }
 								hx-target={ "#" + input.containerID() }
 								hx-swap="outerHTML"
-								class={ "inline-form" }
+								class={ "inline-form inline" }
 							>
-								<button type="submit">Clear</button>
+								<button class="btn btn-sm" type="submit">Clear</button>
 							</form>
 						} else {
 							<form
 								hx-post={ input.setCurrentAttachmentPostStr(ctx, a.IDString) }
 								hx-target={ "#" + input.containerID() }
 								hx-swap="outerHTML"
-								class={ "inline-form" }
+								class={ "inline-form inline" }
 							>
-								<button type="submit">Set as Current</button>
+								<button class="btn btn-sm" type="submit">Set as Current</button>
 							</form>
 						}
 					</li>

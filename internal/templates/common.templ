@@ -14,14 +14,14 @@ func errorTimeoutStr(timeoutMs []int) string {
 templ ErrorMessage(message string, timeoutMs ...int) {
 	if message != "" {
 		<div
-			class={ "error-text alert alert-error", "error-message-layout" }
+			class={ "error-text alert alert-error btn-error", "error-message-layout" }
 			data-error-message
 			data-error-timeout={ errorTimeoutStr(timeoutMs) }
 		>
 			<span>{ message }</span>
 			<button
 				type="button"
-				class={ "error-message-dismiss" }
+				class={ "error-message-dismiss btn-ghost" , "btn btn-sm"}
 				onclick="var p=this.closest('[data-error-message]');if(p)p.remove()"
 				aria-label="Dismiss"
 			>&#x00D7;</button>
@@ -58,13 +58,13 @@ type FormFieldInput struct {
 	Hint      string // renders as <small> below the input
 }
 
-// FormField renders a <div> containing a <label> and <input>, with an optional
+// FormField renders a <div> containing a <label> and <input class="input input-bordered input-sm">, with an optional
 // <small> hint. Use for text/password/email/number inputs. For checkboxes,
-// file inputs, or <select> elements keep the markup inline.
+// file inputs, or <select class="select select-bordered select-sm"> elements keep the markup inline.
 templ FormField(f FormFieldInput) {
 	<div>
 		<label for={ f.ID }>{ f.Label }</label>
-		<input
+		<input class="input input-bordered input-sm"
 			type={ f.Type }
 			id={ f.ID }
 			name={ f.Name }
@@ -78,5 +78,15 @@ templ FormField(f FormFieldInput) {
 		if f.Hint != "" {
 			<small>{ f.Hint }</small>
 		}
+	</div>
+}
+
+// ResponsiveContentPane centers content in the available space while keeping
+// the inner pane responsive: 90% width on phone, 2/3 width on desktop.
+templ ResponsiveContentPane(content templ.Component) {
+	<div class="flex h-full min-h-0 w-full flex-1 justify-center">
+		<div class="h-full min-h-0 w-[90%] md:w-2/3">
+			@content
+		</div>
 	</div>
 }

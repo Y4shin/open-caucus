@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-pre_cmd = ["go generate ./..."]
+pre_cmd = ["task css:build", "go generate ./..."]
 cmd = "go build -o ./tmp/main.exe ."
 bin = "tmp/main.exe"
 args_bin = ["serve"]

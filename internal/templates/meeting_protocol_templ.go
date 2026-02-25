@@ -152,7 +152,7 @@ func ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) templ.Com
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var6 = []any{"full-width-field w-full max-w-full"}
+		var templ_7745c5c3_Var6 = []any{"full-width-field w-full max-w-full", "textarea textarea-bordered"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -177,20 +177,20 @@ func ProtocolAgendaPointPartial(input ProtocolAgendaPointPartialInput) templ.Com
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPoint.Protocol)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_protocol.templ`, Line: 67, Col: 113}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_protocol.templ`, Line: 67, Col: 143}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</textarea> <button type=\"submit\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</textarea> <button class=\"btn btn-sm\" type=\"submit\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "meeting_protocol.save_button"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_protocol.templ`, Line: 68, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_protocol.templ`, Line: 68, Col: 89}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -279,7 +279,7 @@ func MeetingProtocolContent(input MeetingProtocolInput) templ.Component {
 			}
 		} else {
 			for _, ap := range input.AgendaPoints {
-				var templ_7745c5c3_Var13 = []any{"panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm"}
+				var templ_7745c5c3_Var13 = []any{"panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

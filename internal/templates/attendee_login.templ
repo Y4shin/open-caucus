@@ -34,8 +34,8 @@ templ AttendeeLoginContent(input AttendeeLoginInput) {
 	<form method="POST" action={ input.LoginSubmitPost(ctx) }>
 		<div>
 			<label for="secret">{ i18n.T(ctx, "attendee_login.secret_label") }</label>
-			<input type="text" id="secret" name="secret" required autocomplete="off"/>
+			<input class="input input-bordered input-sm" type="text" id="secret" name="secret" required autocomplete="off"/>
 		</div>
-		<button type="submit">{ i18n.T(ctx, "attendee_login.button") }</button>
+		<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "attendee_login.button") }</button>
 	</form>
 }

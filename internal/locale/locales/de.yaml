@@ -4,11 +4,13 @@ de:
     no: "Nein"
     logout: "Abmelden"
     logged_in_as: "Angemeldet als %s"
+    app_name: "Konferenz Tool"
 
   home:
-    page_title: "Meine Ausschüsse - Konferenztool"
+    page_title: "Meine Ausschüsse"
     title: "Meine Ausschüsse"
     no_committees: "Du bist kein Mitglied eines Ausschusses."
+    goto_committee: "Zum Ausschuss: %s"
     admin_link: "Admin-Dashboard"
 
   login:

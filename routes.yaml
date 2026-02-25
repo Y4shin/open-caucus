@@ -969,6 +969,20 @@ routes:
           type: MeetingListPartial
           input_type: MeetingListPartialInput
 
+  # Toggle Meeting Signup Open
+  - path: /committee/{slug}/meeting/{meeting_id}/signup-open-toggle
+    methods:
+      - verb: POST
+        handler: CommitteeToggleMeetingSignupOpen
+        middleware:
+          - session
+          - auth
+          - committee_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: MeetingListPartial
+          input_type: MeetingListPartialInput
+
   # Meeting Join Page
   - path: /committee/{slug}/meeting/{meeting_id}/join
     methods:

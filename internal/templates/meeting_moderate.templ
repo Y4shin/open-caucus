@@ -2,7 +2,6 @@ package templates
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
 )
@@ -44,10 +43,10 @@ func (i *AgendaPointListPartialInput) moderateAgendaPartialGetStr(ctx context.Co
 	return paths.NewCommitteeSlugMeetingMeetingIdModerateAgendaRoute(i.CommitteeSlug, i.IDString).ModerateAgendaPartialGet(ctx, "")
 }
 
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 // Compact Agenda Partial  id="moderate-agenda-compact"
 // Served by ModerateAgendaPartial GET and refreshed via htmx trigger
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 
 templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 	<div
@@ -55,55 +54,61 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 		hx-get={ input.moderateAgendaPartialGetStr(ctx) }
 		hx-trigger="reload"
 		hx-swap="outerHTML"
+		class="space-y-2"
 	>
 		if len(input.AgendaPoints) == 0 {
-			<p class={ "moderate-empty-state" }>No agenda points.</p>
+			<p class="text-sm text-base-content/70">No agenda points.</p>
 		} else {
-			for _, ap := range input.AgendaPoints {
-				<div
-					class={
-						"moderate-agenda-item",
-						templ.KV("moderate-agenda-item-active", ap.IsActive),
-						templ.KV("manage-agenda-point-card-child", ap.ParentID != nil),
-					}
-				>
-					<span class={ "moderate-agenda-position" }>{ input.AgendaPointDisplayNumber(ap) }</span>
-					<span class={ "moderate-agenda-item-title" }>{ ap.Title }</span>
-					if !ap.IsActive {
-						<form
-							hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
-							hx-target="#agenda-point-list-container"
-							hx-swap="outerHTML"
-							hx-on::after-request="if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')"
-							class={ "inline-form" }
-						>
-							<button
-								type="submit"
-								class={ "manage-agenda-action-button" }
-								title="Activate agenda point"
-								aria-label="Activate agenda point"
+			<ul class="list rounded-box border border-base-300 bg-base-100">
+				for _, ap := range input.AgendaPoints {
+					<li
+						class={
+							"list-row items-center gap-3",
+							templ.KV("bg-primary/10", ap.IsActive),
+							templ.KV("pl-8", ap.ParentID != nil),
+						}
+					>
+						<span class="badge badge-outline">{ input.AgendaPointDisplayNumber(ap) }</span>
+						<span class={ "flex-1 truncate", templ.KV("font-semibold", ap.IsActive) }>{ ap.Title }</span>
+						if ap.IsActive {
+							<span class="badge badge-success badge-sm">Active</span>
+						} else {
+							<form
+								hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
+								hx-target="#agenda-point-list-container"
+								hx-swap="outerHTML"
+								hx-on::after-request="if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')"
+								class={ "inline-form inline" }
 							>
-								@Icon(IconCheckCircle, "", "manage-agenda-action-icon")
-							</button>
-						</form>
-					}
-				</div>
-			}
+								<button
+									type="submit"
+									class={ "manage-agenda-action-button btn btn-sm btn-square" }
+									title="Activate agenda point"
+									aria-label="Activate agenda point"
+								>
+									@Icon(IconCheckCircle, "", "manage-agenda-action-icon")
+								</button>
+							</form>
+						}
+					</li>
+				}
+			</ul>
 		}
 	</div>
 }
 
-// ─────────────────────────────────────────────────────────
-// Agenda Card — left column, top half
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 
 templ ModerateAgendaCard(input AgendaPointListPartialInput) {
-	<section class={ "moderate-card", "moderate-card-half" }>
-		<div class={ "moderate-card-header" }>
-			<h2 class={ "moderate-card-title" }>Agenda</h2>
+	<section class="card h-full min-h-0 border border-base-300 bg-base-100 shadow-sm">
+		<div class="card-body min-h-0 p-4">
+			<div class="mb-3 flex items-center justify-between gap-2">
+				<h2 class="text-lg font-semibold">Agenda</h2>
 			<button
 				type="button"
-				class={ "manage-agenda-action-button" }
+				class={ "manage-agenda-action-button btn btn-sm btn-square" }
 				data-manage-dialog-open
 				aria-controls="moderate-agenda-edit-dialog"
 				title="Edit agenda"
@@ -111,51 +116,51 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 			>
 				@Icon(IconSettings, "", "manage-agenda-action-icon")
 			</button>
-		</div>
-		<div class={ "moderate-card-body" }>
+			</div>
 			@ModerateAgendaCompactPartial(input)
 		</div>
-		<dialog id="moderate-agenda-edit-dialog" class={ "manage-speaker-add-dialog" } data-manage-dialog>
-			<div class={ "manage-speaker-add-dialog-header" }>
-				<h3>Edit Agenda</h3>
-				<button type="button" class={ "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
-			</div>
-			<div class={ "manage-speaker-add-search-wrap" }>
+		<dialog id="moderate-agenda-edit-dialog" class="modal" data-manage-dialog>
+			<div class="modal-box w-11/12 max-w-5xl">
+				<div class="mb-4 flex items-center justify-between gap-2">
+					<h3 class="text-lg font-semibold">Edit Agenda</h3>
+					<button type="button" class={ "manage-speaker-add-dialog-close btn btn-sm btn-ghost" } data-manage-dialog-close>Close</button>
+				</div>
 				@AgendaPointListPartial(input)
 			</div>
+			<form method="dialog" class="modal-backdrop">
+				<button aria-label="Close">close</button>
+			</form>
 		</dialog>
 	</section>
 }
 
-// ─────────────────────────────────────────────────────────
-// Tools Card — left column, bottom half
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 
 templ ModerateToolsCard(input ModeratePageInput) {
-	<section class={ "moderate-card", "moderate-card-half" }>
-		<div class={ "moderate-card-header" }>
-			<h2 class={ "moderate-card-title" }>Tools</h2>
-		</div>
-		<div class={ "moderate-card-body" }>
+	<section class="card h-full min-h-0 border border-base-300 bg-base-100 shadow-sm">
+		<div class="card-body min-h-0 space-y-5 p-4">
+			<h2 class="text-lg font-semibold">Tools</h2>
 			if !input.HasActiveAP {
-				<p class={ "moderate-empty-state" }>No active agenda point.</p>
+				<p class="text-sm text-base-content/70">No active agenda point.</p>
 			} else {
-				<div>
-					<div class={ "manage-card-header-row" }>
-						<strong>Attachments</strong>
-						<button
+				<div class="space-y-2">
+					<div class="flex items-center justify-between gap-2">
+						<strong class="text-base">Attachments</strong>
+						<button class="btn btn-sm btn-outline"
 							type="button"
 							data-manage-dialog-open
 							aria-controls={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
 						>Manage Files</button>
 					</div>
 					if len(input.Attachments.Attachments) == 0 {
-						<p class={ "moderate-empty-state" }>No attachments.</p>
+						<p class="text-sm text-base-content/70">No attachments.</p>
 					} else {
-						<ul>
+						<ul class="list rounded-box border border-base-300 bg-base-100">
 							for _, a := range input.Attachments.Attachments {
-								<li>
-									<a href={ templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)) }>
+								<li class="list-row">
+									<a class="link link-primary" href={ templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)) }>
 										if a.Label != "" {
 											{ a.Label } ({ a.Filename })
 										} else {
@@ -167,22 +172,22 @@ templ ModerateToolsCard(input ModeratePageInput) {
 						</ul>
 					}
 				</div>
-				<div>
-					<div class={ "manage-card-header-row" }>
-						<strong>Motions</strong>
-						<button
+				<div class="space-y-2">
+					<div class="flex items-center justify-between gap-2">
+						<strong class="text-base">Motions</strong>
+						<button class="btn btn-sm btn-outline"
 							type="button"
 							data-manage-dialog-open
 							aria-controls={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
 						>Manage Motions</button>
 					</div>
 					if len(input.Motions.Motions) == 0 {
-						<p class={ "moderate-empty-state" }>No motions.</p>
+						<p class="text-sm text-base-content/70">No motions.</p>
 					} else {
-						<ul>
+						<ul class="list rounded-box border border-base-300 bg-base-100">
 							for _, m := range input.Motions.Motions {
-								<li>
-									<a href={ templ.URL(paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(input.CommitteeSlug, input.IDString, m.BlobIDString).ServeBlobDownloadGet(ctx, "")) }>
+								<li class="list-row">
+									<a class="link link-primary" href={ templ.URL(paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(input.CommitteeSlug, input.IDString, m.BlobIDString).ServeBlobDownloadGet(ctx, "")) }>
 										{ m.Title } ({ m.Filename })
 									</a>
 								</li>
@@ -195,81 +200,90 @@ templ ModerateToolsCard(input ModeratePageInput) {
 		if input.HasActiveAP {
 			<dialog
 				id={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
-				class={ "manage-speaker-add-dialog" }
+				class="modal"
 				data-manage-dialog
 			>
-				<div class={ "manage-speaker-add-dialog-header" }>
-					<h3>{ input.ActiveAPTitle } — Attachments</h3>
-					<button type="button" class={ "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
+				<div class="modal-box w-11/12 max-w-5xl">
+					<div class="mb-4 flex items-center justify-between gap-2">
+						<h3 class="text-lg font-semibold">{ input.ActiveAPTitle } - Attachments</h3>
+						<button type="button" class={ "manage-speaker-add-dialog-close btn btn-sm btn-ghost" } data-manage-dialog-close>Close</button>
+					</div>
+					@AttachmentListPartial(input.Attachments)
 				</div>
-				@AttachmentListPartial(input.Attachments)
+				<form method="dialog" class="modal-backdrop">
+					<button aria-label="Close">close</button>
+				</form>
 			</dialog>
 			<dialog
 				id={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
-				class={ "manage-speaker-add-dialog" }
+				class="modal"
 				data-manage-dialog
 			>
-				<div class={ "manage-speaker-add-dialog-header" }>
-					<h3>{ input.ActiveAPTitle } - Motions</h3>
-					<button type="button" class={ "manage-speaker-add-dialog-close" } data-manage-dialog-close>Close</button>
+				<div class="modal-box w-11/12 max-w-5xl">
+					<div class="mb-4 flex items-center justify-between gap-2">
+						<h3 class="text-lg font-semibold">{ input.ActiveAPTitle } - Motions</h3>
+						<button type="button" class={ "manage-speaker-add-dialog-close btn btn-sm btn-ghost" } data-manage-dialog-close>Close</button>
+					</div>
+					@MotionListPartial(input.Motions)
 				</div>
-				@MotionListPartial(input.Motions)
+				<form method="dialog" class="modal-backdrop">
+					<button aria-label="Close">close</button>
+				</form>
 			</dialog>
 		}
 	</section>
 }
-
-// ─────────────────────────────────────────────────────────
-// Speakers Content — quick controls + rows, no settings/add
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 
 templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 	@ErrorMessage(input.Error)
 	if input.CurrentAgendaPointID == nil {
-		<p class={ "moderate-empty-state" }>No active agenda point.</p>
+		<p class="text-sm text-base-content/70">No active agenda point.</p>
 	} else {
-		<div class={ "manage-speakers-quick-control-wrap" }>
-			if current := input.CurrentSpeaker(); current != nil {
-				<form
-					hx-post={ input.SpeakerEndPostStr(ctx, current) }
-					hx-target="#speakers-list-container"
-					hx-swap="outerHTML"
-					class={ "inline-form", "manage-speakers-quick-control-form" }
-				>
-					<button
-						type="submit"
-						class={ "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-end" }
-						title="End current speech"
-						aria-label="End current speech"
+		<div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+			<div class="flex flex-wrap items-center gap-2">
+				if current := input.CurrentSpeaker(); current != nil {
+					<form
+						hx-post={ input.SpeakerEndPostStr(ctx, current) }
+						hx-target="#speakers-list-container"
+						hx-swap="outerHTML"
+						class={ "inline-form inline" }
 					>
-						@Icon(IconCheckCircle, "", "ui-icon--left")
-						End Speech
-					</button>
-				</form>
-			} else if next := input.NextWaitingSpeaker(); next != nil {
-				<form
-					hx-post={ input.SpeakerStartPostStr(ctx, next) }
-					hx-target="#speakers-list-container"
-					hx-swap="outerHTML"
-					class={ "inline-form", "manage-speakers-quick-control-form" }
-				>
-					<button
-						type="submit"
-						class={ "manage-speakers-quick-control-button", "manage-speakers-quick-control-button-start" }
-						title="Start next speaker"
-						aria-label="Start next speaker"
+						<button
+							type="submit"
+							class="btn btn-sm btn-success whitespace-nowrap"
+							title="End current speech"
+							aria-label="End current speech"
+						>
+							@Icon(IconCheckCircle, "", "ui-icon--left")
+							End Speech
+						</button>
+					</form>
+				} else if next := input.NextWaitingSpeaker(); next != nil {
+					<form
+						hx-post={ input.SpeakerStartPostStr(ctx, next) }
+						hx-target="#speakers-list-container"
+						hx-swap="outerHTML"
+						class={ "inline-form inline" }
 					>
-						@Icon(IconArrowForward, "", "ui-icon--left")
-						Start Next Speaker
-					</button>
-				</form>
-			}
-		</div>
-		if len(input.Speakers) > 0 {
-			<div class={ "manage-speakers-scroll-reset-wrap" }>
+						<button
+							type="submit"
+							class="btn btn-sm btn-primary whitespace-nowrap"
+							title="Start next speaker"
+							aria-label="Start next speaker"
+						>
+							@Icon(IconArrowForward, "", "ui-icon--left")
+							Start Next Speaker
+						</button>
+					</form>
+				}
+			</div>
+			if len(input.Speakers) > 0 {
 				<button
 					type="button"
-					class={ "manage-speakers-scroll-reset-button" }
+					class="btn btn-sm btn-ghost whitespace-nowrap"
 					data-manage-speakers-reset-scroll
 					title="Scroll to active position"
 					aria-label="Scroll to active position"
@@ -277,99 +291,99 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 					@Icon(IconHistory, "", "ui-icon--left")
 					Scroll To Active Position
 				</button>
-			</div>
-		}
+			}
+		</div>
 		if len(input.Speakers) == 0 {
-			<p class={ "manage-speakers-rows" }>No speakers in the queue.</p>
+			<p class="text-sm text-base-content/70">No speakers in the queue.</p>
 		} else {
-			<div
-				class={ "live-speaker-list", "manage-speakers-rows", "manage-speakers-rows-list" }
+			<ul
+				class={ "list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1", "live-speaker-list" }
 				data-manage-speakers-viewport
 			>
 				for _, s := range input.Speakers {
-					<div
-						class={ "manage-speakers-row-wrap" }
-						data-manage-scroll-anchor={ strconv.FormatBool(input.IsInitialScrollSpeaker(s)) }
-					>
-						@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s))
-					</div>
+					@LiveSpeakerCard(input.asLiveSpeakerContext(), s, input.CardVariant(s), input.ActionsForSpeaker(ctx, s), input.IsInitialScrollSpeaker(s))
 				}
-			</div>
+			</ul>
 		}
 	}
 }
-
-// ─────────────────────────────────────────────────────────
-// Speakers Card — right column, top (2/3 height)
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Keeps id="speakers-list-container" for OOB swap compatibility
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 
 templ ModerateSpeakersCard(input SpeakersListPartialInput) {
-	<section class={ "moderate-card", "moderate-card-two-thirds" }>
-		<div class={ "moderate-card-header" }>
-			<h2 class={ "moderate-card-title" }>Speakers</h2>
-		</div>
-		<div class={ "moderate-card-body" }>
+	<section class="card min-h-0 flex-[2] border border-base-300 bg-base-100 shadow-sm">
+		<div class="card-body flex min-h-0 flex-col p-4">
+			<h2 class="mb-3 text-lg font-semibold">Speakers</h2>
 			<div
 				id="speakers-list-container"
 				sse-swap="manage-speakers-list-updated"
 				hx-swap="outerHTML"
+				class="flex min-h-0 flex-1 flex-col"
 			>
 				@ModerateSpeakersContent(input)
 			</div>
 		</div>
 	</section>
 }
-
-// ─────────────────────────────────────────────────────────
-// Attendees Card — right column, bottom (1/3 height)
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Reuses SpeakerAddCandidatesPartial for adding speakers inline
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 
 templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
-	<section class={ "moderate-card", "moderate-card-one-third" }>
-		<div class={ "moderate-card-header" }>
-			<h2 class={ "moderate-card-title" }>Add Speaker</h2>
-		</div>
-		<div class={ "moderate-card-body", "moderate-attendees-section" }>
-			<div class={ "moderate-search-wrap" }>
-				<label class={ "manage-speakers-field-label" } for="moderate-speaker-search">Search name or number</label>
-				<input
-					type="text"
-					id="moderate-speaker-search"
-					name="q"
-					placeholder="Type name or number"
-					hx-get={ speakers.SpeakerAddCandidatesPartialGetStr(ctx) }
-					hx-target="#speaker-add-candidates-container"
-					hx-swap="outerHTML"
-					hx-trigger="input changed delay:180ms, search"
-				/>
+	<section class="card min-h-0 flex-1 border border-base-300 bg-base-100 shadow-sm">
+		<div class="card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<h2 class="text-lg font-semibold">Add Speaker</h2>
+				<div class="join w-full max-w-full sm:w-auto sm:min-w-[24rem]">
+					<input class="input input-bordered input-sm join-item min-w-0 flex-1"
+						type="text"
+						id="moderate-speaker-search"
+						name="q"
+						placeholder="Search name or number"
+						hx-get={ speakers.SpeakerAddCandidatesPartialGetStr(ctx) }
+						hx-target="#speaker-add-candidates-container"
+						hx-swap="outerHTML"
+						hx-trigger="input changed delay:180ms, search"
+						hx-sync="this:replace"
+					/>
+					<button
+						type="button"
+						class="btn btn-sm btn-square join-item border-base-300 bg-base-100 text-base-content/70 shadow-none hover:bg-base-200 hover:text-base-content"
+						aria-label="Clear search"
+						onclick="var i=document.getElementById('moderate-speaker-search'); if(!i)return; i.value=''; i.dispatchEvent(new Event('input',{bubbles:true})); i.focus();"
+					>
+						@Icon(IconClose, "", "")
+					</button>
+				</div>
 			</div>
-			@SpeakerAddCandidatesPartial(speakers)
+			<div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1">
+				@SpeakerAddCandidatesPartial(speakers)
+			</div>
 		</div>
 	</section>
 }
-
-// ─────────────────────────────────────────────────────────
-// SSE-Dependent Partial — right column
+// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Replaced entirely on "moderate-updated" SSE event
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 
 templ ModerateDependentPartial(input ModerateDependentPartialInput) {
 	<div
 		id="moderate-dependent-container"
 		sse-swap="moderate-updated"
 		hx-swap="outerHTML"
-		class={ "moderate-col" }
+		class="flex min-h-0 flex-col gap-4"
 	>
 		@ModerateSpeakersCard(input.Speakers)
 		@ModerateAttendeesCard(input.Speakers)
 	</div>
 }
-
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 // Full Page Template
-// ─────────────────────────────────────────────────────────
+// ---------------------------------------------------------
 
 templ MeetingModerateTemplate(input ModeratePageInput) {
 	@PageTemplate("Moderate: "+input.MeetingName+" - "+input.CommitteeName, false, true,
@@ -385,9 +399,9 @@ templ MeetingModerateContent(input ModeratePageInput) {
 		id="moderate-sse-root"
 		hx-ext="sse"
 		data-stream-url={ input.moderateStreamGetStr(ctx) }
-		class={ "moderate-grid" }
+		class="grid min-h-0 flex-1 gap-4 lg:grid-cols-2 lg:[grid-auto-rows:minmax(0,1fr)]"
 	>
-		<div class={ "moderate-col" }>
+		<div class="flex min-h-0 flex-col gap-4">
 			@ModerateAgendaCard(input.AgendaPoints)
 			@ModerateToolsCard(input)
 		</div>
@@ -461,10 +475,25 @@ templ MeetingModerateContent(input ModeratePageInput) {
 			function applyManageSpeakersInitialScroll() {
 				var viewport = getManageSpeakersViewport();
 				if (!viewport) { return; }
+				function nudgePreviousRowOut(anchor) {
+					var prevRow = anchor ? anchor.previousElementSibling : null;
+					if (!prevRow) { return; }
+					var prevRect = prevRow.getBoundingClientRect();
+					var vpRect = viewport.getBoundingClientRect();
+					var overlap = prevRect.bottom - (vpRect.top + 1);
+					if (overlap > -1) {
+						viewport.scrollTop = Math.max(0, viewport.scrollTop + overlap + 8);
+					}
+				}
 				var anchor = viewport.querySelector("[data-manage-scroll-anchor='true']");
 				if (anchor) {
 					var anchorTop = anchor.offsetTop - viewport.offsetTop;
-					viewport.scrollTop = Math.max(0, anchorTop + 2);
+					var anchorMarginTop = parseFloat(window.getComputedStyle(anchor).marginTop || "0");
+					viewport.scrollTop = Math.max(0, anchorTop + anchorMarginTop + 2);
+					nudgePreviousRowOut(anchor);
+					window.requestAnimationFrame(function() {
+						nudgePreviousRowOut(anchor);
+					});
 				} else {
 					viewport.scrollTop = 0;
 				}
@@ -484,6 +513,57 @@ templ MeetingModerateContent(input ModeratePageInput) {
 					var resetBtn = event.target.closest("[data-manage-speakers-reset-scroll]");
 					if (!resetBtn) { return; }
 					restoreManageSpeakersInitialScroll();
+				});
+			}
+
+			function wireSpeakerSearchEnterAdd() {
+				function isSearchInput(target) {
+					return target instanceof HTMLInputElement && (target.id === "speaker-add-search-input" || target.id === "moderate-speaker-search");
+				}
+
+				function clearAndRefocus(input) {
+					input.value = "";
+					input.dispatchEvent(new Event("input", { bubbles: true }));
+					function applyFocus() {
+						if (typeof input.focus === "function") {
+							input.focus({ preventScroll: true });
+						}
+					}
+					window.requestAnimationFrame(function() {
+						applyFocus();
+					});
+					window.setTimeout(applyFocus, 50);
+					window.setTimeout(applyFocus, 150);
+				}
+
+				document.addEventListener("keydown", function(event) {
+					if (event.key !== "Enter") { return; }
+
+					var input = event.target;
+					if (!isSearchInput(input)) { return; }
+					if (input.value.trim() === "") { return; }
+
+					event.preventDefault();
+					var candidates = document.getElementById("speaker-add-candidates-container");
+					if (!candidates) { return; }
+
+					var firstRegularButton = candidates.querySelector("button[data-speaker-add-regular='true']");
+					if (!(firstRegularButton instanceof HTMLButtonElement) || firstRegularButton.disabled) { return; }
+
+					input.dataset.enterAddPending = "true";
+					firstRegularButton.click();
+				});
+
+				document.addEventListener("htmx:afterRequest", function(event) {
+					var source = event.detail && event.detail.elt;
+					if (!(source instanceof Element) || !source.closest("#speaker-add-candidates-container")) { return; }
+
+					var pendingInput = document.querySelector("input[data-enter-add-pending='true']");
+					if (!(pendingInput instanceof HTMLInputElement)) { return; }
+
+					delete pendingInput.dataset.enterAddPending;
+					if (!event.detail.successful) { return; }
+					clearAndRefocus(pendingInput);
 				});
 			}
 
@@ -513,6 +593,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 			updateSpeakingTimers();
 			applyManageSpeakersInitialScroll();
 			window.setTimeout(applyManageSpeakersInitialScroll, 40);
+			window.setTimeout(applyManageSpeakersInitialScroll, 180);
 			window.setInterval(updateSpeakingTimers, 1000);
 			document.addEventListener("htmx:afterSwap", function(event) {
 				updateSpeakingTimers();
@@ -523,6 +604,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 			});
 			wireManageDialogs();
 			wireManageSpeakersControls();
+			wireSpeakerSearchEnterAdd();
 
 			// Closing the agenda edit dialog reloads the compact agenda list
 			document.addEventListener("close", function(e) {
@@ -534,3 +616,4 @@ templ MeetingModerateContent(input ModeratePageInput) {
 		})();
 	</script>
 }
+

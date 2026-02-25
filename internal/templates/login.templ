@@ -24,23 +24,17 @@ templ LoginPageTemplate(input LoginPageInput) {
 
 templ LoginPageContent(input LoginPageInput) {
 	@ErrorMessage(input.Error)
+	<form class="w-full h-full flex justify-center align-center" method="POST" action={ input.LoginSubmitPost(ctx) }>
+	<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+		<legend class="fieldset-legend">Login</legend>
 
-	<form method="POST" action={ input.LoginSubmitPost(ctx) }>
-		@FormField(FormFieldInput{
-			ID:       "username",
-			Name:     "username",
-			Label:    i18n.T(ctx, "login.username_label"),
-			Type:     "text",
-			Value:    input.Username,
-			Required: true,
-		})
-		@FormField(FormFieldInput{
-			ID:       "password",
-			Name:     "password",
-			Label:    i18n.T(ctx, "login.password_label"),
-			Type:     "password",
-			Required: true,
-		})
-		<button type="submit">{ i18n.T(ctx, "login.button") }</button>
+		<label class="label">{i18n.T(ctx, "login.username_label")}</label>
+		<input type="text" name="username" id="username" class="input" placeholder={i18n.T(ctx, "login.username_label")} required />
+
+		<label class="label">{i18n.T(ctx, "login.password_label")}</label>
+		<input type="password" name="password" id="password" class="input" placeholder={i18n.T(ctx, "login.password_label")} required />
+
+		<button class="btn btn-neutral mt-4">{ i18n.T(ctx, "login.button") }</button>
+		</fieldset>
 	</form>
 }

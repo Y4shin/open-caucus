@@ -64,7 +64,7 @@ func addAgendaPoint(t *testing.T, page playwright.Page, title string) {
 	if err := page.Locator("#agenda-point-list-container input[name=title]").Fill(title); err != nil {
 		t.Fatalf("fill agenda title: %v", err)
 	}
-	if err := page.Locator("#agenda-point-list-container .manage-agenda-add-form button[type=submit]").Click(); err != nil {
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-add-form'] button[type=submit]").Click(); err != nil {
 		t.Fatalf("submit agenda form: %v", err)
 	}
 }
@@ -80,7 +80,7 @@ func openSpeakerAddDialog(t *testing.T, page playwright.Page) {
 }
 
 func speakerCandidateCard(page playwright.Page, name string) playwright.Locator {
-	return page.Locator("#speaker-add-candidates-container .manage-speaker-candidate-card").Filter(playwright.LocatorFilterOptions{
+	return page.Locator("#speaker-add-candidates-container [data-testid='manage-speaker-candidate-card']").Filter(playwright.LocatorFilterOptions{
 		HasText: name,
 	})
 }
@@ -103,7 +103,7 @@ func TestAgendaPoint_CreateAndShow(t *testing.T) {
 	urlBefore := page.URL()
 	addAgendaPoint(t, page, "Opening Remarks")
 
-	if err := page.Locator("#agenda-point-list-container .manage-agenda-point-card:has-text('Opening Remarks')").WaitFor(); err != nil {
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Opening Remarks')").WaitFor(); err != nil {
 		t.Fatalf("expected agenda point card: %v", err)
 	}
 	if page.URL() != urlBefore {
@@ -127,7 +127,7 @@ func TestAgendaPoint_CreateSubAgendaPoint(t *testing.T) {
 	}
 
 	addAgendaPoint(t, page, "Parent Item")
-	if err := page.Locator("#agenda-point-list-container .manage-agenda-point-card:has-text('Parent Item')").WaitFor(); err != nil {
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Parent Item')").WaitFor(); err != nil {
 		t.Fatalf("expected parent agenda card: %v", err)
 	}
 
@@ -139,11 +139,11 @@ func TestAgendaPoint_CreateSubAgendaPoint(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("select parent agenda point: %v", err)
 	}
-	if err := page.Locator("#agenda-point-list-container .manage-agenda-add-form button[type=submit]").Click(); err != nil {
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-add-form'] button[type=submit]").Click(); err != nil {
 		t.Fatalf("submit child agenda form: %v", err)
 	}
 
-	if err := page.Locator("#agenda-point-list-container .manage-agenda-point-card:has-text('Child Item'):has-text('Child')").WaitFor(); err != nil {
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Child Item'):has-text('Child')").WaitFor(); err != nil {
 		t.Fatalf("expected child agenda card: %v", err)
 	}
 }
@@ -165,7 +165,7 @@ func TestAgendaPoint_Activate(t *testing.T) {
 	}
 
 	urlBefore := page.URL()
-	card := page.Locator("#agenda-point-list-container .manage-agenda-point-card").Filter(playwright.LocatorFilterOptions{
+	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Item One",
 	})
 	if err := card.Locator("button[title='Activate agenda point']").Click(); err != nil {
@@ -177,7 +177,7 @@ func TestAgendaPoint_Activate(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("expected activate button to disappear after activation: %v", err)
 	}
-	if err := card.Locator(".manage-agenda-point-badge-active, [class*='ManageAgendaPointBadgeActive']").WaitFor(); err != nil {
+	if err := card.Locator("[data-testid='manage-agenda-active-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected active badge on activated agenda point: %v", err)
 	}
 	if page.URL() != urlBefore {
@@ -200,7 +200,7 @@ func TestAgendaPoint_Delete(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	card := page.Locator("#agenda-point-list-container .manage-agenda-point-card").Filter(playwright.LocatorFilterOptions{
+	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Deletable Item",
 	})
 	if err := card.WaitFor(); err != nil {
@@ -216,7 +216,7 @@ func TestAgendaPoint_Delete(t *testing.T) {
 		t.Fatalf("click delete: %v", err)
 	}
 
-	if err := page.Locator("#agenda-point-list-container .manage-agenda-point-card:has-text('Deletable Item')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Deletable Item')").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected agenda point to disappear: %v", err)
@@ -269,8 +269,89 @@ func TestSpeakersList_AddSpeaker(t *testing.T) {
 		t.Fatalf("add regular speech: %v", err)
 	}
 
-	if err := page.Locator("#speakers-list-container .live-speaker-row:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected speaker in list: %v", err)
+	}
+}
+
+// TestSpeakersList_SearchEnterAddsBestMatch verifies Enter behavior in the
+// add-speaker search: add top candidate as regular, clear input, keep focus,
+// and do not add duplicates when regular waiting already exists.
+func TestSpeakersList_SearchEnterAddsBestMatch(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alice Member", "secret-alice")
+	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alicia Member", "secret-alicia")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	openSpeakerAddDialog(t, page)
+	search := page.Locator("#speaker-add-search-input")
+	if err := search.Fill("alice"); err != nil {
+		t.Fatalf("fill search input: %v", err)
+	}
+
+	firstCandidate := page.Locator("#speaker-add-candidates-container [data-testid='manage-speaker-candidate-card']").First()
+	if err := firstCandidate.WaitFor(); err != nil {
+		t.Fatalf("wait first candidate card: %v", err)
+	}
+	if err := firstCandidate.Locator("text=Alice Member").WaitFor(); err != nil {
+		t.Fatalf("expected best match candidate first: %v", err)
+	}
+
+	if err := search.Press("Enter"); err != nil {
+		t.Fatalf("press enter in search: %v", err)
+	}
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").WaitFor(); err != nil {
+		t.Fatalf("expected Enter to add top candidate: %v", err)
+	}
+
+	value, err := search.InputValue()
+	if err != nil {
+		t.Fatalf("read search value after enter-add: %v", err)
+	}
+	if value != "" {
+		t.Fatalf("expected search input to be cleared after enter-add, got %q", value)
+	}
+
+	openSpeakerAddDialog(t, page)
+	search = page.Locator("#speaker-add-search-input")
+	if err := search.Fill("alice"); err != nil {
+		t.Fatalf("fill search input second time: %v", err)
+	}
+	disabled, err := speakerCandidateCard(page, "Alice Member").Locator("button[title='Add regular speech']").IsDisabled()
+	if err != nil {
+		t.Fatalf("read regular button disabled state: %v", err)
+	}
+	if !disabled {
+		t.Fatalf("expected regular button to be disabled once attendee is already waiting regular")
+	}
+
+	countBefore, err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").Count()
+	if err != nil {
+		t.Fatalf("count alice rows before second enter: %v", err)
+	}
+	if err := search.Press("Enter"); err != nil {
+		t.Fatalf("press enter with disabled top regular candidate: %v", err)
+	}
+	if _, err := page.Evaluate(`() => new Promise((resolve) => setTimeout(resolve, 250))`, nil); err != nil {
+		t.Fatalf("wait after second enter: %v", err)
+	}
+	countAfter, err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").Count()
+	if err != nil {
+		t.Fatalf("count alice rows after second enter: %v", err)
+	}
+	if countAfter != countBefore {
+		t.Fatalf("expected no duplicate speaker added on second enter, before=%d after=%d", countBefore, countAfter)
 	}
 }
 
@@ -296,7 +377,7 @@ func TestSpeakersList_OneNonDoneEntryPerType(t *testing.T) {
 	if err := card.Locator("button[title='Add regular speech']").Click(); err != nil {
 		t.Fatalf("add first regular speech: %v", err)
 	}
-	if err := page.Locator("#speakers-list-container .live-speaker-row:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected speaker row after first add: %v", err)
 	}
 
@@ -351,20 +432,20 @@ func TestSpeakersList_StartEnd(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	row := page.Locator("#speakers-list-container .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+	row := page.Locator("#speakers-list-container [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Bob Member",
 	})
 	if err := row.Locator("button[title='Start']").Click(); err != nil {
 		t.Fatalf("click start: %v", err)
 	}
-	if err := page.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('Bob Member')").WaitFor(); err != nil {
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Bob Member')").WaitFor(); err != nil {
 		t.Fatalf("expected speaking row: %v", err)
 	}
 
-	if err := row.Locator("button[title='End']").Click(); err != nil {
+	if err := page.Locator("[data-testid='manage-end-current-speaker']").Click(); err != nil {
 		t.Fatalf("click end: %v", err)
 	}
-	if err := page.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('Bob Member')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Bob Member')").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected speaking state to clear: %v", err)
@@ -393,7 +474,7 @@ func TestSpeakersList_Remove(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	row := page.Locator("#speakers-list-container .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+	row := page.Locator("#speakers-list-container [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Dave Member",
 	})
 	if err := row.WaitFor(); err != nil {
@@ -409,9 +490,10 @@ func TestSpeakersList_Remove(t *testing.T) {
 		t.Fatalf("click remove speaker: %v", err)
 	}
 
-	if err := page.Locator("#speakers-list-container .live-speaker-row:has-text('Dave Member')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Dave Member')").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected speaker row to disappear: %v", err)
 	}
 }
+

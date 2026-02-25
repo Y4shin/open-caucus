@@ -129,6 +129,7 @@ type Handler interface {
 	ManageAgendaPointSetModerator(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	CommitteeDeleteMeeting(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingListPartialInput, *ResponseMeta, error)
 	CommitteeActivateMeeting(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingListPartialInput, *ResponseMeta, error)
+	CommitteeToggleMeetingSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingListPartialInput, *ResponseMeta, error)
 	MeetingJoinPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingJoinInput, *ResponseMeta, error)
 	MeetingJoinSubmit(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingJoinInput, *ResponseMeta, error)
 	MeetingGuestSignup(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingGuestSuccessInput, *ResponseMeta, error)
@@ -624,6 +625,13 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/activate", rt.wrapMiddleware(
 		rt.handleCommitteeActivateMeeting,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/activate", groups),
+		[]string{"session", "auth", "committee_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/signup-open-toggle", rt.wrapMiddleware(
+		rt.handleCommitteeToggleMeetingSignupOpen,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/signup-open-toggle", groups),
 		[]string{"session", "auth", "committee_access"},
 		false,
 	))
@@ -2529,6 +2537,36 @@ func (rt *Router) handleCommitteeActivateMeeting(w http.ResponseWriter, r *http.
 	}
 
 	input, meta, err := rt.handler.CommitteeActivateMeeting(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.MeetingListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleCommitteeToggleMeetingSignupOpen(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.CommitteeToggleMeetingSignupOpen(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

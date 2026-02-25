@@ -401,8 +401,41 @@ func (h *Handler) CommitteeActivateMeeting(ctx context.Context, r *http.Request,
 		return nil, nil, fmt.Errorf("invalid meeting ID")
 	}
 
-	if err := h.Repository.SetActiveMeeting(ctx, params.Slug, meetingID); err != nil {
+	committee, err := h.Repository.GetCommitteeBySlug(ctx, params.Slug)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load committee: %w", err)
+	}
+
+	var nextActiveMeetingID *int64
+	if committee.CurrentMeetingID == nil || *committee.CurrentMeetingID != meetingID {
+		nextActiveMeetingID = &meetingID
+	}
+
+	if err := h.Repository.SetActiveMeeting(ctx, params.Slug, nextActiveMeetingID); err != nil {
 		return nil, nil, fmt.Errorf("failed to set active meeting: %w", err)
+	}
+
+	input, err := h.buildMeetingListPartialInput(ctx, params.Slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
+
+// CommitteeToggleMeetingSignupOpen flips signup_open for a meeting and returns the updated meeting list partial.
+func (h *Handler) CommitteeToggleMeetingSignupOpen(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+
+	if err := h.Repository.SetMeetingSignupOpen(ctx, meetingID, !meeting.SignupOpen); err != nil {
+		return nil, nil, fmt.Errorf("failed to update signup_open: %w", err)
 	}
 
 	input, err := h.buildMeetingListPartialInput(ctx, params.Slug, "")

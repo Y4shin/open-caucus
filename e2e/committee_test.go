@@ -9,9 +9,13 @@ import (
 )
 
 func meetingCard(page playwright.Page, meetingName string) playwright.Locator {
-	return page.Locator("#meeting-list-container article").Filter(playwright.LocatorFilterOptions{
+	return page.Locator("#meeting-list-container [data-testid='committee-meeting-row']").Filter(playwright.LocatorFilterOptions{
 		HasText: meetingName,
 	})
+}
+
+func meetingActiveToggle(page playwright.Page, meetingName string) playwright.Locator {
+	return meetingCard(page, meetingName).Locator("input[data-testid='committee-toggle-active']")
 }
 
 func TestChairpersonSeesCreateMeetingForm(t *testing.T) {
@@ -22,7 +26,7 @@ func TestChairpersonSeesCreateMeetingForm(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if err := page.Locator("#meeting-list-container .committee-create-layout").WaitFor(); err != nil {
+	if err := page.Locator("#meeting-list-container [data-testid='committee-create-form']").WaitFor(); err != nil {
 		t.Fatalf("expected create meeting form for chairperson: %v", err)
 	}
 }
@@ -35,7 +39,7 @@ func TestMemberDoesNotSeeCreateMeetingForm(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")
 
-	visible, err := page.Locator(".committee-create-layout").IsVisible()
+	visible, err := page.Locator("[data-testid='committee-create-form']").IsVisible()
 	if err != nil {
 		t.Fatalf("check create form visibility: %v", err)
 	}
@@ -52,7 +56,7 @@ func TestChairpersonCreateMeeting(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if err := page.Locator("#meeting-list-container .committee-create-layout").WaitFor(); err != nil {
+	if err := page.Locator("#meeting-list-container [data-testid='committee-create-form']").WaitFor(); err != nil {
 		t.Fatalf("create meeting form not found: %v", err)
 	}
 
@@ -61,7 +65,7 @@ func TestChairpersonCreateMeeting(t *testing.T) {
 	if err := page.Locator("#meeting-list-container input[name=name]").Fill("Budget Meeting"); err != nil {
 		t.Fatalf("fill meeting name: %v", err)
 	}
-	if err := page.Locator("#meeting-list-container .committee-create-layout button[type=submit]").Click(); err != nil {
+	if err := page.Locator("#meeting-list-container [data-testid='committee-create-form'] button[type=submit]").Click(); err != nil {
 		t.Fatalf("submit create meeting: %v", err)
 	}
 	if err := meetingCard(page, "Budget Meeting").WaitFor(); err != nil {
@@ -91,30 +95,86 @@ func TestSetActiveMeeting_TransfersActiveStatus(t *testing.T) {
 		t.Fatalf("second meeting card not visible: %v", err)
 	}
 
-	firstActivateForm := firstCard.Locator("form[hx-post*='/activate']")
-	if err := firstActivateForm.Locator("button[type=submit]").Click(); err != nil {
+	firstActive := meetingActiveToggle(page, "First Meeting")
+	secondActive := meetingActiveToggle(page, "Second Meeting")
+
+	if err := firstActive.Click(); err != nil {
 		t.Fatalf("activate first meeting: %v", err)
 	}
-	if err := firstActivateForm.WaitFor(playwright.LocatorWaitForOptions{
-		State: playwright.WaitForSelectorStateDetached,
-	}); err != nil {
-		t.Fatalf("expected first activate form to disappear: %v", err)
+	firstChecked, err := firstActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read first active toggle: %v", err)
+	}
+	if !firstChecked {
+		t.Fatalf("expected first meeting to be active")
+	}
+	secondChecked, err := secondActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read second active toggle: %v", err)
+	}
+	if secondChecked {
+		t.Fatalf("expected second meeting to be inactive while first is active")
 	}
 
-	secondActivateForm := secondCard.Locator("form[hx-post*='/activate']")
-	if err := secondActivateForm.WaitFor(); err != nil {
-		t.Fatalf("expected second activate form while first active: %v", err)
-	}
-	if err := secondActivateForm.Locator("button[type=submit]").Click(); err != nil {
+	if err := secondActive.Click(); err != nil {
 		t.Fatalf("activate second meeting: %v", err)
 	}
-	if err := secondActivateForm.WaitFor(playwright.LocatorWaitForOptions{
-		State: playwright.WaitForSelectorStateDetached,
-	}); err != nil {
-		t.Fatalf("expected second activate form to disappear: %v", err)
+	firstChecked, err = firstActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read first active toggle after activating second: %v", err)
 	}
-	if err := firstCard.Locator("form[hx-post*='/activate']").WaitFor(); err != nil {
-		t.Fatalf("expected first meeting to become activatable again: %v", err)
+	if firstChecked {
+		t.Fatalf("expected first meeting to become inactive after activating second")
+	}
+	secondChecked, err = secondActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read second active toggle after activation: %v", err)
+	}
+	if !secondChecked {
+		t.Fatalf("expected second meeting to be active")
+	}
+}
+
+func TestUnsetActiveMeeting_WhenClickingActiveToggleAgain(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "First Meeting", "")
+	ts.seedMeeting(t, "test-committee", "Second Meeting", "")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+
+	firstActive := meetingActiveToggle(page, "First Meeting")
+	secondActive := meetingActiveToggle(page, "Second Meeting")
+
+	if err := firstActive.Click(); err != nil {
+		t.Fatalf("activate first meeting: %v", err)
+	}
+	firstChecked, err := firstActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read first active toggle after activation: %v", err)
+	}
+	if !firstChecked {
+		t.Fatalf("expected first meeting to be active")
+	}
+
+	if err := firstActive.Click(); err != nil {
+		t.Fatalf("deactivate active meeting: %v", err)
+	}
+	firstChecked, err = firstActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read first active toggle after deactivation: %v", err)
+	}
+	if firstChecked {
+		t.Fatalf("expected first meeting to be inactive after toggling active off")
+	}
+	secondChecked, err := secondActive.IsChecked()
+	if err != nil {
+		t.Fatalf("read second active toggle after deactivation: %v", err)
+	}
+	if secondChecked {
+		t.Fatalf("expected no active meetings after deactivating the active one")
 	}
 }
 

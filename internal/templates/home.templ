@@ -22,27 +22,46 @@ func (i *HomeInput) AdminDashboardGet(ctx context.Context) templ.SafeURL {
 	return templ.URL(paths.Route.AdminDashboardGet(ctx, ""))
 }
 
+func homeScaffoldInput(ctx context.Context, input HomeInput) ScaffoldInput {
+	s := ScaffoldInput{
+		Title: i18n.T(ctx, "home.title"),
+	}
+	if input.IsAdmin {
+		s.Actions = []Action{
+			{
+				Title: i18n.T(ctx, "home.admin_link"),
+				URL:   input.AdminDashboardGet(ctx),
+				Kind:  "info",
+			},
+		}
+	}
+	return s
+}
+
 templ HomeTemplate(input HomeInput) {
-	@PageTemplate(i18n.T(ctx, "home.page_title"), true, session.IsAdminAuthenticated(ctx),
-		ScaffoldInput{Title: i18n.T(ctx, "home.title")},
-		HomeContent(input))
+	@PageTemplate("", true, session.IsAdminAuthenticated(ctx),
+		homeScaffoldInput(ctx, input),
+		ResponsiveContentPane(HomeContent(input)))
 }
 
 templ HomeContent(input HomeInput) {
-	if len(input.Committees) == 0 {
-		<p>{ i18n.T(ctx, "home.no_committees") }</p>
-	} else {
-		<ul>
-			for _, c := range input.Committees {
-				<li>
-					<a href={ templ.URL(paths.NewCommitteeSlugRoute(c.Slug).CommitteePageGet(ctx, "")) }>{ c.Name }</a>
-				</li>
-			}
-		</ul>
-	}
-	if input.IsAdmin {
-		<p>
-			<a href={ input.AdminDashboardGet(ctx) }>{ i18n.T(ctx, "home.admin_link") }</a>
-		</p>
-	}
+	<div class="rounded-box border-base-300 bg-base-200 shadow-sm p-4">
+		if len(input.Committees) == 0 {
+			<p>{ i18n.T(ctx, "home.no_committees") }</p>
+		} else {
+			<ul class="list">
+				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">{ i18n.T(ctx, "home.page_title") }</li>
+				for _, c := range input.Committees {
+					<li class="list-row">
+						<div class="list-col-grow">{ c.Name }</div>
+						<a
+							class="btn btn-ghost btn-small btn-square"
+							href={ templ.URL(paths.NewCommitteeSlugRoute(c.Slug).CommitteePageGet(ctx, "")) }
+							aria-label={ i18n.T(ctx, "home.goto_committee", c.Name) }
+						>@Icon(IconChevronRight, "", "h-4", "w-4")</a>
+					</li>
+				}
+			</ul>
+		}
+	</div>
 }

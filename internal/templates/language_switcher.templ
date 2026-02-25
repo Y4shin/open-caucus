@@ -26,14 +26,16 @@ func currentUILocale(ctx context.Context) string {
 
 templ languageSwitcherWithMode(prefix string, compact bool) {
 	<div class={ "language-switcher-wrap join", templ.KV("language-switcher--compact", compact) }>
-		<span>{ i18n.T(ctx, "language_switcher.label") }</span>
-		<form id={ languageSwitcherFormID(prefix, "en") } method="POST" action="/locale" class={ "inline-form" }>
+		if !compact {
+			<span>{ i18n.T(ctx, "language_switcher.label") }</span>
+		}
+		<form id={ languageSwitcherFormID(prefix, "en") } method="POST" action="/locale" class={ "inline-form inline" }>
 			<input type="hidden" name="lang" value="en"/>
-			<button type="submit" class={ "language-switcher-link btn btn-sm", "language-switcher-link-button", templ.KV("language-switcher-link--active", currentUILocale(ctx) == "en") }>{ i18n.T(ctx, "language_switcher.en_button") }</button>
+			<button type="submit" class={ "language-switcher-link join-item btn btn-sm", "language-switcher-link-button join-item btn btn-sm", templ.KV("language-switcher-link--active btn-active", currentUILocale(ctx) == "en") }>{ i18n.T(ctx, "language_switcher.en_button") }</button>
 		</form>
-		<form id={ languageSwitcherFormID(prefix, "de") } method="POST" action="/locale" class={ "inline-form" }>
+		<form id={ languageSwitcherFormID(prefix, "de") } method="POST" action="/locale" class={ "inline-form inline" }>
 			<input type="hidden" name="lang" value="de"/>
-			<button type="submit" class={ "language-switcher-link btn btn-sm", "language-switcher-link-button", templ.KV("language-switcher-link--active", currentUILocale(ctx) == "de") }>{ i18n.T(ctx, "language_switcher.de_button") }</button>
+			<button type="submit" class={ "language-switcher-link join-item btn btn-sm", "language-switcher-link-button join-item btn btn-sm", templ.KV("language-switcher-link--active btn-active", currentUILocale(ctx) == "de") }>{ i18n.T(ctx, "language_switcher.de_button") }</button>
 		</form>
 	</div>
 }

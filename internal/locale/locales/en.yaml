@@ -4,11 +4,13 @@ en:
     no: "No"
     logout: "Logout"
     logged_in_as: "Logged in as %s"
+    app_name: "Conference Tool"
 
   home:
-    page_title: "My Committees - Conference Tool"
+    page_title: "My Committees"
     title: "My Committees"
     no_committees: "You are not a member of any committee."
+    goto_committee: "To committee: %s"
     admin_link: "Admin Dashboard"
 
   login:

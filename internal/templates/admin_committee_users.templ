@@ -82,7 +82,7 @@ func (i *UserListPartialInput) PaginationArgs(ctx context.Context) PaginationArg
 templ UserListPartial(input UserListPartialInput) {
 	<div id="committee-users-container">
 		@ErrorMessage(input.Error)
-		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
+		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 			<h2>{ i18n.T(ctx, "admin_committee_users.assign_heading") }</h2>
 			if len(input.AssignableAccounts) == 0 {
 				<p>{ i18n.T(ctx, "admin_committee_users.no_assignable_accounts") }</p>
@@ -95,7 +95,7 @@ templ UserListPartial(input UserListPartialInput) {
 				>
 					<div>
 						<label for="account_id">{ i18n.T(ctx, "admin_committee_users.account_label") }</label>
-						<select id="account_id" name="account_id" required>
+						<select class="select select-bordered select-sm" id="account_id" name="account_id" required>
 							<option value="">{ i18n.T(ctx, "admin_committee_users.account_placeholder") }</option>
 							for _, account := range input.AssignableAccounts {
 								<option value={ account.IDString }>{ account.FullName } ({ account.Username })</option>
@@ -104,22 +104,22 @@ templ UserListPartial(input UserListPartialInput) {
 					</div>
 					<div>
 						<label for="role">{ i18n.T(ctx, "admin_committee_users.role_label") }</label>
-						<select id="role" name="role" required>
+						<select class="select select-bordered select-sm" id="role" name="role" required>
 							<option value="member">{ i18n.T(ctx, "admin_committee_users.role_member") }</option>
 							<option value="chairperson">{ i18n.T(ctx, "admin_committee_users.role_chairperson") }</option>
 						</select>
 					</div>
 					<div>
 						<label>
-							<input type="checkbox" name="quoted" value="true"/>
+							<input class="checkbox checkbox-sm" type="checkbox" name="quoted" value="true"/>
 							{ i18n.T(ctx, "admin_committee_users.quoted_label") }
 						</label>
 					</div>
-					<button type="submit">{ i18n.T(ctx, "admin_committee_users.assign_button") }</button>
+					<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "admin_committee_users.assign_button") }</button>
 				</form>
 			}
 		</section>
-		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm" }>
+		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 			<h2>{ i18n.T(ctx, "admin_committee_users.existing_heading") }</h2>
 			if len(input.Users) == 0 {
 				<p>{ i18n.T(ctx, "admin_committee_users.empty_state") }</p>
@@ -153,9 +153,9 @@ templ UserListPartial(input UserListPartialInput) {
 										hx-target="#committee-users-container"
 										hx-swap="outerHTML"
 										hx-confirm={ i18n.T(ctx, "admin_committee_users.delete_confirm") }
-										class={ "inline-form" }
+										class={ "inline-form inline" }
 									>
-										<button type="submit">{ i18n.T(ctx, "admin_committee_users.delete_button") }</button>
+										<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "admin_committee_users.delete_button") }</button>
 									</form>
 								</td>
 							</tr>

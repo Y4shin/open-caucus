@@ -124,13 +124,13 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 				hx-post={ input.MotionVotePostStr(ctx) }
 				hx-target={ "#" + input.containerID() }
 				hx-swap="outerHTML"
-				class={ "inline-form" }
+				class={ "inline-form inline" }
 			>
-				<label>{ i18n.T(ctx, "motion.vote_for_label") } <input type="number" name="votes_for" min="0" required/></label>
-				<label>{ i18n.T(ctx, "motion.vote_against_label") } <input type="number" name="votes_against" min="0" required/></label>
-				<label>{ i18n.T(ctx, "motion.vote_abstained_label") } <input type="number" name="votes_abstained" min="0" required/></label>
-				<label>{ i18n.T(ctx, "motion.vote_eligible_label") } <input type="number" name="votes_eligible" min="0" required/></label>
-				<button type="submit">{ i18n.T(ctx, "motion.record_vote_button") }</button>
+				<label>{ i18n.T(ctx, "motion.vote_for_label") } <input class="input input-bordered input-sm" type="number" name="votes_for" min="0" required/></label>
+				<label>{ i18n.T(ctx, "motion.vote_against_label") } <input class="input input-bordered input-sm" type="number" name="votes_against" min="0" required/></label>
+				<label>{ i18n.T(ctx, "motion.vote_abstained_label") } <input class="input input-bordered input-sm" type="number" name="votes_abstained" min="0" required/></label>
+				<label>{ i18n.T(ctx, "motion.vote_eligible_label") } <input class="input input-bordered input-sm" type="number" name="votes_eligible" min="0" required/></label>
+				<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "motion.record_vote_button") }</button>
 			</form>
 		}
 		<form
@@ -138,27 +138,27 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 			hx-target={ "#" + input.motionListContainerID() }
 			hx-swap="outerHTML"
 			hx-confirm={ i18n.T(ctx, "motion.delete_confirm") }
-			class={ "inline-form" }
+			class={ "inline-form inline" }
 		>
-			<button type="submit">{ i18n.T(ctx, "motion.delete_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "motion.delete_button") }</button>
 		</form>
 		if input.CurrentMotionID != nil && *input.CurrentMotionID == input.Motion.ID {
 			<form
 				hx-post={ input.ClearCurrentPostStr(ctx) }
 				hx-target={ "#" + input.motionListContainerID() }
 				hx-swap="outerHTML"
-				class={ "inline-form" }
+				class={ "inline-form inline" }
 			>
-				<button type="submit">Clear</button>
+				<button class="btn btn-sm" type="submit">Clear</button>
 			</form>
 		} else {
 			<form
 				hx-post={ input.SetCurrentMotionPostStr(ctx) }
 				hx-target={ "#" + input.motionListContainerID() }
 				hx-swap="outerHTML"
-				class={ "inline-form" }
+				class={ "inline-form inline" }
 			>
-				<button type="submit">Set as Current</button>
+				<button class="btn btn-sm" type="submit">Set as Current</button>
 			</form>
 		}
 	</div>
@@ -177,13 +177,13 @@ templ MotionListPartial(input MotionListPartialInput) {
 		>
 			<div>
 				<label for={ "motion-title-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "motion.title_label") }</label>
-				<input type="text" id={ "motion-title-" + input.AgendaPointIDStr } name="title" required/>
+				<input class="input input-bordered input-sm" type="text" id={ "motion-title-" + input.AgendaPointIDStr } name="title" required/>
 			</div>
 			<div>
 				<label for={ "motion-file-" + input.AgendaPointIDStr }>{ i18n.T(ctx, "motion.file_label") }</label>
-				<input type="file" id={ "motion-file-" + input.AgendaPointIDStr } name="file" required/>
+				<input class="file-input file-input-bordered file-input-sm" type="file" id={ "motion-file-" + input.AgendaPointIDStr } name="file" required/>
 			</div>
-			<button type="submit">{ i18n.T(ctx, "motion.upload_button") }</button>
+			<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "motion.upload_button") }</button>
 		</form>
 		if len(input.Motions) == 0 {
 			<p>{ i18n.T(ctx, "motion.empty_state") }</p>

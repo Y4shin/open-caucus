@@ -40,21 +40,6 @@ type LiveSpeakerAction struct {
 	Danger  bool
 }
 
-func (i *AttendeeSpeakersListPartialInput) rowClass(s SpeakerItem) string {
-	speaking := s.IsSpeaking
-	mine := s.AttendeeID == i.CurrentAttendeeID
-	switch {
-	case speaking && mine:
-		return "speaking my-turn LiveSpeaking LiveMyTurn"
-	case speaking:
-		return "speaking LiveSpeaking"
-	case s.IsWaiting && mine:
-		return "my-turn LiveMyTurn"
-	default:
-		return ""
-	}
-}
-
 func (i *AttendeeSpeakersListPartialInput) ActiveSpeakers() []SpeakerItem {
 	result := make([]SpeakerItem, 0, len(i.Speakers))
 	for _, s := range i.Speakers {
@@ -200,7 +185,7 @@ templ LiveAgendaPanelBodyFromPartial(input AttendeeSpeakersListPartialInput) {
 	</div>
 	<div class={ "live-agenda-inline-list", "live-agenda-inline-list" }>
 		if len(input.AgendaPoints) == 0 {
-			<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
+			<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
 		} else {
 			<div class={ "live-agenda-list", "live-agenda-list" }>
 				for _, ap := range input.AgendaPoints {
@@ -217,79 +202,93 @@ templ LiveAgendaPanelBodyFromPartial(input AttendeeSpeakersListPartialInput) {
 templ LiveSpeakersPanelMetaFromPartial(input AttendeeSpeakersListPartialInput) {
 	if input.ModeratorName != "" {
 		<div class={ "live-speakers-panel-meta" }>
-			<span class={ "live-badge", "live-badge-moderator" } data-testid="live-moderator-badge">
+			<span class={ "live-badge badge badge-outline", "live-badge-moderator badge-accent badge badge-outline" } data-testid="live-moderator-badge">
 				{ i18n.T(ctx, "meeting_live.moderator_badge", input.ModeratorName) }
 			</span>
 		</div>
 	}
 }
 
-templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, variant LiveSpeakerCardVariant, actions []LiveSpeakerAction) {
-	<div
-		class={ "live-speaker-item", "live-speaker-row", input.rowClass(s), templ.KV("live-speaker-row-done", variant == LiveSpeakerCardDone), templ.KV("live-speaker-row-done", variant == LiveSpeakerCardDone) }
+templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, variant LiveSpeakerCardVariant, actions []LiveSpeakerAction, scrollAnchor bool) {
+	<li
+		class="list-row items-center gap-3"
+		data-manage-scroll-anchor={ strconv.FormatBool(scrollAnchor) }
+		data-speaker-state={ string(variant) }
+		data-speaker-mine={ strconv.FormatBool(s.AttendeeID == input.CurrentAttendeeID) }
 		data-testid="live-speaker-item"
 	>
-		<div class={ "live-speaker-order", "live-speaker-order" }>
-			if variant == LiveSpeakerCardSpeaking {
-				<span class="ui-icon live-speaking-marker-icon" aria-hidden="true"></span>
+		<div class="w-16 shrink-0 text-center font-semibold text-base-content/70">
+			if variant == LiveSpeakerCardSpeaking && s.SpeakingSinceUnix > 0 {
+				<span class="font-mono text-xs whitespace-nowrap text-base-content/70" data-speaking-since={ strconv.FormatInt(s.SpeakingSinceUnix, 10) }>00:00</span>
+			} else if variant == LiveSpeakerCardDone && s.DoneDurationLabel != "" {
+				<span class="font-mono text-xs whitespace-nowrap text-base-content/70">{ s.DoneDurationLabel }</span>
+			} else if variant == LiveSpeakerCardSpeaking {
+				<span class="inline-flex items-center text-info" aria-hidden="true">
+					@Icon(IconMic, "", "h-4 w-4")
+				</span>
 			} else if variant == LiveSpeakerCardWaiting {
 				{ strconv.FormatInt(input.WaitingDisplayNumber(s), 10) }
 			} else {
 				{ strconv.FormatInt(input.DoneDisplayNumber(s), 10) }
 			}
 		</div>
-		<div class={ "live-speaker-main", "live-speaker-main" }>
-			<div class={ "live-speaker-title-row", "live-speaker-title-row" }>
-				<div class={ "live-speaker-name", "live-speaker-name" } data-testid="live-speaker-name">{ s.AttendeeName }</div>
-				if variant == LiveSpeakerCardSpeaking && s.SpeakingSinceUnix > 0 {
-					<span class={ "live-speaking-timer", "live-speaking-timer" } data-speaking-since={ strconv.FormatInt(s.SpeakingSinceUnix, 10) }>00:00</span>
-				} else if variant == LiveSpeakerCardDone && s.DoneDurationLabel != "" {
-					<span class={ "live-speaking-timer", "live-speaking-timer" }>{ s.DoneDurationLabel }</span>
+		<div class="list-col-grow min-w-0">
+			<div class="flex min-w-0 items-center gap-2">
+				<div class="truncate font-semibold" data-testid="live-speaker-name">{ s.AttendeeName }</div>
+				if s.Type == "ropm" || s.GenderQuoted || s.FirstSpeaker || s.Priority {
+					<div class="flex shrink-0 flex-wrap items-center gap-1">
+						if s.Type == "ropm" {
+							<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge">
+								@Icon(IconScale, "", "h-3.5 w-3.5")
+							</span>
+						}
+						if s.GenderQuoted {
+							<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge">
+								@Icon(IconTransgender, "", "h-3.5 w-3.5")
+							</span>
+						}
+						if s.FirstSpeaker {
+							<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge">
+								@Icon(IconPersonRaised, "", "h-3.5 w-3.5")
+							</span>
+						}
+						if s.Priority {
+							<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge">
+								@Icon(IconStar, "", "h-3.5 w-3.5")
+							</span>
+							<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{ i18n.T(ctx, "meeting_live.badge_priority") }</span>
+						}
+					</div>
 				}
 			</div>
-			<div class={ "live-speaker-meta-row", "live-speaker-meta-row" }>
-				<div class={ "live-badge-row", "live-badge-row" }>
-					if s.Type == "ropm" {
-						<span class={ "live-badge", "live-badge-ropm", "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_ropm") }</span>
-					}
-					if s.GenderQuoted {
-						<span class={ "live-badge", "live-badge-quoted", "quoted-status-chip", "live-badge", "quoted-status-chip" }>
-							@Icon(IconTransgender, "", "quoted-status-chip-icon")
-							{ "-" + i18n.T(ctx, "meeting_live.badge_quoted") }
-						</span>
-					}
-					if s.FirstSpeaker {
-						<span class={ "live-badge", "live-badge-first", "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_first") }</span>
-					}
-					if s.Priority {
-						<span class={ "live-badge", "live-badge-priority", "live-badge" }>{ i18n.T(ctx, "meeting_live.badge_priority") }</span>
-					}
-				</div>
+		</div>
+		if variant == LiveSpeakerCardSpeaking {
+			<div class="shrink-0 self-center">
+				<span class="inline-flex h-9 w-9 items-center justify-center text-info/80" data-testid="live-speaker-speaking-indicator" aria-hidden="true">
+					@Icon(IconMic, "", "h-5 w-5")
+				</span>
 			</div>
-			if len(actions) > 0 {
-				<div class={ "live-speaker-action-row", "live-speaker-action-row" }>
+		} else if len(actions) > 0 {
+			<div class="shrink-0 self-center">
+				<div class="join join-horizontal">
 					for _, action := range actions {
-						<form
+						<button
+							type="button"
 							hx-post={ action.PostURL }
 							hx-target={ action.Target }
 							hx-swap={ action.Swap }
 							hx-confirm={ action.Confirm }
-							class={ "live-speaker-action-form", "live-speaker-action-form" }
+							class={ "join-item btn btn-sm btn-square", "join-item btn btn-sm btn-square", templ.KV("join-item btn btn-sm btn-error btn-square", action.Danger), templ.KV("join-item btn btn-sm btn-error btn-square", action.Danger) }
+							aria-label={ action.Title }
+							title={ action.Title }
 						>
-							<button
-								type="submit"
-								class={ "live-speaker-action-button", "live-speaker-action-button", templ.KV("live-speaker-action-button-danger", action.Danger), templ.KV("live-speaker-action-button-danger", action.Danger) }
-								aria-label={ action.Title }
-								title={ action.Title }
-							>
-								@Icon(action.Icon, "", "live-speaker-action-icon")
-							</button>
-						</form>
+							@Icon(action.Icon, "", "h-4 w-4")
+						</button>
 					}
 				</div>
-			}
-		</div>
-	</div>
+			</div>
+		}
+	</li>
 }
 
 // AttendeeSpeakersListPartial renders the inner content of the attendee speakers list.
@@ -316,13 +315,13 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 				<div class={ "live-speakers-list-viewport", "live-speakers-list-viewport" }>
 				@ErrorMessage(input.Error)
 				if len(input.ActiveSpeakers()) == 0 {
-					<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
+					<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
 				} else {
-					<div class={ "live-speaker-list", "live-speaker-list" }>
+					<ul class={ "list rounded-box border border-base-300 bg-base-100", "live-speaker-list" }>
 						for _, s := range input.ActiveSpeakers() {
-							@LiveSpeakerCard(input, s, input.CardVariant(s), nil)
+							@LiveSpeakerCard(input, s, input.CardVariant(s), nil, false)
 						}
-					</div>
+					</ul>
 				}
 				</div>
 			</div>
@@ -336,7 +335,7 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 					>
 						<button
 							type="submit"
-							class={ "live-self-add-button", "live-self-add-button-danger", "live-self-add-button", "live-self-add-button-danger" }
+							class={ "live-self-add-button btn btn-sm", "live-self-add-button-danger btn btn-sm btn-error", "live-self-add-button btn btn-sm", "live-self-add-button-danger btn btn-sm btn-error" }
 							data-testid="live-self-yield"
 							aria-label={ i18n.T(ctx, "meeting_live.yield_speech") }
 							title={ i18n.T(ctx, "meeting_live.yield_speech") }
@@ -354,7 +353,7 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 						<input type="hidden" name="type" value="ropm"/>
 						<button
 							type="submit"
-							class={ "live-self-add-button", "live-self-add-button-warning", "live-self-add-button", "live-self-add-button-warning" }
+							class={ "live-self-add-button btn btn-sm", "live-self-add-button-warning btn btn-sm btn-warning", "live-self-add-button btn btn-sm", "live-self-add-button-warning btn btn-sm btn-warning" }
 							data-testid="live-add-self-ropm"
 							aria-label={ i18n.T(ctx, "meeting_live.add_self_ropm") }
 							title={ i18n.T(ctx, "meeting_live.add_self_ropm") }
@@ -372,7 +371,7 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 						<input type="hidden" name="type" value="regular"/>
 						<button
 							type="submit"
-							class={ "live-self-add-button", "live-self-add-button" }
+							class={ "live-self-add-button btn btn-sm", "live-self-add-button btn btn-sm" }
 							data-testid="live-add-self-regular"
 							aria-label={ i18n.T(ctx, "meeting_live.add_self_regular") }
 							title={ i18n.T(ctx, "meeting_live.add_self_regular") }
@@ -383,19 +382,19 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 					</form>
 				}
 			</div>
-			<dialog id="speaker-history-dialog" class={ "live-speaker-history-dialog", "live-speaker-history-dialog" } data-live-dialog>
+			<dialog id="speaker-history-dialog" class={ "live-speaker-history-dialog modal-box max-w-4xl", "live-speaker-history-dialog modal-box max-w-4xl" } data-live-dialog>
 				<div class={ "live-speaker-history-header", "live-speaker-history-header" }>
 					<h3>{ i18n.T(ctx, "meeting_live.speaker_history_title") }</h3>
-					<button type="button" class={ "live-speaker-history-close", "live-speaker-history-close" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.speaker_history_close") }</button>
+					<button type="button" class={ "live-speaker-history-close btn btn-sm btn-ghost", "live-speaker-history-close btn btn-sm btn-ghost" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.speaker_history_close") }</button>
 				</div>
 				if len(input.HistorySpeakers()) == 0 {
-					<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.speaker_history_empty") }</p>
+					<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.speaker_history_empty") }</p>
 				} else {
-					<div class={ "live-speaker-list", "live-speaker-history-list", "live-speaker-list", "live-speaker-history-list" }>
+					<ul class={ "list rounded-box border border-base-300 bg-base-100", "live-speaker-list", "live-speaker-history-list" }>
 						for _, s := range input.HistorySpeakers() {
-							@LiveSpeakerCard(input, s, input.CardVariant(s), nil)
+							@LiveSpeakerCard(input, s, input.CardVariant(s), nil, false)
 						}
-					</div>
+					</ul>
 				}
 			</dialog>
 		</div>
@@ -553,7 +552,7 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 			})();
 		</script>
 	</head>
-	<body class={ "app-shell min-h-screen flex flex-col bg-base-200 text-base-content", "live-body" }>
+	<body class={ "app-shell min-h-screen bg-base-200 text-base-content flex flex-col", "live-body" }>
 		@HeaderFooterScaffold(ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: input.CommitteeName,
@@ -564,15 +563,15 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 }
 
 templ MeetingLiveContent(input MeetingLiveInput) {
-	<div class={ "live-grid", "live-mobile-layout" }>
-		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "live-panel", "live-agenda-panel", "live-agenda-panel" }>
+	<div class={ "live-grid grid gap-4 lg:grid-cols-2", "live-mobile-layout" }>
+		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4", "live-panel card bg-base-100 border border-base-300 shadow-sm", "live-agenda-panel card bg-base-100 border border-base-300 shadow-sm", "live-agenda-panel card bg-base-100 border border-base-300 shadow-sm" }>
 			<div class={ "live-agenda-summary-heading-row", "live-agenda-summary-heading-row" }>
 				<h2 class={ "live-agenda-summary-heading", "live-agenda-summary-heading" }>{ i18n.T(ctx, "meeting_live.agenda_heading") }</h2>
 				<div class="live-agenda-header-actions">
 					@LiveDocButtonPartial(input.toCurrentDocInput())
 					<button
 						type="button"
-						class={ "live-speaker-history-button", "live-agenda-full-button", "live-speaker-history-button", "live-agenda-full-button" }
+						class={ "live-speaker-history-button btn btn-sm btn-outline", "live-agenda-full-button btn btn-sm btn-outline", "live-speaker-history-button btn btn-sm btn-outline", "live-agenda-full-button btn btn-sm btn-outline" }
 						data-live-dialog-open
 						aria-controls="agenda-full-dialog"
 						aria-label={ i18n.T(ctx, "meeting_live.agenda_full_button") }
@@ -586,16 +585,16 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 					@LiveAgendaPanelBodyFromPartial(input.Speakers)
 				</div>
 			</div>
-			<div class="live-current-doc-pane">
+			<div class="live-current-doc-pane rounded-box border border-base-300 bg-base-100 p-3">
 				@LiveCurrentDocPartial(input.toCurrentDocInput())
 			</div>
-			<dialog id="agenda-full-dialog" class={ "live-speaker-history-dialog", "live-speaker-history-dialog" } data-live-dialog>
+			<dialog id="agenda-full-dialog" class={ "live-speaker-history-dialog modal-box max-w-4xl", "live-speaker-history-dialog modal-box max-w-4xl" } data-live-dialog>
 				<div class={ "live-speaker-history-header", "live-speaker-history-header" }>
 					<h3>{ i18n.T(ctx, "meeting_live.agenda_full_title") }</h3>
-					<button type="button" class={ "live-speaker-history-close", "live-speaker-history-close" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.agenda_full_close") }</button>
+					<button type="button" class={ "live-speaker-history-close btn btn-sm btn-ghost", "live-speaker-history-close btn btn-sm btn-ghost" } data-live-dialog-close>{ i18n.T(ctx, "meeting_live.agenda_full_close") }</button>
 				</div>
 				if len(input.AgendaPoints) == 0 {
-					<p class={ "live-empty-state" }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
+					<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.no_agenda_points") }</p>
 				} else {
 					<div class={ "live-agenda-list", "live-agenda-list" }>
 						for _, ap := range input.AgendaPoints {
@@ -607,20 +606,20 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 					</div>
 				}
 			</dialog>
-			<dialog id="live-doc-modal" class={ "live-speaker-history-dialog", "live-speaker-history-dialog" } data-live-dialog>
+			<dialog id="live-doc-modal" class={ "live-speaker-history-dialog modal-box max-w-4xl", "live-speaker-history-dialog modal-box max-w-4xl" } data-live-dialog>
 				<div class={ "live-speaker-history-header", "live-speaker-history-header" }>
 					<h3>Current Document</h3>
-					<button type="button" class={ "live-speaker-history-close", "live-speaker-history-close" } data-live-dialog-close>Close</button>
+					<button type="button" class={ "live-speaker-history-close btn btn-sm btn-ghost", "live-speaker-history-close btn btn-sm btn-ghost" } data-live-dialog-close>Close</button>
 				</div>
 				@LiveCurrentDocModalContent(input.toCurrentDocInput())
 			</dialog>
 		</section>
-		<section class={ "panel card bg-base-100 border border-base-300 rounded-box p-4 mb-4 shadow-sm", "live-panel", "live-speakers-panel", "live-speakers-panel" }>
+		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4", "live-panel card bg-base-100 border border-base-300 shadow-sm", "live-speakers-panel card bg-base-100 border border-base-300 shadow-sm", "live-speakers-panel card bg-base-100 border border-base-300 shadow-sm" }>
 			<div class={ "live-speakers-heading-row", "live-speakers-heading-row" }>
 				<h2>{ i18n.T(ctx, "meeting_live.speakers_heading") }</h2>
 				<button
 					type="button"
-					class={ "live-speaker-history-button", "live-speaker-history-button" }
+					class={ "live-speaker-history-button btn btn-sm btn-outline", "live-speaker-history-button btn btn-sm btn-outline" }
 					data-live-dialog-open
 					aria-controls="speaker-history-dialog"
 					aria-label={ i18n.T(ctx, "meeting_live.speaker_history_button") }

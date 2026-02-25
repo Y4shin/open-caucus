@@ -81,7 +81,7 @@ func Pagination(args PaginationArgs) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		var templ_7745c5c3_Var2 = []any{"pagination-nav"}
+		var templ_7745c5c3_Var2 = []any{"pagination-nav join"}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -146,7 +146,7 @@ func Pagination(args PaginationArgs) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(args.PrevPages) > 0 && args.PrevPages[0] > args.FirstPage+1 {
-				var templ_7745c5c3_Var6 = []any{"pagination-ellipsis"}
+				var templ_7745c5c3_Var6 = []any{"pagination-ellipsis join-item btn btn-disabled btn-sm"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -202,14 +202,14 @@ func Pagination(args PaginationArgs) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<button type=\"button\" disabled>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<button class=\"btn btn-sm\" type=\"button\" disabled>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatUint(uint64(args.CurrentPage), 10))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pagination.templ`, Line: 74, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pagination.templ`, Line: 74, Col: 102}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -254,7 +254,7 @@ func Pagination(args PaginationArgs) templ.Component {
 		if args.LastPage > 0 {
 			if len(args.NextPages) > 0 {
 				if args.NextPages[len(args.NextPages)-1]+1 < args.LastPage {
-					var templ_7745c5c3_Var13 = []any{"pagination-ellipsis"}
+					var templ_7745c5c3_Var13 = []any{"pagination-ellipsis join-item btn btn-disabled btn-sm"}
 					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
@@ -278,7 +278,7 @@ func Pagination(args PaginationArgs) templ.Component {
 					}
 				}
 			} else if args.CurrentPage+1 < args.LastPage {
-				var templ_7745c5c3_Var15 = []any{"pagination-ellipsis"}
+				var templ_7745c5c3_Var15 = []any{"pagination-ellipsis join-item btn btn-disabled btn-sm"}
 				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

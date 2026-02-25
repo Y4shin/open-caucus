@@ -56,7 +56,7 @@ templ LiveDocButtonContent(input LiveCurrentDocInput) {
 	<button
 		id="live-doc-btn"
 		type="button"
-		class={ "live-speaker-history-button", "live-speaker-history-button", templ.KV("live-doc-btn--hidden", input.Doc == nil) }
+		class={ "live-speaker-history-button btn btn-sm btn-outline", "live-speaker-history-button btn btn-sm btn-outline", templ.KV("live-doc-btn--hidden", input.Doc == nil) }
 		data-live-dialog-open
 		aria-controls="live-doc-modal"
 		aria-label="Open current document"
@@ -74,9 +74,9 @@ templ LiveDocButtonPartial(input LiveCurrentDocInput) {
 templ LiveCurrentDocContent(input LiveCurrentDocInput) {
 	<div class="live-current-doc-content">
 		if input.Doc == nil {
-			<p class={ "live-empty-state", "live-doc-placeholder" }>No document currently displayed.</p>
+			<p class={ "live-empty-state text-base-content/70", "live-doc-placeholder" }>No document currently displayed.</p>
 		} else if isPreviewable(input.Doc.ContentType) {
-			<iframe src={ input.DocURL(ctx) } class="live-doc-iframe" title={ input.Doc.Filename }></iframe>
+			<iframe src={ input.DocURL(ctx) } class="live-doc-iframe w-full rounded-box border border-base-300 bg-white" title={ input.Doc.Filename }></iframe>
 		} else {
 			<p>
 				@IconLabelLink(input.DocURL(ctx), IconArrowForward, input.Doc.Filename, "left")

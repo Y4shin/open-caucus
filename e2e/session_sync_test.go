@@ -46,27 +46,27 @@ func TestSync_LiveAndManage_SpeakerLifecycleUpdates(t *testing.T) {
 		t.Fatalf("add regular speech for Alice: %v", err)
 	}
 
-	liveRow := livePage.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+	liveRow := livePage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Alice Member",
 	})
 	if err := liveRow.WaitFor(); err != nil {
 		t.Fatalf("expected Alice row on live page after add: %v", err)
 	}
 
-	manageRow := managePage.Locator("#speakers-list-container .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+	manageRow := managePage.Locator("#speakers-list-container [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Alice Member",
 	})
 	if err := manageRow.Locator("button[title='Start']").Click(); err != nil {
 		t.Fatalf("start speech in manage: %v", err)
 	}
-	if err := livePage.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row.speaking:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := livePage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected speaking state on live after manage start: %v", err)
 	}
 
-	if err := manageRow.Locator("button[title='End']").Click(); err != nil {
+	if err := managePage.Locator("[data-testid='manage-end-current-speaker']").Click(); err != nil {
 		t.Fatalf("end speech in manage: %v", err)
 	}
-	if err := livePage.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row.speaking:has-text('Alice Member')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := livePage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected speaking state to clear on live after manage end: %v", err)
@@ -99,7 +99,7 @@ func TestSync_LiveAndLive_SelfAddPropagates(t *testing.T) {
 	if err := alicePage.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
 		t.Fatalf("alice self-add regular: %v", err)
 	}
-	if err := bobPage.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-row:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := bobPage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected Alice to appear on Bob's live page via SSE: %v", err)
 	}
 	if bobPage.URL() != bobURLBefore {
@@ -135,13 +135,13 @@ func TestSync_LiveYield_UpdatesManage(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := managePage.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := managePage.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected speaking row in manage before yield: %v", err)
 	}
 	if err := livePage.Locator("[data-testid='live-self-yield']").Click(); err != nil {
 		t.Fatalf("click yield on live: %v", err)
 	}
-	if err := managePage.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('Alice Member')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := managePage.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected speaking state to clear in manage after live yield: %v", err)
@@ -173,20 +173,21 @@ func TestSync_ManageAndManage_SpeakerActionsPropagate(t *testing.T) {
 		t.Fatalf("goto manage page B: %v", err)
 	}
 
-	rowA := pageA.Locator("#speakers-list-container .live-speaker-row").Filter(playwright.LocatorFilterOptions{HasText: "Alice Member"})
+	rowA := pageA.Locator("#speakers-list-container [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{HasText: "Alice Member"})
 	if err := rowA.Locator("button[title='Start']").Click(); err != nil {
 		t.Fatalf("start speech in manage A: %v", err)
 	}
-	if err := pageB.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := pageB.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected speaking state propagated to manage B: %v", err)
 	}
 
-	if err := rowA.Locator("button[title='End']").Click(); err != nil {
+	if err := pageA.Locator("[data-testid='manage-end-current-speaker']").Click(); err != nil {
 		t.Fatalf("end speech in manage A: %v", err)
 	}
-	if err := pageB.Locator("#speakers-list-container .live-speaker-row.speaking:has-text('Alice Member')").WaitFor(playwright.LocatorWaitForOptions{
+	if err := pageB.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected end state propagated to manage B: %v", err)
 	}
 }
+

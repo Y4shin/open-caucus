@@ -15,7 +15,7 @@ import (
 )
 
 func manageSpeakerRow(page playwright.Page, attendeeName string) playwright.Locator {
-	return page.Locator("#speakers-list-container .manage-speakers-rows .live-speaker-row").Filter(playwright.LocatorFilterOptions{
+	return page.Locator("#speakers-list-container [data-testid='manage-speakers-viewport'] [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: attendeeName,
 	})
 }
@@ -23,10 +23,10 @@ func manageSpeakerRow(page playwright.Page, attendeeName string) playwright.Loca
 func manageSpeakerNamesInDisplayedOrder(t *testing.T, page playwright.Page) []string {
 	t.Helper()
 	raw, err := page.Evaluate(`() => {
-		const container = document.querySelector("section.manage-card #speakers-list-container")
+		const container = document.querySelector("[data-testid='manage-speakers-card'] #speakers-list-container")
 			|| document.querySelector("#speakers-list-container");
 		if (!container) return [];
-		const rows = Array.from(container.querySelectorAll(".manage-speakers-rows-list .live-speaker-row"));
+		const rows = Array.from(container.querySelectorAll("[data-testid='manage-speakers-viewport'] [data-testid='live-speaker-item']"));
 		return rows.map((row) => {
 			const nameEl = row.querySelector("[data-testid='live-speaker-name']");
 			return (nameEl ? nameEl.textContent : row.textContent || "").trim();
@@ -167,7 +167,7 @@ func TestSpeakers_PriorityToggle_MovesToFront(t *testing.T) {
 		t.Fatalf("expected remove-priority button after toggle: %v", err)
 	}
 
-	rows, err := page.Locator("#speakers-list-container .manage-speakers-rows .live-speaker-row").All()
+	rows, err := page.Locator("#speakers-list-container [data-testid='manage-speakers-viewport'] [data-testid='live-speaker-item']").All()
 	if err != nil {
 		t.Fatalf("get speaker rows: %v", err)
 	}
@@ -225,16 +225,19 @@ func TestSpeakers_FirstSpeaker_Badge(t *testing.T) {
 		t.Fatalf("wait for Repeat Speaker row: %v", err)
 	}
 
-	firstBadges, err := firstTimerRow.Locator(".live-badge").Count()
+	firstHasBadge, err := firstTimerRow.Locator("[data-testid='live-speaker-first-badge']").Count()
 	if err != nil {
-		t.Fatalf("count first-timer badges: %v", err)
+		t.Fatalf("count first-speaker badges: %v", err)
 	}
-	repeatBadges, err := repeatRow.Locator(".live-badge").Count()
+	repeatHasBadge, err := repeatRow.Locator("[data-testid='live-speaker-first-badge']").Count()
 	if err != nil {
-		t.Fatalf("count repeat-speaker badges: %v", err)
+		t.Fatalf("count repeat-speaker first badges: %v", err)
 	}
-	if firstBadges <= repeatBadges {
-		t.Errorf("expected first-speaker row to have more badges than repeat row, got first=%d repeat=%d", firstBadges, repeatBadges)
+	if firstHasBadge == 0 {
+		t.Errorf("expected first-speaker badge in First Timer row")
+	}
+	if repeatHasBadge != 0 {
+		t.Errorf("expected no first-speaker badge in Repeat Speaker row, got %d", repeatHasBadge)
 	}
 }
 
@@ -371,3 +374,4 @@ func TestSpeakers_SortingOrder_WithoutActiveSpeaker(t *testing.T) {
 		t.Errorf("unexpected speaker order without active speaker:\n got: %v\nwant: %v", gotOrder, expectedOrder)
 	}
 }
+

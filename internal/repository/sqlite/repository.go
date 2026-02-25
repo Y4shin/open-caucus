@@ -757,10 +757,14 @@ func (r *Repository) DeleteMeeting(ctx context.Context, id int64) error {
 	return nil
 }
 
-// SetActiveMeeting sets a meeting as the current active meeting for a committee
-func (r *Repository) SetActiveMeeting(ctx context.Context, slug string, meetingID int64) error {
+// SetActiveMeeting sets or clears the current active meeting for a committee.
+func (r *Repository) SetActiveMeeting(ctx context.Context, slug string, meetingID *int64) error {
+	var activeID sql.NullInt64
+	if meetingID != nil {
+		activeID = sql.NullInt64{Int64: *meetingID, Valid: true}
+	}
 	err := r.Queries.SetActiveMeeting(ctx, client.SetActiveMeetingParams{
-		CurrentMeetingID: sql.NullInt64{Int64: meetingID, Valid: true},
+		CurrentMeetingID: activeID,
 		Slug:             slug,
 	})
 	if err != nil {
