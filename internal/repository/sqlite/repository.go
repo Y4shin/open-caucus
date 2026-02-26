@@ -1075,6 +1075,22 @@ func (r *Repository) ListSubAgendaPointsForMeeting(ctx context.Context, meetingI
 	return result, nil
 }
 
+// ListSubAgendaPointsForParent returns child agenda points for one parent.
+func (r *Repository) ListSubAgendaPointsForParent(ctx context.Context, meetingID, parentID int64) ([]*model.AgendaPoint, error) {
+	rows, err := r.Queries.ListSubAgendaPointsForParent(ctx, client.ListSubAgendaPointsForParentParams{
+		MeetingID: meetingID,
+		ParentID:  sql.NullInt64{Int64: parentID, Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("list sub-agenda points for parent: %w", err)
+	}
+	result := make([]*model.AgendaPoint, len(rows))
+	for i := range rows {
+		result[i] = agendaPointFromClient(&rows[i])
+	}
+	return result, nil
+}
+
 // GetAgendaPointByID retrieves an agenda point by ID.
 func (r *Repository) GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error) {
 	ap, err := r.Queries.GetAgendaPointByID(ctx, id)
@@ -1091,6 +1107,212 @@ func (r *Repository) GetAgendaPointByID(ctx context.Context, id int64) (*model.A
 func (r *Repository) DeleteAgendaPoint(ctx context.Context, id int64) error {
 	if err := r.Queries.DeleteAgendaPoint(ctx, id); err != nil {
 		return fmt.Errorf("delete agenda point: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) moveAgendaPoint(ctx context.Context, meetingID, agendaPointID int64, direction int) error {
+	ap, err := r.GetAgendaPointByID(ctx, agendaPointID)
+	if err != nil {
+		return err
+	}
+	if ap.MeetingID != meetingID {
+		return fmt.Errorf("agenda point does not belong to meeting")
+	}
+
+	var siblings []*model.AgendaPoint
+	if ap.ParentID == nil {
+		siblings, err = r.ListAgendaPointsForMeeting(ctx, meetingID)
+	} else {
+		siblings, err = r.ListSubAgendaPointsForParent(ctx, meetingID, *ap.ParentID)
+	}
+	if err != nil {
+		return err
+	}
+
+	idx := -1
+	for i, s := range siblings {
+		if s.ID == agendaPointID {
+			idx = i
+			break
+		}
+	}
+	if idx < 0 {
+		return fmt.Errorf("agenda point not found in siblings")
+	}
+	targetIdx := idx + direction
+	if targetIdx < 0 || targetIdx >= len(siblings) {
+		return nil
+	}
+
+	a := siblings[idx]
+	b := siblings[targetIdx]
+
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+	if err := qtx.SetAgendaPointPosition(ctx, client.SetAgendaPointPositionParams{
+		Position: -1,
+		ID:       a.ID,
+	}); err != nil {
+		return fmt.Errorf("set temporary position: %w", err)
+	}
+	if err := qtx.SetAgendaPointPosition(ctx, client.SetAgendaPointPositionParams{
+		Position: a.Position,
+		ID:       b.ID,
+	}); err != nil {
+		return fmt.Errorf("set swapped position: %w", err)
+	}
+	if err := qtx.SetAgendaPointPosition(ctx, client.SetAgendaPointPositionParams{
+		Position: b.Position,
+		ID:       a.ID,
+	}); err != nil {
+		return fmt.Errorf("finalize swapped position: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit tx: %w", err)
+	}
+	return nil
+}
+
+// MoveAgendaPointUp swaps an agenda point with the previous sibling.
+func (r *Repository) MoveAgendaPointUp(ctx context.Context, meetingID, agendaPointID int64) error {
+	return r.moveAgendaPoint(ctx, meetingID, agendaPointID, -1)
+}
+
+// MoveAgendaPointDown swaps an agenda point with the next sibling.
+func (r *Repository) MoveAgendaPointDown(ctx context.Context, meetingID, agendaPointID int64) error {
+	return r.moveAgendaPoint(ctx, meetingID, agendaPointID, 1)
+}
+
+// ApplyAgendaPoints transactionally updates agenda structure to the desired points.
+func (r *Repository) ApplyAgendaPoints(ctx context.Context, meetingID int64, points []repository.AgendaApplyPoint, deleteIDs []int64) error {
+	if len(points) == 0 {
+		return fmt.Errorf("no agenda points provided")
+	}
+
+	keySet := make(map[string]struct{}, len(points))
+	for _, p := range points {
+		if strings.TrimSpace(p.Key) == "" {
+			return fmt.Errorf("agenda point key is required")
+		}
+		if _, exists := keySet[p.Key]; exists {
+			return fmt.Errorf("duplicate agenda point key: %s", p.Key)
+		}
+		keySet[p.Key] = struct{}{}
+	}
+
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+
+	if err := qtx.BumpAgendaPointPositionsForMeeting(ctx, meetingID); err != nil {
+		return fmt.Errorf("bump agenda positions: %w", err)
+	}
+
+	for _, id := range deleteIDs {
+		if err := qtx.DeleteAgendaPoint(ctx, id); err != nil {
+			return fmt.Errorf("delete agenda point %d: %w", id, err)
+		}
+	}
+
+	keyToID := make(map[string]int64, len(points))
+
+	topLevel := make([]repository.AgendaApplyPoint, 0, len(points))
+	children := make([]repository.AgendaApplyPoint, 0, len(points))
+	for _, p := range points {
+		if p.ParentKey == nil {
+			topLevel = append(topLevel, p)
+		} else {
+			children = append(children, p)
+		}
+	}
+	sort.SliceStable(topLevel, func(i, j int) bool {
+		if topLevel[i].Position != topLevel[j].Position {
+			return topLevel[i].Position < topLevel[j].Position
+		}
+		return topLevel[i].Key < topLevel[j].Key
+	})
+	sort.SliceStable(children, func(i, j int) bool {
+		if *children[i].ParentKey != *children[j].ParentKey {
+			return *children[i].ParentKey < *children[j].ParentKey
+		}
+		if children[i].Position != children[j].Position {
+			return children[i].Position < children[j].Position
+		}
+		return children[i].Key < children[j].Key
+	})
+
+	updatePoint := func(p repository.AgendaApplyPoint, parentID *int64) (int64, error) {
+		var pid sql.NullInt64
+		if parentID != nil {
+			pid = sql.NullInt64{Int64: *parentID, Valid: true}
+		}
+		if p.ExistingID != nil {
+			if err := qtx.UpdateAgendaPointStructure(ctx, client.UpdateAgendaPointStructureParams{
+				ParentID:  pid,
+				Position:  p.Position,
+				Title:     p.Title,
+				ID:        *p.ExistingID,
+				MeetingID: meetingID,
+			}); err != nil {
+				return 0, err
+			}
+			return *p.ExistingID, nil
+		}
+		if parentID == nil {
+			created, err := qtx.CreateAgendaPoint(ctx, client.CreateAgendaPointParams{
+				MeetingID: meetingID,
+				Position:  p.Position,
+				Title:     p.Title,
+			})
+			if err != nil {
+				return 0, err
+			}
+			return created.ID, nil
+		}
+		created, err := qtx.CreateSubAgendaPoint(ctx, client.CreateSubAgendaPointParams{
+			MeetingID: meetingID,
+			ParentID:  pid,
+			Position:  p.Position,
+			Title:     p.Title,
+		})
+		if err != nil {
+			return 0, err
+		}
+		return created.ID, nil
+	}
+
+	for _, p := range topLevel {
+		id, err := updatePoint(p, nil)
+		if err != nil {
+			return fmt.Errorf("upsert top-level agenda point: %w", err)
+		}
+		keyToID[p.Key] = id
+	}
+	for _, p := range children {
+		parentID, ok := keyToID[*p.ParentKey]
+		if !ok {
+			return fmt.Errorf("missing parent key: %s", *p.ParentKey)
+		}
+		id, err := updatePoint(p, &parentID)
+		if err != nil {
+			return fmt.Errorf("upsert child agenda point: %w", err)
+		}
+		keyToID[p.Key] = id
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit tx: %w", err)
 	}
 	return nil
 }

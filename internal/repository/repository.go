@@ -7,6 +7,16 @@ import (
 	"github.com/Y4shin/conference-tool/internal/repository/model"
 )
 
+// AgendaApplyPoint describes one desired agenda entry for bulk replacement.
+// Key must be unique within one apply call; ParentKey references another point Key.
+type AgendaApplyPoint struct {
+	Key        string
+	ExistingID *int64
+	ParentKey  *string
+	Title      string
+	Position   int64
+}
+
 // Repository defines the interface for data persistence and migration management.
 type Repository interface {
 	// Close closes the underlying database connection.
@@ -94,9 +104,13 @@ type Repository interface {
 	CreateAgendaPoint(ctx context.Context, meetingID int64, title string) (*model.AgendaPoint, error)
 	CreateSubAgendaPoint(ctx context.Context, meetingID, parentID int64, title string) (*model.AgendaPoint, error)
 	ListAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error)
+	ListSubAgendaPointsForParent(ctx context.Context, meetingID, parentID int64) ([]*model.AgendaPoint, error)
 	ListSubAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error)
 	GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error)
 	DeleteAgendaPoint(ctx context.Context, id int64) error
+	MoveAgendaPointUp(ctx context.Context, meetingID, agendaPointID int64) error
+	MoveAgendaPointDown(ctx context.Context, meetingID, agendaPointID int64) error
+	ApplyAgendaPoints(ctx context.Context, meetingID int64, points []AgendaApplyPoint, deleteIDs []int64) error
 	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error
 	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
 	SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error

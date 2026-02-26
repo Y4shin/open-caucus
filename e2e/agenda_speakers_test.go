@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
@@ -68,6 +69,27 @@ func addAgendaPoint(t *testing.T, page playwright.Page, title string) {
 	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-add-form'] button[type=submit]").Click(); err != nil {
 		t.Fatalf("submit agenda form: %v", err)
 	}
+}
+
+func openAgendaImportDialog(t *testing.T, page playwright.Page) {
+	t.Helper()
+	openModerateAgendaEditor(t, page)
+	openBtn := page.Locator("#agenda-point-list-container button[aria-controls='moderate-agenda-import-dialog']")
+	if err := openBtn.First().Click(); err != nil {
+		t.Fatalf("open agenda import dialog: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog[open]").WaitFor(); err != nil {
+		t.Fatalf("wait agenda import dialog open: %v", err)
+	}
+}
+
+func agendaImportLinePrefixText(t *testing.T, page playwright.Page, rowIndex int) string {
+	t.Helper()
+	text, err := page.Locator("#agenda-import-correction-form [data-import-line-row]").Nth(rowIndex).Locator("[data-import-line-prefix]").TextContent()
+	if err != nil {
+		t.Fatalf("read import line prefix for row %d: %v", rowIndex, err)
+	}
+	return strings.TrimSpace(text)
 }
 
 func openSpeakerAddDialog(t *testing.T, page playwright.Page) {
@@ -241,6 +263,275 @@ func TestAgendaPoint_Delete(t *testing.T) {
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected agenda point to disappear: %v", err)
+	}
+}
+
+func TestAgendaPoint_ReorderMoveUp(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "First")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Second")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	openModerateAgendaEditor(t, page)
+
+	urlBefore := page.URL()
+	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
+		HasText: "Second",
+	})
+	if err := card.Locator("button[title='Move up']").Click(); err != nil {
+		t.Fatalf("click move up: %v", err)
+	}
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").First().Locator("text=Second").WaitFor(); err != nil {
+		t.Fatalf("expected 'Second' to become first card: %v", err)
+	}
+	if page.URL() != urlBefore {
+		t.Errorf("URL changed on reorder: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+func TestAgendaImport_FileUploadPopulatesTextarea(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	openAgendaImportDialog(t, page)
+
+	fileInput := page.Locator("#moderate-agenda-import-dialog input[type='file'][data-agenda-import-file]")
+	if err := fileInput.SetInputFiles(playwright.InputFile{
+		Name:     "agenda.txt",
+		MimeType: "text/plain",
+		Buffer:   []byte("TOP1 Opening\nTOP2 Reports"),
+	}); err != nil {
+		t.Fatalf("set import file: %v", err)
+	}
+
+	if _, err := page.Evaluate(`() => new Promise((resolve) => setTimeout(resolve, 200))`, nil); err != nil {
+		t.Fatalf("wait after import file read: %v", err)
+	}
+	value, err := page.Locator("#agenda-import-source").InputValue()
+	if err != nil {
+		t.Fatalf("read import textarea value: %v", err)
+	}
+	if !strings.Contains(value, "TOP1 Opening") || !strings.Contains(value, "TOP2 Reports") {
+		t.Fatalf("expected textarea to contain imported file contents, got %q", value)
+	}
+}
+
+func TestAgendaImport_ExtractDiffAccept(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "A")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "C")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	openAgendaImportDialog(t, page)
+
+	urlBefore := page.URL()
+	source := page.Locator("#agenda-import-source")
+	if err := source.Fill("TOP1 A\nTOP2 B\nTOP3 C"); err != nil {
+		t.Fatalf("fill import source: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
+		t.Fatalf("click Extract Agenda: %v", err)
+	}
+	if err := page.Locator("#agenda-import-correction-form").WaitFor(); err != nil {
+		t.Fatalf("wait correction form: %v", err)
+	}
+	if err := page.Locator("#agenda-import-correction-form button:has-text('Generate Diff')").Click(); err != nil {
+		t.Fatalf("click Generate Diff: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog h4:has-text('Agenda Diff')").WaitFor(); err != nil {
+		t.Fatalf("wait diff heading: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Accept')").Click(); err != nil {
+		t.Fatalf("click Accept: %v", err)
+	}
+	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('B')").WaitFor(); err != nil {
+		t.Fatalf("expected imported agenda point B to appear: %v", err)
+	}
+	if page.URL() != urlBefore {
+		t.Errorf("URL changed on import apply: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+func TestAgendaImport_CorrectionClickUpdatesDetectedNumbering(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	openAgendaImportDialog(t, page)
+
+	if err := page.Locator("#agenda-import-source").Fill("TOP1 A\nTOP2 B\nTOP3 C"); err != nil {
+		t.Fatalf("fill import source: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
+		t.Fatalf("click Extract Agenda: %v", err)
+	}
+	if err := page.Locator("#agenda-import-correction-form").WaitFor(); err != nil {
+		t.Fatalf("wait correction form: %v", err)
+	}
+
+	rows := page.Locator("#agenda-import-correction-form [data-import-line-row]")
+	count, err := rows.Count()
+	if err != nil {
+		t.Fatalf("count correction rows: %v", err)
+	}
+	if count != 3 {
+		t.Fatalf("expected 3 correction rows, got %d", count)
+	}
+
+	if got := agendaImportLinePrefixText(t, page, 0); got != "TOP 1" {
+		t.Fatalf("unexpected initial prefix row 1: got %q want %q", got, "TOP 1")
+	}
+	if got := agendaImportLinePrefixText(t, page, 1); got != "TOP 2" {
+		t.Fatalf("unexpected initial prefix row 2: got %q want %q", got, "TOP 2")
+	}
+	if got := agendaImportLinePrefixText(t, page, 2); got != "TOP 3" {
+		t.Fatalf("unexpected initial prefix row 3: got %q want %q", got, "TOP 3")
+	}
+
+	if err := rows.Nth(1).Click(); err != nil {
+		t.Fatalf("click row 2 (heading -> subheading): %v", err)
+	}
+	if got := agendaImportLinePrefixText(t, page, 1); got != "TOP 1.1" {
+		t.Fatalf("unexpected prefix row 2 after subheading click: got %q want %q", got, "TOP 1.1")
+	}
+	if got := agendaImportLinePrefixText(t, page, 2); got != "TOP 2" {
+		t.Fatalf("unexpected prefix row 3 after row 2 subheading click: got %q want %q", got, "TOP 2")
+	}
+
+	if err := rows.Nth(1).Click(); err != nil {
+		t.Fatalf("click row 2 (subheading -> ignore): %v", err)
+	}
+	if got := agendaImportLinePrefixText(t, page, 1); got != "" {
+		t.Fatalf("unexpected prefix row 2 after ignore click: got %q want empty", got)
+	}
+	if got := agendaImportLinePrefixText(t, page, 2); got != "TOP 2" {
+		t.Fatalf("unexpected prefix row 3 after row 2 ignore click: got %q want %q", got, "TOP 2")
+	}
+}
+
+func TestAgendaImport_StaleAcceptShowsWarning(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "A")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "C")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	openAgendaImportDialog(t, page)
+
+	source := page.Locator("#agenda-import-source")
+	if err := source.Fill("TOP1 A\nTOP2 Inserted Point\nTOP3 C"); err != nil {
+		t.Fatalf("fill import source: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
+		t.Fatalf("click Extract Agenda: %v", err)
+	}
+	if err := page.Locator("#agenda-import-correction-form").WaitFor(); err != nil {
+		t.Fatalf("wait correction form: %v", err)
+	}
+	if err := page.Locator("#agenda-import-correction-form button:has-text('Generate Diff')").Click(); err != nil {
+		t.Fatalf("click Generate Diff: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog h4:has-text('Agenda Diff')").WaitFor(); err != nil {
+		t.Fatalf("wait diff heading: %v", err)
+	}
+
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "External Change")
+
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Accept')").Click(); err != nil {
+		t.Fatalf("click Accept after external change: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog .alert:has-text('Agenda changed while you reviewed this diff')").WaitFor(); err != nil {
+		t.Fatalf("expected stale warning message: %v", err)
+	}
+
+	// Stale accept should not apply the previously previewed changes yet.
+	count, err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Inserted Point')").Count()
+	if err != nil {
+		t.Fatalf("count inserted point cards: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected stale accept to not apply changes immediately, got count=%d", count)
+	}
+}
+
+func TestAgendaImport_DenyLeavesAgendaUnchanged(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "A")
+	ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "C")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+	openAgendaImportDialog(t, page)
+
+	if err := page.Locator("#agenda-import-source").Fill("TOP1 A\nTOP2 Denied Point\nTOP3 C"); err != nil {
+		t.Fatalf("fill source: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
+		t.Fatalf("click Extract Agenda: %v", err)
+	}
+	if err := page.Locator("#agenda-import-correction-form button:has-text('Generate Diff')").Click(); err != nil {
+		t.Fatalf("click Generate Diff: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Deny')").Click(); err != nil {
+		t.Fatalf("click Deny: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog[open]").WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateDetached,
+	}); err != nil {
+		t.Fatalf("expected import dialog to close on deny: %v", err)
+	}
+
+	count, err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Denied Point')").Count()
+	if err != nil {
+		t.Fatalf("count denied point cards: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected denied point to not be applied, got count=%d", count)
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"unicode"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type AttendeeItem struct {
@@ -150,6 +151,179 @@ type AgendaPointListPartialInput struct {
 	ParentOptions        []AgendaPointItem
 	CurrentAgendaPointID *int64
 	Error                string
+	Import               AgendaImportPreview
+}
+
+type AgendaImportLineItem struct {
+	LineNo        int
+	Text          string
+	State         string
+	DetectedState string
+}
+
+func (l AgendaImportLineItem) StableKey() string {
+	return fmt.Sprintf("%d:%s", l.LineNo, l.Text)
+}
+
+type AgendaImportDiffItem struct {
+	Operation   string
+	BeforeLabel string
+	AfterLabel  string
+	BeforeTitle string
+	AfterTitle  string
+	BeforeTone  string
+	AfterTone   string
+	BeforePairKey string
+	AfterPairKey  string
+}
+
+func agendaDiffHoverKey(pairKey, fallback string) string {
+	if strings.TrimSpace(pairKey) != "" {
+		return pairKey
+	}
+	return fallback
+}
+
+func agendaDiffCellToneClass(tone string) string {
+	switch tone {
+	case "success":
+		return "border-success/40 bg-success/10"
+	case "error":
+		return "border-error/40 bg-error/10"
+	case "warning":
+		return "border-warning/40 bg-warning/10"
+	default:
+		return "border-base-300 bg-base-100"
+	}
+}
+
+func agendaDiffOperationIcon(operation string) IconName {
+	switch operation {
+	case "insert":
+		return IconArrowForward
+	case "delete":
+		return IconDelete
+	case "move":
+		return IconHistory
+	case "rename":
+		return IconSettings
+	default:
+		return IconCheckCircle
+	}
+}
+
+func agendaDiffOperationToneClass(operation string) string {
+	switch operation {
+	case "insert":
+		return "text-success"
+	case "delete":
+		return "text-error"
+	case "move", "rename":
+		return "text-warning"
+	default:
+		return "text-base-content/60"
+	}
+}
+
+func agendaDiffOperationTooltipKey(operation string) string {
+	switch operation {
+	case "insert":
+		return "agenda_import.diff_op_insert"
+	case "delete":
+		return "agenda_import.diff_op_delete"
+	case "move":
+		return "agenda_import.diff_op_move"
+	case "rename":
+		return "agenda_import.diff_op_rename"
+	default:
+		return "agenda_import.diff_op_unchanged"
+	}
+}
+
+type AgendaImportPreview struct {
+	SourceText  string
+	Lines       []AgendaImportLineItem
+	Diff        []AgendaImportDiffItem
+	Fingerprint string
+	Warning     string
+	Stage       string // "", "correction", "diff"
+}
+
+func (i *AgendaPointListPartialInput) ImportModalOpen() bool {
+	return i.Import.Stage != "" || i.Import.Warning != ""
+}
+
+func (i *AgendaPointListPartialInput) ImportHasCorrection() bool {
+	return len(i.Import.Lines) > 0
+}
+
+func (i *AgendaPointListPartialInput) ImportHasDiff() bool {
+	return len(i.Import.Diff) > 0
+}
+
+func (i *AgendaPointListPartialInput) ImportExtractPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaImportExtractRoute(i.CommitteeSlug, i.IDString).ManageAgendaImportExtractPost(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) ImportDiffPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaImportDiffRoute(i.CommitteeSlug, i.IDString).ManageAgendaImportDiffPost(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) ImportApplyPostStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaImportApplyRoute(i.CommitteeSlug, i.IDString).ManageAgendaImportApplyPost(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointMoveUpPostStr(ctx context.Context, ap *AgendaPointItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMoveUpRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointMoveUpPost(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointMoveDownPostStr(ctx context.Context, ap *AgendaPointItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMoveDownRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointMoveDownPost(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointCanMoveUp(ap AgendaPointItem) bool {
+	var firstSeen bool
+	for _, candidate := range i.AgendaPoints {
+		if !agendaSiblings(ap, candidate) {
+			continue
+		}
+		if !firstSeen {
+			firstSeen = true
+			if candidate.ID == ap.ID {
+				return false
+			}
+		}
+		if candidate.ID == ap.ID {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointCanMoveDown(ap AgendaPointItem) bool {
+	var found bool
+	for _, candidate := range i.AgendaPoints {
+		if !agendaSiblings(ap, candidate) {
+			continue
+		}
+		if found {
+			return true
+		}
+		if candidate.ID == ap.ID {
+			found = true
+		}
+	}
+	return false
+}
+
+func agendaSiblings(a, b AgendaPointItem) bool {
+	if a.ParentID == nil && b.ParentID == nil {
+		return true
+	}
+	if a.ParentID == nil || b.ParentID == nil {
+		return false
+	}
+	return *a.ParentID == *b.ParentID
 }
 
 func (i *AgendaPointListPartialInput) AgendaPointCreatePostStr(ctx context.Context) string {
@@ -979,7 +1153,7 @@ templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
 }
 
 templ AgendaPointListPartial(input AgendaPointListPartialInput) {
-	<div id="agenda-point-list-container" class="space-y-3">
+	<div id="agenda-point-list-container" class="space-y-3" data-import-open={ fmt.Sprintf("%t", input.ImportModalOpen()) }>
 		@ErrorMessage(input.Error)
 		<div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
 			<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-1">
@@ -1005,6 +1179,14 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 						<button type="submit" class="btn btn-sm mt-3 w-full">
 							@Icon(IconArrowForward, "", "h-4 w-4")
 							Add
+						</button>
+						<button
+							type="button"
+							class="btn btn-sm btn-outline mt-2 w-full"
+							data-manage-dialog-open
+							aria-controls="moderate-agenda-import-dialog"
+						>
+							{ i18n.T(ctx, "agenda_import.open_button") }
 						</button>
 					</fieldset>
 				</form>
@@ -1040,6 +1222,40 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 									</div>
 								</div>
 								<div class="mt-2 flex items-center gap-2">
+									<form
+										hx-post={ input.AgendaPointMoveUpPostStr(ctx, &ap) }
+										hx-target="#agenda-point-list-container"
+										hx-swap="outerHTML"
+										class="inline-flex"
+									>
+										<button
+											type="submit"
+											class="btn btn-sm btn-square tooltip tooltip-left"
+											data-tip="Move up"
+											title="Move up"
+											aria-label="Move up"
+											disabled?={ !input.AgendaPointCanMoveUp(ap) }
+										>
+											@Icon(IconChevronLeft, "", "h-4 w-4 rotate-90")
+										</button>
+									</form>
+									<form
+										hx-post={ input.AgendaPointMoveDownPostStr(ctx, &ap) }
+										hx-target="#agenda-point-list-container"
+										hx-swap="outerHTML"
+										class="inline-flex"
+									>
+										<button
+											type="submit"
+											class="btn btn-sm btn-square tooltip tooltip-left"
+											data-tip="Move down"
+											title="Move down"
+											aria-label="Move down"
+											disabled?={ !input.AgendaPointCanMoveDown(ap) }
+										>
+											@Icon(IconChevronRight, "", "h-4 w-4 rotate-90")
+										</button>
+									</form>
 									if !ap.IsActive {
 										<form
 											hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
@@ -1091,6 +1307,352 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 				}
 			</div>
 		</div>
+		<dialog id="moderate-agenda-import-dialog" class="modal" data-manage-dialog>
+			<div class="modal-box w-11/12 max-w-5xl">
+				<div class="mb-4 flex items-center justify-between gap-2">
+					<h3 class="text-lg font-semibold">{ i18n.T(ctx, "agenda_import.title") }</h3>
+					<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>{ i18n.T(ctx, "agenda_import.close") }</button>
+				</div>
+				<div class="space-y-4">
+					if input.Import.Warning != "" {
+						<div class="alert alert-warning text-sm">{ input.Import.Warning }</div>
+					}
+
+					<form
+						hx-post={ input.ImportExtractPostStr(ctx) }
+						hx-target="#agenda-point-list-container"
+						hx-swap="outerHTML"
+						class="space-y-3"
+					>
+						<label class="label p-0 text-sm font-medium" for="agenda-import-source">{ i18n.T(ctx, "agenda_import.source_label") }</label>
+						<textarea
+							id="agenda-import-source"
+							name="source_text"
+							class="textarea textarea-bordered min-h-40 w-full"
+							placeholder={ i18n.T(ctx, "agenda_import.source_placeholder") }
+						>{ input.Import.SourceText }</textarea>
+						<div class="flex flex-wrap items-center gap-2">
+							<input
+								type="file"
+								class="file-input file-input-bordered file-input-sm max-w-full"
+								accept=".txt,.md,text/plain,text/markdown"
+								data-agenda-import-file
+								data-target="agenda-import-source"
+							/>
+							<button type="submit" class="btn btn-sm btn-outline">{ i18n.T(ctx, "agenda_import.extract_button") }</button>
+						</div>
+					</form>
+
+					if input.ImportHasCorrection() {
+						<form
+							id="agenda-import-correction-form"
+							hx-post={ input.ImportDiffPostStr(ctx) }
+							hx-target="#agenda-point-list-container"
+							hx-swap="outerHTML"
+							class="space-y-3"
+						>
+							<input type="hidden" name="source_text" value={ input.Import.SourceText }/>
+							<h4 class="text-base font-semibold">{ i18n.T(ctx, "agenda_import.correction_heading") }</h4>
+							<p class="text-sm text-base-content/70">{ i18n.T(ctx, "agenda_import.correction_hint") }</p>
+							<div class="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
+								<ul class="space-y-2" data-agenda-import-lines>
+									for _, line := range input.Import.Lines {
+										<li>
+											<input type="hidden" name="line_no" value={ strconv.Itoa(line.LineNo) }/>
+											<input type="hidden" name="line_text" value={ line.Text }/>
+											<input type="hidden" name="line_detected_state" value={ line.DetectedState }/>
+											<input type="hidden" name="line_state" value={ line.State } data-import-line-state/>
+											<button
+												type="button"
+												class="flex w-full items-center gap-3 rounded-box border border-base-300 bg-base-100 px-3 py-2 text-left transition-colors"
+												data-import-line-row
+												data-state={ line.State }
+											>
+												<span class="w-24 shrink-0 text-xs font-medium tabular-nums text-base-content/60" data-import-line-prefix></span>
+												<span class="min-w-0 flex-1 truncate text-sm" title={ line.Text }>{ line.Text }</span>
+											</button>
+										</li>
+									}
+								</ul>
+							</div>
+							<button type="submit" class="btn btn-sm">{ i18n.T(ctx, "agenda_import.generate_diff_button") }</button>
+						</form>
+					}
+
+					if input.ImportHasDiff() {
+						<div class="space-y-3">
+							<h4 class="text-base font-semibold">{ i18n.T(ctx, "agenda_import.diff_heading") }</h4>
+							<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-2">
+								<style>
+									#agenda-import-diff-grid [data-diff-cell] {
+										transition: filter 120ms ease, box-shadow 120ms ease;
+									}
+									#agenda-import-diff-grid [data-diff-cell][data-hovered="true"] {
+										filter: brightness(0.95);
+										box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
+									}
+								</style>
+								<div class="mb-2 hidden grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-base-content/60 md:grid">
+									<div>{ i18n.T(ctx, "agenda_import.diff_column_current") }</div>
+									<div class="text-center">{ i18n.T(ctx, "agenda_import.diff_column_change") }</div>
+									<div>{ i18n.T(ctx, "agenda_import.diff_column_imported") }</div>
+								</div>
+								<ul class="space-y-2">
+										for idx, item := range input.Import.Diff {
+											<li class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 text-sm">
+												if item.BeforeTitle != "" {
+													<div
+														class={ "min-h-12 rounded-box border p-2", agendaDiffCellToneClass(item.BeforeTone) }
+														data-diff-cell
+														data-diff-hover-key={ agendaDiffHoverKey(item.BeforePairKey, fmt.Sprintf("row-%d-before", idx)) }
+													>
+														<div class="mb-1 text-xs font-medium uppercase tracking-wide text-base-content/60 md:hidden">{ i18n.T(ctx, "agenda_import.diff_column_current") }</div>
+														<div class="flex items-start justify-between gap-2">
+															<div class="min-w-0 flex-1">
+																<div class="text-xs text-base-content/70">{ item.BeforeLabel }</div>
+																<div class="truncate">{ item.BeforeTitle }</div>
+															</div>
+														</div>
+													</div>
+												} else {
+													<div class="min-h-12 rounded-box border border-dashed border-base-300/70 bg-base-200/20"></div>
+												}
+											<div class="flex min-h-12 items-center justify-center">
+												<span
+													class={ "tooltip tooltip-top", agendaDiffOperationToneClass(item.Operation) }
+													data-tip={ i18n.T(ctx, agendaDiffOperationTooltipKey(item.Operation)) }
+												>
+													@Icon(agendaDiffOperationIcon(item.Operation), "", "h-5", "w-5")
+												</span>
+											</div>
+												if item.AfterTitle != "" {
+													<div
+														class={ "min-h-12 rounded-box border p-2", agendaDiffCellToneClass(item.AfterTone) }
+														data-diff-cell
+														data-diff-hover-key={ agendaDiffHoverKey(item.AfterPairKey, fmt.Sprintf("row-%d-after", idx)) }
+													>
+														<div class="mb-1 text-xs font-medium uppercase tracking-wide text-base-content/60 md:hidden">{ i18n.T(ctx, "agenda_import.diff_column_imported") }</div>
+														<div class="flex items-start justify-between gap-2">
+															<div class="min-w-0 flex-1">
+																<div class="text-xs text-base-content/70">{ item.AfterLabel }</div>
+																<div class="truncate">{ item.AfterTitle }</div>
+															</div>
+														</div>
+													</div>
+												} else {
+													<div class="min-h-12 rounded-box border border-dashed border-base-300/70 bg-base-200/20"></div>
+												}
+										</li>
+									}
+								</ul>
+							</div>
+							<div class="alert alert-warning text-sm">{ i18n.T(ctx, "agenda_import.destructive_warning") }</div>
+							<div class="flex flex-wrap gap-2">
+								<form
+									hx-post={ input.ImportApplyPostStr(ctx) }
+									hx-target="#agenda-point-list-container"
+									hx-swap="outerHTML"
+									hx-include="#agenda-import-correction-form"
+									class="inline-flex"
+								>
+									<input type="hidden" name="fingerprint" value={ input.Import.Fingerprint }/>
+									<button type="submit" class="btn btn-sm btn-primary">{ i18n.T(ctx, "agenda_import.accept_button") }</button>
+								</form>
+								<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>{ i18n.T(ctx, "agenda_import.deny_button") }</button>
+							</div>
+						</div>
+					}
+				</div>
+			</div>
+			<form method="dialog" class="modal-backdrop">
+				<button aria-label="Close">close</button>
+			</form>
+		</dialog>
+		<script>
+			(function() {
+				function nextImportLineState(state) {
+					switch (state) {
+						case "ignore":
+							return "heading";
+						case "heading":
+							return "subheading";
+						default:
+							return "ignore";
+					}
+				}
+
+				function setImportLineVisualState(row, state) {
+					row.setAttribute("data-state", state);
+					row.classList.remove("border-base-300", "bg-base-100", "border-primary/30", "bg-primary/10", "border-info/30", "bg-info/10", "opacity-60");
+					switch (state) {
+						case "heading":
+							row.classList.add("border-primary/30", "bg-primary/10");
+							break;
+						case "subheading":
+							row.classList.add("border-info/30", "bg-info/10");
+							break;
+						default:
+							row.classList.add("border-base-300", "bg-base-100", "opacity-60");
+					}
+				}
+
+				function recomputeAgendaImportDetectedNumbers(scope) {
+					var root = scope instanceof Element ? scope : document;
+					var containers = [];
+					if (root instanceof Element && root.matches("[data-agenda-import-lines]")) {
+						containers.push(root);
+					}
+					var nested = root.querySelectorAll("[data-agenda-import-lines]");
+					for (var n = 0; n < nested.length; n++) {
+						containers.push(nested[n]);
+					}
+					for (var c = 0; c < containers.length; c++) {
+						var topIndex = 0;
+						var subIndex = 0;
+						var rows = containers[c].querySelectorAll("[data-import-line-row]");
+						for (var i = 0; i < rows.length; i++) {
+							var row = rows[i];
+							var state = row.getAttribute("data-state") || "ignore";
+							var prefix = row.querySelector("[data-import-line-prefix]");
+							var label = "";
+							if (state === "heading") {
+								topIndex++;
+								subIndex = 0;
+								label = "TOP " + topIndex;
+							} else if (state === "subheading" && topIndex > 0) {
+								subIndex++;
+								label = "TOP " + topIndex + "." + subIndex;
+							}
+							if (prefix) {
+								prefix.textContent = label;
+							}
+						}
+					}
+				}
+
+				function syncAgendaImportLineStates(scope) {
+					var root = scope instanceof Element ? scope : document;
+					var rows = root.querySelectorAll("[data-import-line-row]");
+					for (var i = 0; i < rows.length; i++) {
+						var row = rows[i];
+						var container = row.parentElement;
+						if (!container) { continue; }
+						var hiddenState = container.querySelector("[data-import-line-state]");
+						var state = "ignore";
+						if (hiddenState instanceof HTMLInputElement) {
+							state = hiddenState.value;
+						}
+						if (state !== "ignore" && state !== "heading" && state !== "subheading") {
+							state = "ignore";
+							if (hiddenState instanceof HTMLInputElement) {
+								hiddenState.value = state;
+							}
+						}
+						setImportLineVisualState(row, state);
+					}
+					recomputeAgendaImportDetectedNumbers(root);
+				}
+
+				function clearAgendaImportDiffHover() {
+					var hovered = document.querySelectorAll("#agenda-import-diff-grid [data-diff-cell][data-hovered='true']");
+					for (var i = 0; i < hovered.length; i++) {
+						hovered[i].removeAttribute("data-hovered");
+					}
+				}
+
+				function applyAgendaImportDiffHover(key) {
+					clearAgendaImportDiffHover();
+					if (!key) { return; }
+					var safeKey = key.replace(/"/g, '\\"');
+					var selector = "#agenda-import-diff-grid [data-diff-cell][data-diff-hover-key=\"" + safeKey + "\"]";
+					var cells = document.querySelectorAll(selector);
+					for (var i = 0; i < cells.length; i++) {
+						cells[i].setAttribute("data-hovered", "true");
+					}
+				}
+
+				if (!window.__agendaImportFileWired) {
+					document.addEventListener("change", function(event) {
+						var input = event.target;
+						if (!(input instanceof HTMLInputElement) || !input.matches("[data-agenda-import-file]")) { return; }
+						if (!input.files || input.files.length === 0) { return; }
+						var file = input.files[0];
+						var targetID = input.getAttribute("data-target");
+						if (!targetID) { return; }
+						file.text().then(function(content) {
+							var target = document.getElementById(targetID);
+							if (target instanceof HTMLTextAreaElement) {
+								target.value = content;
+							}
+						});
+					});
+					window.__agendaImportFileWired = true;
+				}
+
+				if (!window.__agendaImportCorrectionWired) {
+					document.addEventListener("click", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var row = target.closest("[data-import-line-row]");
+						if (!row) { return; }
+						var container = row.parentElement;
+						if (!container) { return; }
+						var hiddenState = container.querySelector("[data-import-line-state]");
+						if (!(hiddenState instanceof HTMLInputElement)) { return; }
+						var next = nextImportLineState(hiddenState.value);
+						hiddenState.value = next;
+						setImportLineVisualState(row, next);
+						recomputeAgendaImportDetectedNumbers(row.closest("[data-agenda-import-lines]"));
+					});
+					document.addEventListener("htmx:afterSwap", function(event) {
+						var target = event.target;
+						if (target instanceof Element) {
+							syncAgendaImportLineStates(target);
+							return;
+						}
+						syncAgendaImportLineStates(document);
+					});
+					window.__agendaImportCorrectionWired = true;
+				}
+
+				if (!window.__agendaImportDiffHoverWired) {
+					document.addEventListener("mouseover", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var cell = target.closest("#agenda-import-diff-grid [data-diff-cell]");
+						if (!cell) { return; }
+						applyAgendaImportDiffHover(cell.getAttribute("data-diff-hover-key") || "");
+					});
+					document.addEventListener("mouseout", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var cell = target.closest("#agenda-import-diff-grid [data-diff-cell]");
+						if (!cell) { return; }
+						var related = event.relatedTarget;
+						if (related instanceof Element) {
+							var nextCell = related.closest("#agenda-import-diff-grid [data-diff-cell]");
+							if (nextCell) {
+								applyAgendaImportDiffHover(nextCell.getAttribute("data-diff-hover-key") || "");
+								return;
+							}
+						}
+						clearAgendaImportDiffHover();
+					});
+					document.addEventListener("htmx:afterSwap", function() {
+						clearAgendaImportDiffHover();
+					});
+					window.__agendaImportDiffHoverWired = true;
+				}
+
+				var root = document.getElementById("agenda-point-list-container");
+				var modal = document.getElementById("moderate-agenda-import-dialog");
+				if (!root || !modal || typeof modal.showModal !== "function") { return; }
+				syncAgendaImportLineStates(root);
+				if (root.getAttribute("data-import-open") === "true" && !modal.open) {
+					modal.showModal();
+				}
+			})();
+		</script>
 	</div>
 }
 
@@ -1668,4 +2230,3 @@ templ MeetingManageContent(input MeetingManageInput) {
 func attendeeItemIDString(id int64) string {
 	return strconv.FormatInt(id, 10)
 }
-

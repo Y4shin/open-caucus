@@ -10,6 +10,17 @@ import (
 	"database/sql"
 )
 
+const bumpAgendaPointPositionsForMeeting = `-- name: BumpAgendaPointPositionsForMeeting :exec
+UPDATE agenda_points
+SET position = position + 1000000
+WHERE meeting_id = ?
+`
+
+func (q *Queries) BumpAgendaPointPositionsForMeeting(ctx context.Context, meetingID int64) error {
+	_, err := q.db.ExecContext(ctx, bumpAgendaPointPositionsForMeeting, meetingID)
+	return err
+}
+
 const clearCurrentDocument = `-- name: ClearCurrentDocument :exec
 UPDATE agenda_points
 SET current_attachment_id = NULL, current_motion_id = NULL
@@ -260,6 +271,58 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 	return items, nil
 }
 
+const listSubAgendaPointsForParent = `-- name: ListSubAgendaPointsForParent :many
+SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+       gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
+       current_attachment_id, current_motion_id
+FROM agenda_points
+WHERE meeting_id = ? AND parent_id = ?
+ORDER BY position ASC
+`
+
+type ListSubAgendaPointsForParentParams struct {
+	MeetingID int64
+	ParentID  sql.NullInt64
+}
+
+func (q *Queries) ListSubAgendaPointsForParent(ctx context.Context, arg ListSubAgendaPointsForParentParams) ([]AgendaPoint, error) {
+	rows, err := q.db.QueryContext(ctx, listSubAgendaPointsForParent, arg.MeetingID, arg.ParentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AgendaPoint
+	for rows.Next() {
+		var i AgendaPoint
+		if err := rows.Scan(
+			&i.ID,
+			&i.MeetingID,
+			&i.ParentID,
+			&i.Position,
+			&i.Title,
+			&i.Protocol,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CurrentSpeakerID,
+			&i.GenderQuotationEnabled,
+			&i.FirstSpeakerQuotationEnabled,
+			&i.ModeratorID,
+			&i.CurrentAttachmentID,
+			&i.CurrentMotionID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const setAgendaPointFirstSpeakerQuotation = `-- name: SetAgendaPointFirstSpeakerQuotation :exec
 UPDATE agenda_points SET first_speaker_quotation_enabled = ? WHERE id = ?
 `
@@ -299,6 +362,22 @@ type SetAgendaPointModeratorParams struct {
 
 func (q *Queries) SetAgendaPointModerator(ctx context.Context, arg SetAgendaPointModeratorParams) error {
 	_, err := q.db.ExecContext(ctx, setAgendaPointModerator, arg.ModeratorID, arg.ID)
+	return err
+}
+
+const setAgendaPointPosition = `-- name: SetAgendaPointPosition :exec
+UPDATE agenda_points
+SET position = ?
+WHERE id = ?
+`
+
+type SetAgendaPointPositionParams struct {
+	Position int64
+	ID       int64
+}
+
+func (q *Queries) SetAgendaPointPosition(ctx context.Context, arg SetAgendaPointPositionParams) error {
+	_, err := q.db.ExecContext(ctx, setAgendaPointPosition, arg.Position, arg.ID)
 	return err
 }
 
@@ -373,5 +452,30 @@ type UpdateAgendaPointProtocolParams struct {
 
 func (q *Queries) UpdateAgendaPointProtocol(ctx context.Context, arg UpdateAgendaPointProtocolParams) error {
 	_, err := q.db.ExecContext(ctx, updateAgendaPointProtocol, arg.Protocol, arg.ID)
+	return err
+}
+
+const updateAgendaPointStructure = `-- name: UpdateAgendaPointStructure :exec
+UPDATE agenda_points
+SET parent_id = ?, position = ?, title = ?
+WHERE id = ? AND meeting_id = ?
+`
+
+type UpdateAgendaPointStructureParams struct {
+	ParentID  sql.NullInt64
+	Position  int64
+	Title     string
+	ID        int64
+	MeetingID int64
+}
+
+func (q *Queries) UpdateAgendaPointStructure(ctx context.Context, arg UpdateAgendaPointStructureParams) error {
+	_, err := q.db.ExecContext(ctx, updateAgendaPointStructure,
+		arg.ParentID,
+		arg.Position,
+		arg.Title,
+		arg.ID,
+		arg.MeetingID,
+	)
 	return err
 }

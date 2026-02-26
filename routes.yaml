@@ -712,6 +712,86 @@ routes:
           type: AgendaPointListPartial
           input_type: AgendaPointListPartialInput
 
+  # Agenda Point Move Up
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/move-up
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointMoveUp
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Point Move Down
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/move-down
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointMoveDown
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Import Extract
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda/import/extract
+    methods:
+      - verb: POST
+        handler: ManageAgendaImportExtract
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Import Diff
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda/import/diff
+    methods:
+      - verb: POST
+        handler: ManageAgendaImportDiff
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Import Apply
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda/import/apply
+    methods:
+      - verb: POST
+        handler: ManageAgendaImportApply
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
   # Agenda Point Tools Page (attachments + motions)
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools
     methods:
@@ -1076,5 +1156,4 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: LoginPageTemplate
           input_type: LoginPageInput
-
 

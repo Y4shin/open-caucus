@@ -101,6 +101,11 @@ type Handler interface {
 	ManageAgendaPointCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageActivateAgendaPoint(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaPointMoveUp(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaPointMoveDown(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaImportExtract(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaImportDiff(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaImportApply(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointToolsPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingAgendaPointToolsInput, *ResponseMeta, error)
 	ManageSpeakerAdd(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerAddCandidates(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
@@ -499,6 +504,41 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/activate", rt.wrapMiddleware(
 		rt.handleManageActivateAgendaPoint,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/activate", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/move-up", rt.wrapMiddleware(
+		rt.handleManageAgendaPointMoveUp,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/move-up", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/move-down", rt.wrapMiddleware(
+		rt.handleManageAgendaPointMoveDown,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/move-down", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda/import/extract", rt.wrapMiddleware(
+		rt.handleManageAgendaImportExtract,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda/import/extract", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda/import/diff", rt.wrapMiddleware(
+		rt.handleManageAgendaImportDiff,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda/import/diff", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda/import/apply", rt.wrapMiddleware(
+		rt.handleManageAgendaImportApply,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda/import/apply", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
@@ -2009,6 +2049,158 @@ func (rt *Router) handleManageActivateAgendaPoint(w http.ResponseWriter, r *http
 	}
 
 	input, meta, err := rt.handler.ManageActivateAgendaPoint(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointMoveUp(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointMoveUp(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointMoveDown(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointMoveDown(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaImportExtract(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaImportExtract(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaImportDiff(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaImportDiff(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaImportApply(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaImportApply(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

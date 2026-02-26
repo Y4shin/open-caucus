@@ -36,6 +36,14 @@ FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NOT NULL
 ORDER BY parent_id ASC, position ASC;
 
+-- name: ListSubAgendaPointsForParent :many
+SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+       gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
+       current_attachment_id, current_motion_id
+FROM agenda_points
+WHERE meeting_id = ? AND parent_id = ?
+ORDER BY position ASC;
+
 -- name: GetAgendaPointByID :one
 SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
@@ -44,6 +52,21 @@ FROM agenda_points WHERE id = ?;
 
 -- name: DeleteAgendaPoint :exec
 DELETE FROM agenda_points WHERE id = ?;
+
+-- name: SetAgendaPointPosition :exec
+UPDATE agenda_points
+SET position = ?
+WHERE id = ?;
+
+-- name: UpdateAgendaPointStructure :exec
+UPDATE agenda_points
+SET parent_id = ?, position = ?, title = ?
+WHERE id = ? AND meeting_id = ?;
+
+-- name: BumpAgendaPointPositionsForMeeting :exec
+UPDATE agenda_points
+SET position = position + 1000000
+WHERE meeting_id = ?;
 
 -- name: SetCurrentAgendaPoint :exec
 UPDATE meetings SET current_agenda_point_id = ? WHERE id = ?;
