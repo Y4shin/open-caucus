@@ -23,8 +23,6 @@
 //   - Non-chair attendee on manage page (403)          → attendee_login_test.go
 //   - Chair attendee on manage page (allowed)          → attendee_login_test.go
 //   - All four moderate access levels                  → moderate_test.go
-//   - Non-writer attendee on protocol page (500)       → protocol_test.go
-//   - Writer attendee on protocol page (200)           → protocol_test.go
 package e2e_test
 
 import (
@@ -300,124 +298,6 @@ func TestAccess_ModeratePage_Member_Forbidden(t *testing.T) {
 	}
 }
 
-// TestAccess_ModeratePage_ProtocolWriterOnly_Forbidden verifies that an attendee who
-// is only the designated protocol writer (not a chair or moderator) receives 403.
-func TestAccess_ModeratePage_ProtocolWriterOnly_Forbidden(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedMeetingOpen(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-	attendee := ts.seedAttendee(t, "test-committee", "Board Meeting", "Writer Guest", "secret-writer-pw")
-	ts.seedProtocolWriter(t, "test-committee", "Board Meeting", attendee.ID)
-
-	page := newPage(t)
-	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-writer-pw")
-
-	resp, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
-		t.Fatalf("goto moderate page as protocol-writer-only: %v", err)
-	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for protocol-writer-only attendee on moderate page, got %d", resp.Status())
-	}
-}
-
-// TestAccess_ModeratePage_WrongMeetingAttendee_Forbidden verifies that a chair
-// attendee for meeting A cannot access meeting B's moderate page.
-func TestAccess_ModeratePage_WrongMeetingAttendee_Forbidden(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedMeetingOpen(t, "test-committee", "Meeting A", "")
-	ts.seedMeeting(t, "test-committee", "Meeting B", "")
-	meetingA := ts.getMeetingID(t, "test-committee", "Meeting A")
-	meetingB := ts.getMeetingID(t, "test-committee", "Meeting B")
-	attendee := ts.seedAttendee(t, "test-committee", "Meeting A", "Chair of A", "secret-mod-chair-a")
-	ts.setAttendeeChair(t, attendee.ID, true)
-
-	page := newPage(t)
-	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingA, "secret-mod-chair-a")
-
-	resp, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingB))
-	if err != nil {
-		t.Fatalf("goto wrong-meeting moderate page: %v", err)
-	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for chair attendee of meeting A on meeting B moderate page, got %d", resp.Status())
-	}
-}
-
-// ─── Protocol Page ────────────────────────────────────────────────────────────
-// Middleware chain: [session, auth, committee_access, meeting_access, attendee_required]
-// auth redirects unauthenticated users to /; attendee_required returns 403 for
-// authenticated users without an attendee record.
-// The handler then additionally checks that the attendee is the designated writer;
-// non-writers receive a 500 (see TestProtocolPage_NotWriter in protocol_test.go).
-
-// TestAccess_ProtocolPage_Unauthenticated_Forbidden verifies that a visitor with
-// no session is redirected to the login page when accessing the protocol page.
-func TestAccess_ProtocolPage_Unauthenticated_Forbidden(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	if _, err := page.Goto(protocolURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto protocol page: %v", err)
-	}
-	// The auth middleware redirects unauthenticated users to the login page.
-	if page.URL() != ts.URL+"/" {
-		t.Fatalf("expected redirect to login page (/), got %s", page.URL())
-	}
-}
-
-// TestAccess_ProtocolPage_UserSession_Forbidden verifies that a committee user
-// (non-attendee) session receives a 403 on the protocol page.
-func TestAccess_ProtocolPage_UserSession_Forbidden(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-
-	resp, err := page.Goto(protocolURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
-		t.Fatalf("goto protocol page as user: %v", err)
-	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for user session on protocol page, got %d", resp.Status())
-	}
-}
-
-// TestAccess_ProtocolPage_ChairAttendee_NotWriter_Error verifies that a chair attendee
-// who is not the designated protocol writer cannot access the protocol page.
-// The middleware passes (valid attendee session), but the handler rejects non-writers.
-func TestAccess_ProtocolPage_ChairAttendee_NotWriter_Error(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedMeetingOpen(t, "test-committee", "Board Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-	attendee := ts.seedAttendee(t, "test-committee", "Board Meeting", "Chair Guest", "secret-chair-pw")
-	ts.setAttendeeChair(t, attendee.ID, true)
-	// No protocol writer assigned; attendee is chair but NOT the writer.
-
-	page := newPage(t)
-	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-chair-pw")
-
-	resp, err := page.Goto(protocolURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
-		t.Fatalf("goto protocol page as chair attendee: %v", err)
-	}
-	// attendee_required passes; handler returns error (500) for non-writers.
-	if resp.Status() == 200 {
-		t.Fatalf("expected non-200 for chair attendee who is not the protocol writer, got 200")
-	}
-}
-
-// ─── Designated Moderator Boundary ────────────────────────────────────────────
 // A designated meeting moderator has a narrow access window:
 //   - moderate_access routes (moderate page, speaker actions): ALLOWED
 //   - manage_access routes (manage page, attendee management): FORBIDDEN

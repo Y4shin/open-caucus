@@ -77,7 +77,6 @@ type Repository interface {
 	DeleteMeeting(ctx context.Context, id int64) error
 	SetActiveMeeting(ctx context.Context, slug string, meetingID *int64) error
 	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
-	SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error
 	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
@@ -115,7 +114,6 @@ type Repository interface {
 	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
 	SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error
 	ClearCurrentDocument(ctx context.Context, agendaPointID int64) error
-	UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error
 	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error
 	SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error
 	SetAgendaPointModerator(ctx context.Context, id int64, moderatorID *int64) error

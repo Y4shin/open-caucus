@@ -78,9 +78,6 @@ type Handler interface {
 	ManageToggleSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageMeetingSettingsPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
 	ManageSpeakersListPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
-	ManageSetProtocolWriter(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
-	MeetingProtocolPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingProtocolInput, *ResponseMeta, error)
-	ProtocolSaveAgendaPoint(ctx context.Context, r *http.Request, params RouteParams) (*templates.ProtocolAgendaPointPartialInput, *ResponseMeta, error)
 	ManageMotionCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageMotionDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageMotionRecordVote(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionItemPartialInput, *ResponseMeta, error)
@@ -344,27 +341,6 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		rt.handleManageSpeakersListPartial,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speakers/partial", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/protocol-writer", rt.wrapMiddleware(
-		rt.handleManageSetProtocolWriter,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol-writer", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/protocol", rt.wrapMiddleware(
-		rt.handleMeetingProtocolPage,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "attendee_required"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}", rt.wrapMiddleware(
-		rt.handleProtocolSaveAgendaPoint,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "attendee_required"},
 		false,
 	))
 
@@ -1399,97 +1375,6 @@ func (rt *Router) handleManageSpeakersListPartial(w http.ResponseWriter, r *http
 	}
 
 	templates.SpeakersListSSEPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleManageSetProtocolWriter(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:      r.PathValue("slug"),
-		MeetingId: r.PathValue("meeting_id"),
-	}
-
-	input, meta, err := rt.handler.ManageSetProtocolWriter(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MeetingSettingsPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleMeetingProtocolPage(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:      r.PathValue("slug"),
-		MeetingId: r.PathValue("meeting_id"),
-	}
-
-	input, meta, err := rt.handler.MeetingProtocolPage(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MeetingProtocolTemplate(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleProtocolSaveAgendaPoint(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-	}
-
-	input, meta, err := rt.handler.ProtocolSaveAgendaPoint(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.ProtocolAgendaPointPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleManageMotionCreate(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{

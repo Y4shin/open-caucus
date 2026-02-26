@@ -921,10 +921,6 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 	if m.CurrentAgendaPointID.Valid {
 		currentAgendaPointID = &m.CurrentAgendaPointID.Int64
 	}
-	var protocolWriterID *int64
-	if m.ProtocolWriterID.Valid {
-		protocolWriterID = &m.ProtocolWriterID.Int64
-	}
 	return &model.Meeting{
 		ID:                           m.ID,
 		Name:                         m.Name,
@@ -932,7 +928,6 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 		Secret:                       m.Secret,
 		SignupOpen:                   m.SignupOpen,
 		CurrentAgendaPointID:         currentAgendaPointID,
-		ProtocolWriterID:             protocolWriterID,
 		GenderQuotationEnabled:       m.GenderQuotationEnabled,
 		FirstSpeakerQuotationEnabled: m.FirstSpeakerQuotationEnabled,
 		ModeratorID:                  nullInt64ToPtr(m.ModeratorID),
@@ -983,7 +978,6 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 		ParentID:                     parentID,
 		Position:                     ap.Position,
 		Title:                        ap.Title,
-		Protocol:                     ap.Protocol,
 		CurrentSpeakerID:             currentSpeakerID,
 		GenderQuotationEnabled:       nullBoolToPtr(ap.GenderQuotationEnabled),
 		FirstSpeakerQuotationEnabled: nullBoolToPtr(ap.FirstSpeakerQuotationEnabled),
@@ -1659,32 +1653,6 @@ func (r *Repository) SetAgendaPointModerator(ctx context.Context, id int64, mode
 		ModeratorID: mid,
 	}); err != nil {
 		return fmt.Errorf("set agenda point moderator: %w", err)
-	}
-	return nil
-}
-
-// SetProtocolWriter sets or clears the protocol_writer_id for a meeting.
-func (r *Repository) SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error {
-	var aid sql.NullInt64
-	if attendeeID != nil {
-		aid = sql.NullInt64{Int64: *attendeeID, Valid: true}
-	}
-	if err := r.Queries.SetMeetingProtocolWriter(ctx, client.SetMeetingProtocolWriterParams{
-		ProtocolWriterID: aid,
-		ID:               meetingID,
-	}); err != nil {
-		return fmt.Errorf("set protocol writer: %w", err)
-	}
-	return nil
-}
-
-// UpdateAgendaPointProtocol saves the protocol text for an agenda point.
-func (r *Repository) UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error {
-	if err := r.Queries.UpdateAgendaPointProtocol(ctx, client.UpdateAgendaPointProtocolParams{
-		Protocol: protocol,
-		ID:       agendaPointID,
-	}); err != nil {
-		return fmt.Errorf("update agenda point protocol: %w", err)
 	}
 	return nil
 }

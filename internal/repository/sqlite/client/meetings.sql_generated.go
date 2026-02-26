@@ -56,7 +56,7 @@ func (q *Queries) DeleteMeeting(ctx context.Context, id int64) error {
 }
 
 const getMeetingByID = `-- name: GetMeetingByID :one
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings WHERE id = ?
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings WHERE id = ?
 `
 
 func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error) {
@@ -72,7 +72,6 @@ func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentAgendaPointID,
-		&i.ProtocolWriterID,
 		&i.GenderQuotationEnabled,
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
@@ -81,7 +80,7 @@ func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error)
 }
 
 const listMeetingsForCommittee = `-- name: ListMeetingsForCommittee :many
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, protocol_writer_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings
 WHERE committee_id = (SELECT id FROM committees WHERE slug = ?)
 ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
@@ -111,7 +110,6 @@ func (q *Queries) ListMeetingsForCommittee(ctx context.Context, arg ListMeetings
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CurrentAgendaPointID,
-			&i.ProtocolWriterID,
 			&i.GenderQuotationEnabled,
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
@@ -182,20 +180,6 @@ type SetMeetingModeratorParams struct {
 
 func (q *Queries) SetMeetingModerator(ctx context.Context, arg SetMeetingModeratorParams) error {
 	_, err := q.db.ExecContext(ctx, setMeetingModerator, arg.ModeratorID, arg.ID)
-	return err
-}
-
-const setMeetingProtocolWriter = `-- name: SetMeetingProtocolWriter :exec
-UPDATE meetings SET protocol_writer_id = ? WHERE id = ?
-`
-
-type SetMeetingProtocolWriterParams struct {
-	ProtocolWriterID sql.NullInt64
-	ID               int64
-}
-
-func (q *Queries) SetMeetingProtocolWriter(ctx context.Context, arg SetMeetingProtocolWriterParams) error {
-	_, err := q.db.ExecContext(ctx, setMeetingProtocolWriter, arg.ProtocolWriterID, arg.ID)
 	return err
 }
 

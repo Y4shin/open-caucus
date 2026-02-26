@@ -365,7 +365,7 @@ func TestManagePage_RemoveAttendee(t *testing.T) {
 	}
 }
 
-// TestManagePage_ToggleChair verifies that chair toggling switches button label.
+// TestManagePage_ToggleChair verifies that chair toggling changes state.
 func TestManagePage_ToggleChair(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -385,19 +385,21 @@ func TestManagePage_ToggleChair(t *testing.T) {
 		t.Fatalf("dave card not visible: %v", err)
 	}
 
-	if err := card.Locator("input[title='Make chair']").Click(); err != nil {
-		t.Fatalf("click make chair: %v", err)
+	chairToggle := card.Locator("input[title='Chairperson']")
+	if err := chairToggle.Click(); err != nil {
+		t.Fatalf("click chair toggle on: %v", err)
 	}
-	if err := card.Locator("input[title='Demote chair']").WaitFor(); err != nil {
-		t.Fatalf("expected demote chair button after promote: %v", err)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		return chairToggle.IsChecked()
+	}, "chair toggle to become checked")
 
-	if err := card.Locator("input[title='Demote chair']").Click(); err != nil {
-		t.Fatalf("click demote chair: %v", err)
+	if err := chairToggle.Click(); err != nil {
+		t.Fatalf("click chair toggle off: %v", err)
 	}
-	if err := card.Locator("input[title='Make chair']").WaitFor(); err != nil {
-		t.Fatalf("expected make chair button after demote: %v", err)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		checked, err := chairToggle.IsChecked()
+		return !checked, err
+	}, "chair toggle to become unchecked")
 }
 
 // TestManagePage_GuestRecoveryLink verifies that guest cards provide a
@@ -768,7 +770,7 @@ func TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive(t *testing.T)
 		t.Fatalf("expected quoted badge in manage speaker row: %v", err)
 	}
 
-	liveSpeakerRow := guestPage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
+	liveSpeakerRow := guestPage.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Quoted Guest",
 	})
 	if err := liveSpeakerRow.WaitFor(); err != nil {
@@ -810,9 +812,13 @@ func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
 		t.Fatalf("expected no initial quoted attendee chip, got %d", initialQuotedChipCount)
 	}
 
-	if err := guestCard.Locator("input[title='Enable quoted status']").Click(); err != nil {
+	guestQuotedToggle := guestCard.Locator("input[title='Gender quoted']")
+	if err := guestQuotedToggle.Click(); err != nil {
 		t.Fatalf("toggle guest gender quoted on: %v", err)
 	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		return guestQuotedToggle.IsChecked()
+	}, "guest quoted toggle to become checked")
 	if err := guestCard.Locator("[data-testid='manage-attendee-quoted-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected quoted attendee chip after toggle: %v", err)
 	}
@@ -841,7 +847,7 @@ func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
 	if err := guestPage.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
 		t.Fatalf("guest self-add regular speaker: %v", err)
 	}
-	guestSpeakerRow := guestPage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
+	guestSpeakerRow := guestPage.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Toggle Guest",
 	})
 	if err := guestSpeakerRow.WaitFor(); err != nil {
@@ -851,3 +857,4 @@ func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
 		t.Fatalf("expected gender quoted speaker chip after guest toggle: %v", err)
 	}
 }
+

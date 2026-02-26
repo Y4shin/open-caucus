@@ -5,6 +5,8 @@ package e2e_test
 import (
 	"testing"
 	"time"
+
+	playwright "github.com/playwright-community/playwright-go"
 )
 
 // TestCurrentDoc_SetAndClearAttachment_UpdatesLivePreview verifies that setting
@@ -24,9 +26,10 @@ func TestCurrentDoc_SetAndClearAttachment_UpdatesLivePreview(t *testing.T) {
 
 	livePage := newPage(t)
 	attendeeLoginHelper(t, livePage, ts.URL, "test-committee", meetingID, "secret-alice-current-doc")
-	if err := livePage.Locator("#live-current-doc .live-doc-placeholder").First().WaitFor(); err != nil {
-		t.Fatalf("expected initial current-doc placeholder on live page: %v", err)
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		count, err := livePage.Locator("#live-current-doc").Count()
+		return count == 0, err
+	}, "no current-doc pane before set-current")
 	time.Sleep(800 * time.Millisecond)
 
 	toolsPage := newPage(t)
@@ -46,8 +49,11 @@ func TestCurrentDoc_SetAndClearAttachment_UpdatesLivePreview(t *testing.T) {
 	if err := attachmentRow.Locator("button:has-text('Clear')").WaitFor(); err != nil {
 		t.Fatalf("expected clear button after setting current attachment: %v", err)
 	}
-	if err := livePage.Locator("#live-current-doc iframe").First().WaitFor(); err != nil {
-		t.Fatalf("expected live current-doc iframe after set-current: %v", err)
+	if err := livePage.Locator("[data-testid='live-doc-open-desktop']").First().WaitFor(); err != nil {
+		t.Fatalf("expected desktop open-document button after set-current: %v", err)
+	}
+	if err := livePage.Locator("[data-testid='live-doc-download-desktop']").First().WaitFor(); err != nil {
+		t.Fatalf("expected desktop download-document button after set-current: %v", err)
 	}
 	if toolsPage.URL() != toolsURLBefore {
 		t.Errorf("tools page URL changed after set-current: before=%s after=%s", toolsURLBefore, toolsPage.URL())
@@ -59,8 +65,10 @@ func TestCurrentDoc_SetAndClearAttachment_UpdatesLivePreview(t *testing.T) {
 	if err := attachmentRow.Locator("button:has-text('Set as Current')").WaitFor(); err != nil {
 		t.Fatalf("expected set-current button after clear: %v", err)
 	}
-	if err := livePage.Locator("#live-current-doc .live-doc-placeholder").First().WaitFor(); err != nil {
-		t.Fatalf("expected live placeholder after clearing current doc: %v", err)
+	if err := livePage.Locator("[data-testid='live-doc-open-desktop']").First().WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateDetached,
+	}); err != nil {
+		t.Fatalf("expected desktop document action buttons to be removed after clearing current doc: %v", err)
 	}
 	if toolsPage.URL() != toolsURLBefore {
 		t.Errorf("tools page URL changed after clear-current: before=%s after=%s", toolsURLBefore, toolsPage.URL())

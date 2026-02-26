@@ -55,7 +55,7 @@ en:
     role_label: "Role:"
     role_member: "Member"
     role_chairperson: "Chairperson"
-    quoted_label: "Uses quoted speech in protocols"
+    quoted_label: "Uses quoted speech"
     assign_button: "Assign Account"
     no_assignable_accounts: "All accounts are already assigned to this committee."
     existing_heading: "Assigned Accounts"
@@ -149,6 +149,8 @@ en:
     agenda_full_button: "Open full agenda"
     agenda_full_title: "Full Agenda"
     agenda_full_close: "Close"
+    open_document_button: "Open Document"
+    download_document_button: "Download Document"
     current_item: "Current"
     next_item: "Next"
     none_label: "None"
@@ -174,14 +176,6 @@ en:
     badge_priority: "Prioritized"
     col_name: "Name"
     col_type: "Type"
-
-  meeting_protocol:
-    page_title: "Protocol: %s - %s"
-    heading: "Protocol: %s"
-    back_link: "Back to Manage"
-    empty_state: "No agenda points yet."
-    saved: "Saved."
-    save_button: "Save"
 
   motion:
     heading: "Motions"
@@ -209,6 +203,10 @@ en:
   agenda_import:
     open_button: "Import"
     title: "Import Agenda"
+    step_source: "Source"
+    step_correction: "Correction"
+    step_diff: "Diff"
+    back_button: "Back"
     close: "Close"
     source_label: "Source text"
     source_placeholder: "Paste markdown or plaintext agenda here."
@@ -251,3 +249,9 @@ en:
     label: "Language:"
     en_button: "EN"
     de_button: "DE"
+
+  theme_switcher:
+    label: "Theme:"
+    light_button: "Light"
+    dark_button: "Dark"
+    auto_button: "Auto"

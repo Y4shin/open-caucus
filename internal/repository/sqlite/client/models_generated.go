@@ -32,7 +32,6 @@ type AgendaPoint struct {
 	ParentID                     sql.NullInt64
 	Position                     int64
 	Title                        string
-	Protocol                     string
 	CreatedAt                    string
 	UpdatedAt                    string
 	CurrentSpeakerID             sql.NullInt64
@@ -83,7 +82,6 @@ type Meeting struct {
 	CreatedAt                    string
 	UpdatedAt                    string
 	CurrentAgendaPointID         sql.NullInt64
-	ProtocolWriterID             sql.NullInt64
 	GenderQuotationEnabled       bool
 	FirstSpeakerQuotationEnabled bool
 	ModeratorID                  sql.NullInt64

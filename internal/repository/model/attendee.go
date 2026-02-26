@@ -11,6 +11,6 @@ type Attendee struct {
 	FullName       string
 	Secret         string // Used for guest authentication
 	IsChair        bool   // Whether this attendee is chairing the meeting
-	Quoted         bool   // Whether the attendee uses quoted speech in protocols
+	Quoted         bool   // Whether the attendee uses quoted speech
 	CreatedAt      time.Time
 }

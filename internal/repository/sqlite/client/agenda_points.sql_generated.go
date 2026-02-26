@@ -35,7 +35,7 @@ func (q *Queries) ClearCurrentDocument(ctx context.Context, id int64) error {
 const createAgendaPoint = `-- name: CreateAgendaPoint :one
 INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, NULL, ?, ?)
-RETURNING id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
           current_attachment_id, current_motion_id
 `
@@ -55,7 +55,6 @@ func (q *Queries) CreateAgendaPoint(ctx context.Context, arg CreateAgendaPointPa
 		&i.ParentID,
 		&i.Position,
 		&i.Title,
-		&i.Protocol,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentSpeakerID,
@@ -71,7 +70,7 @@ func (q *Queries) CreateAgendaPoint(ctx context.Context, arg CreateAgendaPointPa
 const createSubAgendaPoint = `-- name: CreateSubAgendaPoint :one
 INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, ?, ?, ?)
-RETURNING id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
           current_attachment_id, current_motion_id
 `
@@ -97,7 +96,6 @@ func (q *Queries) CreateSubAgendaPoint(ctx context.Context, arg CreateSubAgendaP
 		&i.ParentID,
 		&i.Position,
 		&i.Title,
-		&i.Protocol,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentSpeakerID,
@@ -120,7 +118,7 @@ func (q *Queries) DeleteAgendaPoint(ctx context.Context, id int64) error {
 }
 
 const getAgendaPointByID = `-- name: GetAgendaPointByID :one
-SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
        current_attachment_id, current_motion_id
 FROM agenda_points WHERE id = ?
@@ -135,7 +133,6 @@ func (q *Queries) GetAgendaPointByID(ctx context.Context, id int64) (AgendaPoint
 		&i.ParentID,
 		&i.Position,
 		&i.Title,
-		&i.Protocol,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.CurrentSpeakerID,
@@ -178,7 +175,7 @@ func (q *Queries) GetMaxSubAgendaPointPosition(ctx context.Context, arg GetMaxSu
 }
 
 const listAgendaPointsForMeeting = `-- name: ListAgendaPointsForMeeting :many
-SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
        current_attachment_id, current_motion_id
 FROM agenda_points
@@ -201,7 +198,6 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 			&i.ParentID,
 			&i.Position,
 			&i.Title,
-			&i.Protocol,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CurrentSpeakerID,
@@ -225,7 +221,7 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 }
 
 const listSubAgendaPointsForMeeting = `-- name: ListSubAgendaPointsForMeeting :many
-SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
        current_attachment_id, current_motion_id
 FROM agenda_points
@@ -248,7 +244,6 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 			&i.ParentID,
 			&i.Position,
 			&i.Title,
-			&i.Protocol,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CurrentSpeakerID,
@@ -272,7 +267,7 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 }
 
 const listSubAgendaPointsForParent = `-- name: ListSubAgendaPointsForParent :many
-SELECT id, meeting_id, parent_id, position, title, protocol, created_at, updated_at, current_speaker_id,
+SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
        current_attachment_id, current_motion_id
 FROM agenda_points
@@ -300,7 +295,6 @@ func (q *Queries) ListSubAgendaPointsForParent(ctx context.Context, arg ListSubA
 			&i.ParentID,
 			&i.Position,
 			&i.Title,
-			&i.Protocol,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.CurrentSpeakerID,
@@ -438,20 +432,6 @@ type SetCurrentSpeakerParams struct {
 
 func (q *Queries) SetCurrentSpeaker(ctx context.Context, arg SetCurrentSpeakerParams) error {
 	_, err := q.db.ExecContext(ctx, setCurrentSpeaker, arg.CurrentSpeakerID, arg.ID)
-	return err
-}
-
-const updateAgendaPointProtocol = `-- name: UpdateAgendaPointProtocol :exec
-UPDATE agenda_points SET protocol = ? WHERE id = ?
-`
-
-type UpdateAgendaPointProtocolParams struct {
-	Protocol string
-	ID       int64
-}
-
-func (q *Queries) UpdateAgendaPointProtocol(ctx context.Context, arg UpdateAgendaPointProtocolParams) error {
-	_, err := q.db.ExecContext(ctx, updateAgendaPointProtocol, arg.Protocol, arg.ID)
 	return err
 }
 

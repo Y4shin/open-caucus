@@ -10,7 +10,7 @@ type User struct {
 	Username      string // Denormalized from the accounts table (read-only)
 	CommitteeSlug string // Populated when joined with committees table (read-only)
 	FullName      string
-	Quoted        bool   // Whether the user uses quoted speech in protocols
+	Quoted        bool   // Whether the user uses quoted speech
 	Role          string // 'chairperson' or 'member'
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

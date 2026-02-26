@@ -351,54 +351,6 @@ routes:
           type: SpeakersListSSEPartial
           input_type: SpeakersListPartialInput
 
-  # Set Protocol Writer
-  - path: /committee/{slug}/meeting/{meeting_id}/protocol-writer
-    methods:
-      - verb: POST
-        handler: ManageSetProtocolWriter
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingSettingsPartial
-          input_type: MeetingSettingsPartialInput
-
-  # Protocol Page (attendee: protocol writer only)
-  - path: /committee/{slug}/meeting/{meeting_id}/protocol
-    methods:
-      - verb: GET
-        handler: MeetingProtocolPage
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - attendee_required
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingProtocolTemplate
-          input_type: MeetingProtocolInput
-
-  # Save Protocol Text for an Agenda Point
-  - path: /committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}
-    methods:
-      - verb: POST
-        handler: ProtocolSaveAgendaPoint
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - attendee_required
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: ProtocolAgendaPointPartial
-          input_type: ProtocolAgendaPointPartialInput
-
   # Motion Create (upload document + title for an agenda point)
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create
     methods:

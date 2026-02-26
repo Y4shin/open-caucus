@@ -55,7 +55,7 @@ de:
     role_label: "Rolle:"
     role_member: "Mitglied"
     role_chairperson: "Vorsitz"
-    quoted_label: "Verwendet woertliche Rede im Protokoll"
+    quoted_label: "Verwendet woertliche Rede"
     assign_button: "Konto zuweisen"
     no_assignable_accounts: "Alle Konten sind diesem Ausschuss bereits zugewiesen."
     existing_heading: "Zugewiesene Konten"
@@ -149,6 +149,8 @@ de:
     agenda_full_button: "Gesamte Tagesordnung oeffnen"
     agenda_full_title: "Gesamte Tagesordnung"
     agenda_full_close: "Schliessen"
+    open_document_button: "Dokument oeffnen"
+    download_document_button: "Dokument herunterladen"
     current_item: "Aktuell"
     next_item: "Als Naechstes"
     none_label: "Keine"
@@ -174,14 +176,6 @@ de:
     badge_priority: "Priorisiert"
     col_name: "Name"
     col_type: "Typ"
-
-  meeting_protocol:
-    page_title: "Protokoll: %s - %s"
-    heading: "Protokoll: %s"
-    back_link: "Zurueck zur Verwaltung"
-    empty_state: "Noch keine Tagesordnungspunkte."
-    saved: "Gespeichert."
-    save_button: "Speichern"
 
   motion:
     heading: "Antraege"
@@ -209,6 +203,10 @@ de:
   agenda_import:
     open_button: "Importieren"
     title: "Tagesordnung importieren"
+    step_source: "Quelle"
+    step_correction: "Korrektur"
+    step_diff: "Diff"
+    back_button: "Zurueck"
     close: "Schliessen"
     source_label: "Quelltext"
     source_placeholder: "Markdown- oder Klartext-Tagesordnung hier einfuegen."
@@ -251,3 +249,9 @@ de:
     label: "Sprache:"
     en_button: "EN"
     de_button: "DE"
+
+  theme_switcher:
+    label: "Design:"
+    light_button: "Hell"
+    dark_button: "Dunkel"
+    auto_button: "Auto"
