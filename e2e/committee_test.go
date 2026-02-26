@@ -207,3 +207,4 @@ func TestChairpersonDeleteMeeting(t *testing.T) {
 		t.Fatalf("expected meeting card to be removed: %v", err)
 	}
 }
+

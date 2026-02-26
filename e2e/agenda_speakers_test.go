@@ -12,7 +12,7 @@ import (
 )
 
 func agendaManageURL(baseURL, slug, meetingID string) string {
-	return fmt.Sprintf("%s/committee/%s/meeting/%s/manage", baseURL, slug, meetingID)
+	return fmt.Sprintf("%s/committee/%s/meeting/%s/moderate", baseURL, slug, meetingID)
 }
 
 // activateAgendaPoint sets the meeting's current agenda point directly via the repo.
@@ -61,6 +61,7 @@ func (ts *testServer) getAttendeeIDForMeeting(t *testing.T, slug, meetingName, f
 
 func addAgendaPoint(t *testing.T, page playwright.Page, title string) {
 	t.Helper()
+	openModerateAgendaEditor(t, page)
 	if err := page.Locator("#agenda-point-list-container input[name=title]").Fill(title); err != nil {
 		t.Fatalf("fill agenda title: %v", err)
 	}
@@ -71,8 +72,24 @@ func addAgendaPoint(t *testing.T, page playwright.Page, title string) {
 
 func openSpeakerAddDialog(t *testing.T, page playwright.Page) {
 	t.Helper()
-	if err := page.Locator("#speakers-list-container button[data-manage-dialog-open]").Click(); err != nil {
-		t.Fatalf("open add speaker dialog: %v", err)
+	openButton := page.Locator("#speakers-list-container button[data-manage-dialog-open]")
+	count, err := openButton.Count()
+	if err != nil {
+		t.Fatalf("count add speaker open buttons: %v", err)
+	}
+	if count > 0 {
+		if err := openButton.First().Click(); err != nil {
+			t.Fatalf("open add speaker dialog: %v", err)
+		}
+	}
+	search := page.Locator("#speaker-add-search-input")
+	if visible, err := search.IsVisible(); err == nil && visible {
+		if err := search.Fill(" "); err != nil {
+			t.Fatalf("prime add speaker search: %v", err)
+		}
+		if err := search.Fill(""); err != nil {
+			t.Fatalf("reset add speaker search: %v", err)
+		}
 	}
 	if err := page.Locator("#speaker-add-candidates-container").WaitFor(); err != nil {
 		t.Fatalf("wait add speaker candidates: %v", err)
@@ -99,6 +116,7 @@ func TestAgendaPoint_CreateAndShow(t *testing.T) {
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateAgendaEditor(t, page)
 
 	urlBefore := page.URL()
 	addAgendaPoint(t, page, "Opening Remarks")
@@ -125,6 +143,7 @@ func TestAgendaPoint_CreateSubAgendaPoint(t *testing.T) {
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateAgendaEditor(t, page)
 
 	addAgendaPoint(t, page, "Parent Item")
 	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Parent Item')").WaitFor(); err != nil {
@@ -163,6 +182,7 @@ func TestAgendaPoint_Activate(t *testing.T) {
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateAgendaEditor(t, page)
 
 	urlBefore := page.URL()
 	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
@@ -199,6 +219,7 @@ func TestAgendaPoint_Delete(t *testing.T) {
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateAgendaEditor(t, page)
 
 	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Deletable Item",
@@ -238,7 +259,7 @@ func TestSpeakersList_NoActivePoint(t *testing.T) {
 		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := page.Locator("text=No active agenda point").WaitFor(); err != nil {
+	if err := page.Locator("[data-testid='manage-speakers-card'] #speakers-list-container p:has-text('No active agenda point.')").First().WaitFor(); err != nil {
 		t.Fatalf("expected no-active-point message: %v", err)
 	}
 }
@@ -496,4 +517,3 @@ func TestSpeakersList_Remove(t *testing.T) {
 		t.Fatalf("expected speaker row to disappear: %v", err)
 	}
 }
-

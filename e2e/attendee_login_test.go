@@ -208,7 +208,7 @@ func TestGuestLive_LogoutButton(t *testing.T) {
 }
 
 // TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage verifies that
-// chair attendees can navigate from /live to /manage.
+// chair attendees can navigate from /live to /moderate.
 func TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -231,7 +231,7 @@ func TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage(t *testing.T) {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	manageLink := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')")
+	manageLink := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Moderate'), .scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')")
 	if err := manageLink.WaitFor(); err != nil {
 		t.Fatalf("expected manage button for chair attendee: %v", err)
 	}
@@ -239,7 +239,7 @@ func TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage(t *testing.T) {
 		t.Fatalf("click manage button: %v", err)
 	}
 	if err := page.WaitForURL(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("expected navigation to /manage for chair attendee: %v", err)
+		t.Fatalf("expected navigation to /moderate for chair attendee: %v", err)
 	}
 }
 
@@ -266,7 +266,7 @@ func TestManagePage_AttendeeNonChair_Forbidden(t *testing.T) {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	manageCount, err := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')").Count()
+	manageCount, err := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Moderate'), .scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')").Count()
 	if err != nil {
 		t.Fatalf("count manage links: %v", err)
 	}
@@ -276,9 +276,9 @@ func TestManagePage_AttendeeNonChair_Forbidden(t *testing.T) {
 
 	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
 	if err != nil {
-		t.Fatalf("goto /manage as non-chair attendee: %v", err)
+		t.Fatalf("goto /moderate as non-chair attendee: %v", err)
 	}
 	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for /manage as non-chair attendee, got %d", resp.Status())
+		t.Fatalf("expected 403 for /moderate as non-chair attendee, got %d", resp.Status())
 	}
 }

@@ -31,8 +31,6 @@ func (r *Registry) Get(name string) func(http.Handler) http.Handler {
 		return r.authRequired
 	case "committee_access":
 		return r.committeeAccess
-	case "manage_access":
-		return r.manageAccess
 	case "moderate_access":
 		return r.moderateAccess
 	case "admin_required":

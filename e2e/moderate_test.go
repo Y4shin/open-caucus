@@ -16,7 +16,7 @@ func moderateURL(baseURL, slug, meetingID string) string {
 }
 
 // TestModeratePage_ChairpersonCanAccess verifies a chairperson user session can
-// access the moderate page and all four card headings are rendered.
+// access the moderate page, including left workspace tabs and right-column cards.
 func TestModeratePage_ChairpersonCanAccess(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -30,7 +30,12 @@ func TestModeratePage_ChairpersonCanAccess(t *testing.T) {
 		t.Fatalf("goto moderate page: %v", err)
 	}
 
-	for _, heading := range []string{"Agenda", "Tools", "Speakers", "Add Speaker"} {
+	for _, tabName := range []string{"Agenda", "Tools", "Attendees", "Settings"} {
+		if err := page.Locator("#moderate-left-controls [data-moderate-left-tab]:has-text('" + tabName + "')").WaitFor(); err != nil {
+			t.Fatalf("expected %q left tab on moderate page: %v", tabName, err)
+		}
+	}
+	for _, heading := range []string{"Speakers", "Add Speaker"} {
 		if err := page.Locator("h2:has-text('" + heading + "')").WaitFor(); err != nil {
 			t.Fatalf("expected %q card heading on moderate page: %v", heading, err)
 		}
@@ -167,7 +172,7 @@ func TestModeratePage_AddSpeakerFromAttendeesCard(t *testing.T) {
 	}
 	urlBefore := page.URL()
 
-	if err := page.Locator("#moderate-speaker-search").Fill("Alice"); err != nil {
+	if err := page.Locator("#speaker-add-search-input").Fill("Alice"); err != nil {
 		t.Fatalf("fill speaker search: %v", err)
 	}
 	candidateCard := page.Locator("#speaker-add-candidates-container [data-testid='manage-speaker-candidate-card']").Filter(playwright.LocatorFilterOptions{
@@ -207,7 +212,7 @@ func TestModeratePage_SearchEnterAddsBestMatch(t *testing.T) {
 		t.Fatalf("goto moderate page: %v", err)
 	}
 
-	search := page.Locator("#moderate-speaker-search")
+	search := page.Locator("#speaker-add-search-input")
 	if err := search.Fill("alice"); err != nil {
 		t.Fatalf("fill moderate speaker search: %v", err)
 	}
@@ -240,7 +245,7 @@ func TestModeratePage_SearchEnterAddsBestMatch(t *testing.T) {
 		t.Fatalf("read active element id: %v", err)
 	}
 	activeID, _ := activeIDRaw.(string)
-	if activeID != "moderate-speaker-search" {
+	if activeID != "speaker-add-search-input" {
 		t.Fatalf("expected moderate search input to stay focused after enter-add, got active id %q", activeID)
 	}
 }
@@ -268,7 +273,7 @@ func TestModeratePage_SearchEnterAddsMultipleConsecutive(t *testing.T) {
 		t.Fatalf("goto moderate page: %v", err)
 	}
 
-	search := page.Locator("#moderate-speaker-search")
+	search := page.Locator("#speaker-add-search-input")
 	addViaEnter := func(query, expectedTopName string) {
 		t.Helper()
 		if err := search.Fill(query); err != nil {
@@ -287,7 +292,7 @@ func TestModeratePage_SearchEnterAddsMultipleConsecutive(t *testing.T) {
 		if err := expectedCard.First().WaitFor(); err != nil {
 			t.Fatalf("wait expected candidate %q after query %q: %v", expectedTopName, query, err)
 		}
-		if err := page.Locator("#speaker-add-candidates-container [data-testid='manage-speaker-candidate-card']").First().Locator("text="+expectedTopName).WaitFor(); err != nil {
+		if err := page.Locator("#speaker-add-candidates-container [data-testid='manage-speaker-candidate-card']").First().Locator("text=" + expectedTopName).WaitFor(); err != nil {
 			t.Fatalf("expected %q to be first candidate after query %q: %v", expectedTopName, query, err)
 		}
 
@@ -311,7 +316,7 @@ func TestModeratePage_SearchEnterAddsMultipleConsecutive(t *testing.T) {
 			t.Fatalf("read active element id after Enter for %q: %v", query, err)
 		}
 		activeID, _ := activeIDRaw.(string)
-		if activeID != "moderate-speaker-search" {
+		if activeID != "speaker-add-search-input" {
 			t.Fatalf("expected moderate search focus after Enter for %q, got %q", query, activeID)
 		}
 
@@ -407,4 +412,3 @@ func TestModeratePage_SSE_SpeakerUpdatePropagates(t *testing.T) {
 		t.Errorf("moderate page URL changed during SSE update: before=%s after=%s", modURLBefore, moderatePage.URL())
 	}
 }
-

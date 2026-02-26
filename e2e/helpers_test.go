@@ -256,3 +256,4 @@ func (ts *testServer) setMeetingModerator(t *testing.T, slug, meetingName string
 		t.Fatalf("set meeting moderator: %v", err)
 	}
 }
+

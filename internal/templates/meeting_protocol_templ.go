@@ -50,7 +50,7 @@ type MeetingProtocolInput struct {
 }
 
 func (i *MeetingProtocolInput) ManageURL(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, i.IDString).MeetingModerateGet(ctx, ""))
 }
 
 func (i *MeetingProtocolInput) agendaPointPartialInput(ap ProtocolAgendaPointItem) ProtocolAgendaPointPartialInput {

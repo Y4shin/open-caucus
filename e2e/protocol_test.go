@@ -42,6 +42,7 @@ func TestManagePage_AssignProtocolWriter(t *testing.T) {
 	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateLeftTab(t, page, "settings")
 
 	urlBefore := page.URL()
 

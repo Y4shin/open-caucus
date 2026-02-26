@@ -51,14 +51,12 @@ go generate ./...
 
 ### Database Operations
 
-Database migration commands are not yet implemented in the binary. The migrations exist in [internal/repository/sqlite/migrations/](internal/repository/sqlite/migrations/).
+Migrations run automatically at startup via `repo.MigrateUp()`. The migration files live in [internal/repository/sqlite/migrations/](internal/repository/sqlite/migrations/).
+
+The Taskfile `db:migrate:*` tasks are stubs and not yet wired to the binary. To seed an initial admin user for local development:
 
 ```bash
-# Placeholder tasks (not yet implemented)
-task db:migrate:up
-task db:migrate:down
-task db:migrate:create
-task db:reset
+task init:dev-db   # creates admin/admin — runs: go run . create-admin --username admin --password admin
 ```
 
 ### Testing
@@ -102,7 +100,9 @@ go vet ./...
 ### Development Workflows
 
 ```bash
-task setup            # Initial project setup
+task deps:check       # Verify Go, Node.js, and npm are installed
+task setup            # Initial project setup (runs deps:check first)
+task init:dev-db      # Seed a local admin user (admin/admin) after first setup
 task fresh            # Clean, generate, build, and run
 task ci               # Run all CI checks
 task deps:tidy        # Tidy go.mod and go.sum

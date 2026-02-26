@@ -238,23 +238,31 @@ templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, var
 				if s.Type == "ropm" || s.GenderQuoted || s.FirstSpeaker || s.Priority {
 					<div class="flex shrink-0 flex-wrap items-center gap-1">
 						if s.Type == "ropm" {
-							<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge">
-								@Icon(IconScale, "", "h-3.5 w-3.5")
+							<span class="tooltip tooltip-right" data-tip="Rules of procedure motion">
+								<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge">
+									@Icon(IconScale, "", "h-3.5 w-3.5")
+								</span>
 							</span>
 						}
 						if s.GenderQuoted {
-							<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge">
-								@Icon(IconTransgender, "", "h-3.5 w-3.5")
+							<span class="tooltip tooltip-right" data-tip="Gender quoted">
+								<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge">
+									@Icon(IconTransgender, "", "h-3.5 w-3.5")
+								</span>
 							</span>
 						}
 						if s.FirstSpeaker {
-							<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge">
-								@Icon(IconPersonRaised, "", "h-3.5 w-3.5")
+							<span class="tooltip tooltip-right" data-tip="First speaker">
+								<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge">
+									@Icon(IconPersonRaised, "", "h-3.5 w-3.5")
+								</span>
 							</span>
 						}
 						if s.Priority {
-							<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge">
-								@Icon(IconStar, "", "h-3.5 w-3.5")
+							<span class="tooltip tooltip-right" data-tip="Priority speaker">
+								<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge">
+									@Icon(IconStar, "", "h-3.5 w-3.5")
+								</span>
 							</span>
 							<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{ i18n.T(ctx, "meeting_live.badge_priority") }</span>
 						}
@@ -278,9 +286,10 @@ templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, var
 							hx-target={ action.Target }
 							hx-swap={ action.Swap }
 							hx-confirm={ action.Confirm }
-							class={ "join-item btn btn-sm btn-square", "join-item btn btn-sm btn-square", templ.KV("join-item btn btn-sm btn-error btn-square", action.Danger), templ.KV("join-item btn btn-sm btn-error btn-square", action.Danger) }
+							class={ "join-item btn btn-sm btn-square tooltip tooltip-left", "join-item btn btn-sm btn-square tooltip tooltip-left", templ.KV("join-item btn btn-sm btn-error btn-square tooltip tooltip-left", action.Danger), templ.KV("join-item btn btn-sm btn-error btn-square tooltip tooltip-left", action.Danger) }
 							aria-label={ action.Title }
 							title={ action.Title }
+							data-tip={ action.Title }
 						>
 							@Icon(action.Icon, "", "h-4 w-4")
 						</button>
@@ -335,10 +344,11 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 					>
 						<button
 							type="submit"
-							class={ "live-self-add-button btn btn-sm", "live-self-add-button-danger btn btn-sm btn-error", "live-self-add-button btn btn-sm", "live-self-add-button-danger btn btn-sm btn-error" }
+							class={ "live-self-add-button btn btn-sm tooltip tooltip-right", "live-self-add-button-danger btn btn-sm btn-error tooltip tooltip-right", "live-self-add-button btn btn-sm tooltip tooltip-right", "live-self-add-button-danger btn btn-sm btn-error tooltip tooltip-right" }
 							data-testid="live-self-yield"
 							aria-label={ i18n.T(ctx, "meeting_live.yield_speech") }
 							title={ i18n.T(ctx, "meeting_live.yield_speech") }
+							data-tip={ i18n.T(ctx, "meeting_live.yield_speech") }
 						>
 							@Icon(IconMic, "", "live-self-add-icon")
 						</button>
@@ -353,10 +363,11 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 						<input type="hidden" name="type" value="ropm"/>
 						<button
 							type="submit"
-							class={ "live-self-add-button btn btn-sm", "live-self-add-button-warning btn btn-sm btn-warning", "live-self-add-button btn btn-sm", "live-self-add-button-warning btn btn-sm btn-warning" }
+							class={ "live-self-add-button btn btn-sm tooltip tooltip-right", "live-self-add-button-warning btn btn-sm btn-warning tooltip tooltip-right", "live-self-add-button btn btn-sm tooltip tooltip-right", "live-self-add-button-warning btn btn-sm btn-warning tooltip tooltip-right" }
 							data-testid="live-add-self-ropm"
 							aria-label={ i18n.T(ctx, "meeting_live.add_self_ropm") }
 							title={ i18n.T(ctx, "meeting_live.add_self_ropm") }
+							data-tip={ i18n.T(ctx, "meeting_live.add_self_ropm") }
 							disabled?={ input.HasCurrentAttendeeWaitingType("ropm") }
 						>
 							@Icon(IconScale, "", "live-self-add-icon")
@@ -371,10 +382,11 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 						<input type="hidden" name="type" value="regular"/>
 						<button
 							type="submit"
-							class={ "live-self-add-button btn btn-sm", "live-self-add-button btn btn-sm" }
+							class={ "live-self-add-button btn btn-sm tooltip tooltip-right", "live-self-add-button btn btn-sm tooltip tooltip-right" }
 							data-testid="live-add-self-regular"
 							aria-label={ i18n.T(ctx, "meeting_live.add_self_regular") }
 							title={ i18n.T(ctx, "meeting_live.add_self_regular") }
+							data-tip={ i18n.T(ctx, "meeting_live.add_self_regular") }
 							disabled?={ input.HasCurrentAttendeeWaitingType("regular") }
 						>
 							@Icon(IconPersonRaised, "", "live-self-add-icon")
@@ -431,7 +443,7 @@ func (i *MeetingLiveInput) SSEStreamURL(ctx context.Context) templ.SafeURL {
 }
 
 func (i *MeetingLiveInput) ManageGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, i.IDString).MeetingModerateGet(ctx, ""))
 }
 
 func (i *MeetingLiveInput) ModerateGet(ctx context.Context) templ.SafeURL {
@@ -463,17 +475,10 @@ func (i *MeetingLiveInput) NextAgendaPoint() *AgendaPointItem {
 
 func (i *MeetingLiveInput) ScaffoldActions(ctx context.Context) []Action {
 	var actions []Action
-	if i.CanModerate {
+	if i.CanModerate || i.CanManage {
 		actions = append(actions, Action{
 			Title: i18n.T(ctx, "meeting_live.moderate_button"),
 			URL:   i.ModerateGet(ctx),
-			Kind:  "info",
-		})
-	}
-	if i.CanManage {
-		actions = append(actions, Action{
-			Title: i18n.T(ctx, "meeting_live.manage_button"),
-			URL:   i.ManageGet(ctx),
 			Kind:  "info",
 		})
 	}
@@ -569,15 +574,17 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 				<h2 class={ "live-agenda-summary-heading", "live-agenda-summary-heading" }>{ i18n.T(ctx, "meeting_live.agenda_heading") }</h2>
 				<div class="live-agenda-header-actions">
 					@LiveDocButtonPartial(input.toCurrentDocInput())
-					<button
-						type="button"
-						class={ "live-speaker-history-button btn btn-sm btn-outline", "live-agenda-full-button btn btn-sm btn-outline", "live-speaker-history-button btn btn-sm btn-outline", "live-agenda-full-button btn btn-sm btn-outline" }
-						data-live-dialog-open
-						aria-controls="agenda-full-dialog"
-						aria-label={ i18n.T(ctx, "meeting_live.agenda_full_button") }
-					>
-						@Icon(IconVisibility, "", "live-agenda-dialog-icon")
-					</button>
+				<button
+					type="button"
+					class={ "live-speaker-history-button btn btn-sm btn-outline tooltip tooltip-left", "live-agenda-full-button btn btn-sm btn-outline tooltip tooltip-left", "live-speaker-history-button btn btn-sm btn-outline tooltip tooltip-left", "live-agenda-full-button btn btn-sm btn-outline tooltip tooltip-left" }
+					data-live-dialog-open
+					aria-controls="agenda-full-dialog"
+					aria-label={ i18n.T(ctx, "meeting_live.agenda_full_button") }
+					title={ i18n.T(ctx, "meeting_live.agenda_full_button") }
+					data-tip={ i18n.T(ctx, "meeting_live.agenda_full_button") }
+				>
+					@Icon(IconVisibility, "", "live-agenda-dialog-icon")
+				</button>
 				</div>
 			</div>
 			<div class="live-agenda-top">
@@ -619,10 +626,12 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 				<h2>{ i18n.T(ctx, "meeting_live.speakers_heading") }</h2>
 				<button
 					type="button"
-					class={ "live-speaker-history-button btn btn-sm btn-outline", "live-speaker-history-button btn btn-sm btn-outline" }
+					class={ "live-speaker-history-button btn btn-sm btn-outline tooltip tooltip-left", "live-speaker-history-button btn btn-sm btn-outline tooltip tooltip-left" }
 					data-live-dialog-open
 					aria-controls="speaker-history-dialog"
 					aria-label={ i18n.T(ctx, "meeting_live.speaker_history_button") }
+					title={ i18n.T(ctx, "meeting_live.speaker_history_button") }
+					data-tip={ i18n.T(ctx, "meeting_live.speaker_history_button") }
 				>
 					@Icon(IconHistory, "", "live-speaker-history-icon")
 				</button>

@@ -15,7 +15,7 @@ func joinURL(baseURL, slug, meetingID string) string {
 }
 
 func manageJoinQRURL(baseURL, slug, meetingID string) string {
-	return fmt.Sprintf("%s/committee/%s/meeting/%s/manage/join-qr", baseURL, slug, meetingID)
+	return fmt.Sprintf("%s/committee/%s/meeting/%s/moderate/join-qr", baseURL, slug, meetingID)
 }
 
 // TestJoinPage_RegisteredUserSeesSignupButton verifies that a logged-in committee
@@ -281,6 +281,7 @@ func TestGuestSignup_PublishesManageSSE(t *testing.T) {
 		t.Fatalf("expected redirect to /live after guest signup: %v", err)
 	}
 
+	openModerateLeftTab(t, managePage, "attendees")
 	if err := managePage.Locator("#attendee-list-container [data-testid='manage-attendee-card']:has-text('Guest Via Join')").WaitFor(); err != nil {
 		t.Fatalf("expected attendee propagated to manage page via SSE: %v", err)
 	}
@@ -355,4 +356,3 @@ func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
 		t.Fatalf("expected join URL with meeting_secret query param, got: %v", href)
 	}
 }
-

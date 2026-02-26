@@ -160,10 +160,10 @@ func TestAccess_ManagePage_Unauthenticated_RedirectedToLogin(t *testing.T) {
 
 	page := newPage(t)
 	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage page: %v", err)
+		t.Fatalf("goto moderate page: %v", err)
 	}
 	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to / for unauthenticated manage page: %v", err)
+		t.Fatalf("expected redirect to / for unauthenticated moderate page: %v", err)
 	}
 }
 
@@ -181,10 +181,10 @@ func TestAccess_ManagePage_Member_Forbidden(t *testing.T) {
 
 	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
 	if err != nil {
-		t.Fatalf("goto manage page as member: %v", err)
+		t.Fatalf("goto moderate page as member: %v", err)
 	}
 	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for member user on manage page, got %d", resp.Status())
+		t.Fatalf("expected 403 for member user on moderate page, got %d", resp.Status())
 	}
 }
 
@@ -203,10 +203,10 @@ func TestAccess_ManagePage_WrongCommitteeUser_Forbidden(t *testing.T) {
 
 	resp, err := page.Goto(manageURL(ts.URL, "committee-b", meetingID))
 	if err != nil {
-		t.Fatalf("goto wrong-committee manage page: %v", err)
+		t.Fatalf("goto wrong-committee moderate page: %v", err)
 	}
 	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for wrong-committee chairperson on manage page, got %d", resp.Status())
+		t.Fatalf("expected 403 for wrong-committee chairperson on moderate page, got %d", resp.Status())
 	}
 }
 
@@ -227,16 +227,16 @@ func TestAccess_ManagePage_WrongMeetingAttendee_Forbidden(t *testing.T) {
 
 	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingB))
 	if err != nil {
-		t.Fatalf("goto wrong-meeting manage page: %v", err)
+		t.Fatalf("goto wrong-meeting moderate page: %v", err)
 	}
 	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for chair attendee of meeting A on meeting B manage page, got %d", resp.Status())
+		t.Fatalf("expected 403 for chair attendee of meeting A on meeting B moderate page, got %d", resp.Status())
 	}
 }
 
 // TestAccess_ManagePage_DesignatedModerator_Forbidden verifies that an attendee who
 // is only the designated meeting moderator (not a chair) cannot access the manage page.
-func TestAccess_ManagePage_DesignatedModerator_Forbidden(t *testing.T) {
+func TestAccess_ManagePage_DesignatedModerator_Allowed(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedMeetingOpen(t, "test-committee", "Board Meeting", "")
@@ -249,10 +249,10 @@ func TestAccess_ManagePage_DesignatedModerator_Forbidden(t *testing.T) {
 
 	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
 	if err != nil {
-		t.Fatalf("goto manage page as designated moderator: %v", err)
+		t.Fatalf("goto moderate page as designated moderator: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for designated moderator on manage page, got %d", resp.Status())
+	if resp.Status() != 200 {
+		t.Fatalf("expected 200 for designated moderator on moderate page, got %d", resp.Status())
 	}
 }
 
@@ -425,7 +425,7 @@ func TestAccess_ProtocolPage_ChairAttendee_NotWriter_Error(t *testing.T) {
 // TestAccess_DesignatedModerator_ModerateAllowed_ManageForbidden verifies that a
 // designated meeting moderator can access the moderate page but is blocked from the
 // manage page in the same browser session.
-func TestAccess_DesignatedModerator_ModerateAllowed_ManageForbidden(t *testing.T) {
+func TestAccess_DesignatedModerator_ModerateAllowed(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedMeetingOpen(t, "test-committee", "Board Meeting", "")
@@ -444,12 +444,12 @@ func TestAccess_DesignatedModerator_ModerateAllowed_ManageForbidden(t *testing.T
 		t.Fatalf("expected moderate page to render for designated moderator: %v", err)
 	}
 
-	// Manage page must be forbidden.
-	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
+	// Ensure follow-up loads still succeed on the same route/session.
+	resp, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID))
 	if err != nil {
-		t.Fatalf("goto manage page as designated moderator: %v", err)
+		t.Fatalf("revisit moderate page as designated moderator: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for designated moderator on manage page, got %d", resp.Status())
+	if resp.Status() != 200 {
+		t.Fatalf("expected 200 on moderate revisit for designated moderator, got %d", resp.Status())
 	}
 }

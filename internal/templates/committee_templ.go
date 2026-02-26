@@ -43,7 +43,7 @@ func (i *CommitteePageInput) MeetingViewGet(ctx context.Context, m *MeetingItem)
 }
 
 func (i *CommitteePageInput) MeetingManageGet(ctx context.Context, m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, m.IDString).MeetingModerateGet(ctx, ""))
 }
 
 func (i *CommitteePageInput) MeetingDeletePost(ctx context.Context, m *MeetingItem) templ.SafeURL {
@@ -86,7 +86,7 @@ func (i *MeetingListPartialInput) MeetingViewGet(ctx context.Context, m *Meeting
 }
 
 func (i *MeetingListPartialInput) MeetingManageGet(ctx context.Context, m *MeetingItem) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, m.IDString).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, m.IDString).MeetingModerateGet(ctx, ""))
 }
 
 func (i *MeetingListPartialInput) MeetingDeletePostStr(ctx context.Context, m *MeetingItem) string {

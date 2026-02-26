@@ -13,7 +13,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/pagination"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
@@ -283,96 +282,6 @@ func (h *Handler) CommitteeMeetingView(ctx context.Context, r *http.Request, par
 		MeetingName:   meeting.Name,
 		MeetingID:     meeting.ID,
 		IDString:      params.MeetingId,
-	}, nil, nil
-}
-
-// CommitteeMeetingManage shows the meeting management page
-func (h *Handler) CommitteeMeetingManage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingManageInput, *routes.ResponseMeta, error) {
-	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid meeting ID")
-	}
-
-	committee, err := h.Repository.GetCommitteeBySlug(ctx, params.Slug)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load committee: %w", err)
-	}
-
-	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
-	}
-
-	attendees, err := h.Repository.ListAttendeesForMeeting(ctx, meetingID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load attendees: %w", err)
-	}
-
-	topLevelAgendaPoints, err := h.Repository.ListAgendaPointsForMeeting(ctx, meetingID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load agenda points: %w", err)
-	}
-	subAgendaPoints, err := h.Repository.ListSubAgendaPointsForMeeting(ctx, meetingID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load sub-agenda points: %w", err)
-	}
-	agendaPoints := flattenAgendaPoints(topLevelAgendaPoints, subAgendaPoints)
-
-	var speakers []*model.SpeakerEntry
-
-	// Compute effective quotation settings for the active agenda point.
-	effectiveGender := meeting.GenderQuotationEnabled
-	effectiveFirstSpeaker := meeting.FirstSpeakerQuotationEnabled
-	var apGenderQuotation *bool
-	var apFirstSpeakerQuotation *bool
-	var apModeratorID *int64
-	apIDStr := ""
-
-	if meeting.CurrentAgendaPointID != nil {
-		apIDStr = strconv.FormatInt(*meeting.CurrentAgendaPointID, 10)
-		speakers, err = h.Repository.ListSpeakersForAgendaPoint(ctx, *meeting.CurrentAgendaPointID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to load speakers: %w", err)
-		}
-		activeAP, err := h.Repository.GetAgendaPointByID(ctx, *meeting.CurrentAgendaPointID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to load active agenda point: %w", err)
-		}
-		apGenderQuotation = activeAP.GenderQuotationEnabled
-		apFirstSpeakerQuotation = activeAP.FirstSpeakerQuotationEnabled
-		apModeratorID = activeAP.ModeratorID
-		if activeAP.GenderQuotationEnabled != nil {
-			effectiveGender = *activeAP.GenderQuotationEnabled
-		}
-		if activeAP.FirstSpeakerQuotationEnabled != nil {
-			effectiveFirstSpeaker = *activeAP.FirstSpeakerQuotationEnabled
-		}
-		if apModeratorID == nil {
-			apModeratorID = meeting.ModeratorID
-		}
-	}
-
-	return &templates.MeetingManageInput{
-		CommitteeName:                    committee.Name,
-		CommitteeSlug:                    committee.Slug,
-		MeetingName:                      meeting.Name,
-		MeetingID:                        meeting.ID,
-		IDString:                         params.MeetingId,
-		Attendees:                        buildAttendeeItems(attendees),
-		SignupOpen:                       meeting.SignupOpen,
-		ProtocolWriterID:                 meeting.ProtocolWriterID,
-		GenderQuotationEnabled:           meeting.GenderQuotationEnabled,
-		FirstSpeakerQuotationEnabled:     meeting.FirstSpeakerQuotationEnabled,
-		ModeratorID:                      meeting.ModeratorID,
-		AgendaPoints:                     buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
-		CurrentAgendaPointID:             meeting.CurrentAgendaPointID,
-		AgendaPointIDString:              apIDStr,
-		AgendaPointGenderQuotation:       apGenderQuotation,
-		AgendaPointFirstSpeakerQuotation: apFirstSpeakerQuotation,
-		AgendaPointModeratorID:           apModeratorID,
-		EffectiveGenderQuotation:         effectiveGender,
-		EffectiveFirstSpeakerQuotation:   effectiveFirstSpeaker,
-		Speakers:                         buildSpeakerItems(speakers),
 	}, nil, nil
 }
 

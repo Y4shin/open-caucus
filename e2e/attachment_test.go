@@ -185,3 +185,4 @@ func TestAttachments_DeleteAttachment_RemovesFromList(t *testing.T) {
 		t.Errorf("HTMX swap caused unexpected navigation: before=%s after=%s", urlBefore, page.URL())
 	}
 }
+

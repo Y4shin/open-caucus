@@ -234,9 +234,49 @@ tasks:
     cmds:
       - go tool github.com/playwright-community/playwright-go/cmd/playwright {{.CLI_ARGS}}
 
+  deps:check:
+    desc: Check that required tools are installed (go, node, npm)
+    cmds:
+      - |
+        failed=0
+        if command -v go >/dev/null 2>&1; then
+          printf "  OK    go:   %s\n" "$(go version)"
+        else
+          printf "  MISS  go    — install from https://go.dev/dl/ (need 1.25+)\n"
+          failed=1
+        fi
+        if command -v node >/dev/null 2>&1; then
+          printf "  OK    node: %s\n" "$(node --version)"
+        else
+          printf "  MISS  node  — install from https://nodejs.org/ (need 20+)\n"
+          failed=1
+        fi
+        if command -v npm >/dev/null 2>&1; then
+          printf "  OK    npm:  %s\n" "$(npm --version)"
+        else
+          printf "  MISS  npm   — bundled with node, reinstall from https://nodejs.org/\n"
+          failed=1
+        fi
+        if [ "$failed" -ne 0 ]; then
+          echo ""
+          echo "One or more dependencies are missing. Install them and re-run 'task deps:check'."
+          exit 1
+        fi
+        echo ""
+        echo "All required dependencies are installed."
+
+  init:dev-db:
+    desc: Initialize the database with an admin user.
+    vars:
+      USERNAME: admin
+      PASSWORD: admin
+    cmds:
+      - go run {{.MAIN_PATH}} create-admin --username {{.USERNAME}} --password {{.PASSWORD}}
+
   setup:
     desc: Initial project setup
     cmds:
+      - task: deps:check
       - task: deps
       - task: generate
       - echo "Setup complete! Run 'task dev' to start development."

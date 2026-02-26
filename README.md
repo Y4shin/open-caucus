@@ -1,401 +1,507 @@
 # Conference Tool
 
-A web application built with Go, HTMX, and Templ featuring type-safe routing through code generation.
+A web application for managing parliamentary-style conference meetings. It handles committees, meetings, agenda points, attendees, speakers lists, motions, and real-time session views — all driven by HTMX with no heavy JavaScript framework.
 
-## Features
+Built with Go, [HTMX](https://htmx.org/), [Templ](https://templ.guide/), [DaisyUI](https://daisyui.com/), and SQLite.
 
-- **Type-Safe Routing**: YAML-based route definitions with automatic code generation
-- **HTMX Integration**: Dynamic, modern web UX without heavy JavaScript frameworks
-- **Templ Templates**: Type-safe HTML templating with Go
-- **Middleware Support**: Flexible middleware system with prefix-based and route-specific middleware
-- **Server-Sent Events (SSE)**: Built-in support for real-time updates
-- **Path Parameters**: Automatic extraction and type-safe handling
+---
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Architecture](#architecture)
+- [Extending the Code](#extending-the-code)
+- [Development Reference](#development-reference)
+- [E2E Testing](#e2e-testing)
+
+---
+
+## Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [Go](https://go.dev/dl/) | 1.25+ | Application runtime and all Go-based tooling |
+| [Node.js](https://nodejs.org/) | 20+ | Tailwind CSS / DaisyUI build pipeline |
+| [Task](https://taskfile.dev/) | any | Task runner — required to use the commands in this guide |
+
+All other tools — `templ`, `air`, `sqlc`, `golangci-lint` — are declared as Go tool dependencies in `go.mod` and require no separate installation.
+
+To verify your environment:
+
+```bash
+task deps:check
+```
+
+This checks Go, Node.js, and npm and prints a pass/fail summary.
+
+---
+
+## Getting Started
+
+```bash
+# 1. Clone
+git clone <repository-url>
+cd conference-tool
+
+# 2. Check dependencies
+task deps:check
+
+# 3. Install Node modules, download Go modules, and generate all code
+task setup
+
+# 4. Copy the example env file and edit as needed
+cp .env.example .env
+
+# 5. Start the dev server with hot reload
+task dev
+```
+
+For CSS hot-reload during development, run this in a second terminal:
+
+```bash
+task css:watch
+```
+
+The application is now available at `http://localhost:8080`.
+
+---
 
 ## Project Structure
 
 ```
 .
-├── cmd/
-│   └── conference-tool/         # CLI application
+├── cmd/                          # Cobra CLI entry points
+│   ├── root.go
+│   └── serve.go                  # Wires all dependencies and starts the HTTP server
+├── e2e/                          # Playwright browser E2E tests (build tag: e2e)
+│   ├── main_test.go              # TestMain — Playwright driver init
+│   ├── helpers_test.go           # testServer, DB seed helpers
+│   └── browser_helpers_test.go   # newPage, adminLogin, userLogin
 ├── internal/
-│   ├── config/                  # Configuration management
-│   ├── routes/                  # Generated routing code
-│   │   ├── gen.go              # go:generate directive
-│   │   └── routes_gen.go       # Generated router (DO NOT EDIT)
-│   └── templates/              # Templ templates
-│       ├── *.templ             # Template definitions
-│       ├── *_templ.go          # Generated Go code from templates
-│       └── gen.go              # go:generate directive for templ
-├── tools/
-│   └── routing/                # Route code generator
-│       ├── cmd/route-codegen/  # CLI tool for code generation
-│       ├── types.go            # YAML configuration types
-│       ├── parser.go           # YAML parser and validator
-│       └── generator.go        # Code generation logic
-├── routes.yaml                 # Route definitions
-├── go.mod
-└── README.md
+│   ├── assets/css/               # Tailwind CSS source (app.css)
+│   ├── broker/                   # In-memory SSE event broker
+│   ├── config/                   # Configuration loading (Viper + env vars)
+│   ├── handlers/                 # HTTP request handlers
+│   │   ├── handlers.go           # Handler struct + HandlerBuilder
+│   │   ├── admin.go              # Admin panel handlers
+│   │   ├── auth.go               # Login, logout, committee session handlers
+│   │   ├── manage.go             # Meeting management (chairperson)
+│   │   ├── moderate.go           # Live moderation view
+│   │   └── ...                   # Other feature handlers
+│   ├── locale/                   # i18n middleware and translation loader
+│   │   └── locales/              # YAML translation catalogs (en.yaml, de.yaml)
+│   ├── middleware/               # HTTP middleware registry
+│   ├── pagination/               # Shared pagination helpers
+│   ├── repository/               # Repository interface (repository.go)
+│   │   └── sqlite/               # SQLite implementation
+│   │       ├── client/           # SQLC-generated type-safe DB client (DO NOT EDIT)
+│   │       ├── migrations/       # Numbered SQL migration files (.up.sql / .down.sql)
+│   │       ├── queries/          # SQL query files read by SQLC
+│   │       └── sqlc.yaml         # SQLC configuration
+│   ├── routes/                   # Generated routing code (DO NOT EDIT)
+│   │   ├── gen.go                # go:generate directive
+│   │   ├── routes_gen.go         # Generated router + Handler interface
+│   │   ├── paths/
+│   │   │   └── paths_gen.go      # Generated type-safe URL builders (DO NOT EDIT)
+│   │   └── static/               # Compiled CSS served as a static asset
+│   ├── session/                  # Cookie-based session management
+│   ├── storage/                  # File storage (attachments)
+│   └── templates/                # Templ templates
+│       ├── *.templ               # Template source files
+│       └── *_templ.go            # Generated Go code (DO NOT EDIT)
+├── tools/routing/                # Custom route code generator
+│   ├── types.go                  # YAML config types
+│   ├── parser.go                 # YAML parser and validator
+│   └── generator.go              # Code generation logic
+├── .air.toml                     # Hot reload config
+├── .env.example                  # Example environment variables
+├── go.mod / go.sum
+├── package.json                  # Node.js devDependencies (Tailwind, DaisyUI)
+├── routes.yaml                   # Route definitions — the source of truth
+├── Taskfile.yaml                 # Task runner definitions
+└── flake.nix                     # Nix development environment (optional)
 ```
 
-## Getting Started
+---
 
-### Prerequisites
+## Architecture
 
-- Go 1.25.5 or later
-- Node.js 20+ (for Tailwind CSS/DaisyUI build)
-- The project uses Go tools (templ, air, sqlc) which are automatically managed via `go.mod`
-- (Optional) [Task](https://taskfile.dev/) for running common development tasks
+### Request Lifecycle
 
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd conference-tool
-   ```
-
-2. Install dependencies and generate code:
-   ```bash
-   # Using Task (recommended)
-   task setup
-
-   # Or manually
-   go mod download
-   npm install
-   go generate ./...
-   ```
-
-### Running the Application
-
-```bash
-# Using Task (recommended)
-task dev              # Start with hot reload
-task css:watch        # Run in a second terminal for CSS rebuilds
-task run              # Run directly
-
-# Or manually
-go tool air           # Start with hot reload
-npm run watch:css     # Run in a second terminal for CSS rebuilds
-go run . serve        # Run directly
+```
+HTTP Request
+     │
+     ▼
+  Router (routes_gen.go)
+     │  extracts path params
+     │  applies middleware chain
+     ▼
+  Handler method
+     │  reads DB, applies business logic
+     │  returns (*TemplateInput, error)
+     ▼
+  Templ component
+     │  renders HTML fragment or full page
+     ▼
+HTTP Response
 ```
 
-## Route Code Generation
+For HTMX requests the handler returns a **partial** HTML fragment, which HTMX swaps into the page without a full reload.
 
-This project uses a custom code generation tool to create type-safe routing from YAML definitions.
+---
 
-### Defining Routes
+### Type-Safe Routing
 
-Routes are defined in [`routes.yaml`](routes.yaml):
+Routes are defined once in [`routes.yaml`](routes.yaml) and the code generator (`tools/routing/`) produces three artifacts:
+
+1. **`routes_gen.go`** — the `Handler` interface every handler struct must satisfy, plus the `Router` that wires it all together.
+2. **`paths_gen.go`** — locale-aware URL builder functions so templates and handlers never hardcode URL strings.
+3. **`RouteParams`** — a struct carrying all path parameters for a given route.
+
+Example route definition:
 
 ```yaml
-version: 1.0
-
-# Middleware groups apply to all routes matching the prefix
-middleware_groups:
-  - prefix: /api
-    middleware: [CORS, RateLimit]
-
-routes:
-  - path: /
-    methods:
-      - verb: GET
-        handler: HomePage
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: HomePageTemplate
-          input_type: HomePageInput
-        middleware: [Logging]
-
-  - path: /posts/{id}
-    methods:
-      - verb: GET
-        handler: GetPost
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: PostDetailTemplate
-          input_type: Post
+- path: /committee/{slug}/meeting/{meeting_id}/manage
+  methods:
+    - verb: GET
+      handler: CommitteeManageMeeting
+      middleware:
+        - session
+        - auth
+        - committee_access
+      template:
+        package: github.com/Y4shin/conference-tool/internal/templates
+        type: MeetingManageTemplate
+        input_type: MeetingManageInput
 ```
 
-### Route Configuration
+The generated handler signature becomes:
 
-Each route requires:
-- **path**: URL path with optional `{param}` placeholders
-- **verb**: HTTP method (GET, POST, PUT, DELETE, etc.)
-- **handler**: Name of the handler method
-- **template**:
-  - `package`: Full import path to template package
-  - `type`: Name of the templ component
-  - `input_type`: Type of the input parameter for the template
-- **middleware** (optional): Route-specific middleware
-- **sse** (optional): Set to `true` for Server-Sent Events endpoints
-
-### Middleware Groups
-
-Middleware can be applied to all routes matching a prefix:
-
-```yaml
-middleware_groups:
-  - prefix: /api
-    middleware: [CORS, RateLimit]
-
-  - prefix: /admin
-    middleware: [RequireAuth, RequireAdmin]
+```go
+CommitteeManageMeeting(
+    ctx context.Context,
+    r *http.Request,
+    params routes.RouteParams,
+) (*templates.MeetingManageInput, *routes.ResponseMeta, error)
 ```
 
-Routes automatically inherit middleware from all matching prefixes. More specific prefixes are applied first.
+Using the generated URL builder in a template:
 
-### Generated Code
+```go
+import "github.com/Y4shin/conference-tool/internal/routes/paths"
 
-The code generator creates:
+// No path params:
+paths.Route.AdminDashboardGet(ctx, "")
 
-1. **Handler Interface**: Type-safe interface with methods returning template input data
-   ```go
-   type Handler interface {
-       HomePage(w http.ResponseWriter, r *http.Request) (*templates.HomePageInput, error)
-       GetPost(w http.ResponseWriter, r *http.Request, params RouteParams) (*templates.Post, error)
-   }
-   ```
+// With path params:
+paths.NewCommitteeSlugMeetingMeetingIdManageRoute(slug, meetingID).
+    CommitteeManageMeetingGet(ctx, "")
 
-2. **Router**: Registers all routes with the HTTP server
-   ```go
-   router := routes.NewRouter(handler, middleware)
-   http.ListenAndServe(":8080", router.RegisterRoutes())
-   ```
-
-3. **RouteParams**: Struct containing all path parameters
-   ```go
-   type RouteParams struct {
-       Id string
-   }
-   ```
-
-4. **Type-safe URL Builders**: Functions for constructing URLs
-   ```go
-   routes.Route.HomePageGet()                    // "/"
-   routes.PostsIdRoute{id: "123"}.Get()         // "/posts/123"
-   ```
-
-### Regenerating Routes
-
-After modifying `routes.yaml`:
-
-```bash
-# Using Task (recommended)
-task generate:routes    # Generate only routes
-task generate           # Generate everything
-
-# Or manually
-go generate ./internal/routes
-go generate ./...
+// With query params:
+paths.Route.CommitteePageGetWithQuery(ctx, "", paths.CommitteePageGetQueryParams{Page: "2"})
 ```
 
-## Templates
+---
 
-Templates are written using [Templ](https://templ.guide/), a type-safe HTML templating language.
+### Templates (Templ)
 
-### Creating Templates
+Templates live in `internal/templates/*.templ`. Each file defines:
 
-Templates are defined in `internal/templates/*.templ`:
+- **Input types** (plain Go structs and methods)
+- **`templ` components** — Go functions that render HTML
 
 ```templ
 package templates
 
-type Post struct {
-    ID      string
-    Title   string
-    Content string
-    Author  string
+type MeetingManageInput struct {
+    CommitteeSlug string
+    Meeting       MeetingItem
+    AgendaPoints  []AgendaPointItem
 }
 
-templ PostDetailTemplate(input Post) {
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>{ input.Title }</title>
-        </head>
-        <body>
-            <h1>{ input.Title }</h1>
-            <p>By { input.Author }</p>
-            <div>{ input.Content }</div>
-        </body>
-    </html>
+templ MeetingManageTemplate(input MeetingManageInput) {
+    @Scaffold(ScaffoldInput{Title: input.Meeting.Name}) {
+        <div id="agenda-point-list-container">
+            @AgendaPointList(input)
+        </div>
+    }
 }
 ```
 
-### Generating Template Code
+Run `task generate:templates` (or `go generate ./internal/templates`) after editing `.templ` files. The `*_templ.go` output is committed but must not be edited by hand.
 
-```bash
-# Using Task (recommended)
-task generate:templates
+Templates use `i18n.T(ctx, "key")` for translations. Keys map to entries in `internal/locale/locales/en.yaml` (and other locale files).
 
-# Or manually
-go generate ./internal/templates
+---
+
+### Database Layer
+
+SQLite with SQLC for compile-time-checked queries:
+
+- **Schema** — migrations in `internal/repository/sqlite/migrations/`, numbered `NNN_description.up.sql` / `.down.sql`. Migrations run automatically at startup.
+- **Queries** — SQL files in `internal/repository/sqlite/queries/`. SQLC reads these and generates a type-safe Go client in `internal/repository/sqlite/client/`.
+- **Interface** — `internal/repository/repository.go` declares the `Repository` interface. Handlers depend only on this interface, not on the SQLite implementation.
+
+Run `task generate:db` after adding or modifying query files.
+
+---
+
+### Middleware
+
+Middleware is registered by name in `internal/middleware/middleware.go` and referenced by name in `routes.yaml`:
+
+```yaml
+middleware:
+  - session        # load/save session cookie
+  - auth           # require authenticated user
+  - committee_access  # verify user belongs to the committee
 ```
 
-This generates `*_templ.go` files with the compiled template functions.
+The middleware registry resolves names to `func(http.Handler) http.Handler` values and the router applies them in order.
 
-## Implementing Handlers
+---
 
-Implement the generated `Handler` interface:
+### Internationalisation (i18n)
+
+- Locale resolution order: URL prefix → `locale` cookie → `Accept-Language` header → default (`en`).
+- Translation catalogs are YAML files rooted by locale code in `internal/locale/locales/`.
+- Templates call `i18n.T(ctx, "key")` using the `github.com/invopop/ctxi18n/i18n` package.
+- A language switcher component is available at `internal/templates/language_switcher.templ`.
+
+---
+
+### Real-Time Updates (SSE)
+
+Routes marked `sse: true` in `routes.yaml` stream Server-Sent Events. Handlers subscribe to the in-memory broker and write events directly to the response writer. HTMX on the client uses `hx-ext="sse"` to consume the stream and swap content on incoming events.
+
+---
+
+## Extending the Code
+
+### Adding a New Route
+
+1. **Define the route** in `routes.yaml`:
+
+   ```yaml
+   - path: /committee/{slug}/my-feature
+     methods:
+       - verb: GET
+         handler: CommitteeMyFeature
+         middleware:
+           - session
+           - auth
+           - committee_access
+         template:
+           package: github.com/Y4shin/conference-tool/internal/templates
+           type: MyFeatureTemplate
+           input_type: MyFeatureInput
+   ```
+
+2. **Create a Templ template** in `internal/templates/my_feature.templ`:
+
+   ```templ
+   package templates
+
+   type MyFeatureInput struct {
+       CommitteeSlug string
+       // ... your data fields
+   }
+
+   templ MyFeatureTemplate(input MyFeatureInput) {
+       @Scaffold(ScaffoldInput{Title: "My Feature"}) {
+           <p>Hello from my feature!</p>
+       }
+   }
+   ```
+
+3. **Regenerate all code**:
+
+   ```bash
+   task generate
+   ```
+
+4. **Implement the handler** in a file under `internal/handlers/` (e.g., `my_feature.go`):
+
+   ```go
+   package handlers
+
+   import (
+       "context"
+       "net/http"
+
+       "github.com/Y4shin/conference-tool/internal/routes"
+       "github.com/Y4shin/conference-tool/internal/templates"
+   )
+
+   func (h *Handler) CommitteeMyFeature(
+       ctx context.Context,
+       r *http.Request,
+       params routes.RouteParams,
+   ) (*templates.MyFeatureInput, *routes.ResponseMeta, error) {
+       // fetch data, apply business logic...
+       return &templates.MyFeatureInput{
+           CommitteeSlug: params.Slug,
+       }, nil, nil
+   }
+   ```
+
+   The compiler will flag a missing method if you forget this step — the generated `Handler` interface is your checklist.
+
+5. **Add an E2E test** in `e2e/` covering the happy path (see [E2E Testing](#e2e-testing)).
+
+---
+
+### Adding a New Database Query
+
+1. Write a SQL query in `internal/repository/sqlite/queries/`, following the existing SQLC annotation style:
+
+   ```sql
+   -- name: GetMyThing :one
+   SELECT * FROM my_table WHERE id = ? LIMIT 1;
+   ```
+
+2. Regenerate the DB client:
+
+   ```bash
+   task generate:db
+   ```
+
+3. Expose the query through the `Repository` interface in `internal/repository/repository.go` and implement it in `internal/repository/sqlite/repository.go` by delegating to the generated client method.
+
+---
+
+### Adding a New Database Migration
+
+Create two numbered files in `internal/repository/sqlite/migrations/`:
+
+```
+NNN_my_change.up.sql
+NNN_my_change.down.sql
+```
+
+Where `NNN` is the next sequential number. Migrations run automatically on startup via `repo.MigrateUp()`.
+
+---
+
+### Adding New Middleware
+
+1. Implement a `func(http.Handler) http.Handler` in `internal/middleware/`.
+2. Register it by name in `NewRegistry()` inside `internal/middleware/middleware.go`.
+3. Reference the name in `routes.yaml`.
+
+---
+
+### Adding a Translation Key
+
+Add the key to every locale file under `internal/locale/locales/`. Each file must be rooted by its locale code:
+
+```yaml
+en:
+  my_feature:
+    title: "My Feature"
+    description: "Does something useful."
+```
+
+Then use it in a template:
 
 ```go
-package myapp
-
-import (
-    "net/http"
-    "github.com/Y4shin/conference-tool/internal/routes"
-    "github.com/Y4shin/conference-tool/internal/templates"
-)
-
-type MyHandler struct {
-    db *sql.DB
-}
-
-func (h *MyHandler) HomePage(w http.ResponseWriter, r *http.Request) (*templates.HomePageInput, error) {
-    return &templates.HomePageInput{
-        Title: "Welcome",
-    }, nil
-}
-
-func (h *MyHandler) GetPost(w http.ResponseWriter, r *http.Request, params routes.RouteParams) (*templates.Post, error) {
-    post, err := h.db.GetPost(params.Id)
-    if err != nil {
-        return nil, err
-    }
-
-    return &templates.Post{
-        ID:      post.ID,
-        Title:   post.Title,
-        Content: post.Content,
-        Author:  post.Author,
-    }, nil
-}
+i18n.T(ctx, "my_feature.title")
 ```
 
-## Middleware
+---
 
-Create a middleware registry:
+## Development Reference
+
+### Key Tasks
+
+| Task | Description |
+|------|-------------|
+| `task deps:check` | Verify Go, Node.js, and npm are installed |
+| `task setup` | First-time setup: check deps, install modules, generate code |
+| `task dev` | Start the server with hot reload (`air`) |
+| `task css:watch` | Rebuild CSS on file changes (run alongside `task dev`) |
+| `task css:build` | Build CSS once |
+| `task generate` | Regenerate all code (CSS, routes, templates, DB client) |
+| `task generate:routes` | Regenerate routes only |
+| `task generate:templates` | Regenerate templates only |
+| `task generate:db` | Regenerate database client only |
+| `task test` | Run unit tests |
+| `task test:e2e` | Run Playwright browser tests |
+| `task check` | Format, vet, and lint |
+| `task ci` | Full CI gate (format check, vet, lint, test) |
+
+Run `task --list` for the full list.
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and adjust as needed:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENVIRONMENT` | `development` | `development`, `staging`, `production` |
+| `HOST` | `0.0.0.0` | Bind address |
+| `PORT` | `8080` | HTTP port |
+| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `LOG_FORMAT` | `text` | `text` or `json` |
+
+### Code Generation Summary
+
+After changing… | Run…
+--- | ---
+`routes.yaml` | `task generate:routes`
+`*.templ` files | `task generate:templates`
+SQL query files | `task generate:db`
+Anything | `task generate` (does all of the above + CSS)
+
+**Never edit generated files** — they have `_gen.go`, `_templ.go`, or live under `client/` (SQLC output).
+
+---
+
+## E2E Testing
+
+Browser tests use [Playwright](https://playwright.dev/) and live in `e2e/`. They require the `e2e` build tag and are excluded from `task test`.
+
+### First-Time Setup
+
+```bash
+task playwright:install    # Download Chromium (once per machine)
+```
+
+### Running Tests
+
+```bash
+task test:e2e                  # Headless
+task test:e2e:headed           # With visible browser
+task test:e2e:headed:slow      # Visible + slow-motion (useful for debugging)
+```
+
+### Test Helpers
+
+- `newTestServer(t)` — starts a full app instance with an in-memory SQLite DB.
+- `newPage(t)` — launches an isolated Chromium context. Skips the test automatically if browsers are not installed.
+- `adminLogin(t, page, baseURL)` / `userLogin(t, page, baseURL, committee, username, password)` — reusable login flows.
+- `ts.seedCommittee`, `ts.seedUser`, `ts.seedMeeting` — seed the DB directly without HTTP.
+
+### HTMX Assertions
 
 ```go
-package middleware
+// Confirm no full navigation occurred after an HTMX form submit
+urlBefore := page.URL()
+page.Locator("button:has-text('Save')").Click()
+// ... wait for content swap ...
+assert(page.URL() == urlBefore)
 
-import "net/http"
+// Wait for swapped-in content
+page.Locator("td:has-text('new value')").WaitFor()
 
-type Registry struct {
-    middlewares map[string]func(http.Handler) http.Handler
-}
+// Wait for removed content
+locator.WaitFor(playwright.LocatorWaitForOptions{
+    State: playwright.WaitForSelectorStateDetached,
+})
 
-func NewRegistry() *Registry {
-    r := &Registry{
-        middlewares: make(map[string]func(http.Handler) http.Handler),
-    }
-
-    r.Register("Logging", loggingMiddleware)
-    r.Register("CORS", corsMiddleware)
-    r.Register("RateLimit", rateLimitMiddleware)
-    r.Register("RequireAuth", authMiddleware)
-
-    return r
-}
-
-func (r *Registry) Get(name string) func(http.Handler) http.Handler {
-    return r.middlewares[name]
-}
-
-func (r *Registry) Register(name string, mw func(http.Handler) http.Handler) {
-    r.middlewares[name] = mw
-}
-
-func loggingMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // Log request
-        next.ServeHTTP(w, r)
-    })
-}
+// Accept an hx-confirm dialog — register BEFORE clicking
+page.OnDialog(func(d playwright.Dialog) { d.Accept() })
+page.Locator("button:has-text('Delete')").Click()
 ```
-
-## Configuration
-
-Configuration is managed via environment variables and config files. See [`internal/config/`](internal/config) for details.
-
-## Development
-
-### Available Commands
-
-The project uses [Taskfile](https://taskfile.dev/) for common development tasks. Run `task --list` to see all available commands.
-
-Key tasks:
-- `task dev` - Run with hot reload
-- `task css:watch` - Watch and rebuild Tailwind + DaisyUI CSS
-- `task css:build` - Build Tailwind + DaisyUI CSS once
-- `task test` - Run tests
-- `task generate` - Generate all code
-- `task check` - Run all code quality checks
-- `task ci` - Run CI checks
-
-See [Taskfile.yaml](Taskfile.yaml) for the complete list of available tasks.
-
-### Code Generation
-
-The project uses `go generate` for code generation:
-
-```bash
-# Using Task (recommended)
-task generate              # All code generation
-task css:build             # Stylesheet only
-task generate:routes       # Routes only
-task generate:templates    # Templates only
-task generate:db          # Database client only
-
-# Or manually
-npm run build:css                    # Stylesheet
-go generate ./...                      # All
-go generate ./internal/routes          # Routes
-go generate ./internal/templates       # Templates
-go generate ./internal/repository/sqlite  # Database
-```
-
-### Adding New Routes
-
-1. Add route definition to `routes.yaml`
-2. Create corresponding templ template in `internal/templates/`
-3. Run `task generate` (or `go generate ./...`)
-4. Implement the handler method
-5. Register any new middleware if needed
-
-### Building the Code Generator
-
-```bash
-cd tools/routing/cmd/route-codegen
-go build
-```
-
-## Architecture
-
-### Type-Safe Routing Flow
-
-1. **Define** routes in YAML with template input types
-2. **Generate** Handler interface and router code
-3. **Implement** handlers that return template input data
-4. **Router** automatically:
-   - Extracts path parameters
-   - Calls handler method
-   - Handles errors (returns HTTP 500)
-   - Passes input to template
-   - Renders template to response
-
-### Benefits
-
-- **Compile-time Safety**: Invalid routes, missing handlers, or type mismatches caught at build time
-- **No Manual Wiring**: Router generation eliminates boilerplate
-- **Clear Separation**: Handlers prepare data, templates render HTML
-- **Refactoring Support**: Rename handlers or change signatures with confidence
-- **Documentation**: YAML serves as route documentation
-
-## License
-
-[Add your license here]
-
-## Contributing
-
-[Add contribution guidelines here]

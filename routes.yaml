@@ -232,24 +232,9 @@ routes:
           type: MeetingLiveTemplate
           input_type: MeetingLiveInput
 
-  # Meeting Manage
-  - path: /committee/{slug}/meeting/{meeting_id}/manage
-    methods:
-      - verb: GET
-        handler: CommitteeMeetingManage
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - manage_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingManageTemplate
-          input_type: MeetingManageInput
 
-  # Meeting Manage Join QR
-  - path: /committee/{slug}/meeting/{meeting_id}/manage/join-qr
+  # Meeting Moderate Join QR
+  - path: /committee/{slug}/meeting/{meeting_id}/moderate/join-qr
     methods:
       - verb: GET
         handler: CommitteeMeetingManageJoinQR
@@ -258,32 +243,12 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingJoinQRTemplate
           input_type: MeetingJoinQRInput
 
-  # Meeting Manage Stream (SSE — attendee-related manage updates)
-  - path: /committee/{slug}/meeting/{meeting_id}/manage/stream
-    methods:
-      - verb: GET
-        sse: true
-        handler: ManageStream
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - manage_access
-        query_params:
-          - client_id
-        events:
-          - name: ManageAttendeeListUpdated
-            template:
-              package: github.com/Y4shin/conference-tool/internal/templates
-              type: ManageAttendeeDependentPartial
-              input_type: ManageAttendeeDependentPartialInput
 
   # Meeting Moderate Page (condensed moderator view)
   - path: /committee/{slug}/meeting/{meeting_id}/moderate
@@ -348,7 +313,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: ManageAttendeeDependentPartial
@@ -364,7 +329,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsSSEPartial
@@ -380,7 +345,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListSSEPartial
@@ -396,7 +361,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
@@ -444,7 +409,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MotionListPartial
@@ -460,7 +425,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MotionListPartial
@@ -476,7 +441,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MotionItemPartial
@@ -492,7 +457,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         raw: true
 
   # Current Document Preview (attendee-accessible stream target)
@@ -517,7 +482,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttachmentListPartial
@@ -533,7 +498,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttachmentListPartial
@@ -613,7 +578,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: ManageAttendeeDependentPartial
@@ -629,7 +594,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: ManageAttendeeDependentPartial
@@ -645,7 +610,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: ManageAttendeeDependentPartial
@@ -661,7 +626,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: ManageAttendeeDependentPartial
@@ -677,7 +642,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: ManageAttendeeDependentPartial
@@ -693,7 +658,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingAttendeeRecoveryTemplate
@@ -709,7 +674,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AgendaPointListPartial
@@ -725,7 +690,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AgendaPointListPartial
@@ -757,7 +722,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingAgendaPointToolsTemplate
@@ -776,7 +741,7 @@ routes:
           - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: SpeakersListPartial
+          type: ModerateSpeakerSettingsPartial
           input_type: SpeakersListPartialInput
 
   # Speaker Add Candidates Partial (for modal filtering)
@@ -810,7 +775,7 @@ routes:
           - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
-          type: SpeakersListPartial
+          type: ModerateSpeakerSettingsPartial
           input_type: SpeakersListPartialInput
 
   # Speaker Start
@@ -887,7 +852,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
@@ -903,7 +868,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingSettingsPartial
@@ -919,7 +884,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -935,7 +900,7 @@ routes:
           - auth
           - committee_access
           - meeting_access
-          - manage_access
+          - moderate_access
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListPartial
@@ -1111,3 +1076,5 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: LoginPageTemplate
           input_type: LoginPageInput
+
+

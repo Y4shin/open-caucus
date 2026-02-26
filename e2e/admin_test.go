@@ -211,3 +211,4 @@ func TestAdminDeleteUser(t *testing.T) {
 		t.Fatalf("expected user to be removed from list: %v", err)
 	}
 }
+

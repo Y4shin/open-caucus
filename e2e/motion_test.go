@@ -235,3 +235,4 @@ func mustReadFile(t *testing.T, path string) []byte {
 	}
 	return data
 }
+

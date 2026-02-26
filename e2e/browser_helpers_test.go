@@ -93,3 +93,52 @@ func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username,
 		t.Fatalf("goto /committee/%s: %v", committee, err)
 	}
 }
+
+func openModerateLeftTab(t *testing.T, page playwright.Page, tabName string) {
+	t.Helper()
+	if err := page.Locator("#moderate-left-controls").WaitFor(); err != nil {
+		t.Fatalf("wait moderate left controls: %v", err)
+	}
+	tab := page.Locator("#moderate-left-controls [data-moderate-left-tab='" + tabName + "']")
+	count, err := tab.Count()
+	if err != nil {
+		t.Fatalf("count moderate left tab %q: %v", tabName, err)
+	}
+	if count == 0 {
+		t.Fatalf("moderate left tab %q not found", tabName)
+	}
+	panel := page.Locator("#moderate-left-panel-" + tabName)
+	if visible, err := panel.IsVisible(); err == nil && visible {
+		return
+	}
+	if err := tab.First().Click(); err != nil {
+		if _, evalErr := tab.First().Evaluate("el => { el.click(); return true; }", nil); evalErr != nil {
+			t.Fatalf("click moderate left tab %q: %v (eval fallback: %v)", tabName, err, evalErr)
+		}
+	}
+	if err := panel.WaitFor(); err != nil {
+		t.Fatalf("wait moderate left panel %q: %v", tabName, err)
+	}
+}
+
+func openModerateAgendaEditor(t *testing.T, page playwright.Page) {
+	t.Helper()
+	openModerateLeftTab(t, page, "agenda")
+	isOpen, err := page.Locator("#moderate-agenda-edit-dialog[open]").IsVisible()
+	if err == nil && isOpen {
+		if err := page.Locator("#agenda-point-list-container").WaitFor(); err != nil {
+			t.Fatalf("wait agenda-point-list-container in dialog: %v", err)
+		}
+		return
+	}
+	openButton := page.Locator("#moderate-left-panel-agenda [data-manage-dialog-open][aria-controls='moderate-agenda-edit-dialog']")
+	if err := openButton.First().Click(); err != nil {
+		t.Fatalf("open moderate agenda editor: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-edit-dialog[open]").WaitFor(); err != nil {
+		t.Fatalf("wait moderate agenda dialog open: %v", err)
+	}
+	if err := page.Locator("#agenda-point-list-container").WaitFor(); err != nil {
+		t.Fatalf("wait agenda-point-list-container in dialog: %v", err)
+	}
+}

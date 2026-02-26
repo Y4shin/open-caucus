@@ -173,3 +173,4 @@ func TestAttendeeLive_SelfAddButtons(t *testing.T) {
 	}, "second speaker row for Alice after ropm self-add")
 }
 
+

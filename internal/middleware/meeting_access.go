@@ -50,7 +50,7 @@ func (r *Registry) meetingAccess(next http.Handler) http.Handler {
 					req = req.WithContext(ctx)
 				}
 				// No attendee found: continue without CurrentAttendee.
-				// Downstream middleware (manage_access, moderate_access, attendee_required)
+				// Downstream middleware (moderate_access, attendee_required)
 				// or the handler itself decides whether to allow or reject.
 			}
 		}

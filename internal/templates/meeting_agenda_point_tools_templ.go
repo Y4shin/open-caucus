@@ -26,7 +26,7 @@ type MeetingAgendaPointToolsInput struct {
 }
 
 func (i *MeetingAgendaPointToolsInput) ManagePageGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.MeetingIDStr).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, i.MeetingIDStr).MeetingModerateGet(ctx, ""))
 }
 
 func MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) templ.Component {

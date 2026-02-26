@@ -24,7 +24,7 @@ type MeetingJoinQRInput struct {
 }
 
 func (i *MeetingJoinQRInput) MeetingManageGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, i.IDString).MeetingModerateGet(ctx, ""))
 }
 
 func (i *MeetingJoinQRInput) QRCodeSrc() templ.SafeURL {

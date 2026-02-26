@@ -191,3 +191,4 @@ func TestSync_ManageAndManage_SpeakerActionsPropagate(t *testing.T) {
 	}
 }
 
+

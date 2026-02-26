@@ -21,26 +21,28 @@ type ModeratePageInput struct {
 	MeetingName   string
 	IDString      string // meeting ID
 	// Left column
-	AgendaPoints  AgendaPointListPartialInput
-	HasActiveAP   bool
-	ActiveAPTitle string
-	Attachments   AttachmentListPartialInput // for active AP
-	Motions       MotionListPartialInput     // for active AP
-	// Right column (SSE-dependent)
+	AgendaPoints    AgendaPointListPartialInput
+	HasActiveAP     bool
+	ActiveAPTitle   string
+	Attachments     AttachmentListPartialInput // for active AP
+	Motions         MotionListPartialInput     // for active AP
+	MeetingSettings MeetingSettingsPartialInput
+	// Right column
 	Speakers  SpeakersListPartialInput
 	Attendees AttendeeListPartialInput
 }
 
-// ModerateDependentPartialInput is the SSE-refreshed right-column input.
+// ModerateDependentPartialInput is the SSE-refreshed dependent input.
 type ModerateDependentPartialInput struct {
-	CommitteeSlug string
-	IDString      string // meeting ID
-	Speakers      SpeakersListPartialInput
-	Attendees     AttendeeListPartialInput
+	CommitteeSlug   string
+	IDString        string // meeting ID
+	Speakers        SpeakersListPartialInput
+	Attendees       AttendeeListPartialInput
+	MeetingSettings MeetingSettingsPartialInput
 }
 
-func (i *ModeratePageInput) managePageGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageGet(ctx, ""))
+func (i *ModeratePageInput) committeePageGet(ctx context.Context) templ.SafeURL {
+	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGet(ctx, ""))
 }
 
 func (i *ModeratePageInput) moderateStreamGetStr(ctx context.Context) string {
@@ -51,10 +53,7 @@ func (i *AgendaPointListPartialInput) moderateAgendaPartialGetStr(ctx context.Co
 	return paths.NewCommitteeSlugMeetingMeetingIdModerateAgendaRoute(i.CommitteeSlug, i.IDString).ModerateAgendaPartialGet(ctx, "")
 }
 
-// ---------------------------------------------------------
-// Compact Agenda Partial  id="moderate-agenda-compact"
-// Served by ModerateAgendaPartial GET and refreshed via htmx trigger
-// ---------------------------------------------------------
+// Compact Agenda Partial
 func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -83,7 +82,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(input.moderateAgendaPartialGetStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 54, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 52, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -132,7 +131,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointDisplayNumber(ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 71, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 69, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -167,7 +166,7 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(ap.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 72, Col: 90}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 70, Col: 90}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -183,83 +182,43 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 						return templ_7745c5c3_Err
 					}
 				} else {
-					var templ_7745c5c3_Var9 = []any{"inline-form inline"}
-					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
 					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<form hx-post=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var10 string
-					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointActivatePostStr(ctx, &ap))
+					var templ_7745c5c3_Var9 string
+					templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointActivatePostStr(ctx, &ap))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 77, Col: 60}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 75, Col: 60}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" hx-target=\"#agenda-point-list-container\" hx-swap=\"outerHTML\" hx-on::after-request=\"if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')\" class=\"")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var11 string
-					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var9).String())
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" hx-target=\"#agenda-point-list-container\" hx-swap=\"outerHTML\" hx-on::after-request=\"if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')\" class=\"inline\"><button type=\"submit\" class=\"btn btn-sm btn-square tooltip tooltip-left\" data-tip=\"Activate agenda point\" title=\"Activate agenda point\" aria-label=\"Activate agenda point\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">")
+					templ_7745c5c3_Err = Icon(IconCheckCircle, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var12 = []any{"manage-agenda-action-button btn btn-sm btn-square"}
-					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<button type=\"submit\" class=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var13 string
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var12).String())
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" title=\"Activate agenda point\" aria-label=\"Activate agenda point\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = Icon(IconCheckCircle, "", "manage-agenda-action-icon").Render(ctx, templ_7745c5c3_Buffer)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</button></form>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</button></form>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</li>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</li>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</ul>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</ul>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -267,9 +226,6 @@ func ModerateAgendaCompactPartial(input AgendaPointListPartialInput) templ.Compo
 	})
 }
 
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// ---------------------------------------------------------
 func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -286,42 +242,28 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var14 == nil {
-			templ_7745c5c3_Var14 = templ.NopComponent
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<section class=\"card h-full min-h-0 border border-base-300 bg-base-100 shadow-sm\"><div class=\"card-body min-h-0 p-4\"><div class=\"mb-3 flex items-center justify-between gap-2\"><h2 class=\"text-lg font-semibold\">Agenda</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<section class=\"min-h-0\" data-testid=\"manage-agenda-card\"><div class=\"mb-3 flex items-center justify-between gap-2\"><h2 class=\"text-lg font-semibold\">Agenda</h2><div class=\"flex items-center gap-2\"><button type=\"button\" class=\"btn btn-sm btn-square btn-ghost\" data-manage-dialog-open aria-controls=\"moderate-agenda-help-dialog\" title=\"Agenda help\" aria-label=\"Agenda help\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var15 = []any{"manage-agenda-action-button btn btn-sm btn-square"}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
+		templ_7745c5c3_Err = Icon(IconHelp, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "<button type=\"button\" class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</button> <button type=\"button\" class=\"btn btn-sm btn-square tooltip tooltip-left\" data-tip=\"Edit agenda\" data-manage-dialog-open aria-controls=\"moderate-agenda-edit-dialog\" title=\"Edit agenda\" aria-label=\"Edit agenda\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var16 string
-		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var15).String())
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+		templ_7745c5c3_Err = Icon(IconSettings, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" data-manage-dialog-open aria-controls=\"moderate-agenda-edit-dialog\" title=\"Edit agenda\" aria-label=\"Edit agenda\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = Icon(IconSettings, "", "manage-agenda-action-icon").Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -329,29 +271,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div><dialog id=\"moderate-agenda-edit-dialog\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-5xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">Edit Agenda</h3>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var17 = []any{"manage-speaker-add-dialog-close btn btn-sm btn-ghost"}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var17...)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<button type=\"button\" class=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var18 string
-		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var17).String())
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\" data-manage-dialog-close>Close</button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<dialog id=\"moderate-agenda-help-dialog\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-2xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">Agenda Panel Help</h3><button type=\"button\" class=\"btn btn-sm btn-ghost\" data-manage-dialog-close>Close</button></div><div class=\"space-y-2 text-sm text-base-content/80\"><p>This panel shows all agenda points in order.</p><p>The active agenda point is highlighted and drives speakers/tools behavior.</p><p>Use the settings icon to open the full agenda editor.</p></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog> <dialog id=\"moderate-agenda-edit-dialog\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-5xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">Edit Agenda</h3><button type=\"button\" class=\"btn btn-sm btn-ghost\" data-manage-dialog-close>Close</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -359,7 +279,7 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -367,9 +287,6 @@ func ModerateAgendaCard(input AgendaPointListPartialInput) templ.Component {
 	})
 }
 
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// ---------------------------------------------------------
 func ModerateToolsCard(input ModeratePageInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -386,250 +303,224 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var19 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var19 == nil {
-			templ_7745c5c3_Var19 = templ.NopComponent
+		templ_7745c5c3_Var11 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var11 == nil {
+			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<section class=\"card h-full min-h-0 border border-base-300 bg-base-100 shadow-sm\"><div class=\"card-body min-h-0 space-y-5 p-4\"><h2 class=\"text-lg font-semibold\">Tools</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "<section class=\"min-h-0 space-y-5\"><h2 class=\"text-lg font-semibold\">Tools</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if !input.HasActiveAP {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<p class=\"text-sm text-base-content/70\">No active agenda point.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<p class=\"text-sm text-base-content/70\">No active agenda point.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<div class=\"space-y-2\"><div class=\"flex items-center justify-between gap-2\"><strong class=\"text-base\">Attachments</strong> <button class=\"btn btn-sm btn-outline\" type=\"button\" data-manage-dialog-open aria-controls=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<div class=\"space-y-2\"><div class=\"flex items-center justify-between gap-2\"><strong class=\"text-base\">Attachments</strong> <button class=\"btn btn-sm btn-outline\" type=\"button\" data-manage-dialog-open aria-controls=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr)
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 154, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 171, Col: 90}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\">Manage Files</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\">Manage Files</button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Attachments.Attachments) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"text-sm text-base-content/70\">No attachments.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<p class=\"text-sm text-base-content/70\">No attachments.</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<ul class=\"list rounded-box border border-base-300 bg-base-100\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<ul class=\"list rounded-box border border-base-300 bg-base-100\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, a := range input.Attachments.Attachments {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<li class=\"list-row\"><a class=\"link link-primary\" href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<li class=\"list-row\"><a class=\"link link-primary\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var21 templ.SafeURL
-					templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)))
+					var templ_7745c5c3_Var13 templ.SafeURL
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 163, Col: 101}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 180, Col: 101}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 					if a.Label != "" {
-						var templ_7745c5c3_Var22 string
-						templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(a.Label)
+						var templ_7745c5c3_Var14 string
+						templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(a.Label)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 165, Col: 20}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 182, Col: 20}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, " (")
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						var templ_7745c5c3_Var23 string
-						templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(a.Filename)
-						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 165, Col: 36}
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, " (")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, ")")
+						var templ_7745c5c3_Var15 string
+						templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(a.Filename)
+						if templ_7745c5c3_Err != nil {
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 182, Col: 36}
+						}
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, ")")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					} else {
-						var templ_7745c5c3_Var24 string
-						templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(a.Filename)
+						var templ_7745c5c3_Var16 string
+						templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(a.Filename)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 167, Col: 23}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 184, Col: 23}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</a></li>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</a></li>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "</ul>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</ul>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</div><div class=\"space-y-2\"><div class=\"flex items-center justify-between gap-2\"><strong class=\"text-base\">Motions</strong> <button class=\"btn btn-sm btn-outline\" type=\"button\" data-manage-dialog-open aria-controls=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</div><div class=\"space-y-2\"><div class=\"flex items-center justify-between gap-2\"><strong class=\"text-base\">Motions</strong> <button class=\"btn btn-sm btn-outline\" type=\"button\" data-manage-dialog-open aria-controls=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var25 string
-			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-motions-dialog-" + input.Motions.AgendaPointIDStr)
+			var templ_7745c5c3_Var17 string
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-motions-dialog-" + input.Motions.AgendaPointIDStr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 181, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 198, Col: 82}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\">Manage Motions</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\">Manage Motions</button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Motions.Motions) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<p class=\"text-sm text-base-content/70\">No motions.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<p class=\"text-sm text-base-content/70\">No motions.</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "<ul class=\"list rounded-box border border-base-300 bg-base-100\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<ul class=\"list rounded-box border border-base-300 bg-base-100\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				for _, m := range input.Motions.Motions {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<li class=\"list-row\"><a class=\"link link-primary\" href=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<li class=\"list-row\"><a class=\"link link-primary\" href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var26 templ.SafeURL
-					templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(input.CommitteeSlug, input.IDString, m.BlobIDString).ServeBlobDownloadGet(ctx, "")))
+					var templ_7745c5c3_Var18 templ.SafeURL
+					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(input.CommitteeSlug, input.IDString, m.BlobIDString).ServeBlobDownloadGet(ctx, "")))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 190, Col: 192}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 207, Col: 192}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\">")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var27 string
-					templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(m.Title)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 191, Col: 19}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, " (")
+					var templ_7745c5c3_Var19 string
+					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(m.Title)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 208, Col: 19}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var28 string
-					templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(m.Filename)
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 191, Col: 35}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " (")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, ")</a></li>")
+					var templ_7745c5c3_Var20 string
+					templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(m.Filename)
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 208, Col: 35}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, ")</a></li>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "</ul>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "</ul>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
 		}
 		if input.HasActiveAP {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<dialog id=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<dialog id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var29 string
-			templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr)
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 202, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 218, Col: 76}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-5xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var30 string
-			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(input.ActiveAPTitle)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 208, Col: 61}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-5xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, " - Attachments</h3>")
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(input.ActiveAPTitle)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 224, Col: 61}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var31 = []any{"manage-speaker-add-dialog-close btn btn-sm btn-ghost"}
-			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var31...)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "<button type=\"button\" class=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var32 string
-			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var31).String())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "\" data-manage-dialog-close>Close</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, " - Attachments</h3><button type=\"button\" class=\"btn btn-sm btn-ghost\" data-manage-dialog-close>Close</button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -637,55 +528,33 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog> <dialog id=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog> <dialog id=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var33 string
-			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-motions-dialog-" + input.Motions.AgendaPointIDStr)
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs("moderate-motions-dialog-" + input.Motions.AgendaPointIDStr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 218, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 234, Col: 68}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-5xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var34 string
-			templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(input.ActiveAPTitle)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 224, Col: 61}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-5xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, " - Motions</h3>")
+			var templ_7745c5c3_Var24 string
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(input.ActiveAPTitle)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 240, Col: 61}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var35 = []any{"manage-speaker-add-dialog-close btn btn-sm btn-ghost"}
-			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var35...)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<button type=\"button\" class=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var36 string
-			templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var35).String())
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" data-manage-dialog-close>Close</button></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, " - Motions</h3><button type=\"button\" class=\"btn btn-sm btn-ghost\" data-manage-dialog-close>Close</button></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -693,10 +562,133 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func ModerateManageAttendeesCard(input AttendeeListPartialInput) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var25 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var25 == nil {
+			templ_7745c5c3_Var25 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<section class=\"min-h-0\" data-testid=\"manage-attendees-card\"><div class=\"mb-3 flex items-center justify-between gap-2\"><h2 class=\"text-lg font-semibold\">Attendees</h2><div class=\"flex items-center gap-2\"><form hx-post=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var26 string
+		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(input.ToggleSignupOpenPostStr(ctx))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 259, Col: 49}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-trigger=\"change\" class=\"inline-flex\" title=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var27 string
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeSignupStateLabel(input.SignupOpen))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 264, Col: 55}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = SignupToggleField("manage_signup_open", "signup_open", attendeeSignupToggleLabel(), input.SignupOpen, "").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</form>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if input.ShowSelfSignup {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "<form hx-post=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var28 string
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeSelfSignupPostStr(ctx))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 270, Col: 52}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" class=\"inline-flex\"><button type=\"submit\" class=\"btn btn-sm btn-square tooltip tooltip-left\" data-tip=\"Sign yourself up\" title=\"Sign yourself up\" aria-label=\"Sign yourself up\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = Icon(IconPersonRaised, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</button></form>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "<a href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var29 templ.SafeURL
+		templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinURLErrs(input.ManageJoinQRGet(ctx))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 288, Col: 38}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" class=\"btn btn-sm btn-square tooltip tooltip-left\" data-tip=\"Show signup QR\" title=\"Show signup QR\" aria-label=\"Show signup QR\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = Icon(IconQrCode2, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</a></div></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = AttendeeListPartial(input).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</section>")
 		if templ_7745c5c3_Err != nil {
@@ -706,9 +698,125 @@ func ModerateToolsCard(input ModeratePageInput) templ.Component {
 	})
 }
 
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// ---------------------------------------------------------
+func ModerateSettingsCard(input ModeratePageInput) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var30 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var30 == nil {
+			templ_7745c5c3_Var30 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<section class=\"min-h-0\" data-testid=\"manage-settings-card\"><h2 class=\"mb-3 text-lg font-semibold\">Settings</h2><div id=\"meeting-settings-container\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = MeetingSettingsContent(input.MeetingSettings).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "</div><div class=\"divider my-4\">Agenda Point</div><div id=\"moderate-speaker-settings-container\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateSpeakerSettingsContent(input.Speakers).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "</div></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func ModerateLeftWorkspace(input ModeratePageInput) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var31 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var31 == nil {
+			templ_7745c5c3_Var31 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "<section id=\"moderate-left-controls\" data-meeting-id=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var32 string
+		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(input.IDString)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 318, Col: 34}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\" class=\"card min-h-0 border border-base-300 bg-base-100 shadow-sm\"><div class=\"card-body min-h-0 p-4\"><div role=\"tablist\" class=\"tabs tabs-border tabs-sm w-full\"><button type=\"button\" class=\"tab tab-active flex-1 justify-center\" data-moderate-left-tab=\"agenda\">Agenda</button> <button type=\"button\" class=\"tab flex-1 justify-center\" data-moderate-left-tab=\"tools\">Tools</button> <button type=\"button\" class=\"tab flex-1 justify-center\" data-moderate-left-tab=\"attendees\">Attendees</button> <button type=\"button\" class=\"tab flex-1 justify-center\" data-moderate-left-tab=\"settings\">Settings</button></div><div class=\"mt-3 min-h-0 flex-1 overflow-y-auto\"><div id=\"moderate-left-panel-agenda\" data-moderate-left-panel=\"agenda\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateAgendaCard(input.AgendaPoints).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "</div><div id=\"moderate-left-panel-tools\" data-moderate-left-panel=\"tools\" class=\"hidden\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateToolsCard(input).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "</div><div id=\"moderate-left-panel-attendees\" data-moderate-left-panel=\"attendees\" class=\"hidden\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateManageAttendeesCard(input.Attendees).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "</div><div id=\"moderate-left-panel-settings\" data-moderate-left-panel=\"settings\" class=\"hidden\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateSettingsCard(input).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "</div></div></div></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
 func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -725,9 +833,9 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var37 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var37 == nil {
-			templ_7745c5c3_Var37 = templ.NopComponent
+		templ_7745c5c3_Var33 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var33 == nil {
+			templ_7745c5c3_Var33 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = ErrorMessage(input.Error).Render(ctx, templ_7745c5c3_Buffer)
@@ -735,48 +843,30 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if input.CurrentAgendaPointID == nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 64, "<p class=\"text-sm text-base-content/70\">No active agenda point.</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "<p class=\"text-sm text-base-content/70\">No active agenda point.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 65, "<div class=\"mb-2 flex flex-wrap items-center justify-between gap-2\"><div class=\"flex flex-wrap items-center gap-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "<div class=\"mb-2 flex flex-wrap items-center justify-between gap-2\" data-testid=\"manage-speakers-quick-controls\"><div class=\"flex flex-wrap items-center gap-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if current := input.CurrentSpeaker(); current != nil {
-				var templ_7745c5c3_Var38 = []any{"inline-form inline"}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<form hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 66, "<form hx-post=\"")
+				var templ_7745c5c3_Var34 string
+				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerEndPostStr(ctx, current))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 355, Col: 53}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var39 string
-				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerEndPostStr(ctx, current))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 249, Col: 53}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 67, "\" hx-target=\"#speakers-list-container\" hx-swap=\"outerHTML\" class=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var40 string
-				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var38).String())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 68, "\"><button type=\"submit\" class=\"btn btn-sm btn-success whitespace-nowrap\" title=\"End current speech\" aria-label=\"End current speech\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "\" hx-target=\"#speakers-list-container\" hx-swap=\"outerHTML\" class=\"inline\"><button type=\"submit\" class=\"btn btn-sm btn-success whitespace-nowrap\" data-testid=\"manage-end-current-speaker\" data-testid-group=\"manage-speakers-quick-button\" title=\"End current speech\" aria-label=\"End current speech\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -784,43 +874,25 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 69, "End Speech</button></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "End Speech</button></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else if next := input.NextWaitingSpeaker(); next != nil {
-				var templ_7745c5c3_Var41 = []any{"inline-form inline"}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var41...)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<form hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<form hx-post=\"")
+				var templ_7745c5c3_Var35 string
+				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerStartPostStr(ctx, next))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 374, Col: 52}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var42 string
-				templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerStartPostStr(ctx, next))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 266, Col: 52}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 71, "\" hx-target=\"#speakers-list-container\" hx-swap=\"outerHTML\" class=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var43 string
-				templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var41).String())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 72, "\"><button type=\"submit\" class=\"btn btn-sm btn-primary whitespace-nowrap\" title=\"Start next speaker\" aria-label=\"Start next speaker\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "\" hx-target=\"#speakers-list-container\" hx-swap=\"outerHTML\" class=\"inline\"><button type=\"submit\" class=\"btn btn-sm btn-primary whitespace-nowrap\" data-testid=\"manage-start-next-speaker\" data-testid-group=\"manage-speakers-quick-button\" title=\"Start next speaker\" aria-label=\"Start next speaker\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -828,17 +900,17 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 73, "Start Next Speaker</button></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "Start Next Speaker</button></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 74, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Speakers) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 75, "<button type=\"button\" class=\"btn btn-sm btn-ghost whitespace-nowrap\" data-manage-speakers-reset-scroll title=\"Scroll to active position\" aria-label=\"Scroll to active position\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<button type=\"button\" class=\"btn btn-sm btn-ghost whitespace-nowrap\" data-manage-speakers-reset-scroll data-testid=\"manage-speakers-reset-scroll\" title=\"Scroll to active position\" aria-label=\"Scroll to active position\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -846,40 +918,40 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 76, "Scroll To Active Position</button>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "Scroll To Active Position</button>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 77, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(input.Speakers) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 78, "<p class=\"text-sm text-base-content/70\">No speakers in the queue.</p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "<p class=\"text-sm text-base-content/70\">No speakers in the queue.</p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				var templ_7745c5c3_Var44 = []any{"list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1", "live-speaker-list"}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var44...)
+				var templ_7745c5c3_Var36 = []any{"list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1", "live-speaker-list"}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var36...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 79, "<ul class=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "<ul class=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var45 string
-				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var44).String())
+				var templ_7745c5c3_Var37 string
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var36).String())
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 1, Col: 0}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 80, "\" data-manage-speakers-viewport>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "\" data-manage-speakers-viewport data-testid=\"manage-speakers-viewport\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -889,7 +961,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 81, "</ul>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "</ul>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -899,10 +971,7 @@ func ModerateSpeakersContent(input SpeakersListPartialInput) templ.Component {
 	})
 }
 
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// Keeps id="speakers-list-container" for OOB swap compatibility
-// ---------------------------------------------------------
+// Keeps id="speakers-list-container" for compatibility with existing swaps/tests.
 func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -919,12 +988,20 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var46 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var46 == nil {
-			templ_7745c5c3_Var46 = templ.NopComponent
+		templ_7745c5c3_Var38 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var38 == nil {
+			templ_7745c5c3_Var38 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 82, "<section class=\"card min-h-0 flex-[2] border border-base-300 bg-base-100 shadow-sm\"><div class=\"card-body flex min-h-0 flex-col p-4\"><h2 class=\"mb-3 text-lg font-semibold\">Speakers</h2><div id=\"speakers-list-container\" sse-swap=\"manage-speakers-list-updated\" hx-swap=\"outerHTML\" class=\"flex min-h-0 flex-1 flex-col\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "<section class=\"card min-h-0 flex-[2] border border-base-300 bg-base-100 shadow-sm\" data-testid=\"manage-speakers-card\"><div class=\"card-body flex min-h-0 flex-col p-4\"><div class=\"mb-3 flex items-center justify-between gap-2\"><h2 class=\"text-lg font-semibold\">Speakers</h2><button type=\"button\" class=\"btn btn-sm btn-square btn-ghost\" data-manage-dialog-open aria-controls=\"moderate-speakers-help-dialog\" title=\"Speakers help\" aria-label=\"Speakers help\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = Icon(IconHelp, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "</button></div><div id=\"speakers-list-container\" sse-swap=\"manage-speakers-list-updated\" hx-swap=\"outerHTML\" class=\"flex min-h-0 flex-1 flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -932,7 +1009,7 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 83, "</div></div></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "</div><dialog id=\"moderate-speakers-help-dialog\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-2xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">Speakers Panel Help</h3><button type=\"button\" class=\"btn btn-sm btn-ghost\" data-manage-dialog-close>Close</button></div><div class=\"space-y-2 text-sm text-base-content/80\"><p>This list is the speaking queue for the active agenda point.</p><p>Use quick controls to start the next speaker or end the current one.</p><p>Row action buttons let you prioritize, start/stop, or remove entries.</p></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog></div></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -940,10 +1017,6 @@ func ModerateSpeakersCard(input SpeakersListPartialInput) templ.Component {
 	})
 }
 
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// Reuses SpeakerAddCandidatesPartial for adding speakers inline
-// ---------------------------------------------------------
 func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -960,33 +1033,33 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var47 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var47 == nil {
-			templ_7745c5c3_Var47 = templ.NopComponent
+		templ_7745c5c3_Var39 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var39 == nil {
+			templ_7745c5c3_Var39 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 84, "<section class=\"card min-h-0 flex-1 border border-base-300 bg-base-100 shadow-sm\"><div class=\"card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4\"><div class=\"flex flex-wrap items-center justify-between gap-3\"><h2 class=\"text-lg font-semibold\">Add Speaker</h2><div class=\"join w-full max-w-full sm:w-auto sm:min-w-[24rem]\"><input class=\"input input-bordered input-sm join-item min-w-0 flex-1\" type=\"text\" id=\"moderate-speaker-search\" name=\"q\" placeholder=\"Search name or number\" hx-get=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "<section class=\"card min-h-0 flex-1 border border-base-300 bg-base-100 shadow-sm\"><div class=\"card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4\"><div class=\"flex flex-wrap items-center justify-between gap-3\"><h2 class=\"text-lg font-semibold\">Add Speaker</h2><div class=\"join w-full max-w-full sm:w-auto sm:min-w-[24rem]\"><input class=\"input input-bordered input-sm join-item min-w-0 flex-1\" type=\"text\" id=\"speaker-add-search-input\" name=\"q\" placeholder=\"Search name or number\" hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var48 string
-		templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(speakers.SpeakerAddCandidatesPartialGetStr(ctx))
+		var templ_7745c5c3_Var40 string
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(speakers.SpeakerAddCandidatesPartialGetStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 346, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 479, Col: 62}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 85, "\" hx-target=\"#speaker-add-candidates-container\" hx-swap=\"outerHTML\" hx-trigger=\"input changed delay:180ms, search\" hx-sync=\"this:replace\"> <button type=\"button\" class=\"btn btn-sm btn-square join-item border-base-300 bg-base-100 text-base-content/70 shadow-none hover:bg-base-200 hover:text-base-content\" aria-label=\"Clear search\" onclick=\"var i=document.getElementById('moderate-speaker-search'); if(!i)return; i.value=''; i.dispatchEvent(new Event('input',{bubbles:true})); i.focus();\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = Icon(IconClose, "", "").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "\" hx-target=\"#speaker-add-candidates-container\" hx-swap=\"outerHTML\" hx-trigger=\"input changed delay:180ms, search\" hx-sync=\"this:replace\"> <button type=\"button\" class=\"btn btn-sm btn-square btn-ghost join-item border-base-300\" data-manage-dialog-open aria-controls=\"moderate-add-speaker-help-dialog\" title=\"Add speaker help\" aria-label=\"Add speaker help\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 86, "</button></div></div><div class=\"min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1\">")
+		templ_7745c5c3_Err = Icon(IconHelp, "", "h-4 w-4").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 94, "</button></div></div><div class=\"min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -994,7 +1067,7 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 87, "</div></div></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 95, "</div><dialog id=\"moderate-add-speaker-help-dialog\" class=\"modal\" data-manage-dialog><div class=\"modal-box w-11/12 max-w-2xl\"><div class=\"mb-4 flex items-center justify-between gap-2\"><h3 class=\"text-lg font-semibold\">Add Speaker Help</h3><button type=\"button\" class=\"btn btn-sm btn-ghost\" data-manage-dialog-close>Close</button></div><div class=\"space-y-2 text-sm text-base-content/80\"><p>Search by attendee number or name to filter candidates.</p><p>Press Enter in the search field to add the top regular candidate.</p><p>Use the row buttons to add either a regular speech or a rules-of-procedure speech.</p></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog></div></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1002,10 +1075,48 @@ func ModerateAttendeesCard(speakers SpeakersListPartialInput) templ.Component {
 	})
 }
 
-// ---------------------------------------------------------
-// ---------------------------------------------------------
-// Replaced entirely on "moderate-updated" SSE event
-// ---------------------------------------------------------
+func ModerateDependentContent(input ModerateDependentPartialInput) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var41 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var41 == nil {
+			templ_7745c5c3_Var41 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 96, "<div id=\"moderate-dependent-container\" sse-swap=\"moderate-updated\" hx-swap=\"outerHTML\" class=\"flex min-h-0 flex-col gap-4\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateSpeakersCard(input.Speakers).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateAttendeesCard(input.Speakers).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 97, "</div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+// Replaced on "moderate-updated" SSE event.
 func ModerateDependentPartial(input ModerateDependentPartialInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1022,24 +1133,40 @@ func ModerateDependentPartial(input ModerateDependentPartialInput) templ.Compone
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var49 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var49 == nil {
-			templ_7745c5c3_Var49 = templ.NopComponent
+		templ_7745c5c3_Var42 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var42 == nil {
+			templ_7745c5c3_Var42 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 88, "<div id=\"moderate-dependent-container\" sse-swap=\"moderate-updated\" hx-swap=\"outerHTML\" class=\"flex min-h-0 flex-col gap-4\">")
+		templ_7745c5c3_Err = ModerateDependentContent(input).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ModerateSpeakersCard(input.Speakers).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 98, "<div id=\"attendee-list-container\" hx-swap-oob=\"outerHTML\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ModerateAttendeesCard(input.Speakers).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = AttendeeListPartial(input.Attendees).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 89, "</div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 99, "</div><div id=\"meeting-settings-container\" hx-swap-oob=\"outerHTML\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = MeetingSettingsContent(input.MeetingSettings).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 100, "</div><div id=\"moderate-speaker-settings-container\" hx-swap-oob=\"outerHTML\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = ModerateSpeakerSettingsContent(input.Speakers).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 101, "</div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1047,9 +1174,6 @@ func ModerateDependentPartial(input ModerateDependentPartialInput) templ.Compone
 	})
 }
 
-// ---------------------------------------------------------
-// Full Page Template
-// ---------------------------------------------------------
 func MeetingModerateTemplate(input ModeratePageInput) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -1066,15 +1190,15 @@ func MeetingModerateTemplate(input ModeratePageInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var50 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var50 == nil {
-			templ_7745c5c3_Var50 = templ.NopComponent
+		templ_7745c5c3_Var43 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var43 == nil {
+			templ_7745c5c3_Var43 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = PageTemplate("Moderate: "+input.MeetingName+" - "+input.CommitteeName, false, true,
 			ScaffoldInput{
 				Title:    "Moderate: " + input.MeetingName,
-				BackLink: SafeURLPtr(input.managePageGet(ctx)),
+				BackLink: SafeURLPtr(input.committeePageGet(ctx)),
 			},
 			MeetingModerateContent(input)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
@@ -1100,50 +1224,43 @@ func MeetingModerateContent(input ModeratePageInput) templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var51 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var51 == nil {
-			templ_7745c5c3_Var51 = templ.NopComponent
+		templ_7745c5c3_Var44 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var44 == nil {
+			templ_7745c5c3_Var44 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 90, "<div id=\"moderate-sse-root\" hx-ext=\"sse\" data-stream-url=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 102, "<div id=\"moderate-sse-root\" hx-ext=\"sse\" data-stream-url=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var52 string
-		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(input.moderateStreamGetStr(ctx))
+		var templ_7745c5c3_Var45 string
+		templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(input.moderateStreamGetStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 401, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_moderate.templ`, Line: 559, Col: 51}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 91, "\" class=\"grid min-h-0 flex-1 gap-4 lg:grid-cols-2 lg:[grid-auto-rows:minmax(0,1fr)]\"><div class=\"flex min-h-0 flex-col gap-4\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ModerateAgendaCard(input.AgendaPoints).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 103, "\" class=\"grid min-h-0 flex-1 gap-4 lg:grid-cols-2 lg:[grid-auto-rows:minmax(0,1fr)]\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = ModerateToolsCard(input).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = ModerateLeftWorkspace(input).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 92, "</div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = ModerateDependentPartial(ModerateDependentPartialInput{
-			CommitteeSlug: input.CommitteeSlug,
-			IDString:      input.IDString,
-			Speakers:      input.Speakers,
-			Attendees:     input.Attendees,
+		templ_7745c5c3_Err = ModerateDependentContent(ModerateDependentPartialInput{
+			CommitteeSlug:   input.CommitteeSlug,
+			IDString:        input.IDString,
+			Speakers:        input.Speakers,
+			Attendees:       input.Attendees,
+			MeetingSettings: input.MeetingSettings,
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 93, "</div><script>\r\n\t\t(function() {\r\n\t\t\tfunction formatElapsed(totalSeconds) {\r\n\t\t\t\tvar mins = Math.floor(totalSeconds / 60);\r\n\t\t\t\tvar secs = totalSeconds % 60;\r\n\t\t\t\treturn String(mins).padStart(2, \"0\") + \":\" + String(secs).padStart(2, \"0\");\r\n\t\t\t}\r\n\r\n\t\t\tfunction updateSpeakingTimers() {\r\n\t\t\t\tvar nowSec = Math.floor(Date.now() / 1000);\r\n\t\t\t\tvar timers = document.querySelectorAll(\"[data-speaking-since]\");\r\n\t\t\t\tfor (var i = 0; i < timers.length; i++) {\r\n\t\t\t\t\tvar el = timers[i];\r\n\t\t\t\t\tvar since = Number(el.getAttribute(\"data-speaking-since\"));\r\n\t\t\t\t\tif (!Number.isFinite(since) || since <= 0) { continue; }\r\n\t\t\t\t\tvar elapsed = Math.max(0, nowSec - since);\r\n\t\t\t\t\tel.textContent = formatElapsed(elapsed);\r\n\t\t\t\t}\r\n\t\t\t}\r\n\r\n\t\t\tfunction wireManageDialogs() {\r\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\r\n\t\t\t\t\tvar openBtn = event.target.closest(\"[data-manage-dialog-open]\");\r\n\t\t\t\t\tif (openBtn) {\r\n\t\t\t\t\t\tvar dialogID = openBtn.getAttribute(\"aria-controls\");\r\n\t\t\t\t\t\tvar dialog = dialogID ? document.getElementById(dialogID) : null;\r\n\t\t\t\t\t\tif (dialog && typeof dialog.showModal === \"function\") {\r\n\t\t\t\t\t\t\tdialog.showModal();\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tvar closeBtn = event.target.closest(\"[data-manage-dialog-close]\");\r\n\t\t\t\t\tif (closeBtn) {\r\n\t\t\t\t\t\tvar closeDialog = closeBtn.closest(\"dialog\");\r\n\t\t\t\t\t\tif (closeDialog && typeof closeDialog.close === \"function\") {\r\n\t\t\t\t\t\t\tcloseDialog.close();\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t}\r\n\t\t\t\t});\r\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\r\n\t\t\t\t\tvar dialog = event.target;\r\n\t\t\t\t\tif (!(dialog instanceof HTMLDialogElement) || !dialog.hasAttribute(\"data-manage-dialog\")) { return; }\r\n\t\t\t\t\tvar rect = dialog.getBoundingClientRect();\r\n\t\t\t\t\tvar outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;\r\n\t\t\t\t\tif (outside) { dialog.close(); }\r\n\t\t\t\t});\r\n\t\t\t}\r\n\r\n\t\t\tfunction getManageSpeakersViewport() {\r\n\t\t\t\tvar viewports = document.querySelectorAll(\"#speakers-list-container [data-manage-speakers-viewport]\");\r\n\t\t\t\tvar best = null;\r\n\t\t\t\tvar bestScore = -1;\r\n\t\t\t\tfor (var i = 0; i < viewports.length; i++) {\r\n\t\t\t\t\tvar viewport = viewports[i];\r\n\t\t\t\t\tvar score = Math.max(viewport.scrollHeight || 0, viewport.clientHeight || 0);\r\n\t\t\t\t\tif (score > bestScore) { bestScore = score; best = viewport; }\r\n\t\t\t\t}\r\n\t\t\t\treturn best;\r\n\t\t\t}\r\n\r\n\t\t\tfunction applyManageSpeakersInitialScroll() {\n\t\t\t\tvar viewport = getManageSpeakersViewport();\n\t\t\t\tif (!viewport) { return; }\n\t\t\t\tfunction nudgePreviousRowOut(anchor) {\n\t\t\t\t\tvar prevRow = anchor ? anchor.previousElementSibling : null;\n\t\t\t\t\tif (!prevRow) { return; }\n\t\t\t\t\tvar prevRect = prevRow.getBoundingClientRect();\n\t\t\t\t\tvar vpRect = viewport.getBoundingClientRect();\n\t\t\t\t\tvar overlap = prevRect.bottom - (vpRect.top + 1);\n\t\t\t\t\tif (overlap > -1) {\n\t\t\t\t\t\tviewport.scrollTop = Math.max(0, viewport.scrollTop + overlap + 8);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tvar anchor = viewport.querySelector(\"[data-manage-scroll-anchor='true']\");\n\t\t\t\tif (anchor) {\n\t\t\t\t\tvar anchorTop = anchor.offsetTop - viewport.offsetTop;\n\t\t\t\t\tvar anchorMarginTop = parseFloat(window.getComputedStyle(anchor).marginTop || \"0\");\n\t\t\t\t\tviewport.scrollTop = Math.max(0, anchorTop + anchorMarginTop + 2);\n\t\t\t\t\tnudgePreviousRowOut(anchor);\n\t\t\t\t\twindow.requestAnimationFrame(function() {\n\t\t\t\t\t\tnudgePreviousRowOut(anchor);\n\t\t\t\t\t});\n\t\t\t\t} else {\n\t\t\t\t\tviewport.scrollTop = 0;\n\t\t\t\t}\n\t\t\t\tviewport.dataset.initialScrollTop = String(viewport.scrollTop);\n\t\t\t}\r\n\r\n\t\t\tfunction restoreManageSpeakersInitialScroll() {\r\n\t\t\t\tvar viewport = getManageSpeakersViewport();\r\n\t\t\t\tif (!viewport) { return; }\r\n\t\t\t\tvar saved = Number(viewport.dataset.initialScrollTop);\r\n\t\t\t\tif (Number.isFinite(saved)) { viewport.scrollTop = saved; return; }\r\n\t\t\t\tapplyManageSpeakersInitialScroll();\r\n\t\t\t}\r\n\r\n\t\t\tfunction wireManageSpeakersControls() {\n\t\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\t\tvar resetBtn = event.target.closest(\"[data-manage-speakers-reset-scroll]\");\n\t\t\t\t\tif (!resetBtn) { return; }\n\t\t\t\t\trestoreManageSpeakersInitialScroll();\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tfunction wireSpeakerSearchEnterAdd() {\n\t\t\t\tfunction isSearchInput(target) {\n\t\t\t\t\treturn target instanceof HTMLInputElement && (target.id === \"speaker-add-search-input\" || target.id === \"moderate-speaker-search\");\n\t\t\t\t}\n\n\t\t\t\tfunction clearAndRefocus(input) {\n\t\t\t\t\tinput.value = \"\";\n\t\t\t\t\tinput.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\t\t\t\t\tfunction applyFocus() {\n\t\t\t\t\t\tif (typeof input.focus === \"function\") {\n\t\t\t\t\t\t\tinput.focus({ preventScroll: true });\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\twindow.requestAnimationFrame(function() {\n\t\t\t\t\t\tapplyFocus();\n\t\t\t\t\t});\n\t\t\t\t\twindow.setTimeout(applyFocus, 50);\n\t\t\t\t\twindow.setTimeout(applyFocus, 150);\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener(\"keydown\", function(event) {\n\t\t\t\t\tif (event.key !== \"Enter\") { return; }\n\n\t\t\t\t\tvar input = event.target;\n\t\t\t\t\tif (!isSearchInput(input)) { return; }\n\t\t\t\t\tif (input.value.trim() === \"\") { return; }\n\n\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\tvar candidates = document.getElementById(\"speaker-add-candidates-container\");\n\t\t\t\t\tif (!candidates) { return; }\n\n\t\t\t\t\tvar firstRegularButton = candidates.querySelector(\"button[data-speaker-add-regular='true']\");\n\t\t\t\t\tif (!(firstRegularButton instanceof HTMLButtonElement) || firstRegularButton.disabled) { return; }\n\n\t\t\t\t\tinput.dataset.enterAddPending = \"true\";\n\t\t\t\t\tfirstRegularButton.click();\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function(event) {\n\t\t\t\t\tvar source = event.detail && event.detail.elt;\n\t\t\t\t\tif (!(source instanceof Element) || !source.closest(\"#speaker-add-candidates-container\")) { return; }\n\n\t\t\t\t\tvar pendingInput = document.querySelector(\"input[data-enter-add-pending='true']\");\n\t\t\t\t\tif (!(pendingInput instanceof HTMLInputElement)) { return; }\n\n\t\t\t\t\tdelete pendingInput.dataset.enterAddPending;\n\t\t\t\t\tif (!event.detail.successful) { return; }\n\t\t\t\t\tclearAndRefocus(pendingInput);\n\t\t\t\t});\n\t\t\t}\n\r\n\t\t\tvar root = document.getElementById(\"moderate-sse-root\");\r\n\t\t\tif (!root) return;\r\n\r\n\t\t\tvar key = \"moderateClientId\";\r\n\t\t\tvar clientID = sessionStorage.getItem(key);\r\n\t\t\tif (!clientID) {\r\n\t\t\t\tif (window.crypto && typeof window.crypto.randomUUID === \"function\") {\r\n\t\t\t\t\tclientID = window.crypto.randomUUID();\r\n\t\t\t\t} else {\r\n\t\t\t\t\tclientID = Date.now().toString(36) + Math.random().toString(36).slice(2);\r\n\t\t\t\t}\r\n\t\t\t\tsessionStorage.setItem(key, clientID);\r\n\t\t\t}\r\n\t\t\troot.dataset.clientId = clientID;\r\n\r\n\t\t\tvar streamURL = root.getAttribute(\"data-stream-url\");\r\n\t\t\tif (!streamURL) return;\r\n\t\t\tvar separator = streamURL.indexOf(\"?\") >= 0 ? \"&\" : \"?\";\r\n\t\t\troot.setAttribute(\"sse-connect\", streamURL + separator + \"client_id=\" + encodeURIComponent(clientID));\r\n\t\t\tif (window.htmx && typeof window.htmx.process === \"function\") {\r\n\t\t\t\twindow.htmx.process(root);\r\n\t\t\t}\r\n\r\n\t\t\tupdateSpeakingTimers();\n\t\t\tapplyManageSpeakersInitialScroll();\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 40);\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 180);\n\t\t\twindow.setInterval(updateSpeakingTimers, 1000);\n\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\r\n\t\t\t\tupdateSpeakingTimers();\r\n\t\t\t\tvar target = event.target;\r\n\t\t\t\tif (!(target instanceof Element)) { return; }\r\n\t\t\t\tif (target.id !== \"speakers-list-container\" && !target.closest(\"#speakers-list-container\")) { return; }\r\n\t\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 0);\r\n\t\t\t});\n\t\t\twireManageDialogs();\n\t\t\twireManageSpeakersControls();\n\t\t\twireSpeakerSearchEnterAdd();\n\n\t\t\t// Closing the agenda edit dialog reloads the compact agenda list\n\t\t\tdocument.addEventListener(\"close\", function(e) {\n\t\t\t\tif (e.target && e.target.id === \"moderate-agenda-edit-dialog\") {\r\n\t\t\t\t\tvar compact = document.getElementById(\"moderate-agenda-compact\");\r\n\t\t\t\t\tif (compact && window.htmx) { htmx.trigger(compact, \"reload\"); }\r\n\t\t\t\t}\r\n\t\t\t}, true);\r\n\t\t})();\r\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 104, "</div><script>\n\t\t(function() {\n\t\t\tfunction formatElapsed(totalSeconds) {\n\t\t\t\tvar mins = Math.floor(totalSeconds / 60);\n\t\t\t\tvar secs = totalSeconds % 60;\n\t\t\t\treturn String(mins).padStart(2, \"0\") + \":\" + String(secs).padStart(2, \"0\");\n\t\t\t}\n\n\t\t\tfunction updateSpeakingTimers() {\n\t\t\t\tvar nowSec = Math.floor(Date.now() / 1000);\n\t\t\t\tvar timers = document.querySelectorAll(\"[data-speaking-since]\");\n\t\t\t\tfor (var i = 0; i < timers.length; i++) {\n\t\t\t\t\tvar el = timers[i];\n\t\t\t\t\tvar since = Number(el.getAttribute(\"data-speaking-since\"));\n\t\t\t\t\tif (!Number.isFinite(since) || since <= 0) { continue; }\n\t\t\t\t\tvar elapsed = Math.max(0, nowSec - since);\n\t\t\t\t\tel.textContent = formatElapsed(elapsed);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction wireManageDialogs() {\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\n\t\t\t\t\tvar openBtn = event.target.closest(\"[data-manage-dialog-open]\");\n\t\t\t\t\tif (openBtn) {\n\t\t\t\t\t\tvar dialogID = openBtn.getAttribute(\"aria-controls\");\n\t\t\t\t\t\tvar dialog = dialogID ? document.getElementById(dialogID) : null;\n\t\t\t\t\t\tif (dialog && typeof dialog.showModal === \"function\") {\n\t\t\t\t\t\t\tdialog.showModal();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tvar closeBtn = event.target.closest(\"[data-manage-dialog-close]\");\n\t\t\t\t\tif (closeBtn) {\n\t\t\t\t\t\tvar closeDialog = closeBtn.closest(\"dialog\");\n\t\t\t\t\t\tif (closeDialog && typeof closeDialog.close === \"function\") {\n\t\t\t\t\t\t\tcloseDialog.close();\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\n\t\t\t\t\tvar dialog = event.target;\n\t\t\t\t\tif (!(dialog instanceof HTMLDialogElement) || !dialog.hasAttribute(\"data-manage-dialog\")) { return; }\n\t\t\t\t\tvar rect = dialog.getBoundingClientRect();\n\t\t\t\t\tvar outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;\n\t\t\t\t\tif (outside) { dialog.close(); }\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tfunction wireModerateLeftTabs() {\n\t\t\t\tvar root = document.getElementById(\"moderate-left-controls\");\n\t\t\t\tif (!root) { return; }\n\t\t\t\tvar buttons = root.querySelectorAll(\"[data-moderate-left-tab]\");\n\t\t\t\tvar panels = root.querySelectorAll(\"[data-moderate-left-panel]\");\n\t\t\t\tif (!buttons.length || !panels.length) { return; }\n\t\t\t\tvar key = \"moderateLeftTab:\" + (root.getAttribute(\"data-meeting-id\") || \"\");\n\n\t\t\t\tfunction activate(tabName) {\n\t\t\t\t\tvar found = false;\n\t\t\t\t\tfor (var i = 0; i < buttons.length; i++) {\n\t\t\t\t\t\tvar btn = buttons[i];\n\t\t\t\t\t\tvar selected = btn.getAttribute(\"data-moderate-left-tab\") === tabName;\n\t\t\t\t\t\tbtn.classList.toggle(\"tab-active\", selected);\n\t\t\t\t\t\tif (selected) { found = true; }\n\t\t\t\t\t}\n\t\t\t\t\tfor (var j = 0; j < panels.length; j++) {\n\t\t\t\t\t\tvar panel = panels[j];\n\t\t\t\t\t\tvar show = panel.getAttribute(\"data-moderate-left-panel\") === tabName;\n\t\t\t\t\t\tpanel.classList.toggle(\"hidden\", !show);\n\t\t\t\t\t}\n\t\t\t\t\tif (found && key) {\n\t\t\t\t\t\tsessionStorage.setItem(key, tabName);\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tif (root.dataset.tabsWired !== \"true\") {\n\t\t\t\t\tfor (var k = 0; k < buttons.length; k++) {\n\t\t\t\t\t\tbuttons[k].addEventListener(\"click\", function() {\n\t\t\t\t\t\t\tvar targetTab = this.getAttribute(\"data-moderate-left-tab\");\n\t\t\t\t\t\t\tif (!targetTab) { return; }\n\t\t\t\t\t\t\tactivate(targetTab);\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t\troot.dataset.tabsWired = \"true\";\n\t\t\t\t}\n\n\t\t\t\tvar saved = key ? sessionStorage.getItem(key) : \"\";\n\t\t\t\tactivate(saved || \"agenda\");\n\t\t\t}\n\n\t\t\tfunction getManageSpeakersViewport() {\n\t\t\t\tvar viewports = document.querySelectorAll(\"#speakers-list-container [data-manage-speakers-viewport]\");\n\t\t\t\tvar best = null;\n\t\t\t\tvar bestScore = -1;\n\t\t\t\tfor (var i = 0; i < viewports.length; i++) {\n\t\t\t\t\tvar viewport = viewports[i];\n\t\t\t\t\tvar score = Math.max(viewport.scrollHeight || 0, viewport.clientHeight || 0);\n\t\t\t\t\tif (score > bestScore) { bestScore = score; best = viewport; }\n\t\t\t\t}\n\t\t\t\treturn best;\n\t\t\t}\n\n\t\t\tfunction applyManageSpeakersInitialScroll() {\n\t\t\t\tvar viewport = getManageSpeakersViewport();\n\t\t\t\tif (!viewport) { return; }\n\t\t\t\tfunction nudgePreviousRowOut(anchor) {\n\t\t\t\t\tvar prevRow = anchor ? anchor.previousElementSibling : null;\n\t\t\t\t\tif (!prevRow) { return; }\n\t\t\t\t\tvar prevRect = prevRow.getBoundingClientRect();\n\t\t\t\t\tvar vpRect = viewport.getBoundingClientRect();\n\t\t\t\t\tvar overlap = prevRect.bottom - (vpRect.top + 1);\n\t\t\t\t\tif (overlap > -1) {\n\t\t\t\t\t\tviewport.scrollTop = Math.max(0, viewport.scrollTop + overlap + 8);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tvar anchor = viewport.querySelector(\"[data-manage-scroll-anchor='true']\");\n\t\t\t\tif (anchor) {\n\t\t\t\t\tvar anchorTop = anchor.offsetTop - viewport.offsetTop;\n\t\t\t\t\tvar anchorMarginTop = parseFloat(window.getComputedStyle(anchor).marginTop || \"0\");\n\t\t\t\t\tviewport.scrollTop = Math.max(0, anchorTop + anchorMarginTop + 2);\n\t\t\t\t\tnudgePreviousRowOut(anchor);\n\t\t\t\t\twindow.requestAnimationFrame(function() {\n\t\t\t\t\t\tnudgePreviousRowOut(anchor);\n\t\t\t\t\t});\n\t\t\t\t} else {\n\t\t\t\t\tviewport.scrollTop = 0;\n\t\t\t\t}\n\t\t\t\tviewport.dataset.initialScrollTop = String(viewport.scrollTop);\n\t\t\t}\n\n\t\t\tfunction restoreManageSpeakersInitialScroll() {\n\t\t\t\tvar viewport = getManageSpeakersViewport();\n\t\t\t\tif (!viewport) { return; }\n\t\t\t\tvar saved = Number(viewport.dataset.initialScrollTop);\n\t\t\t\tif (Number.isFinite(saved)) { viewport.scrollTop = saved; return; }\n\t\t\t\tapplyManageSpeakersInitialScroll();\n\t\t\t}\n\n\t\t\tfunction wireManageSpeakersControls() {\n\t\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\t\tvar resetBtn = event.target.closest(\"[data-manage-speakers-reset-scroll]\");\n\t\t\t\t\tif (!resetBtn) { return; }\n\t\t\t\t\trestoreManageSpeakersInitialScroll();\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tfunction wireSpeakerSearchEnterAdd() {\n\t\t\t\tfunction isSearchInput(target) {\n\t\t\t\t\treturn target instanceof HTMLInputElement && (target.id === \"speaker-add-search-input\" || target.id === \"moderate-speaker-search\");\n\t\t\t\t}\n\n\t\t\t\tfunction clearAndRefocus(input) {\n\t\t\t\t\tinput.value = \"\";\n\t\t\t\t\tinput.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\t\t\t\t\tfunction applyFocus() {\n\t\t\t\t\t\tif (typeof input.focus === \"function\") {\n\t\t\t\t\t\t\tinput.focus({ preventScroll: true });\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\twindow.requestAnimationFrame(function() {\n\t\t\t\t\t\tapplyFocus();\n\t\t\t\t\t});\n\t\t\t\t\twindow.setTimeout(applyFocus, 50);\n\t\t\t\t\twindow.setTimeout(applyFocus, 150);\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener(\"keydown\", function(event) {\n\t\t\t\t\tif (event.key !== \"Enter\") { return; }\n\n\t\t\t\t\tvar input = event.target;\n\t\t\t\t\tif (!isSearchInput(input)) { return; }\n\t\t\t\t\tif (input.value.trim() === \"\") { return; }\n\n\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\tvar candidates = document.getElementById(\"speaker-add-candidates-container\");\n\t\t\t\t\tif (!candidates) { return; }\n\n\t\t\t\t\tvar firstRegularButton = candidates.querySelector(\"button[data-speaker-add-regular='true']\");\n\t\t\t\t\tif (!(firstRegularButton instanceof HTMLButtonElement) || firstRegularButton.disabled) { return; }\n\n\t\t\t\t\tinput.dataset.enterAddPending = \"true\";\n\t\t\t\t\tfirstRegularButton.click();\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function(event) {\n\t\t\t\t\tvar source = event.detail && event.detail.elt;\n\t\t\t\t\tif (!(source instanceof Element) || !source.closest(\"#speaker-add-candidates-container\")) { return; }\n\n\t\t\t\t\tvar pendingInput = document.querySelector(\"input[data-enter-add-pending='true']\");\n\t\t\t\t\tif (!(pendingInput instanceof HTMLInputElement)) { return; }\n\n\t\t\t\t\tdelete pendingInput.dataset.enterAddPending;\n\t\t\t\t\tif (!event.detail.successful) { return; }\n\t\t\t\t\tclearAndRefocus(pendingInput);\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tvar root = document.getElementById(\"moderate-sse-root\");\n\t\t\tif (!root) return;\n\n\t\t\tvar key = \"moderateClientId\";\n\t\t\tvar clientID = sessionStorage.getItem(key);\n\t\t\tif (!clientID) {\n\t\t\t\tif (window.crypto && typeof window.crypto.randomUUID === \"function\") {\n\t\t\t\t\tclientID = window.crypto.randomUUID();\n\t\t\t\t} else {\n\t\t\t\t\tclientID = Date.now().toString(36) + Math.random().toString(36).slice(2);\n\t\t\t\t}\n\t\t\t\tsessionStorage.setItem(key, clientID);\n\t\t\t}\n\t\t\troot.dataset.clientId = clientID;\n\n\t\t\tvar streamURL = root.getAttribute(\"data-stream-url\");\n\t\t\tif (!streamURL) return;\n\t\t\tvar separator = streamURL.indexOf(\"?\") >= 0 ? \"&\" : \"?\";\n\t\t\troot.setAttribute(\"sse-connect\", streamURL + separator + \"client_id=\" + encodeURIComponent(clientID));\n\t\t\tif (window.htmx && typeof window.htmx.process === \"function\") {\n\t\t\t\twindow.htmx.process(root);\n\t\t\t}\n\n\t\t\tupdateSpeakingTimers();\n\t\t\tapplyManageSpeakersInitialScroll();\n\t\t\twireModerateLeftTabs();\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 40);\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 180);\n\t\t\twindow.setInterval(updateSpeakingTimers, 1000);\n\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\n\t\t\t\tupdateSpeakingTimers();\n\t\t\t\twireModerateLeftTabs();\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof Element)) { return; }\n\t\t\t\tif (target.id !== \"speakers-list-container\" && !target.closest(\"#speakers-list-container\")) { return; }\n\t\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 0);\n\t\t\t});\n\t\t\twireManageDialogs();\n\t\t\twireManageSpeakersControls();\n\t\t\twireSpeakerSearchEnterAdd();\n\n\t\t\tdocument.addEventListener(\"close\", function(e) {\n\t\t\t\tif (e.target && e.target.id === \"moderate-agenda-edit-dialog\") {\n\t\t\t\t\tvar compact = document.getElementById(\"moderate-agenda-compact\");\n\t\t\t\t\tif (compact && window.htmx) { htmx.trigger(compact, \"reload\"); }\n\t\t\t\t}\n\t\t\t}, true);\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -257,6 +257,7 @@ func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateLeftTab(t, page, "settings")
 
 	urlBefore := page.URL()
 
@@ -300,6 +301,7 @@ func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto manage page: %v", err)
 	}
+	openModerateLeftTab(t, page, "settings")
 
 	urlBefore := page.URL()
 	genderSelect := page.Locator("#gender_quotation_enabled")
@@ -374,4 +376,3 @@ func TestSpeakers_SortingOrder_WithoutActiveSpeaker(t *testing.T) {
 		t.Errorf("unexpected speaker order without active speaker:\n got: %v\nwant: %v", gotOrder, expectedOrder)
 	}
 }
-

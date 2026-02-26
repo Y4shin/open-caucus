@@ -120,3 +120,4 @@ func TestCurrentDoc_SetMotionClearsAttachmentSelection(t *testing.T) {
 		t.Errorf("tools page URL changed during current-doc actions: before=%s after=%s", urlBefore, page.URL())
 	}
 }
+

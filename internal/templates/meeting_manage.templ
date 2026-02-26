@@ -9,7 +9,6 @@ import (
 	"unicode"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
-	"github.com/invopop/ctxi18n/i18n"
 )
 
 type AttendeeItem struct {
@@ -44,7 +43,7 @@ func (i *AttendeeListPartialInput) ToggleSignupOpenPostStr(ctx context.Context) 
 }
 
 func (i *AttendeeListPartialInput) ManageJoinQRGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageJoinQrRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageJoinQRGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateJoinQrRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageJoinQRGet(ctx, ""))
 }
 
 func attendeeSignupStateLabel(open bool) string {
@@ -59,17 +58,11 @@ func attendeeSignupToggleLabel() string {
 }
 
 func attendeeChairToggleLabel(isChair bool) string {
-	if isChair {
-		return "Demote chair"
-	}
-	return "Make chair"
+	return "Chairperson"
 }
 
 func attendeeGenderQuotedToggleLabel(quoted bool) string {
-	if quoted {
-		return "Disable quoted status"
-	}
-	return "Enable quoted status"
+	return "Gender quoted"
 }
 
 func (i *AttendeeListPartialInput) AttendeeDeletePostStr(ctx context.Context, a *AttendeeItem) string {
@@ -607,11 +600,11 @@ func (i *MeetingManageInput) CommitteeDashboardGet(ctx context.Context) templ.Sa
 }
 
 func (i *MeetingManageInput) ManageStreamGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageStreamRoute(i.CommitteeSlug, i.IDString).ManageStreamGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateStreamRoute(i.CommitteeSlug, i.IDString).ModerateStreamGet(ctx, ""))
 }
 
 func (i *MeetingManageInput) ManageJoinQRGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageJoinQrRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageJoinQRGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateJoinQrRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageJoinQRGet(ctx, ""))
 }
 
 func (i *MeetingManageInput) attendeeListInput() AttendeeListPartialInput {
@@ -681,152 +674,140 @@ func (i *MeetingManageInput) attendeeDependentInput() ManageAttendeeDependentPar
 templ AttendeeListPartial(input AttendeeListPartialInput) {
 	<div id="attendee-list-container" sse-swap="manage-attendee-list-updated" hx-swap="outerHTML">
 		@ErrorMessage(input.Error)
-		<div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+		<div class="mb-4">
 			<form
 				hx-post={ input.AttendeeCreatePostStr(ctx) }
-				hx-target="#manage-attendee-dependent-container"
+				hx-target="#attendee-list-container"
 				hx-swap="outerHTML"
-				hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+				hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
 				hx-on::after-request="if(event.detail.successful) this.reset()"
-				class="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto_auto] sm:items-end"
+				class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"
 				data-testid="manage-add-guest-form"
 			>
-				<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
-				<input class="input input-bordered input-sm" type="text" id="full_name" name="full_name" placeholder="Display name" required/>
-				<label class="label p-0 text-sm font-medium" for="manage_guest_gender_quoted">Gender quoted</label>
-				<input class="checkbox checkbox-sm" type="checkbox" id="manage_guest_gender_quoted" name="gender_quoted" value="true"/>
-				<button class="btn btn-sm" type="submit">Add</button>
+				<div class="w-full min-w-0 flex-1">
+					<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
+					<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder="Display name" required/>
+				</div>
+				<label class="label cursor-pointer justify-start gap-2 p-0 sm:mb-1 whitespace-nowrap" for="manage_guest_gender_quoted">
+					<span class="text-sm font-medium">Gender quoted</span>
+					<input class="checkbox checkbox-sm" type="checkbox" id="manage_guest_gender_quoted" name="gender_quoted" value="true"/>
+				</label>
+				<button class="btn btn-sm sm:mb-1" type="submit">Add</button>
 			</form>
-
-			<div class="flex items-center gap-2">
-				<form
-					hx-post={ input.ToggleSignupOpenPostStr(ctx) }
-					hx-target="#manage-attendee-dependent-container"
-					hx-swap="outerHTML"
-					hx-trigger="change"
-					class="inline-flex"
-					title={ attendeeSignupStateLabel(input.SignupOpen) }
-				>
-					@SignupToggleField("manage_signup_open", "signup_open", attendeeSignupToggleLabel(), input.SignupOpen, "")
-				</form>
-				if input.ShowSelfSignup {
-					<form
-						hx-post={ input.AttendeeSelfSignupPostStr(ctx) }
-						hx-target="#manage-attendee-dependent-container"
-						hx-swap="outerHTML"
-						hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-						class="inline-flex"
-					>
-						<button
-							type="submit"
-							class="btn btn-sm btn-square"
-							title="Sign yourself up"
-							aria-label="Sign yourself up"
-						>
-							@Icon(IconPersonRaised, "", "h-4 w-4")
-						</button>
-					</form>
-				}
-			</div>
 		</div>
 		if len(input.Attendees) == 0 {
 			<p class="text-sm text-base-content/70">No attendees yet.</p>
 		} else {
-			<div class="grid gap-3 md:grid-cols-2" data-testid="manage-attendee-grid">
+			<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="manage-attendee-grid">
 				for _, a := range input.Attendees {
-					<div class="card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm" data-testid="manage-attendee-card">
-						<div class="flex items-start gap-3">
-							<span class="shrink-0 text-base-content/70">#{ strconv.FormatInt(a.AttendeeNumber, 10) }</span>
-							<div class="min-w-0 flex-1">
-								<span class="block truncate font-semibold">{ a.FullName }</span>
-								if a.IsGuest || a.IsChair || a.Quoted {
-									<div class="mt-1 flex flex-wrap gap-1">
-										if a.IsGuest {
-											<span class="badge badge-outline">Guest</span>
-										}
-										if a.IsChair {
-											<span class="badge badge-outline badge-success">
-												Chair
+					<li class="list-row items-center gap-3" data-testid="manage-attendee-card">
+						<div class="w-12 shrink-0 text-base-content/70">#{ strconv.FormatInt(a.AttendeeNumber, 10) }</div>
+						<div class="list-col-grow min-w-0">
+							<div class="truncate font-semibold">{ a.FullName }</div>
+							if a.IsGuest || a.IsChair || a.Quoted {
+								<div class="mt-1 flex flex-wrap items-center gap-1">
+									if a.IsGuest {
+										<span class="badge badge-neutral badge-sm">Guest</span>
+									}
+									if a.IsChair {
+										<span class="tooltip tooltip-right" data-tip="Chair">
+											<span class="badge badge-success badge-sm">
+												@Icon(IconCrown, "", "h-3.5 w-3.5")
 											</span>
-										}
-										if a.Quoted {
-											<span class="badge badge-outline badge-info" data-testid="manage-attendee-quoted-badge">
-												@Icon(IconTransgender, "", "h-4 w-4")
-												{ "-" + i18n.T(ctx, "meeting_live.badge_quoted") }
+										</span>
+									}
+									if a.Quoted {
+										<span class="tooltip tooltip-right" data-tip="Gender quoted">
+											<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge">
+												@Icon(IconTransgender, "", "h-3.5 w-3.5")
 											</span>
-										}
-									</div>
+										</span>
+									}
+								</div>
+							}
+						</div>
+						<div class="shrink-0 self-center">
+							<div class="flex flex-col gap-1">
+								<form
+									hx-post={ input.AttendeeToggleChairPostStr(ctx, &a) }
+									hx-target="#attendee-list-container"
+									hx-swap="outerHTML"
+									hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+									hx-trigger="change"
+									class="inline-flex"
+								>
+									<label class="label cursor-pointer justify-start gap-2 p-0">
+										<input
+											class={ "toggle toggle-sm", templ.KV("toggle-primary", a.IsChair) }
+											type="checkbox"
+											checked?={ a.IsChair }
+											title={ attendeeChairToggleLabel(a.IsChair) }
+											aria-label={ attendeeChairToggleLabel(a.IsChair) }
+										/>
+										<span class="text-xs leading-none">{ attendeeChairToggleLabel(a.IsChair) }</span>
+									</label>
+								</form>
+								if a.IsGuest {
+									<form
+										hx-post={ input.AttendeeToggleQuotedPostStr(ctx, &a) }
+										hx-target="#attendee-list-container"
+										hx-swap="outerHTML"
+										hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+										hx-trigger="change"
+										class="inline-flex"
+									>
+										<label class="label cursor-pointer justify-start gap-2 p-0">
+											<input
+												class={ "toggle toggle-sm", templ.KV("toggle-info", a.Quoted) }
+												type="checkbox"
+												checked?={ a.Quoted }
+												title={ attendeeGenderQuotedToggleLabel(a.Quoted) }
+												aria-label={ attendeeGenderQuotedToggleLabel(a.Quoted) }
+											/>
+											<span class="text-xs leading-none">{ attendeeGenderQuotedToggleLabel(a.Quoted) }</span>
+										</label>
+									</form>
+								} else {
+									<div class="h-6" aria-hidden="true"></div>
 								}
 							</div>
 						</div>
-						<div class="mt-3 flex flex-wrap gap-2">
-							<form
-								hx-post={ input.AttendeeToggleChairPostStr(ctx, &a) }
-								hx-target="#manage-attendee-dependent-container"
-								hx-swap="outerHTML"
-								hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-								class="inline-flex"
-							>
-								<button
-									type="submit"
-									class={ "btn btn-sm btn-square", templ.KV("btn-primary", a.IsChair) }
-									title={ attendeeChairToggleLabel(a.IsChair) }
-									aria-label={ attendeeChairToggleLabel(a.IsChair) }
-								>
-									@Icon(IconCrown, "", "h-4 w-4")
-								</button>
-							</form>
-							if a.IsGuest {
+						<div class="shrink-0 self-center">
+							<div class="join join-vertical">
+								if a.IsGuest {
+									<a
+										href={ input.AttendeeRecoveryGet(ctx, &a) }
+										class="join-item btn btn-sm btn-square tooltip tooltip-left"
+										data-tip="Recovery link"
+										title="Recovery link"
+										aria-label="Recovery link"
+									>
+										@Icon(IconHistory, "", "h-4 w-4")
+									</a>
+								}
 								<form
-									hx-post={ input.AttendeeToggleQuotedPostStr(ctx, &a) }
-									hx-target="#manage-attendee-dependent-container"
+									hx-post={ input.AttendeeDeletePostStr(ctx, &a) }
+									hx-target="#attendee-list-container"
 									hx-swap="outerHTML"
-									hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+									hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+									hx-confirm="Remove this attendee?"
 									class="inline-flex"
 								>
 									<button
 										type="submit"
-										class={ "btn btn-sm btn-square", templ.KV("btn-secondary", a.Quoted) }
-										title={ attendeeGenderQuotedToggleLabel(a.Quoted) }
-										aria-label={ attendeeGenderQuotedToggleLabel(a.Quoted) }
+										class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left"
+										data-tip="Remove attendee"
+										title="Remove attendee"
+										aria-label="Remove attendee"
 									>
-										if a.Quoted {
-											@Icon(IconTransgender, "", "h-4 w-4")
-										} else {
-											@Icon(IconMale, "", "h-4 w-4")
-										}
+										@Icon(IconDelete, "", "h-4 w-4")
 									</button>
 								</form>
-								<a
-									href={ input.AttendeeRecoveryGet(ctx, &a) }
-									class="btn btn-sm btn-square"
-									title="Recovery link"
-									aria-label="Recovery link"
-								>
-									@Icon(IconHistory, "", "h-4 w-4")
-								</a>
-							}
-							<form
-								hx-post={ input.AttendeeDeletePostStr(ctx, &a) }
-								hx-target="#manage-attendee-dependent-container"
-								hx-swap="outerHTML"
-								hx-vals="js:{client_id: document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-								hx-confirm="Remove this attendee?"
-								class="inline-flex"
-							>
-								<button
-									type="submit"
-									class="btn btn-sm btn-square btn-error"
-									title="Remove attendee"
-									aria-label="Remove attendee"
-								>
-									@Icon(IconDelete, "", "h-4 w-4")
-								</button>
-							</form>
+							</div>
 						</div>
-					</div>
+					</li>
 				}
-			</div>
+			</ul>
 		}
 	</div>
 }
@@ -918,6 +899,85 @@ templ MeetingSettingsContent(input MeetingSettingsPartialInput) {
 	</div>
 }
 
+templ ModerateSpeakerSettingsPartial(input SpeakersListPartialInput) {
+	<div id="moderate-speaker-settings-container" hx-swap="outerHTML">
+		@ModerateSpeakerSettingsContent(input)
+	</div>
+}
+
+templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
+	@ErrorMessage(input.Error)
+	if input.CurrentAgendaPointID == nil {
+		<p class="text-sm text-base-content/70">No active agenda point. Activate one above to configure agenda-point settings.</p>
+	} else {
+		<div class="space-y-3">
+			<div class="rounded-box border border-base-300 bg-base-100 p-3">
+				<h3 class="mb-2 text-sm font-semibold">Agenda Point Quotation Settings</h3>
+				<form
+					hx-post={ input.AgendaPointQuotationPostStr(ctx) }
+					hx-target="#moderate-speaker-settings-container"
+					hx-swap="outerHTML"
+					hx-trigger="change"
+					class="grid gap-3 md:grid-cols-2"
+				>
+					<div class="space-y-1">
+						<label class="label p-0 text-sm font-medium" for="ap_gender_quotation">Gender quotation</label>
+						<select class="select select-bordered select-sm" id="ap_gender_quotation" name="gender_quotation_enabled">
+							<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
+							<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
+							<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
+						</select>
+					</div>
+					<div class="space-y-1">
+						<label class="label p-0 text-sm font-medium" for="ap_first_speaker">First-speaker bonus</label>
+						<select class="select select-bordered select-sm" id="ap_first_speaker" name="first_speaker_quotation_enabled">
+							<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
+							<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
+							<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
+						</select>
+					</div>
+				</form>
+				<div class="mt-2 flex flex-wrap gap-2">
+					<span class={ "badge badge-outline", templ.KV("badge-success", input.EffectiveGenderQuotation), templ.KV("badge-ghost", !input.EffectiveGenderQuotation) }>
+						Gender:
+						if input.EffectiveGenderQuotation {
+							on
+						} else {
+							off
+						}
+					</span>
+					<span class={ "badge badge-outline", templ.KV("badge-success", input.EffectiveFirstSpeakerQuotation), templ.KV("badge-ghost", !input.EffectiveFirstSpeakerQuotation) }>
+						First speaker:
+						if input.EffectiveFirstSpeakerQuotation {
+							on
+						} else {
+							off
+						}
+					</span>
+				</div>
+			</div>
+
+			<div class="rounded-box border border-base-300 bg-base-100 p-3">
+				<h3 class="mb-2 text-sm font-semibold">Agenda Point Moderator</h3>
+				<form
+					hx-post={ input.AgendaPointModeratorPostStr(ctx) }
+					hx-target="#moderate-speaker-settings-container"
+					hx-swap="outerHTML"
+					hx-trigger="change"
+					class="flex flex-wrap items-end gap-3"
+				>
+					<select class="select select-bordered select-sm" name="attendee_id">
+						<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
+						for _, a := range input.Attendees {
+							<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
+						}
+					</select>
+				</form>
+			</div>
+		</div>
+	}
+}
+
 templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 	<div id="agenda-point-list-container" class="space-y-3">
 		@ErrorMessage(input.Error)
@@ -989,7 +1049,8 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 										>
 											<button
 												type="submit"
-												class="btn btn-sm btn-square"
+												class="btn btn-sm btn-square tooltip tooltip-left"
+												data-tip="Activate agenda point"
 												title="Activate agenda point"
 												aria-label="Activate agenda point"
 											>
@@ -999,7 +1060,8 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 									}
 									<a
 										href={ input.AgendaPointToolsGet(ctx, &ap) }
-										class="btn btn-sm btn-square"
+										class="btn btn-sm btn-square tooltip tooltip-left"
+										data-tip="Open tools"
 										title="Open tools"
 										aria-label="Open tools"
 									>
@@ -1014,7 +1076,8 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 									>
 										<button
 											type="submit"
-											class="btn btn-sm btn-square btn-error"
+											class="btn btn-sm btn-square btn-error tooltip tooltip-left"
+											data-tip="Delete agenda point"
 											title="Delete agenda point"
 											aria-label="Delete agenda point"
 										>
@@ -1257,9 +1320,10 @@ templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
 							value="regular"
 							title="Add regular speech"
 							aria-label="Add regular speech"
+							data-tip="Add regular speech"
 							data-speaker-add-regular="true"
 							disabled?={ input.hasAttendeeWaitingType(a.ID, "regular") }
-							class="btn btn-square btn-sm btn-outline join-item leading-none"
+							class="btn btn-square btn-sm btn-outline join-item leading-none tooltip tooltip-left"
 						>
 							@Icon(IconPersonRaised, "", "h-4 w-4")
 						</button>
@@ -1269,8 +1333,9 @@ templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
 							value="ropm"
 							title="Add RoPM speech"
 							aria-label="Add RoPM speech"
+							data-tip="Add RoPM speech"
 							disabled?={ input.hasAttendeeWaitingType(a.ID, "ropm") }
-							class="btn btn-square btn-sm btn-warning join-item leading-none"
+							class="btn btn-square btn-sm btn-warning join-item leading-none tooltip tooltip-left"
 						>
 							@Icon(IconScale, "", "h-4 w-4")
 						</button>
@@ -1283,10 +1348,14 @@ templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
 }
 
 templ ManageAttendeeDependentPartial(input ManageAttendeeDependentPartialInput) {
-	<div id="manage-attendee-dependent-container" sse-swap="manage-attendee-list-updated" hx-swap="outerHTML" class="contents">
-		@ManageMeetingSettingsCard(input.MeetingSettings)
-		@ManageSpeakersListCard(input.SpeakersList)
-		@ManageAttendeesCard(input.AttendeeList)
+	<div id="attendee-list-container" sse-swap="manage-attendee-list-updated" hx-swap="outerHTML">
+		@AttendeeListPartial(input.AttendeeList)
+	</div>
+	<div id="meeting-settings-container" hx-swap-oob="outerHTML">
+		@MeetingSettingsContent(input.MeetingSettings)
+	</div>
+	<div id="moderate-speaker-settings-container" hx-swap-oob="outerHTML">
+		@ModerateSpeakerSettingsContent(input.SpeakersList)
 	</div>
 }
 
@@ -1310,7 +1379,8 @@ templ ManageAttendeesCard(input AttendeeListPartialInput) {
 			<h2 class="text-lg font-semibold">Attendees</h2>
 			<a
 				href={ input.ManageJoinQRGet(ctx) }
-				class="btn btn-sm btn-square"
+				class="btn btn-sm btn-square tooltip tooltip-left"
+				data-tip="Show signup QR"
 				title="Show signup QR"
 				aria-label="Show signup QR"
 			>
@@ -1598,3 +1668,4 @@ templ MeetingManageContent(input MeetingManageInput) {
 func attendeeItemIDString(id int64) string {
 	return strconv.FormatInt(id, 10)
 }
+

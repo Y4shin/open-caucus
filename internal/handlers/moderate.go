@@ -11,6 +11,9 @@ import (
 	"github.com/Y4shin/conference-tool/internal/templates"
 )
 
+const meetingAttendeesChangedEvent = "meeting-attendees-changed"
+const speakersUpdatedEvent = "speakers-updated"
+
 // MeetingModerate serves the condensed moderator view for a meeting.
 func (h *Handler) MeetingModerate(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.ModeratePageInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
@@ -42,15 +45,20 @@ func (h *Handler) MeetingModerate(ctx context.Context, r *http.Request, params r
 	if err != nil {
 		return nil, nil, err
 	}
+	settingsPartial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	input := &templates.ModeratePageInput{
-		CommitteeName: committee.Name,
-		CommitteeSlug: committee.Slug,
-		MeetingName:   meeting.Name,
-		IDString:      params.MeetingId,
-		AgendaPoints:  *agendaPartial,
-		Speakers:      *speakersPartial,
-		Attendees:     *attendeePartial,
+		CommitteeName:   committee.Name,
+		CommitteeSlug:   committee.Slug,
+		MeetingName:     meeting.Name,
+		IDString:        params.MeetingId,
+		AgendaPoints:    *agendaPartial,
+		Speakers:        *speakersPartial,
+		Attendees:       *attendeePartial,
+		MeetingSettings: *settingsPartial,
 	}
 
 	// Load tools data if there is an active agenda point.
@@ -128,12 +136,17 @@ func (h *Handler) ModerateStream(ctx context.Context, r *http.Request, params ro
 				if err != nil {
 					continue
 				}
+				settingsPartial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
+				if err != nil {
+					continue
+				}
 
 				dependentInput := templates.ModerateDependentPartialInput{
-					CommitteeSlug: params.Slug,
-					IDString:      params.MeetingId,
-					Speakers:      *speakersPartial,
-					Attendees:     *attendeePartial,
+					CommitteeSlug:   params.Slug,
+					IDString:        params.MeetingId,
+					Speakers:        *speakersPartial,
+					Attendees:       *attendeePartial,
+					MeetingSettings: *settingsPartial,
 				}
 
 				select {

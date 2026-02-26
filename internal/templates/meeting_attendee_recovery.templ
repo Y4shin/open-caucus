@@ -17,7 +17,7 @@ type MeetingAttendeeRecoveryInput struct {
 }
 
 func (i *MeetingAttendeeRecoveryInput) MeetingManageGet(ctx context.Context) templ.SafeURL {
-	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdManageRoute(i.CommitteeSlug, i.MeetingIDStr).CommitteeMeetingManageGet(ctx, ""))
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateRoute(i.CommitteeSlug, i.MeetingIDStr).MeetingModerateGet(ctx, ""))
 }
 
 func (i *MeetingAttendeeRecoveryInput) QRCodeSrc() templ.SafeURL {
