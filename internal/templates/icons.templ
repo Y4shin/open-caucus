@@ -28,6 +28,10 @@ const (
 	IconToggleOn     IconName = "toggle_on"
 	IconClose        IconName = "close"
 	IconHelp         IconName = "help"
+	IconLightMode    IconName = "light_mode"
+	IconDarkMode     IconName = "dark_mode"
+	IconDescription  IconName = "description"
+	IconDownload     IconName = "download"
 )
 
 func iconPath(name IconName) string {
@@ -78,6 +82,14 @@ func iconPath(name IconName) string {
 		return "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 	case IconHelp:
 		return "M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"
+	case IconLightMode:
+		return "M11 18h2v3h-2v-3Zm7.5-7h3v2h-3v-2ZM3 11h3v2H3v-2Zm14.66 6.24 2.12 2.12-1.42 1.41-2.12-2.12 1.42-1.41ZM5.64 4.22l2.12 2.12-1.41 1.42-2.12-2.12 1.41-1.42Zm12.02 3.54 2.12-2.12 1.41 1.42-2.12 2.12-1.41-1.42ZM5.64 19.78l-1.41-1.41 2.12-2.12 1.41 1.41-2.12 2.12ZM11 0h2v3h-2V0Zm1 6a6 6 0 1 1 0 12 6 6 0 0 1 0-12Z"
+	case IconDarkMode:
+		return "M12 3a9 9 0 1 0 9 9c0-.55-.05-1.08-.15-1.6-.91 1.58-2.61 2.6-4.55 2.6-2.9 0-5.25-2.35-5.25-5.25 0-1.94 1.02-3.64 2.6-4.55A8.67 8.67 0 0 0 12 3Z"
+	case IconDescription:
+		return "M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6Zm4 18H6V4h7v5h5v11ZM8 13h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h5v2H8V9Z"
+	case IconDownload:
+		return "M5 20h14v-2H5v2Zm7-18-5.5 5.5 1.41 1.41L11 5.83V16h2V5.83l3.09 3.08 1.41-1.41L12 2Z"
 	default:
 		return ""
 	}

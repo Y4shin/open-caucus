@@ -7,7 +7,6 @@ type AgendaPoint struct {
 	ParentID                     *int64
 	Position                     int64
 	Title                        string
-	Protocol                     string
 	CurrentSpeakerID             *int64
 	GenderQuotationEnabled       *bool  // nil = inherit from meeting
 	FirstSpeakerQuotationEnabled *bool  // nil = inherit from meeting

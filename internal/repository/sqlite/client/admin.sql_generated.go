@@ -311,10 +311,12 @@ func (q *Queries) ListUnassignedAccountsForCommittee(ctx context.Context, commit
 const listUsersInCommittee = `-- name: ListUsersInCommittee :many
 
 SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
-       u.created_at, u.updated_at, a.username
+       u.created_at, u.updated_at, a.username,
+       CASE WHEN om.user_id IS NULL THEN 0 ELSE 1 END AS oauth_managed
 FROM users u
 JOIN accounts a ON u.account_id = a.id
 JOIN committees c ON u.committee_id = c.id
+LEFT JOIN oauth_managed_memberships om ON om.user_id = u.id
 WHERE c.slug = ?
 ORDER BY a.username ASC LIMIT ? OFFSET ?
 `
@@ -326,15 +328,16 @@ type ListUsersInCommitteeParams struct {
 }
 
 type ListUsersInCommitteeRow struct {
-	ID          int64
-	AccountID   int64
-	CommitteeID int64
-	FullName    sql.NullString
-	Role        string
-	Quoted      bool
-	CreatedAt   string
-	UpdatedAt   string
-	Username    string
+	ID           int64
+	AccountID    int64
+	CommitteeID  int64
+	FullName     sql.NullString
+	Role         string
+	Quoted       bool
+	CreatedAt    string
+	UpdatedAt    string
+	Username     string
+	OauthManaged int64
 }
 
 // User / Membership Management
@@ -357,6 +360,7 @@ func (q *Queries) ListUsersInCommittee(ctx context.Context, arg ListUsersInCommi
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Username,
+			&i.OauthManaged,
 		); err != nil {
 			return nil, err
 		}

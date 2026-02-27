@@ -212,7 +212,7 @@ func TestGuestSignup_InvalidMeetingSecret(t *testing.T) {
 		t.Fatalf("click submit: %v", err)
 	}
 
-	if err := page.Locator("div:has-text('Invalid meeting secret')").WaitFor(); err != nil {
+	if err := page.Locator("#app-notification-target .alert:has-text('Invalid meeting secret')").WaitFor(); err != nil {
 		t.Fatalf("expected invalid meeting secret error: %v", err)
 	}
 }
@@ -320,7 +320,7 @@ func TestGuestSignup_Quoted_SetsSpeakerQuotedBadge(t *testing.T) {
 	if err := page.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
 		t.Fatalf("click self-add regular: %v", err)
 	}
-	row := page.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
+	row := page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Quoted Via Join",
 	})
 	if err := row.WaitFor(); err != nil {
@@ -356,3 +356,4 @@ func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
 		t.Fatalf("expected join URL with meeting_secret query param, got: %v", href)
 	}
 }
+

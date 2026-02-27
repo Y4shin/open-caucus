@@ -3,6 +3,8 @@
 package e2e_test
 
 import (
+	"context"
+	"strconv"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
@@ -45,6 +47,37 @@ func TestMemberDoesNotSeeCreateMeetingForm(t *testing.T) {
 	}
 	if visible {
 		t.Error("member should not see the create meeting form")
+	}
+}
+
+func TestMemberSeesActiveMeetingInfoAndJoinButton(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "member1", "pass123", "Regular Member", "member")
+	ts.seedMeeting(t, "test-committee", "Active Meeting", "This one is active")
+	activeMeetingID := ts.getMeetingID(t, "test-committee", "Active Meeting")
+	activeMeetingIDInt, err := strconv.ParseInt(activeMeetingID, 10, 64)
+	if err != nil {
+		t.Fatalf("parse active meeting id: %v", err)
+	}
+	if err := ts.repo.SetActiveMeeting(context.Background(), "test-committee", &activeMeetingIDInt); err != nil {
+		t.Fatalf("set active meeting: %v", err)
+	}
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")
+
+	if err := page.Locator("[data-testid='committee-active-meeting-card']").WaitFor(); err != nil {
+		t.Fatalf("expected active meeting card for member: %v", err)
+	}
+	if err := page.Locator("[data-testid='committee-active-meeting-name']:has-text('Active Meeting')").WaitFor(); err != nil {
+		t.Fatalf("expected active meeting name in card: %v", err)
+	}
+	if err := page.Locator("[data-testid='committee-join-active-meeting']").Click(); err != nil {
+		t.Fatalf("click join active meeting button: %v", err)
+	}
+	if err := page.WaitForURL(ts.URL + "/committee/test-committee/meeting/" + activeMeetingID + "/join"); err != nil {
+		t.Fatalf("expected navigation to join page: %v", err)
 	}
 }
 
@@ -207,4 +240,3 @@ func TestChairpersonDeleteMeeting(t *testing.T) {
 		t.Fatalf("expected meeting card to be removed: %v", err)
 	}
 }
-

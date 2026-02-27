@@ -13,7 +13,7 @@ import (
 )
 
 func attendeeLiveSpeakerRows(page playwright.Page) playwright.Locator {
-	return page.Locator("#attendee-speakers-list .live-speakers-list-viewport .live-speaker-list [data-testid='live-speaker-item']")
+	return page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-list'] [data-testid='live-speaker-item']")
 }
 
 // attendeeLoginHelper navigates to the attendee-login page and authenticates with the given secret.
@@ -75,7 +75,7 @@ func TestAttendee_SpeakersListUpdates_ViaSSE(t *testing.T) {
 		t.Fatalf("chair page should show Alice in speaker list: %v", err)
 	}
 
-	if err := attendeePage.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']:has-text('Alice Speaker')").WaitFor(); err != nil {
+	if err := attendeePage.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']:has-text('Alice Speaker')").WaitFor(); err != nil {
 		t.Fatalf("attendee page should receive SSE speaker update: %v", err)
 	}
 	if attendeePage.URL() != urlBefore {
@@ -99,7 +99,7 @@ func TestAttendee_SeesOwnPositionHighlighted(t *testing.T) {
 	page := newPage(t)
 	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-alice")
 
-	if err := page.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item'][data-speaker-mine='true']:has-text('Alice Member')").WaitFor(); err != nil {
+	if err := page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item'][data-speaker-mine='true']:has-text('Alice Member')").WaitFor(); err != nil {
 		t.Fatalf("expected Alice's row to be marked as mine: %v", err)
 	}
 }
@@ -124,7 +124,7 @@ func TestAttendee_QuotedBadgeVisible(t *testing.T) {
 	page := newPage(t)
 	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-bob")
 
-	bobRow := page.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
+	bobRow := page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Bob Quoted",
 	})
 	if err := bobRow.WaitFor(); err != nil {
@@ -152,7 +152,7 @@ func TestAttendeeLive_SelfAddButtons(t *testing.T) {
 	if err := page.Locator("[data-testid='live-add-self-regular']").Click(); err != nil {
 		t.Fatalf("click add self regular: %v", err)
 	}
-	if err := page.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']:has-text('Alice Speaker')").WaitFor(); err != nil {
+	if err := page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']:has-text('Alice Speaker')").WaitFor(); err != nil {
 		t.Fatalf("expected regular self-added speaker row: %v", err)
 	}
 
@@ -168,9 +168,10 @@ func TestAttendeeLive_SelfAddButtons(t *testing.T) {
 		t.Fatalf("click add self ropm: %v", err)
 	}
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		count, err := page.Locator("#attendee-speakers-list .live-speakers-list-viewport [data-testid='live-speaker-item']:has-text('Alice Speaker')").Count()
+		count, err := page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']:has-text('Alice Speaker')").Count()
 		return count >= 2, err
 	}, "second speaker row for Alice after ropm self-add")
 }
+
 
 

@@ -1,48 +1,54 @@
 package templates
 
-import "strconv"
+import (
+	"strconv"
+	"strings"
+)
 
-func errorTimeoutStr(timeoutMs []int) string {
-	if len(timeoutMs) > 0 {
+func notificationTimeoutStr(timeoutMs []int) string {
+	if len(timeoutMs) > 0 && timeoutMs[0] > 0 {
 		return strconv.Itoa(timeoutMs[0])
 	}
-	return "0"
+	return "6000"
 }
 
-// ErrorMessage renders a styled, dismissable error message when message is non-empty.
-// The optional timeoutMs parameter auto-dismisses the message after that many milliseconds.
-templ ErrorMessage(message string, timeoutMs ...int) {
+func notificationToneClass(tone string) string {
+	switch strings.ToLower(strings.TrimSpace(tone)) {
+	case "success":
+		return "alert-success"
+	case "warning":
+		return "alert-warning"
+	case "info":
+		return "alert-info"
+	default:
+		return "alert-error"
+	}
+}
+
+templ NotificationMessage(tone string, message string, timeoutMs ...int) {
 	if message != "" {
 		<div
-			class={ "error-text alert alert-error btn-error", "error-message-layout" }
-			data-error-message
-			data-error-timeout={ errorTimeoutStr(timeoutMs) }
+			class={ "app-notification alert shadow-lg", notificationToneClass(tone) }
+			role="status"
+			data-notification-item
+			data-notification-timeout={ notificationTimeoutStr(timeoutMs) }
+			hx-swap-oob="afterbegin:#app-notification-target"
 		>
 			<span>{ message }</span>
 			<button
 				type="button"
-				class={ "error-message-dismiss btn-ghost" , "btn btn-sm"}
-				onclick="var p=this.closest('[data-error-message]');if(p)p.remove()"
+				class="btn btn-ghost btn-xs"
+				data-notification-dismiss
 				aria-label="Dismiss"
 			>&#x00D7;</button>
-			<script>
-				(function(){
-					var s=document.currentScript;
-					var el=s&&s.closest?s.closest('[data-error-message]'):null;
-					if(!el){var a=document.querySelectorAll('[data-error-message]:not([data-em-init])');el=a.length?a[a.length-1]:null;}
-					if(!el)return;
-					el.setAttribute('data-em-init','1');
-					var t=parseInt(el.getAttribute('data-error-timeout'),10);
-					if(!t||t<=0)return;
-					setTimeout(function(){
-						el.style.transition='opacity 0.3s ease';
-						el.style.opacity='0';
-						setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},350);
-					},t);
-				})();
-			</script>
 		</div>
 	}
+}
+
+// ErrorMessage renders an error notification when message is non-empty.
+// The optional timeoutMs parameter overrides the auto-dismiss timeout.
+templ ErrorMessage(message string, timeoutMs ...int) {
+	@NotificationMessage("error", message, timeoutMs...)
 }
 
 // FormFieldInput holds the parameters for a single label + input field group.

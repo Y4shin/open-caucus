@@ -23,6 +23,7 @@ type RouteParams struct {
 	BlobId        string
 	MeetingId     string
 	MotionId      string
+	RuleId        string
 	Slug          string
 	SpeakerId     string
 	UserId        string
@@ -64,10 +65,15 @@ type Handler interface {
 	AdminDeleteCommittee(ctx context.Context, r *http.Request, params RouteParams) (*templates.CommitteeListPartialInput, *ResponseMeta, error)
 	AdminCommitteeUsers(ctx context.Context, r *http.Request, params RouteParams) (*templates.AdminCommitteeUsersInput, *ResponseMeta, error)
 	AdminAssignAccount(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
+	AdminCreateOAuthCommitteeGroupRule(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
+	AdminDeleteOAuthCommitteeGroupRule(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
 	AdminDeleteUser(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
+	AdminUpdateUserMembership(ctx context.Context, r *http.Request, params RouteParams) (*templates.UserListPartialInput, *ResponseMeta, error)
 	Home(ctx context.Context, r *http.Request) (*templates.HomeInput, *ResponseMeta, error)
 	LoginPage(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
 	LoginSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
+	OAuthStart(w http.ResponseWriter, r *http.Request) error
+	OAuthCallback(w http.ResponseWriter, r *http.Request) error
 	CommitteePage(ctx context.Context, r *http.Request, params RouteParams) (*templates.CommitteePageInput, *ResponseMeta, error)
 	CommitteeCreateMeeting(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingListPartialInput, *ResponseMeta, error)
 	MeetingLivePage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingLiveInput, *ResponseMeta, error)
@@ -78,9 +84,6 @@ type Handler interface {
 	ManageToggleSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageMeetingSettingsPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
 	ManageSpeakersListPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
-	ManageSetProtocolWriter(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
-	MeetingProtocolPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingProtocolInput, *ResponseMeta, error)
-	ProtocolSaveAgendaPoint(ctx context.Context, r *http.Request, params RouteParams) (*templates.ProtocolAgendaPointPartialInput, *ResponseMeta, error)
 	ManageMotionCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageMotionDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageMotionRecordVote(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionItemPartialInput, *ResponseMeta, error)
@@ -189,7 +192,7 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /admin/login", rt.wrapMiddleware(
 		rt.handleAdminLoginSubmit,
 		getMiddlewareForPath("/admin/login", groups),
-		[]string{"session"},
+		[]string{"session", "password_auth_enabled"},
 		false,
 	))
 
@@ -249,9 +252,30 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
+	rt.mux.HandleFunc("POST /admin/committee/{slug}/oauth-group-rule/create", rt.wrapMiddleware(
+		rt.handleAdminCreateOAuthCommitteeGroupRule,
+		getMiddlewareForPath("/admin/committee/{slug}/oauth-group-rule/create", groups),
+		[]string{"session", "admin_required"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /admin/committee/{slug}/oauth-group-rule/{rule_id}/delete", rt.wrapMiddleware(
+		rt.handleAdminDeleteOAuthCommitteeGroupRule,
+		getMiddlewareForPath("/admin/committee/{slug}/oauth-group-rule/{rule_id}/delete", groups),
+		[]string{"session", "admin_required"},
+		false,
+	))
+
 	rt.mux.HandleFunc("POST /admin/committee/{slug}/membership/{user_id}/delete", rt.wrapMiddleware(
 		rt.handleAdminDeleteUser,
 		getMiddlewareForPath("/admin/committee/{slug}/membership/{user_id}/delete", groups),
+		[]string{"session", "admin_required"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /admin/committee/{slug}/membership/{user_id}/update", rt.wrapMiddleware(
+		rt.handleAdminUpdateUserMembership,
+		getMiddlewareForPath("/admin/committee/{slug}/membership/{user_id}/update", groups),
 		[]string{"session", "admin_required"},
 		false,
 	))
@@ -273,6 +297,20 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /login", rt.wrapMiddleware(
 		rt.handleLoginSubmit,
 		getMiddlewareForPath("/login", groups),
+		[]string{"session", "password_auth_enabled"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /oauth/start", rt.wrapMiddleware(
+		rt.handleOAuthStart,
+		getMiddlewareForPath("/oauth/start", groups),
+		[]string{"session"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /oauth/callback", rt.wrapMiddleware(
+		rt.handleOAuthCallback,
+		getMiddlewareForPath("/oauth/callback", groups),
 		[]string{"session"},
 		false,
 	))
@@ -344,27 +382,6 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		rt.handleManageSpeakersListPartial,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/speakers/partial", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/protocol-writer", rt.wrapMiddleware(
-		rt.handleManageSetProtocolWriter,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol-writer", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/protocol", rt.wrapMiddleware(
-		rt.handleMeetingProtocolPage,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "attendee_required"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}", rt.wrapMiddleware(
-		rt.handleProtocolSaveAgendaPoint,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "attendee_required"},
 		false,
 	))
 
@@ -985,6 +1002,65 @@ func (rt *Router) handleAdminAssignAccount(w http.ResponseWriter, r *http.Reques
 
 	templates.UserListPartial(*input).Render(r.Context(), w)
 }
+func (rt *Router) handleAdminCreateOAuthCommitteeGroupRule(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug: r.PathValue("slug"),
+	}
+
+	input, meta, err := rt.handler.AdminCreateOAuthCommitteeGroupRule(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.UserListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleAdminDeleteOAuthCommitteeGroupRule(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:   r.PathValue("slug"),
+		RuleId: r.PathValue("rule_id"),
+	}
+
+	input, meta, err := rt.handler.AdminDeleteOAuthCommitteeGroupRule(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.UserListPartial(*input).Render(r.Context(), w)
+}
 func (rt *Router) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug:   r.PathValue("slug"),
@@ -992,6 +1068,36 @@ func (rt *Router) handleAdminDeleteUser(w http.ResponseWriter, r *http.Request) 
 	}
 
 	input, meta, err := rt.handler.AdminDeleteUser(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.UserListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleAdminUpdateUserMembership(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:   r.PathValue("slug"),
+		UserId: r.PathValue("user_id"),
+	}
+
+	input, meta, err := rt.handler.AdminUpdateUserMembership(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -1089,6 +1195,16 @@ func (rt *Router) handleLoginSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.LoginPageTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleOAuthStart(w http.ResponseWriter, r *http.Request) {
+	if err := rt.handler.OAuthStart(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+func (rt *Router) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
+	if err := rt.handler.OAuthCallback(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 func (rt *Router) handleCommitteePage(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
@@ -1399,97 +1515,6 @@ func (rt *Router) handleManageSpeakersListPartial(w http.ResponseWriter, r *http
 	}
 
 	templates.SpeakersListSSEPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleManageSetProtocolWriter(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:      r.PathValue("slug"),
-		MeetingId: r.PathValue("meeting_id"),
-	}
-
-	input, meta, err := rt.handler.ManageSetProtocolWriter(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MeetingSettingsPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleMeetingProtocolPage(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:      r.PathValue("slug"),
-		MeetingId: r.PathValue("meeting_id"),
-	}
-
-	input, meta, err := rt.handler.MeetingProtocolPage(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MeetingProtocolTemplate(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleProtocolSaveAgendaPoint(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-	}
-
-	input, meta, err := rt.handler.ProtocolSaveAgendaPoint(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.ProtocolAgendaPointPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleManageMotionCreate(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{

@@ -32,7 +32,6 @@ type AgendaPoint struct {
 	ParentID                     sql.NullInt64
 	Position                     int64
 	Title                        string
-	Protocol                     string
 	CreatedAt                    string
 	UpdatedAt                    string
 	CurrentSpeakerID             sql.NullInt64
@@ -83,7 +82,6 @@ type Meeting struct {
 	CreatedAt                    string
 	UpdatedAt                    string
 	CurrentAgendaPointID         sql.NullInt64
-	ProtocolWriterID             sql.NullInt64
 	GenderQuotationEnabled       bool
 	FirstSpeakerQuotationEnabled bool
 	ModeratorID                  sql.NullInt64
@@ -100,6 +98,33 @@ type Motion struct {
 	VotesEligible  sql.NullInt64
 	CreatedAt      string
 	UpdatedAt      string
+}
+
+type OauthCommitteeGroupRule struct {
+	ID          int64
+	CommitteeID int64
+	GroupName   string
+	Role        string
+	CreatedAt   string
+	UpdatedAt   string
+}
+
+type OauthIdentity struct {
+	ID         int64
+	Issuer     string
+	Subject    string
+	AccountID  int64
+	Username   sql.NullString
+	FullName   sql.NullString
+	Email      sql.NullString
+	GroupsJson sql.NullString
+	CreatedAt  string
+	UpdatedAt  string
+}
+
+type OauthManagedMembership struct {
+	UserID       int64
+	LastSyncedAt string
 }
 
 type PasswordCredential struct {

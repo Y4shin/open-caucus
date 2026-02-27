@@ -10,9 +10,11 @@ import (
 )
 
 type AdminAccountsInput struct {
-	Accounts   []AccountItem
-	Pagination pagination.Page
-	Error      string
+	Accounts         []AccountItem
+	Pagination       pagination.Page
+	Error            string
+	PasswordEnabled  bool
+	OAuthEnabled     bool
 }
 
 type AccountItem struct {
@@ -23,9 +25,11 @@ type AccountItem struct {
 }
 
 type AccountListPartialInput struct {
-	Accounts   []AccountItem
-	Pagination pagination.Page
-	Error      string
+	Accounts        []AccountItem
+	Pagination      pagination.Page
+	Error           string
+	PasswordEnabled bool
+	OAuthEnabled    bool
 }
 
 func (i *AdminAccountsInput) AdminDashboardGet(ctx context.Context) templ.SafeURL {
@@ -90,13 +94,15 @@ templ AccountListPartial(input AccountListPartialInput) {
 					Type:     "text",
 					Required: true,
 				})
-				@FormField(FormFieldInput{
-					ID:       "password",
-					Name:     "password",
-					Label:    i18n.T(ctx, "admin_accounts.password_label"),
-					Type:     "password",
-					Required: true,
-				})
+				if input.PasswordEnabled {
+					@FormField(FormFieldInput{
+						ID:       "password",
+						Name:     "password",
+						Label:    i18n.T(ctx, "admin_accounts.password_label"),
+						Type:     "password",
+						Required: true,
+					})
+				}
 				<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "admin_accounts.create_button") }</button>
 			</form>
 		</section>
@@ -146,8 +152,10 @@ templ AdminAccountsTemplate(input AdminAccountsInput) {
 
 templ AdminAccountsContent(input AdminAccountsInput) {
 	@AccountListPartial(AccountListPartialInput{
-		Accounts:   input.Accounts,
-		Pagination: input.Pagination,
-		Error:      input.Error,
+		Accounts:        input.Accounts,
+		Pagination:      input.Pagination,
+		Error:           input.Error,
+		PasswordEnabled: input.PasswordEnabled,
+		OAuthEnabled:    input.OAuthEnabled,
 	})
 }

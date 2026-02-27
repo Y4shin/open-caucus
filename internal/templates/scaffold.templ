@@ -18,6 +18,29 @@ templ PageTemplate(title string, htmx bool, htmxSSE bool, scaffold ScaffoldInput
 		<title>{ title }</title>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<script>
+			(function() {
+				var storageKey = "conference-tool.theme";
+				var preference = "auto";
+				try {
+					var stored = window.localStorage.getItem(storageKey);
+					if (stored === "light" || stored === "dark" || stored === "auto") {
+						preference = stored;
+					}
+				} catch (error) {
+					preference = "auto";
+				}
+				if (preference === "dark") {
+					document.documentElement.setAttribute("data-theme", "dark");
+					return;
+				}
+				if (preference === "light") {
+					document.documentElement.setAttribute("data-theme", "corporate");
+					return;
+				}
+				document.documentElement.removeAttribute("data-theme");
+			})();
+		</script>
 		@GlobalStylesheetLink()
 		if htmx || htmxSSE {
 			<script src={ paths.Route.HtmxMinJs() }></script>
@@ -74,74 +97,267 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 		}
 		<div class="flex-1">
 			<div class="min-w-0 md:hidden">
-				<h1 class="truncate text-base font-semibold sm:text-lg">{i18n.T(ctx, "common.app_name")}</h1>
+				<h1 class="truncate text-base font-semibold sm:text-lg">{ i18n.T(ctx, "common.app_name") }</h1>
 			</div>
 			<div class="min-w-0 hidden md:block">
-				<h1 class="truncate text-base font-semibold sm:text-lg">{i18n.T(ctx, "common.app_name")} - { input.Title }</h1>
+				<h1 class="truncate text-base font-semibold sm:text-lg">{ i18n.T(ctx, "common.app_name") } - { input.Title }</h1>
 			</div>
 		</div>
-			<div class="flex-none flex flex-row items-center gap-2">
-				<div class="scaffold-desktop-right hidden md:flex items-center gap-2">
-					if len(input.Actions) > 0 {
-						<div class="flex items-center gap-2">
+		<div class="flex-none flex flex-row items-center gap-2">
+			<div class="scaffold-desktop-right hidden md:flex items-center gap-2">
+				if len(input.Actions) > 0 {
+					<div class="flex items-center gap-2">
+						for _, action := range input.Actions {
+							<a href={ action.URL } class={ "scaffold-action-btn btn btn-sm" + scaffoldActionKindClass(action.Kind) }>{ action.Title }</a>
+						}
+					</div>
+				}
+				if CurrentDisplayName(ctx) != "" {
+					<p class="scaffold-auth-text text-xs">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
+					<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
+						<button class="btn btn-ghost btn-sm" type="submit">{ i18n.T(ctx, "common.logout") }</button>
+					</form>
+				} else if session.IsAdminAuthenticated(ctx) {
+					<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") }>
+						<button class="btn btn-ghost btn-sm" type="submit">{ i18n.T(ctx, "common.logout") }</button>
+					</form>
+				}
+			</div>
+			<details class="dropdown dropdown-end md:hidden">
+				<summary class="btn btn-ghost btn-sm">Menu</summary>
+				<div class="dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow">
+					if input.Subtitle != "" {
+						<p class="mb-2 text-sm text-base-content/70">{ input.Subtitle }</p>
+					}
+					if len(input.Actions) > 0 || CurrentDisplayName(ctx) != "" || session.IsAdminAuthenticated(ctx) {
+						<div class="flex flex-col gap-2">
 							for _, action := range input.Actions {
-								<a href={ action.URL } class={ "scaffold-action-btn btn btn-sm" + scaffoldActionKindClass(action.Kind) }>{ action.Title }</a>
+								<a href={ action.URL } class={ "btn btn-sm justify-start" + scaffoldActionKindClass(action.Kind) }>{ action.Title }</a>
+							}
+							if CurrentDisplayName(ctx) != "" {
+								<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
+									<button type="submit" class="btn btn-sm btn-error btn-block">{ i18n.T(ctx, "common.logout") }</button>
+								</form>
+							} else if session.IsAdminAuthenticated(ctx) {
+								<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") }>
+									<button type="submit" class="btn btn-sm btn-error btn-block">{ i18n.T(ctx, "common.logout") }</button>
+								</form>
 							}
 						</div>
 					}
 					if CurrentDisplayName(ctx) != "" {
-						<p class="scaffold-auth-text text-xs">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
-						<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
-							<button class="btn btn-ghost btn-sm" type="submit">{ i18n.T(ctx, "common.logout") }</button>
-						</form>
-					} else if session.IsAdminAuthenticated(ctx) {
-						<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") }>
-							<button class="btn btn-ghost btn-sm" type="submit">{ i18n.T(ctx, "common.logout") }</button>
-						</form>
+						<p class="mt-3 text-xs text-base-content/70">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
 					}
-					@LanguageSwitcherCompact("scaffold-nav-lang")
-				</div>
-				<details class="dropdown dropdown-end md:hidden">
-						<summary class="btn btn-ghost btn-sm">Menu</summary>
-						<div class="dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow">
-							if input.Subtitle != "" {
-							<p class="mb-2 text-sm text-base-content/70">{ input.Subtitle }</p>
-						}
-						if len(input.Actions) > 0 || CurrentDisplayName(ctx) != "" || session.IsAdminAuthenticated(ctx) {
-							<div class="flex flex-col gap-2">
-								for _, action := range input.Actions {
-									<a href={ action.URL } class={ "btn btn-sm justify-start" + scaffoldActionKindClass(action.Kind) }>{ action.Title }</a>
-								}
-								if CurrentDisplayName(ctx) != "" {
-									<form method="POST" action={ paths.Route.LogoutSubmitPost(ctx, "") }>
-										<button type="submit" class="btn btn-sm btn-error btn-block">{ i18n.T(ctx, "common.logout") }</button>
-									</form>
-								} else if session.IsAdminAuthenticated(ctx) {
-									<form method="POST" action={ paths.Route.AdminLogoutPost(ctx, "") }>
-										<button type="submit" class="btn btn-sm btn-error btn-block">{ i18n.T(ctx, "common.logout") }</button>
-									</form>
-								}
-							</div>
-						}
-						if CurrentDisplayName(ctx) != "" {
-							<p class="mt-3 text-xs text-base-content/70">{ i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)) }</p>
-						}
-						<div class="mt-3 flex items-center justify-between gap-2">
-							<span class="text-xs text-base-content/70">Made with ♥ by Patric</span>
-								@LanguageSwitcherCompact("scaffold-mobile-lang")
-							</div>
+					<div class="mt-3 flex items-center justify-between gap-2">
+						<span class="text-xs text-base-content/70">Made with love by Patric</span>
+						<div class="flex items-center gap-2">
+							@LanguageSwitcherCompact("scaffold-mobile-lang")
+							@ThemeSwitcherCompact("scaffold-mobile-theme")
 						</div>
-				</details>
-			</div>
+					</div>
+				</div>
+			</details>
+		</div>
 	</nav>
+	<div
+		id="app-notification-target"
+		class="app-notification-target"
+		aria-live="polite"
+		aria-atomic="false"
+		aria-relevant="additions"
+	></div>
 	<main class={ "page-main w-full max-w-screen-xl mx-auto flex-1 p-4 flex flex-col gap-4 min-h-0 overflow-hidden p-5" }>
 		@content
 	</main>
 	<footer class="page-footer border-t border-base-300 bg-base-100/70">
 		<div class="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-4 py-3 text-sm text-base-content/70 lg:px-5">
-			<span class="text-xs sm:text-sm">Made with ♥ by Patric</span>
-			@LanguageSwitcherCompact("scaffold-footer-lang")
+			<span class="text-xs sm:text-sm">Made with love by Patric</span>
+			<div class="flex items-center gap-2">
+				@LanguageSwitcherCompact("scaffold-footer-lang")
+				@ThemeSwitcherCompact("scaffold-footer-theme")
+			</div>
 		</div>
 	</footer>
-}
+	<script>
+		(function() {
+			var hostID = "app-notification-target";
+			var defaultTimeout = 6000;
 
+			function getHost() {
+				return document.getElementById(hostID);
+			}
+
+			function parseTimeout(item) {
+				var raw = item.getAttribute("data-notification-timeout");
+				var parsed = Number.parseInt(raw || "", 10);
+				if (!Number.isFinite(parsed) || parsed <= 0) {
+					return defaultTimeout;
+				}
+				return parsed;
+			}
+
+			function dismissNotification(item) {
+				if (!(item instanceof HTMLElement) || item.dataset.notificationDismissed === "1") {
+					return;
+				}
+				item.dataset.notificationDismissed = "1";
+				item.classList.add("app-notification-leave");
+				window.setTimeout(function() {
+					if (item.parentNode) {
+						item.parentNode.removeChild(item);
+					}
+				}, 220);
+			}
+
+			function initializeNotification(item) {
+				if (!(item instanceof HTMLElement) || item.dataset.notificationInit === "1") {
+					return;
+				}
+				item.dataset.notificationInit = "1";
+				var timeout = parseTimeout(item);
+				if (timeout <= 0) {
+					return;
+				}
+				window.setTimeout(function() {
+					dismissNotification(item);
+				}, timeout);
+			}
+
+			function routeNotifications(scope) {
+				var host = getHost();
+				if (!host) {
+					return;
+				}
+				var root = scope;
+				if (!(root instanceof Element) && !(root instanceof Document)) {
+					root = document;
+				}
+				var items = root.querySelectorAll("[data-notification-item]");
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					if (!host.contains(item)) {
+						host.prepend(item);
+					}
+					initializeNotification(item);
+				}
+			}
+
+			document.addEventListener("click", function(event) {
+				var target = event.target;
+				if (!(target instanceof Element)) {
+					return;
+				}
+				var dismissButton = target.closest("[data-notification-dismiss]");
+				if (!dismissButton) {
+					return;
+				}
+				var item = dismissButton.closest("[data-notification-item]");
+				dismissNotification(item);
+			});
+
+			document.addEventListener("htmx:afterSwap", function(event) {
+				routeNotifications(event.target);
+			});
+			document.addEventListener("htmx:oobAfterSwap", function(event) {
+				routeNotifications(event.target);
+			});
+
+			if (document.readyState === "loading") {
+				document.addEventListener("DOMContentLoaded", function() {
+					routeNotifications(document);
+				});
+			} else {
+				routeNotifications(document);
+			}
+		})();
+	</script>
+	<script>
+		(function() {
+			var storageKey = "conference-tool.theme";
+			var validValues = { light: true, dark: true, auto: true };
+
+			function normalizePreference(value) {
+				return validValues[value] ? value : "auto";
+			}
+
+			function readPreference() {
+				try {
+					return normalizePreference(window.localStorage.getItem(storageKey));
+				} catch (error) {
+					return "auto";
+				}
+			}
+
+			function writePreference(value) {
+				try {
+					window.localStorage.setItem(storageKey, value);
+				} catch (error) {
+				}
+			}
+
+			function applyPreference(value) {
+				var pref = normalizePreference(value);
+				if (pref === "dark") {
+					document.documentElement.setAttribute("data-theme", "dark");
+					return;
+				}
+				if (pref === "light") {
+					document.documentElement.setAttribute("data-theme", "corporate");
+					return;
+				}
+				document.documentElement.removeAttribute("data-theme");
+			}
+
+			function syncSwitchers(value) {
+				var pref = normalizePreference(value);
+				var inputs = document.querySelectorAll("[data-theme-pref-input]");
+				for (var i = 0; i < inputs.length; i++) {
+					var input = inputs[i];
+					if (!(input instanceof HTMLInputElement)) {
+						continue;
+					}
+					var checked = input.value === pref;
+					input.checked = checked;
+					var option = input.closest("[data-theme-pref-option]");
+					if (option) {
+						option.classList.toggle("btn-active", checked);
+					}
+				}
+			}
+
+			function setPreference(value) {
+				var pref = normalizePreference(value);
+				writePreference(pref);
+				applyPreference(pref);
+				syncSwitchers(pref);
+			}
+
+			document.addEventListener("change", function(event) {
+				var target = event.target;
+				if (!(target instanceof HTMLInputElement) || !target.matches("[data-theme-pref-input]")) {
+					return;
+				}
+				setPreference(target.value);
+			});
+
+			if (window.matchMedia) {
+				var media = window.matchMedia("(prefers-color-scheme: dark)");
+				var onSystemThemeChange = function() {
+					if (readPreference() === "auto") {
+						applyPreference("auto");
+						syncSwitchers("auto");
+					}
+				};
+				if (typeof media.addEventListener === "function") {
+					media.addEventListener("change", onSystemThemeChange);
+				} else if (typeof media.addListener === "function") {
+					media.addListener(onSystemThemeChange);
+				}
+			}
+
+			var initialPreference = readPreference();
+			applyPreference(initialPreference);
+			syncSwitchers(initialPreference);
+		})();
+	</script>
+}

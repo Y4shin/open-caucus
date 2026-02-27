@@ -738,7 +738,6 @@ func (h *Handler) loadMeetingSettingsPartial(ctx context.Context, slug, meetingI
 		CommitteeSlug:                slug,
 		IDString:                     meetingIDStr,
 		SignupOpen:                   meeting.SignupOpen,
-		ProtocolWriterID:             meeting.ProtocolWriterID,
 		GenderQuotationEnabled:       meeting.GenderQuotationEnabled,
 		FirstSpeakerQuotationEnabled: meeting.FirstSpeakerQuotationEnabled,
 		ModeratorID:                  meeting.ModeratorID,
@@ -764,34 +763,6 @@ func (h *Handler) ManageToggleSignupOpen(ctx context.Context, r *http.Request, p
 	}
 
 	partial, err := h.loadManageAttendeeDependentPartial(ctx, params.Slug, params.MeetingId, meetingID)
-	return partial, nil, err
-}
-
-// ManageSetProtocolWriter assigns or clears the protocol writer for a meeting.
-func (h *Handler) ManageSetProtocolWriter(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingSettingsPartialInput, *routes.ResponseMeta, error) {
-	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid meeting ID")
-	}
-
-	if err := r.ParseForm(); err != nil {
-		return nil, nil, fmt.Errorf("failed to parse form: %w", err)
-	}
-
-	var attendeeID *int64
-	if raw := strings.TrimSpace(r.FormValue("attendee_id")); raw != "" {
-		aid, err := strconv.ParseInt(raw, 10, 64)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid attendee ID")
-		}
-		attendeeID = &aid
-	}
-
-	if err := h.Repository.SetProtocolWriter(ctx, meetingID, attendeeID); err != nil {
-		return nil, nil, fmt.Errorf("failed to set protocol writer: %w", err)
-	}
-
-	partial, err := h.loadMeetingSettingsPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	return partial, nil, err
 }
 

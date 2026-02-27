@@ -55,6 +55,7 @@ debug
 *.tmp
 *.temp
 .tmp/
+/dev/
 
 # Log files
 *.log

@@ -10,7 +10,6 @@ type Meeting struct {
 	Secret                       string
 	SignupOpen                   bool
 	CurrentAgendaPointID         *int64
-	ProtocolWriterID             *int64
 	GenderQuotationEnabled       bool   // default true
 	FirstSpeakerQuotationEnabled bool   // default true
 	ModeratorID                  *int64 // nil if not set

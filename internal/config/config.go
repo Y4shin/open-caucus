@@ -13,6 +13,7 @@ import (
 type Config struct {
 	Application *ApplicationConfig `mapstructure:"application"`
 	Database    *DatabaseConfig    `mapstructure:"database"`
+	Auth        *AuthConfig        `mapstructure:"auth"`
 }
 
 // ConfigGroup identifies config subsections
@@ -21,11 +22,12 @@ type ConfigGroup string
 const (
 	ApplicationGroup ConfigGroup = "application"
 	DatabaseGroup    ConfigGroup = "database"
+	AuthGroup        ConfigGroup = "auth"
 )
 
 // LoadConfig loads full configuration
 func LoadConfig() (*Config, error) {
-	return LoadConfigSelective([]ConfigGroup{ApplicationGroup, DatabaseGroup})
+	return LoadConfigSelective([]ConfigGroup{ApplicationGroup, DatabaseGroup, AuthGroup})
 }
 
 // stringToStringMapHook decodes comma-separated key=value strings into map[string]string
@@ -90,6 +92,11 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 			if err := BindConfigToViper(v, cfg.Database, string(DatabaseGroup)); err != nil {
 				return nil, fmt.Errorf("failed to bind database config: %w", err)
 			}
+		case AuthGroup:
+			cfg.Auth = &AuthConfig{}
+			if err := BindConfigToViper(v, cfg.Auth, string(AuthGroup)); err != nil {
+				return nil, fmt.Errorf("failed to bind auth config: %w", err)
+			}
 		default:
 			return nil, fmt.Errorf("unknown config group: %s", group)
 		}
@@ -130,6 +137,8 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 			groupCfg = cfg.Application
 		case DatabaseGroup:
 			groupCfg = cfg.Database
+		case AuthGroup:
+			groupCfg = cfg.Auth
 		}
 
 		if groupCfg != nil {
@@ -147,11 +156,33 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 			groupCfg = cfg.Application
 		case DatabaseGroup:
 			groupCfg = cfg.Database
+		case AuthGroup:
+			groupCfg = cfg.Auth
 		}
 
 		if groupCfg != nil {
 			if err := ValidateConfig(groupCfg); err != nil {
 				return nil, fmt.Errorf("validation failed for %s: %w", group, err)
+			}
+		}
+	}
+
+	if cfg.Auth != nil {
+		if !cfg.Auth.PasswordEnabled && !cfg.Auth.OAuthEnabled {
+			return nil, fmt.Errorf("validation failed for auth: at least one auth provider must be enabled")
+		}
+		if cfg.Auth.OAuthEnabled {
+			if cfg.Auth.OAuthIssuerURL == "" {
+				return nil, fmt.Errorf("validation failed for auth: oauth_issuer_url is required when OAuth is enabled")
+			}
+			if cfg.Auth.OAuthClientID == "" {
+				return nil, fmt.Errorf("validation failed for auth: oauth_client_id is required when OAuth is enabled")
+			}
+			if cfg.Auth.OAuthClientSecret == "" {
+				return nil, fmt.Errorf("validation failed for auth: oauth_client_secret is required when OAuth is enabled")
+			}
+			if cfg.Auth.OAuthRedirectURL == "" {
+				return nil, fmt.Errorf("validation failed for auth: oauth_redirect_url is required when OAuth is enabled")
 			}
 		}
 	}

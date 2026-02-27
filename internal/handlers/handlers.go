@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
+	"github.com/Y4shin/conference-tool/internal/config"
+	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/pagination"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/session"
@@ -79,6 +81,8 @@ type Handler struct {
 	Repository     repository.Repository
 	Storage        storage.Service
 	SessionManager *session.Manager
+	AuthConfig     *config.AuthConfig
+	OAuthService   *oauth.Service
 }
 
 func NewHandler(b broker.Broker) *Handler {

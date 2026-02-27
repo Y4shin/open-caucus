@@ -1,19 +1,25 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
+	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +27,14 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the HTTP server",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if _, err := os.Stat(".env"); err == nil {
+			if loadErr := godotenv.Load(".env"); loadErr != nil {
+				return fmt.Errorf("load .env: %w", loadErr)
+			}
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("stat .env: %w", err)
+		}
+
 		cfg, err := config.LoadConfig()
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
@@ -51,8 +65,24 @@ var serveCmd = &cobra.Command{
 		// Initialize session manager with repository as store
 		sessionManager := session.NewManager(repo, []byte(cfg.Application.SessionSecret))
 
+		oauthService, err := oauth.New(context.Background(), oauth.Config{
+			Enabled:        cfg.Auth.OAuthEnabled,
+			IssuerURL:      cfg.Auth.OAuthIssuerURL,
+			ClientID:       cfg.Auth.OAuthClientID,
+			ClientSecret:   cfg.Auth.OAuthClientSecret,
+			RedirectURL:    cfg.Auth.OAuthRedirectURL,
+			Scopes:         cfg.Auth.OAuthScopes,
+			GroupsClaim:    cfg.Auth.OAuthGroupsClaim,
+			UsernameClaims: cfg.Auth.OAuthUsernameClaims,
+			FullNameClaims: cfg.Auth.OAuthFullNameClaims,
+			StateTTL:       time.Duration(cfg.Auth.OAuthStateTTLSeconds) * time.Second,
+		}, []byte(cfg.Application.SessionSecret))
+		if err != nil {
+			return fmt.Errorf("failed to initialize oauth service: %w", err)
+		}
+
 		// Initialize middleware registry with session manager
-		mw := middleware.NewRegistry(sessionManager, repo)
+		mw := middleware.NewRegistry(sessionManager, repo, cfg.Auth.PasswordEnabled)
 
 		// Initialize handlers with repository, broker, storage, and session manager
 		handler := &handlers.Handler{
@@ -60,6 +90,8 @@ var serveCmd = &cobra.Command{
 			Repository:     repo,
 			Storage:        store,
 			SessionManager: sessionManager,
+			AuthConfig:     cfg.Auth,
+			OAuthService:   oauthService,
 		}
 
 		// Create router

@@ -46,6 +46,10 @@ func CollectEnvFields(groups []ConfigGroup) ([]EnvFieldInfo, error) {
 		switch group {
 		case ApplicationGroup:
 			cfg = &ApplicationConfig{}
+		case DatabaseGroup:
+			cfg = &DatabaseConfig{}
+		case AuthGroup:
+			cfg = &AuthConfig{}
 		default:
 			return nil, fmt.Errorf("unknown config group: %s", group)
 		}
@@ -253,7 +257,7 @@ func GenerateExampleEnv(groups []ConfigGroup) (string, error) {
 	var output strings.Builder
 
 	// Process groups in defined order
-	groupOrder := []string{"application"}
+	groupOrder := []string{"application", "auth", "database"}
 	for _, groupName := range groupOrder {
 		fields, ok := groupedFields[groupName]
 		if !ok || len(fields) == 0 {

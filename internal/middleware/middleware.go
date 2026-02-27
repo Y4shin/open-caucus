@@ -12,13 +12,15 @@ import (
 type Registry struct {
 	SessionManager *session.Manager
 	Repository     repository.Repository
+	PasswordEnabled bool
 }
 
 // NewRegistry creates a new middleware registry
-func NewRegistry(sessionManager *session.Manager, repo repository.Repository) *Registry {
+func NewRegistry(sessionManager *session.Manager, repo repository.Repository, passwordEnabled bool) *Registry {
 	return &Registry{
 		SessionManager: sessionManager,
 		Repository:     repo,
+		PasswordEnabled: passwordEnabled,
 	}
 }
 
@@ -41,6 +43,8 @@ func (r *Registry) Get(name string) func(http.Handler) http.Handler {
 		return r.attendeeRequired
 	case "meeting_access":
 		return r.meetingAccess
+	case "password_auth_enabled":
+		return r.passwordAuthEnabled
 	default:
 		return r.defaultLogger(name)
 	}

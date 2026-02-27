@@ -44,11 +44,21 @@ type Repository interface {
 	GetAccountByUsername(ctx context.Context, username string) (*model.Account, error)
 	GetAccountByID(ctx context.Context, id int64) (*model.Account, error)
 	CreateAccount(ctx context.Context, username, fullName, passwordHash string) (*model.Account, error)
+	CreateOAuthAccount(ctx context.Context, username, fullName string) (*model.Account, error)
 	GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error)
+	GetOAuthIdentityByIssuerSubject(ctx context.Context, issuer, subject string) (*model.OAuthIdentity, error)
+	UpsertOAuthIdentity(
+		ctx context.Context,
+		issuer, subject string,
+		accountID int64,
+		username, fullName, email *string,
+		groupsJSON *string,
+	) (*model.OAuthIdentity, error)
 	GetUserByCommitteeAndUsername(ctx context.Context, slug, username string) (*model.User, error)
 	GetUserByID(ctx context.Context, id int64) (*model.User, error)
 	GetUserMembershipByAccountIDAndSlug(ctx context.Context, accountID int64, slug string) (*model.User, error)
 	ListCommitteesByAccountID(ctx context.Context, accountID int64) ([]*model.Committee, error)
+	SyncOAuthCommitteeMemberships(ctx context.Context, accountID int64, desired []model.OAuthDesiredMembership) error
 
 	// Committee
 	GetCommitteeBySlug(ctx context.Context, slug string) (*model.Committee, error)
@@ -77,7 +87,6 @@ type Repository interface {
 	DeleteMeeting(ctx context.Context, id int64) error
 	SetActiveMeeting(ctx context.Context, slug string, meetingID *int64) error
 	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
-	SetProtocolWriter(ctx context.Context, meetingID int64, attendeeID *int64) error
 	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
@@ -115,7 +124,6 @@ type Repository interface {
 	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
 	SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error
 	ClearCurrentDocument(ctx context.Context, agendaPointID int64) error
-	UpdateAgendaPointProtocol(ctx context.Context, agendaPointID int64, protocol string) error
 	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error
 	SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error
 	SetAgendaPointModerator(ctx context.Context, id int64, moderatorID *int64) error
@@ -144,6 +152,8 @@ type Repository interface {
 	CountUsersInCommittee(ctx context.Context, slug string) (int64, error)
 	CreateUser(ctx context.Context, committeeID int64, username, passwordHash, fullName string, quoted bool, role string) error
 	AssignAccountToCommittee(ctx context.Context, committeeID, accountID int64, quoted bool, role string) error
+	UpdateUserMembership(ctx context.Context, userID int64, quoted bool, role string) error
+	IsOAuthManagedMembership(ctx context.Context, userID int64) (bool, error)
 	DeleteUserByID(ctx context.Context, id int64) error
 
 	// Admin - Account admin flag
@@ -151,4 +161,8 @@ type Repository interface {
 	CountAllAccounts(ctx context.Context) (int64, error)
 	ListAllAccounts(ctx context.Context, limit, offset int) ([]*model.Account, error)
 	ListUnassignedAccountsForCommittee(ctx context.Context, committeeID int64) ([]*model.Account, error)
+	ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx context.Context, slug string) ([]*model.OAuthCommitteeGroupRule, error)
+	ListAllOAuthCommitteeGroupRules(ctx context.Context) ([]*model.OAuthCommitteeGroupRule, error)
+	CreateOAuthCommitteeGroupRuleByCommitteeSlug(ctx context.Context, slug, groupName, role string) (*model.OAuthCommitteeGroupRule, error)
+	DeleteOAuthCommitteeGroupRuleByIDAndCommitteeSlug(ctx context.Context, id int64, slug string) error
 }

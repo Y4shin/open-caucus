@@ -25,7 +25,7 @@ func (r *Registry) meetingAccess(next http.Handler) http.Handler {
 			return
 		}
 
-		_, meetingIDStr, ok := extractSlugAndMeetingID(req.URL.Path)
+		slug, meetingIDStr, ok := extractSlugAndMeetingID(req.URL.Path)
 		if !ok {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
@@ -38,6 +38,14 @@ func (r *Registry) meetingAccess(next http.Handler) http.Handler {
 
 		if sd.IsAccountSession() {
 			if cu, cuOK := session.GetCurrentUser(req.Context()); cuOK {
+				if cu.Role == "member" {
+					committee, err := r.Repository.GetCommitteeBySlug(req.Context(), slug)
+					if err != nil || committee.CurrentMeetingID == nil || *committee.CurrentMeetingID != meetingID {
+						http.Error(w, "Forbidden", http.StatusForbidden)
+						return
+					}
+				}
+
 				attendee, err := r.Repository.GetAttendeeByUserIDAndMeetingID(req.Context(), cu.UserID, meetingID)
 				if err == nil {
 					ctx := session.WithCurrentAttendee(req.Context(), &session.CurrentAttendee{

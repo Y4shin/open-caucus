@@ -22,6 +22,7 @@ type CommitteePageInput struct {
 	CommitteeName string
 	CommitteeSlug string
 	Meetings      []MeetingItem
+	ActiveMeeting *MeetingItem
 	Pagination    pagination.Page
 	FormError     string
 }
@@ -57,6 +58,13 @@ func (i *CommitteePageInput) PageURL(ctx context.Context, page uint32) templ.Saf
 		q.PageSize = strconv.Itoa(i.Pagination.PageSize)
 	}
 	return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGetWithQuery(ctx, "", q))
+}
+
+func (i *CommitteePageInput) ActiveMeetingJoinGet(ctx context.Context) templ.SafeURL {
+	if i.ActiveMeeting == nil {
+		return templ.URL(paths.NewCommitteeSlugRoute(i.CommitteeSlug).CommitteePageGet(ctx, ""))
+	}
+	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdJoinRoute(i.CommitteeSlug, i.ActiveMeeting.IDString).MeetingJoinPageGet(ctx, ""))
 }
 
 // MeetingListPartialInput is the input for the HTMX-swappable meeting list partial.
@@ -245,5 +253,22 @@ templ CommitteePageContent(input CommitteePageInput) {
 				Pagination:    input.Pagination,
 				FormError:     input.FormError,
 			})
+	} else {
+		<section class="card border border-base-300 bg-base-200 p-4 mt-4" data-testid="committee-active-meeting-card">
+			<h3 class="text-lg font-semibold">{ i18n.T(ctx, "committee.active_meeting_heading") }</h3>
+			if input.ActiveMeeting == nil {
+				<p class="text-base-content/70">{ i18n.T(ctx, "committee.no_active_meeting") }</p>
+			} else {
+				<div class="mt-2">
+					<p class="font-medium" data-testid="committee-active-meeting-name">{ input.ActiveMeeting.Name }</p>
+					if input.ActiveMeeting.Description != "" {
+						<p class="text-sm text-base-content/70">{ input.ActiveMeeting.Description }</p>
+					}
+				</div>
+				<a class="btn btn-primary btn-sm mt-3" data-testid="committee-join-active-meeting" href={ input.ActiveMeetingJoinGet(ctx) }>
+					{ i18n.T(ctx, "committee.join_active_meeting") }
+				</a>
+			}
+		</section>
 	}
 }

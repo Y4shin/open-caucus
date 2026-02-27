@@ -23,9 +23,6 @@ UPDATE committees SET current_meeting_id = ? WHERE slug = ?;
 -- name: SetMeetingSignupOpen :exec
 UPDATE meetings SET signup_open = ? WHERE id = ?;
 
--- name: SetMeetingProtocolWriter :exec
-UPDATE meetings SET protocol_writer_id = ? WHERE id = ?;
-
 -- name: SetMeetingGenderQuotation :exec
 UPDATE meetings SET gender_quotation_enabled = ? WHERE id = ?;
 

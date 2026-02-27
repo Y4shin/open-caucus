@@ -17,6 +17,7 @@ routes:
         handler: AdminLoginSubmit
         middleware:
           - session
+          - password_auth_enabled
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AdminLoginTemplate
@@ -134,11 +135,50 @@ routes:
           type: UserListPartial
           input_type: UserListPartialInput
 
+  # Create OAuth Committee Group Rule
+  - path: /admin/committee/{slug}/oauth-group-rule/create
+    methods:
+      - verb: POST
+        handler: AdminCreateOAuthCommitteeGroupRule
+        middleware:
+          - session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: UserListPartial
+          input_type: UserListPartialInput
+
+  # Delete OAuth Committee Group Rule
+  - path: /admin/committee/{slug}/oauth-group-rule/{rule_id}/delete
+    methods:
+      - verb: POST
+        handler: AdminDeleteOAuthCommitteeGroupRule
+        middleware:
+          - session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: UserListPartial
+          input_type: UserListPartialInput
+
   # Delete Committee Membership
   - path: /admin/committee/{slug}/membership/{user_id}/delete
     methods:
       - verb: POST
         handler: AdminDeleteUser
+        middleware:
+          - session
+          - admin_required
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: UserListPartial
+          input_type: UserListPartialInput
+
+  # Update Committee Membership
+  - path: /admin/committee/{slug}/membership/{user_id}/update
+    methods:
+      - verb: POST
+        handler: AdminUpdateUserMembership
         middleware:
           - session
           - admin_required
@@ -181,10 +221,31 @@ routes:
         handler: LoginSubmit
         middleware:
           - session
+          - password_auth_enabled
         template:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: LoginPageTemplate
           input_type: LoginPageInput
+
+  # OAuth/OIDC Login Start
+  - path: /oauth/start
+    methods:
+      - verb: GET
+        handler: OAuthStart
+        middleware:
+          - session
+        query_params:
+          - target
+        raw: true
+
+  # OAuth/OIDC Callback
+  - path: /oauth/callback
+    methods:
+      - verb: GET
+        handler: OAuthCallback
+        middleware:
+          - session
+        raw: true
 
   # Committee Dashboard
   - path: /committee/{slug}
@@ -350,54 +411,6 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: SpeakersListSSEPartial
           input_type: SpeakersListPartialInput
-
-  # Set Protocol Writer
-  - path: /committee/{slug}/meeting/{meeting_id}/protocol-writer
-    methods:
-      - verb: POST
-        handler: ManageSetProtocolWriter
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingSettingsPartial
-          input_type: MeetingSettingsPartialInput
-
-  # Protocol Page (attendee: protocol writer only)
-  - path: /committee/{slug}/meeting/{meeting_id}/protocol
-    methods:
-      - verb: GET
-        handler: MeetingProtocolPage
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - attendee_required
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MeetingProtocolTemplate
-          input_type: MeetingProtocolInput
-
-  # Save Protocol Text for an Agenda Point
-  - path: /committee/{slug}/meeting/{meeting_id}/protocol/{agenda_point_id}
-    methods:
-      - verb: POST
-        handler: ProtocolSaveAgendaPoint
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - attendee_required
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: ProtocolAgendaPointPartial
-          input_type: ProtocolAgendaPointPartialInput
 
   # Motion Create (upload document + title for an agenda point)
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create
