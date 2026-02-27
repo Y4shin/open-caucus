@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -59,6 +60,7 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 	// Look up account and verify password
 	account, err := h.Repository.GetAccountByUsername(ctx, username)
 	if err != nil {
+		slog.Warn("login failed: account not found", "username", username)
 		return &templates.LoginPageInput{
 			Error:           "Invalid credentials",
 			Username:        username,
@@ -69,6 +71,7 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 
 	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
 	if err != nil {
+		slog.Warn("login failed: no password credential", "username", username)
 		return &templates.LoginPageInput{
 			Error:           "Invalid credentials",
 			Username:        username,
@@ -78,6 +81,7 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
+		slog.Warn("login failed: wrong password", "username", username)
 		return &templates.LoginPageInput{
 			Error:           "Invalid credentials",
 			Username:        username,
@@ -99,6 +103,7 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 	}
 	cookie := h.SessionManager.CreateCookie(sessionID)
 
+	slog.Info("user logged in", "username", username)
 	meta := routes.NewResponseMeta().
 		WithCookie(cookie).
 		WithRedirect(http.StatusSeeOther, "/home")
@@ -218,6 +223,7 @@ func (h *Handler) CommitteeCreateMeeting(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to create meeting: %w", err)
 	}
 
+	slog.Info("meeting created", "name", name, "slug", slug)
 	input, err := h.buildMeetingListPartialInput(ctx, slug, "")
 	if err != nil {
 		return nil, nil, err
@@ -322,6 +328,7 @@ func (h *Handler) CommitteeDeleteMeeting(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to delete meeting: %w", err)
 	}
 
+	slog.Info("meeting deleted", "meeting_id", meetingID, "slug", params.Slug)
 	input, err := h.buildMeetingListPartialInput(ctx, params.Slug, "")
 	if err != nil {
 		return nil, nil, err
@@ -394,6 +401,7 @@ func (h *Handler) LogoutSubmit(ctx context.Context, r *http.Request) (*templates
 	if cookie, err := r.Cookie("session_id"); err == nil {
 		_ = h.SessionManager.DestroySession(ctx, cookie.Value)
 	}
+	slog.Info("user logged out")
 
 	// Create cookie that clears the session
 	clearCookie := &http.Cookie{

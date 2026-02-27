@@ -5,9 +5,12 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"gopkg.in/yaml.v3"
 )
+
+var pathParamPattern = regexp.MustCompile(`\{([^}]+)\}`)
 
 // ParseConfig reads and parses a YAML route configuration file
 func ParseConfig(filename string) (*RouteConfig, error) {
@@ -126,13 +129,12 @@ func validateConfig(config *RouteConfig) error {
 
 // ExtractPathParams extracts parameter names from a path like /posts/{id}/comments/{commentId}
 func ExtractPathParams(path string) []string {
-	re := regexp.MustCompile(`\{([^}]+)\}`)
-	matches := re.FindAllStringSubmatch(path, -1)
+	matches := pathParamPattern.FindAllStringSubmatch(path, -1)
 
 	var params []string
 	for _, match := range matches {
 		if len(match) > 1 {
-			params = append(params, match[1])
+			params = append(params, normalizePathParam(match[1]))
 		}
 	}
 
@@ -141,8 +143,9 @@ func ExtractPathParams(path string) []string {
 
 // ToPascalCase converts a string to PascalCase (e.g., "user_id" -> "UserId")
 func ToPascalCase(s string) string {
+	s = normalizePathParam(s)
 	words := strings.FieldsFunc(s, func(r rune) bool {
-		return r == '_' || r == '-'
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r)
 	})
 
 	for i, word := range words {
@@ -152,6 +155,12 @@ func ToPascalCase(s string) string {
 	}
 
 	return strings.Join(words, "")
+}
+
+func normalizePathParam(raw string) string {
+	raw = strings.TrimSpace(raw)
+	raw = strings.TrimSuffix(raw, "...")
+	return strings.TrimSpace(raw)
 }
 
 // ToCamelCase converts a string to camelCase (e.g., "user_id" -> "userId")

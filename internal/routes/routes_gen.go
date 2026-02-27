@@ -18,9 +18,11 @@ var staticFS embed.FS
 // RouteParams contains extracted parameters from the URL path
 type RouteParams struct {
 	AgendaPointId string
+	AssetPath     string
 	AttachmentId  string
 	AttendeeId    string
 	BlobId        string
+	DocPath       string
 	MeetingId     string
 	MotionId      string
 	RuleId        string
@@ -134,6 +136,10 @@ type Handler interface {
 	AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeSpeakersListPartialInput, *ResponseMeta, error)
 	MeetingLiveLegacyRedirect(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingLiveInput, *ResponseMeta, error)
 	LogoutSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
+	DocsPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.DocsElementInput, *ResponseMeta, error)
+	DocsPageOOB(ctx context.Context, r *http.Request, params RouteParams) (*templates.DocsElementInput, *ResponseMeta, error)
+	DocsSearch(ctx context.Context, r *http.Request) (*templates.DocsSearchResultsInput, *ResponseMeta, error)
+	ServeDocsAsset(w http.ResponseWriter, r *http.Request, params RouteParams) error
 }
 
 // MiddlewareRegistry provides middleware functions by name
@@ -180,7 +186,9 @@ func getMiddlewareForPath(path string, groups []middlewareGroup) []string {
 // RegisterRoutes installs all routes into the HTTP server
 func (rt *Router) RegisterRoutes() http.Handler {
 	// Define middleware groups from YAML
-	groups := []middlewareGroup{}
+	groups := []middlewareGroup{
+		{prefix: "/docs", middleware: []string{"session", "auth"}},
+	}
 
 	rt.mux.HandleFunc("GET /admin/login", rt.wrapMiddleware(
 		rt.handleAdminLogin,
@@ -732,6 +740,34 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		rt.handleLogoutSubmit,
 		getMiddlewareForPath("/logout", groups),
 		[]string{"session"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /docs/{doc_path...}", rt.wrapMiddleware(
+		rt.handleDocsPage,
+		getMiddlewareForPath("/docs/{doc_path...}", groups),
+		[]string{},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /docs/oob/{doc_path...}", rt.wrapMiddleware(
+		rt.handleDocsPageOOB,
+		getMiddlewareForPath("/docs/oob/{doc_path...}", groups),
+		[]string{},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /docs/search", rt.wrapMiddleware(
+		rt.handleDocsSearch,
+		getMiddlewareForPath("/docs/search", groups),
+		[]string{},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /docs/assets/{asset_path...}", rt.wrapMiddleware(
+		rt.handleServeDocsAsset,
+		getMiddlewareForPath("/docs/assets/{asset_path...}", groups),
+		[]string{},
 		false,
 	))
 
@@ -3013,6 +3049,98 @@ func (rt *Router) handleLogoutSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.LoginPageTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleDocsPage(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		DocPath: r.PathValue("doc_path"),
+	}
+
+	input, meta, err := rt.handler.DocsPage(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.DocsElement(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleDocsPageOOB(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		DocPath: r.PathValue("doc_path"),
+	}
+
+	input, meta, err := rt.handler.DocsPageOOB(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.DocsElementOOB(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleDocsSearch(w http.ResponseWriter, r *http.Request) {
+	input, meta, err := rt.handler.DocsSearch(r.Context(), r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.DocsSearchResults(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleServeDocsAsset(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		AssetPath: r.PathValue("asset_path"),
+	}
+
+	if err := rt.handler.ServeDocsAsset(w, r, params); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // wrapMiddleware chains middleware in the correct order

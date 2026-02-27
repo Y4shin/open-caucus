@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/Y4shin/conference-tool/internal/session"
@@ -12,6 +13,7 @@ func (r *Registry) adminRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		sd, ok := session.GetSession(req.Context())
 		if !ok || sd.IsExpired() || !sd.IsAdmin {
+			slog.Warn("admin access denied", "path", req.URL.Path, "has_session", ok)
 			http.Redirect(w, req, "/admin/login", http.StatusSeeOther)
 			return
 		}

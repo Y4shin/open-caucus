@@ -14,9 +14,11 @@ import (
 
 const (
 	defaultBaseURL        = "http://127.0.0.1:8080"
-	defaultOutDir         = "docs/assets/captures"
+	defaultOutDir         = "doc/assets/captures"
 	defaultViewportWidth  = 1440
 	defaultViewportHeight = 900
+	defaultMobileWidth    = 390
+	defaultMobileHeight   = 844
 	defaultScreenshotName = "example-admin-login.png"
 	defaultGIFName        = "example-login-flow.gif"
 	defaultGIFFPS         = 8
@@ -50,9 +52,17 @@ const (
 	LanguageGerman  Language = "de"
 )
 
+type Device string
+
+const (
+	DeviceDesktop Device = "desktop"
+	DeviceMobile  Device = "mobile"
+)
+
 type Variant struct {
 	Theme    Theme
 	Language Language
+	Device   Device
 }
 
 type ScreenshotExampleOptions struct {
@@ -68,6 +78,13 @@ type GIFExampleOptions struct {
 	Variant       Variant
 	StartPath     string
 	LoginPath     string
+	Username      string
+	Password      string
+	UsernameInput string
+	PasswordInput string
+	SubmitInput   string
+	Submit        bool
+	WaitForPath   string
 	OutputName    string
 	FPS           int
 	ScaleWidth    int
@@ -206,8 +223,8 @@ func RunGIFExample(opts GIFExampleOptions) (GIFExampleResult, error) {
 	if _, err := page.Goto(loginURL, playwright.PageGotoOptions{WaitUntil: playwright.WaitUntilStateLoad}); err != nil {
 		return GIFExampleResult{}, fmt.Errorf("navigate to %q: %w", loginURL, err)
 	}
-	username := page.Locator("input[name=username]")
-	password := page.Locator("input[name=password]")
+	username := page.Locator(opts.UsernameInput)
+	password := page.Locator(opts.PasswordInput)
 	if err := username.WaitFor(); err != nil {
 		return GIFExampleResult{}, fmt.Errorf("wait for username input: %w", err)
 	}
@@ -217,7 +234,7 @@ func RunGIFExample(opts GIFExampleOptions) (GIFExampleResult, error) {
 	if err := username.Click(); err != nil {
 		return GIFExampleResult{}, fmt.Errorf("focus username input: %w", err)
 	}
-	if err := username.PressSequentially("demo-user", playwright.LocatorPressSequentiallyOptions{
+	if err := username.PressSequentially(opts.Username, playwright.LocatorPressSequentiallyOptions{
 		Delay: playwright.Float(opts.TypingDelayMS),
 	}); err != nil {
 		return GIFExampleResult{}, fmt.Errorf("type username: %w", err)
@@ -225,10 +242,34 @@ func RunGIFExample(opts GIFExampleOptions) (GIFExampleResult, error) {
 	if err := password.Click(); err != nil {
 		return GIFExampleResult{}, fmt.Errorf("focus password input: %w", err)
 	}
-	if err := password.PressSequentially("demo-password", playwright.LocatorPressSequentiallyOptions{
+	if err := password.PressSequentially(opts.Password, playwright.LocatorPressSequentiallyOptions{
 		Delay: playwright.Float(opts.TypingDelayMS),
 	}); err != nil {
 		return GIFExampleResult{}, fmt.Errorf("type password: %w", err)
+	}
+	if opts.Submit {
+		if strings.TrimSpace(opts.SubmitInput) != "" {
+			submit := page.Locator(opts.SubmitInput)
+			if err := submit.WaitFor(); err != nil {
+				return GIFExampleResult{}, fmt.Errorf("wait for submit control %q: %w", opts.SubmitInput, err)
+			}
+			if err := submit.Click(); err != nil {
+				return GIFExampleResult{}, fmt.Errorf("click submit control %q: %w", opts.SubmitInput, err)
+			}
+		} else {
+			if err := password.Press("Enter"); err != nil {
+				return GIFExampleResult{}, fmt.Errorf("submit login form: %w", err)
+			}
+		}
+		if strings.TrimSpace(opts.WaitForPath) != "" {
+			waitURL, err := resolveURL(opts.Common.BaseURL, opts.WaitForPath)
+			if err != nil {
+				return GIFExampleResult{}, fmt.Errorf("resolve wait-for path %q: %w", opts.WaitForPath, err)
+			}
+			if err := page.WaitForURL(waitURL); err != nil {
+				return GIFExampleResult{}, fmt.Errorf("wait for post-submit URL %q: %w", waitURL, err)
+			}
+		}
 	}
 
 	page.WaitForTimeout(opts.FinalPauseMS)
@@ -272,6 +313,18 @@ func withGIFDefaults(opts GIFExampleOptions) GIFExampleOptions {
 	}
 	if opts.LoginPath == "" {
 		opts.LoginPath = "/admin/login"
+	}
+	if opts.Username == "" {
+		opts.Username = "demo-user"
+	}
+	if opts.Password == "" {
+		opts.Password = "demo-password"
+	}
+	if strings.TrimSpace(opts.UsernameInput) == "" {
+		opts.UsernameInput = "input[name=username]"
+	}
+	if strings.TrimSpace(opts.PasswordInput) == "" {
+		opts.PasswordInput = "input[name=password]"
 	}
 	if opts.OutputName == "" {
 		opts.OutputName = defaultGIFName
@@ -331,12 +384,27 @@ func ParseLanguage(raw string) (Language, error) {
 	}
 }
 
+func ParseDevice(raw string) (Device, error) {
+	normalized := strings.ToLower(strings.TrimSpace(raw))
+	switch normalized {
+	case "desktop":
+		return DeviceDesktop, nil
+	case "mobile", "moblie":
+		return DeviceMobile, nil
+	default:
+		return "", fmt.Errorf("unsupported device %q (supported: desktop, mobile)", raw)
+	}
+}
+
 func normalizeVariant(v Variant) (Variant, error) {
 	if v.Theme == "" {
 		v.Theme = ThemeLight
 	}
 	if v.Language == "" {
 		v.Language = LanguageEnglish
+	}
+	if v.Device == "" {
+		v.Device = DeviceDesktop
 	}
 	theme, err := ParseTheme(string(v.Theme))
 	if err != nil {
@@ -346,9 +414,14 @@ func normalizeVariant(v Variant) (Variant, error) {
 	if err != nil {
 		return Variant{}, err
 	}
+	device, err := ParseDevice(string(v.Device))
+	if err != nil {
+		return Variant{}, err
+	}
 	return Variant{
 		Theme:    theme,
 		Language: lang,
+		Device:   device,
 	}, nil
 }
 
@@ -403,10 +476,17 @@ func newContext(browser playwright.Browser, common CommonOptions, variant Varian
 		colorScheme = playwright.ColorSchemeDark
 	}
 
+	viewportWidth := common.ViewportWidth
+	viewportHeight := common.ViewportHeight
+	if variant.Device == DeviceMobile && viewportWidth == defaultViewportWidth && viewportHeight == defaultViewportHeight {
+		viewportWidth = defaultMobileWidth
+		viewportHeight = defaultMobileHeight
+	}
+
 	ctxOpts := playwright.BrowserNewContextOptions{
 		Viewport: &playwright.Size{
-			Width:  common.ViewportWidth,
-			Height: common.ViewportHeight,
+			Width:  viewportWidth,
+			Height: viewportHeight,
 		},
 		ColorScheme: colorScheme,
 		Locale:      playwright.String(languageLocale(variant.Language)),
@@ -414,12 +494,17 @@ func newContext(browser playwright.Browser, common CommonOptions, variant Varian
 			"Accept-Language": languageHeader(variant.Language),
 		},
 	}
+	if variant.Device == DeviceMobile {
+		ctxOpts.IsMobile = playwright.Bool(true)
+		ctxOpts.HasTouch = playwright.Bool(true)
+		ctxOpts.DeviceScaleFactor = playwright.Float(2)
+	}
 	if recordVideoDir != "" {
 		ctxOpts.RecordVideo = &playwright.RecordVideo{
 			Dir: recordVideoDir,
 			Size: &playwright.Size{
-				Width:  common.ViewportWidth,
-				Height: common.ViewportHeight,
+				Width:  viewportWidth,
+				Height: viewportHeight,
 			},
 		}
 	}

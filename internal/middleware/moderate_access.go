@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -61,6 +62,7 @@ func (r *Registry) moderateAccess(next http.Handler) http.Handler {
 			return
 		}
 
+		slog.Warn("moderate access denied", "attendee_id", ca.AttendeeID, "meeting_id", meetingID)
 		http.Error(w, "Forbidden: moderator access required", http.StatusForbidden)
 	})
 }

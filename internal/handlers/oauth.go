@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -40,6 +41,7 @@ func (h *Handler) OAuthCallback(w http.ResponseWriter, r *http.Request) error {
 	callbackResult, err := h.OAuthService.HandleCallback(r.Context(), r)
 	http.SetCookie(w, h.OAuthService.ClearStateCookie())
 	if err != nil {
+		slog.Warn("oauth callback failed", "err", err)
 		redirect := "/"
 		if strings.EqualFold(callbackResultTarget(callbackResult), "admin") {
 			redirect = "/admin/login"
@@ -50,6 +52,7 @@ func (h *Handler) OAuthCallback(w http.ResponseWriter, r *http.Request) error {
 
 	account, err := h.resolveOAuthAccount(r.Context(), callbackResult.Principal)
 	if err != nil {
+		slog.Warn("oauth account resolution failed", "subject", callbackResult.Principal.Subject, "err", err)
 		redirect := "/"
 		if callbackResult.Target == "admin" {
 			redirect = "/admin/login"
@@ -83,11 +86,13 @@ func (h *Handler) OAuthCallback(w http.ResponseWriter, r *http.Request) error {
 	redirect := "/home"
 	if callbackResult.Target == "admin" {
 		if !refreshedAccount.IsAdmin {
+			slog.Warn("oauth admin login denied: account is not admin", "username", refreshedAccount.Username)
 			http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 			return nil
 		}
 		redirect = "/admin"
 	}
+	slog.Info("oauth login successful", "username", refreshedAccount.Username, "target", callbackResult.Target)
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
 	return nil
 }

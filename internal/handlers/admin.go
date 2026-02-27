@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -58,14 +59,17 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 	// Verify password
 	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
 	if err != nil {
+		slog.Warn("admin login failed: no password credential", "username", username)
 		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
+		slog.Warn("admin login failed: wrong password", "username", username)
 		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 
 	// Check admin flag
 	if !account.IsAdmin {
+		slog.Warn("admin login denied: account is not admin", "username", username)
 		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 
@@ -80,6 +84,7 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 		return nil, nil, fmt.Errorf("create admin session: %w", err)
 	}
 
+	slog.Info("admin logged in", "username", username)
 	cookie := h.SessionManager.CreateCookie(signedID)
 	meta := routes.NewResponseMeta().
 		WithCookie(cookie).
@@ -261,6 +266,7 @@ func (h *Handler) AdminCreateAccount(ctx context.Context, r *http.Request) (*tem
 		return input, nil, nil
 	}
 
+	slog.Info("account created", "username", username)
 	input, err := h.buildAccountListPartialInput(ctx, "")
 	if err != nil {
 		return nil, nil, err
@@ -327,6 +333,7 @@ func (h *Handler) AdminCreateCommittee(ctx context.Context, r *http.Request) (*t
 		}, nil, nil
 	}
 
+	slog.Info("committee created", "name", name, "slug", slug)
 	items, _ := h.listAllCommitteesForPartial(ctx)
 	return &templates.CommitteeListPartialInput{Committees: items}, nil, nil
 }
@@ -343,6 +350,7 @@ func (h *Handler) AdminDeleteCommittee(ctx context.Context, r *http.Request, par
 		}, nil, nil
 	}
 
+	slog.Info("committee deleted", "slug", slug)
 	items, err := h.listAllCommitteesForPartial(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to list committees: %w", err)
@@ -529,6 +537,7 @@ func (h *Handler) AdminAssignAccount(ctx context.Context, r *http.Request, param
 		return input, nil, nil
 	}
 
+	slog.Info("account assigned to committee", "account_id", accountID, "slug", slug, "role", role)
 	input, err := h.buildUserListPartialInput(ctx, slug, "")
 	if err != nil {
 		return nil, nil, err
@@ -550,6 +559,7 @@ func (h *Handler) AdminDeleteUser(ctx context.Context, r *http.Request, params r
 		return nil, nil, fmt.Errorf("failed to delete user: %w", err)
 	}
 
+	slog.Info("user deleted from committee", "user_id", userID, "slug", slug)
 	input, err := h.buildUserListPartialInput(ctx, slug, "")
 	if err != nil {
 		return nil, nil, err

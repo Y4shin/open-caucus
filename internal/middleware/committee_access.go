@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -30,6 +31,7 @@ func (r *Registry) committeeAccess(next http.Handler) http.Handler {
 		if sd.IsAccountSession() && sd.AccountID != nil {
 			membership, err := r.Repository.GetUserMembershipByAccountIDAndSlug(req.Context(), *sd.AccountID, slugFromPath)
 			if err != nil {
+				slog.Warn("committee access denied: no membership", "account_id", *sd.AccountID, "slug", slugFromPath)
 				http.Error(w, "Forbidden: no committee membership", http.StatusForbidden)
 				return
 			}

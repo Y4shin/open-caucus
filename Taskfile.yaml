@@ -24,7 +24,7 @@ tasks:
     cmds:
       - go run {{.MAIN_PATH}} serve
 
-  populate-env:
+  env:populate:
     desc: Create/update a ready-to-use local .env for app + dev OIDC
     cmds:
       - go run {{.MAIN_PATH}} oidc-dev populate-env
@@ -250,11 +250,9 @@ tasks:
       - go tool github.com/playwright-community/playwright-go/cmd/playwright {{.CLI_ARGS}}
 
   docs:capture:all:
-    desc: Regenerate all internal documentation images and GIFs (requires app running at BASE_URL)
-    vars:
-      BASE_URL: http://127.0.0.1:8080
+    desc: Regenerate all internal documentation images and GIFs in self-hosted capture environments
     cmds:
-      - go run {{.MAIN_PATH}} docs-capture run --base-url {{.BASE_URL}}
+      - go run {{.MAIN_PATH}} docs-capture run
 
   deps:check:
     desc: Check that required tools are installed (go, node, npm)

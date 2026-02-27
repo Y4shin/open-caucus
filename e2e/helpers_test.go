@@ -11,10 +11,12 @@ import (
 	"strings"
 	"testing"
 
+	docembed "github.com/Y4shin/conference-tool/doc"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
+	"github.com/Y4shin/conference-tool/internal/docs"
 	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
@@ -70,6 +72,14 @@ func newTestServer(t *testing.T) *testServer {
 	b := broker.NewMemoryBroker()
 	store := storage.NewMemStorage()
 
+	if err := locale.LoadTranslations(); err != nil {
+		t.Fatalf("load translations: %v", err)
+	}
+	docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
+	if err != nil {
+		t.Fatalf("load embedded docs: %v", err)
+	}
+
 	h := &handlers.Handler{
 		Broker:         b,
 		Repository:     repo,
@@ -77,10 +87,7 @@ func newTestServer(t *testing.T) *testServer {
 		SessionManager: sessionMgr,
 		AuthConfig:     authCfg,
 		OAuthService:   oauthSvc,
-	}
-
-	if err := locale.LoadTranslations(); err != nil {
-		t.Fatalf("load translations: %v", err)
+		DocsService:    docsService,
 	}
 
 	mux := routes.NewRouter(h, mw).RegisterRoutes()
@@ -95,6 +102,7 @@ func newTestServer(t *testing.T) *testServer {
 	t.Cleanup(func() {
 		ts.Close()
 		b.Shutdown()
+		_ = docsService.Close()
 		repo.Close()
 	})
 
@@ -273,4 +281,3 @@ func (ts *testServer) setMeetingModerator(t *testing.T, slug, meetingName string
 		t.Fatalf("set meeting moderator: %v", err)
 	}
 }
-

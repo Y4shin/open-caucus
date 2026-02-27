@@ -184,6 +184,7 @@ func GetRouteBuilders(config *RouteConfig, localePackage string) RouteBuilders {
 		key := route.Path
 		for _, param := range params {
 			key = strings.Replace(key, "{"+param+"}", "{}", 1)
+			key = strings.Replace(key, "{"+param+"...}", "{}", 1)
 		}
 
 		if groups[key] == nil {
@@ -208,6 +209,7 @@ func GetRouteBuilders(config *RouteConfig, localePackage string) RouteBuilders {
 		pathReturn := route.Path
 		for _, param := range params {
 			pathReturn = strings.Replace(pathReturn, "{"+param+"}", "\" + r."+ToPascalCase(param)+" + \"", 1)
+			pathReturn = strings.Replace(pathReturn, "{"+param+"...}", "\" + r."+ToPascalCase(param)+" + \"", 1)
 		}
 		pathReturn = strings.Replace(pathReturn, " + \"\"", "", -1)
 		routeRes := BuilderRoute{

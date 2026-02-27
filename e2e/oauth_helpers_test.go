@@ -12,8 +12,10 @@ import (
 
 	playwright "github.com/playwright-community/playwright-go"
 
+	docembed "github.com/Y4shin/conference-tool/doc"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
+	"github.com/Y4shin/conference-tool/internal/docs"
 	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
@@ -115,6 +117,14 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 	b := broker.NewMemoryBroker()
 	store := storage.NewMemStorage()
 
+	if err := locale.LoadTranslations(); err != nil {
+		t.Fatalf("load translations: %v", err)
+	}
+	docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
+	if err != nil {
+		t.Fatalf("load embedded docs: %v", err)
+	}
+
 	h := &handlers.Handler{
 		Broker:         b,
 		Repository:     repo,
@@ -122,10 +132,7 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 		SessionManager: sessionMgr,
 		AuthConfig:     authCfg,
 		OAuthService:   oauthSvc,
-	}
-
-	if err := locale.LoadTranslations(); err != nil {
-		t.Fatalf("load translations: %v", err)
+		DocsService:    docsService,
 	}
 
 	mux := routes.NewRouter(h, mw).RegisterRoutes()
@@ -144,6 +151,7 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 		ts.Close()
 		provider.Close()
 		b.Shutdown()
+		_ = docsService.Close()
 		repo.Close()
 	})
 

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/Y4shin/conference-tool/internal/session"
@@ -13,7 +14,7 @@ func (r *Registry) authRequired(next http.Handler) http.Handler {
 		// Get session from context
 		sessionData, ok := session.GetSession(req.Context())
 		if !ok || sessionData.IsExpired() {
-			// No valid session - redirect to login
+			slog.Debug("unauthenticated request redirected to login", "path", req.URL.Path)
 			http.Redirect(w, req, "/", http.StatusSeeOther)
 			return
 		}

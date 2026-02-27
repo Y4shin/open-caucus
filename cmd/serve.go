@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	docembed "github.com/Y4shin/conference-tool/doc"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
+	"github.com/Y4shin/conference-tool/internal/docs"
 	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
@@ -46,17 +48,20 @@ var serveCmd = &cobra.Command{
 			return fmt.Errorf("failed to create repository: %w", err)
 		}
 		defer repo.Close()
+		slog.Info("database opened", "path", cfg.Database.Path)
 
 		// Run migrations
 		if err := repo.MigrateUp(); err != nil {
 			return fmt.Errorf("failed to run migrations: %w", err)
 		}
+		slog.Info("database migrations applied")
 
 		// Initialize file storage
 		store, err := storage.NewDirStorage(cfg.Application.StorageDir)
 		if err != nil {
 			return fmt.Errorf("failed to create storage: %w", err)
 		}
+		slog.Info("file storage initialized", "dir", cfg.Application.StorageDir)
 
 		// Initialize broker
 		b := broker.NewMemoryBroker()
@@ -80,9 +85,20 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("failed to initialize oauth service: %w", err)
 		}
+		slog.Info("auth configured", "password_enabled", cfg.Auth.PasswordEnabled, "oauth_enabled", cfg.Auth.OAuthEnabled)
 
 		// Initialize middleware registry with session manager
 		mw := middleware.NewRegistry(sessionManager, repo, cfg.Auth.PasswordEnabled)
+
+		// Load translations (must happen before any request is served).
+		if err := locale.LoadTranslations(); err != nil {
+			return fmt.Errorf("failed to load translations: %w", err)
+		}
+		docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
+		if err != nil {
+			return fmt.Errorf("failed to load embedded docs: %w", err)
+		}
+		defer docsService.Close()
 
 		// Initialize handlers with repository, broker, storage, and session manager
 		handler := &handlers.Handler{
@@ -92,16 +108,12 @@ var serveCmd = &cobra.Command{
 			SessionManager: sessionManager,
 			AuthConfig:     cfg.Auth,
 			OAuthService:   oauthService,
+			DocsService:    docsService,
 		}
 
 		// Create router
 		router := routes.NewRouter(handler, mw)
 		mux := router.RegisterRoutes()
-
-		// Load translations (must happen before any request is served).
-		if err := locale.LoadTranslations(); err != nil {
-			return fmt.Errorf("failed to load translations: %w", err)
-		}
 
 		// Compose app routes and locale switcher in a top-level mux.
 		appMux := http.NewServeMux()
@@ -135,7 +147,7 @@ var serveCmd = &cobra.Command{
 		})
 
 		addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
-		log.Printf("Starting server on %s", addr)
+		slog.Info("starting server", "addr", addr, "env", cfg.Application.Environment)
 
 		return http.ListenAndServe(addr, handlerWithLocale)
 	},

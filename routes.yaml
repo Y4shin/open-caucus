@@ -1,5 +1,11 @@
 version: 1.0
 
+middleware_groups:
+  - prefix: /docs
+    middleware:
+      - session
+      - auth
+
 routes:
   # Admin Login
   - path: /admin/login
@@ -1170,3 +1176,46 @@ routes:
           type: LoginPageTemplate
           input_type: LoginPageInput
 
+  # Documentation Element (localized markdown by logical path)
+  - path: /docs/{doc_path...}
+    methods:
+      - verb: GET
+        handler: DocsPage
+        query_params:
+          - heading
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: DocsElement
+          input_type: DocsElementInput
+
+  # Documentation Element OOB (for HTMX swap)
+  - path: /docs/oob/{doc_path...}
+    methods:
+      - verb: GET
+        handler: DocsPageOOB
+        query_params:
+          - heading
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: DocsElementOOB
+          input_type: DocsElementInput
+
+  # Documentation Search
+  - path: /docs/search
+    methods:
+      - verb: GET
+        handler: DocsSearch
+        query_params:
+          - q
+          - limit
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: DocsSearchResults
+          input_type: DocsSearchResultsInput
+
+  # Embedded Documentation Assets
+  - path: /docs/assets/{asset_path...}
+    methods:
+      - verb: GET
+        handler: ServeDocsAsset
+        raw: true

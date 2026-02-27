@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/Y4shin/conference-tool/internal/repository"
@@ -50,11 +50,11 @@ func (r *Registry) Get(name string) func(http.Handler) http.Handler {
 	}
 }
 
-// defaultLogger returns a simple logging middleware
+// defaultLogger returns a pass-through middleware and warns about the unknown name.
 func (r *Registry) defaultLogger(name string) func(http.Handler) http.Handler {
+	slog.Warn("unknown middleware requested", "name", name)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			log.Printf("[%s] %s %s", name, req.Method, req.URL.Path)
 			next.ServeHTTP(w, req)
 		})
 	}

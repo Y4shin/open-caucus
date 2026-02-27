@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -41,6 +42,7 @@ func (r *Registry) meetingAccess(next http.Handler) http.Handler {
 				if cu.Role == "member" {
 					committee, err := r.Repository.GetCommitteeBySlug(req.Context(), slug)
 					if err != nil || committee.CurrentMeetingID == nil || *committee.CurrentMeetingID != meetingID {
+						slog.Warn("member meeting access denied: meeting not active", "slug", slug, "meeting_id", meetingID)
 						http.Error(w, "Forbidden", http.StatusForbidden)
 						return
 					}
@@ -66,6 +68,7 @@ func (r *Registry) meetingAccess(next http.Handler) http.Handler {
 		if sd.IsGuestSession() {
 			ca, ok := session.GetCurrentAttendee(req.Context())
 			if !ok || ca.MeetingID != meetingID {
+				slog.Warn("meeting access denied for guest session", "meeting_id", meetingID, "path", req.URL.Path)
 				http.Error(w, "Forbidden", http.StatusForbidden)
 				return
 			}

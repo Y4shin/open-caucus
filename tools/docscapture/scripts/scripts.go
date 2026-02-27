@@ -1,6 +1,7 @@
 package scripts
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"slices"
@@ -11,12 +12,16 @@ import (
 type Script struct {
 	Name        string
 	Description string
-	Run         func(common docscapture.CommonOptions, variant docscapture.Variant) (string, error)
+	Environment EnvironmentOptions
+	Run         func(ctx context.Context, common docscapture.CommonOptions, variant docscapture.Variant, env *docscapture.Environment) (string, error)
 }
+
+type EnvironmentOptions = docscapture.EnvironmentOptions
 
 func All() []Script {
 	return []Script{
 		exampleScreenshotAdminLoginScript(),
+		exampleScreenshotAdminLoginOAuthScript(),
 		exampleGIFLoginFlowScript(),
 	}
 }

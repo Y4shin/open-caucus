@@ -299,7 +299,7 @@ Important compatibility note:
 
 Local interactive OIDC provider:
 
-0. Generate a ready local `.env`: `task populate-env`.
+0. Generate a ready local `.env`: `task env:populate`.
 1. Generate users file: `task oidc-dev:generate-users`.
 2. Configure shared OAuth env vars in `.env` if needed (`OAUTH_ISSUER_URL`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `OAUTH_REDIRECT_URL`).
 3. Configure `OIDC_DEV_USERS_FILE` if needed (default `dev/users.yaml`).

@@ -2,6 +2,7 @@ de:
   common:
     yes: "Ja"
     no: "Nein"
+    help: "Hilfe"
     logout: "Abmelden"
     logged_in_as: "Angemeldet als %s"
     app_name: "Konferenz Tool"

@@ -2,6 +2,7 @@ en:
   common:
     yes: "Yes"
     no: "No"
+    help: "Help"
     logout: "Logout"
     logged_in_as: "Logged in as %s"
     app_name: "Conference Tool"
