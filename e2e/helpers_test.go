@@ -14,9 +14,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
+	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
+	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
@@ -51,7 +53,20 @@ func newTestServer(t *testing.T) *testServer {
 
 	secret := []byte(testSecret)
 	sessionMgr := session.NewManager(repo, secret)
-	mw := middleware.NewRegistry(sessionMgr, repo)
+	authCfg := &config.AuthConfig{
+		PasswordEnabled:       true,
+		OAuthEnabled:          false,
+		OAuthProvisioningMode: "preprovisioned",
+		OAuthGroupsClaim:      "groups",
+		OAuthUsernameClaims:   []string{"preferred_username", "email", "sub"},
+		OAuthFullNameClaims:   []string{"name", "preferred_username", "email"},
+		OAuthStateTTLSeconds:  300,
+	}
+	oauthSvc, err := oauth.New(context.Background(), oauth.Config{Enabled: false}, secret)
+	if err != nil {
+		t.Fatalf("create oauth service: %v", err)
+	}
+	mw := middleware.NewRegistry(sessionMgr, repo, authCfg.PasswordEnabled)
 	b := broker.NewMemoryBroker()
 	store := storage.NewMemStorage()
 
@@ -60,6 +75,8 @@ func newTestServer(t *testing.T) *testServer {
 		Repository:     repo,
 		Storage:        store,
 		SessionManager: sessionMgr,
+		AuthConfig:     authCfg,
+		OAuthService:   oauthSvc,
 	}
 
 	if err := locale.LoadTranslations(); err != nil {

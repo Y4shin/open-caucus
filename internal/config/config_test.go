@@ -203,11 +203,17 @@ func TestStringToStringMapHook_WrongMapType(t *testing.T) {
 func TestLoadConfig_Defaults(t *testing.T) {
 	// Clear any env vars that might affect the test
 	snapshot := SetTestEnv(map[string]*string{
-		"SERVICE_NAME": nil,
-		"ENVIRONMENT":  nil,
-		"PORT":         nil,
-		"HOST":         nil,
-		"ADMIN_KEY":    nil,
+		"SERVICE_NAME":           nil,
+		"ENVIRONMENT":            nil,
+		"PORT":                   nil,
+		"HOST":                   nil,
+		"AUTH_PASSWORD_ENABLED":  nil,
+		"AUTH_OAUTH_ENABLED":     nil,
+		"OAUTH_ISSUER_URL":       nil,
+		"OAUTH_CLIENT_ID":        nil,
+		"OAUTH_CLIENT_SECRET":    nil,
+		"OAUTH_REDIRECT_URL":     nil,
+		"OAUTH_PROVISIONING_MODE": nil,
 	})
 	defer snapshot.Restore()
 
@@ -233,14 +239,25 @@ func TestLoadConfig_Defaults(t *testing.T) {
 	if cfg.Application.Host != "0.0.0.0" {
 		t.Errorf("Host: got %q, want %q", cfg.Application.Host, "0.0.0.0")
 	}
+	if cfg.Auth == nil {
+		t.Fatal("Auth config is nil")
+	}
+	if !cfg.Auth.PasswordEnabled {
+		t.Errorf("PasswordEnabled: got %v, want true", cfg.Auth.PasswordEnabled)
+	}
+	if cfg.Auth.OAuthEnabled {
+		t.Errorf("OAuthEnabled: got %v, want false", cfg.Auth.OAuthEnabled)
+	}
 }
 
 func TestLoadConfig_EnvOverrides(t *testing.T) {
 	snapshot := SetTestEnv(map[string]*string{
-		"SERVICE_NAME": stringPtr("my-service"),
-		"ENVIRONMENT":  stringPtr("production"),
-		"PORT":         stringPtr("9000"),
-		"HOST":         stringPtr("127.0.0.1"),
+		"SERVICE_NAME":          stringPtr("my-service"),
+		"ENVIRONMENT":           stringPtr("production"),
+		"PORT":                  stringPtr("9000"),
+		"HOST":                  stringPtr("127.0.0.1"),
+		"AUTH_PASSWORD_ENABLED": stringPtr("true"),
+		"AUTH_OAUTH_ENABLED":    stringPtr("false"),
 	})
 	defer snapshot.Restore()
 
@@ -278,31 +295,60 @@ func TestLoadConfig_ValidationFailures(t *testing.T) {
 			name: "invalid_environment",
 			envVars: map[string]*string{
 				"ENVIRONMENT": stringPtr("invalid"),
-				"ADMIN_KEY":   stringPtr("test-key"),
 			},
 			wantErr: "validation failed",
 		},
 		{
 			name: "port_below_range",
 			envVars: map[string]*string{
-				"PORT":      stringPtr("0"),
-				"ADMIN_KEY": stringPtr("test-key"),
+				"PORT": stringPtr("0"),
 			},
 			wantErr: "validation failed",
 		},
 		{
 			name: "port_above_range",
 			envVars: map[string]*string{
-				"PORT":      stringPtr("99999"),
-				"ADMIN_KEY": stringPtr("test-key"),
+				"PORT": stringPtr("99999"),
 			},
 			wantErr: "validation failed",
+		},
+		{
+			name: "no_auth_provider_enabled",
+			envVars: map[string]*string{
+				"AUTH_PASSWORD_ENABLED": stringPtr("false"),
+				"AUTH_OAUTH_ENABLED":    stringPtr("false"),
+			},
+			wantErr: "at least one auth provider must be enabled",
+		},
+		{
+			name: "oauth_enabled_missing_required_values",
+			envVars: map[string]*string{
+				"AUTH_PASSWORD_ENABLED": stringPtr("false"),
+				"AUTH_OAUTH_ENABLED":    stringPtr("true"),
+				"OAUTH_ISSUER_URL":      stringPtr(""),
+				"OAUTH_CLIENT_ID":       stringPtr(""),
+				"OAUTH_CLIENT_SECRET":   stringPtr(""),
+				"OAUTH_REDIRECT_URL":    stringPtr(""),
+			},
+			wantErr: "oauth_issuer_url is required",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			snapshot := SetTestEnv(tt.envVars)
+			envVars := map[string]*string{
+				"AUTH_PASSWORD_ENABLED":  nil,
+				"AUTH_OAUTH_ENABLED":     nil,
+				"OAUTH_ISSUER_URL":       nil,
+				"OAUTH_CLIENT_ID":        nil,
+				"OAUTH_CLIENT_SECRET":    nil,
+				"OAUTH_REDIRECT_URL":     nil,
+				"OAUTH_PROVISIONING_MODE": nil,
+			}
+			for k, v := range tt.envVars {
+				envVars[k] = v
+			}
+			snapshot := SetTestEnv(envVars)
 			defer snapshot.Restore()
 
 			_, err := LoadConfig()

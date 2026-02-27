@@ -19,12 +19,14 @@ en:
     username_label: "Username:"
     password_label: "Password:"
     button: "Login"
+    oauth_button: "Login with OAuth"
 
   admin_login:
     title: "Admin Login"
     username_label: "Username:"
     password_label: "Password:"
     button: "Login"
+    oauth_button: "Login with OAuth"
 
   admin_dashboard:
     title: "Admin Dashboard"
@@ -65,8 +67,14 @@ en:
     col_role: "Role"
     col_quoted: "Quoted"
     col_actions: "Actions"
+    update_button: "Save"
     delete_button: "Remove"
     delete_confirm: "Are you sure you want to remove this assignment?"
+    oauth_managed_role_hint: "Role managed by OAuth"
+    oauth_rules_heading: "OAuth Group Access Rules"
+    oauth_group_label: "OAuth Group"
+    oauth_rule_add_button: "Add Rule"
+    oauth_rules_empty: "No OAuth group rules configured."
 
   admin_accounts:
     page_title: "Accounts - Admin"
@@ -86,6 +94,9 @@ en:
     page_title: "%s - Conference Tool"
     dashboard_heading: "Committee Dashboard"
     welcome: "Welcome to the committee management system."
+    active_meeting_heading: "Current Active Meeting"
+    no_active_meeting: "No meeting is currently active."
+    join_active_meeting: "Join Meeting"
     meetings_heading: "Meetings"
     create_meeting_heading: "Create New Meeting"
     existing_meetings_heading: "Existing Meetings"

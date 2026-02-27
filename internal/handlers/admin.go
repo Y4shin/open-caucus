@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/pagination"
+	"github.com/Y4shin/conference-tool/internal/repository/model"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/templates"
@@ -28,7 +29,10 @@ func (h *Handler) AdminLogin(ctx context.Context, r *http.Request) (*templates.A
 		return nil, meta, nil
 	}
 
-	return &templates.AdminLoginInput{}, nil, nil
+	return &templates.AdminLoginInput{
+		PasswordEnabled: h.passwordAuthEnabled(),
+		OAuthEnabled:    h.oauthAuthEnabled(),
+	}, nil, nil
 }
 
 // AdminLoginSubmit processes admin login
@@ -36,7 +40,9 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 	// Parse form
 	if err := r.ParseForm(); err != nil {
 		return &templates.AdminLoginInput{
-			Error: "Invalid form submission",
+			Error:           "Invalid form submission",
+			PasswordEnabled: h.passwordAuthEnabled(),
+			OAuthEnabled:    h.oauthAuthEnabled(),
 		}, nil, nil
 	}
 
@@ -46,21 +52,21 @@ func (h *Handler) AdminLoginSubmit(ctx context.Context, r *http.Request) (*templ
 	// Lookup account
 	account, err := h.Repository.GetAccountByUsername(ctx, username)
 	if err != nil {
-		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 
 	// Verify password
 	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
 	if err != nil {
-		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
-		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 
 	// Check admin flag
 	if !account.IsAdmin {
-		return &templates.AdminLoginInput{Error: "Invalid username or password"}, nil, nil
+		return &templates.AdminLoginInput{Error: "Invalid username or password", PasswordEnabled: h.passwordAuthEnabled(), OAuthEnabled: h.oauthAuthEnabled()}, nil, nil
 	}
 
 	// Create account session (admin status comes from DB, not session type)
@@ -159,8 +165,10 @@ func (h *Handler) AdminAccounts(ctx context.Context, r *http.Request) (*template
 	}
 
 	return &templates.AdminAccountsInput{
-		Accounts:   items,
-		Pagination: p,
+		Accounts:        items,
+		Pagination:      p,
+		PasswordEnabled: h.passwordAuthEnabled(),
+		OAuthEnabled:    h.oauthAuthEnabled(),
 	}, nil, nil
 }
 
@@ -189,9 +197,11 @@ func (h *Handler) buildAccountListPartialInput(ctx context.Context, formError st
 	}
 
 	return &templates.AccountListPartialInput{
-		Accounts:   items,
-		Pagination: p,
-		Error:      formError,
+		Accounts:        items,
+		Pagination:      p,
+		Error:           formError,
+		PasswordEnabled: h.passwordAuthEnabled(),
+		OAuthEnabled:    h.oauthAuthEnabled(),
 	}, nil
 }
 
@@ -208,7 +218,7 @@ func (h *Handler) AdminCreateAccount(ctx context.Context, r *http.Request) (*tem
 	username := strings.TrimSpace(r.FormValue("username"))
 	fullName := strings.TrimSpace(r.FormValue("full_name"))
 	password := r.FormValue("password")
-	if username == "" || fullName == "" || password == "" {
+	if username == "" || fullName == "" {
 		input, err := h.buildAccountListPartialInput(ctx, "All fields are required")
 		if err != nil {
 			return nil, nil, err
@@ -216,13 +226,35 @@ func (h *Handler) AdminCreateAccount(ctx context.Context, r *http.Request) (*tem
 		return input, nil, nil
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to hash password: %w", err)
-	}
-
-	if _, err := h.Repository.CreateAccount(ctx, username, fullName, string(hashedPassword)); err != nil {
-		input, loadErr := h.buildAccountListPartialInput(ctx, fmt.Sprintf("Failed to create account: %v", err))
+	if h.passwordAuthEnabled() {
+		if strings.TrimSpace(password) == "" {
+			input, err := h.buildAccountListPartialInput(ctx, "All fields are required")
+			if err != nil {
+				return nil, nil, err
+			}
+			return input, nil, nil
+		}
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+		if _, err := h.Repository.CreateAccount(ctx, username, fullName, string(hashedPassword)); err != nil {
+			input, loadErr := h.buildAccountListPartialInput(ctx, fmt.Sprintf("Failed to create account: %v", err))
+			if loadErr != nil {
+				return nil, nil, loadErr
+			}
+			return input, nil, nil
+		}
+	} else if h.oauthAuthEnabled() {
+		if _, err := h.Repository.CreateOAuthAccount(ctx, username, fullName); err != nil {
+			input, loadErr := h.buildAccountListPartialInput(ctx, fmt.Sprintf("Failed to create account: %v", err))
+			if loadErr != nil {
+				return nil, nil, loadErr
+			}
+			return input, nil, nil
+		}
+	} else {
+		input, loadErr := h.buildAccountListPartialInput(ctx, "No authentication provider is enabled")
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
@@ -248,6 +280,19 @@ func (h *Handler) listAllCommitteesForPartial(ctx context.Context) ([]templates.
 		items[i] = templates.CommitteeItem{Slug: c.Slug, Name: c.Name}
 	}
 	return items, nil
+}
+
+func mapOAuthGroupRulesForTemplate(rules []*model.OAuthCommitteeGroupRule) []templates.OAuthCommitteeGroupRuleItem {
+	items := make([]templates.OAuthCommitteeGroupRuleItem, len(rules))
+	for i, rule := range rules {
+		items[i] = templates.OAuthCommitteeGroupRuleItem{
+			ID:       rule.ID,
+			IDString: strconv.FormatInt(rule.ID, 10),
+			Group:    rule.GroupName,
+			Role:     rule.Role,
+		}
+	}
+	return items
 }
 
 // AdminCreateCommittee creates a new committee
@@ -330,12 +375,13 @@ func (h *Handler) AdminCommitteeUsers(ctx context.Context, r *http.Request, para
 	items := make([]templates.UserItem, len(users))
 	for i, u := range users {
 		items[i] = templates.UserItem{
-			ID:       u.ID,
-			IDString: fmt.Sprintf("%d", u.ID),
-			Username: u.Username,
-			FullName: u.FullName,
-			Role:     u.Role,
-			Quoted:   u.Quoted,
+			ID:           u.ID,
+			IDString:     fmt.Sprintf("%d", u.ID),
+			Username:     u.Username,
+			FullName:     u.FullName,
+			Role:         u.Role,
+			Quoted:       u.Quoted,
+			OAuthManaged: u.OAuthManaged,
 		}
 	}
 
@@ -352,12 +398,22 @@ func (h *Handler) AdminCommitteeUsers(ctx context.Context, r *http.Request, para
 			FullName: a.FullName,
 		}
 	}
+	ruleItems := []templates.OAuthCommitteeGroupRuleItem{}
+	if h.oauthAuthEnabled() {
+		rules, err := h.Repository.ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx, slug)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to list oauth group rules: %w", err)
+		}
+		ruleItems = mapOAuthGroupRulesForTemplate(rules)
+	}
 
 	return &templates.AdminCommitteeUsersInput{
 		CommitteeName:      committee.Name,
 		CommitteeSlug:      committee.Slug,
 		Users:              items,
 		AssignableAccounts: assignableItems,
+		OAuthGroupRules:    ruleItems,
+		OAuthEnabled:       h.oauthAuthEnabled(),
 		Pagination:         p,
 	}, nil, nil
 }
@@ -379,7 +435,15 @@ func (h *Handler) buildUserListPartialInput(ctx context.Context, slug, formError
 
 	items := make([]templates.UserItem, len(users))
 	for i, u := range users {
-		items[i] = templates.UserItem{ID: u.ID, IDString: fmt.Sprintf("%d", u.ID), Username: u.Username, FullName: u.FullName, Role: u.Role, Quoted: u.Quoted}
+		items[i] = templates.UserItem{
+			ID:           u.ID,
+			IDString:     fmt.Sprintf("%d", u.ID),
+			Username:     u.Username,
+			FullName:     u.FullName,
+			Role:         u.Role,
+			Quoted:       u.Quoted,
+			OAuthManaged: u.OAuthManaged,
+		}
 	}
 
 	committeeID, err := h.Repository.GetCommitteeIDBySlug(ctx, slug)
@@ -399,11 +463,21 @@ func (h *Handler) buildUserListPartialInput(ctx context.Context, slug, formError
 			FullName: a.FullName,
 		}
 	}
+	ruleItems := []templates.OAuthCommitteeGroupRuleItem{}
+	if h.oauthAuthEnabled() {
+		rules, err := h.Repository.ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx, slug)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list oauth group rules: %w", err)
+		}
+		ruleItems = mapOAuthGroupRulesForTemplate(rules)
+	}
 
 	return &templates.UserListPartialInput{
 		CommitteeSlug:      slug,
 		Users:              items,
 		AssignableAccounts: assignableItems,
+		OAuthGroupRules:    ruleItems,
+		OAuthEnabled:       h.oauthAuthEnabled(),
 		Pagination:         p,
 		Error:              formError,
 	}, nil
@@ -476,6 +550,159 @@ func (h *Handler) AdminDeleteUser(ctx context.Context, r *http.Request, params r
 		return nil, nil, fmt.Errorf("failed to delete user: %w", err)
 	}
 
+	input, err := h.buildUserListPartialInput(ctx, slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
+
+// AdminUpdateUserMembership updates quoted and role for a committee membership.
+// Role updates are blocked for OAuth-managed memberships.
+func (h *Handler) AdminUpdateUserMembership(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.UserListPartialInput, *routes.ResponseMeta, error) {
+	slug := params.Slug
+	userID, err := strconv.ParseInt(params.UserId, 10, 64)
+	if err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Invalid user ID")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	if err := r.ParseForm(); err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Invalid form submission")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	role := strings.TrimSpace(r.FormValue("role"))
+	quoted := false
+	for _, v := range r.Form["quoted"] {
+		if v == "true" {
+			quoted = true
+			break
+		}
+	}
+	if role != "member" && role != "chairperson" {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Invalid role")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	user, err := h.Repository.GetUserByID(ctx, userID)
+	if err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Membership not found")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	committeeID, err := h.Repository.GetCommitteeIDBySlug(ctx, slug)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get committee ID: %w", err)
+	}
+	if user.CommitteeID != committeeID {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Membership does not belong to this committee")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	oauthManaged, err := h.Repository.IsOAuthManagedMembership(ctx, userID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to check oauth-managed membership: %w", err)
+	}
+	if oauthManaged {
+		role = user.Role
+	}
+
+	if err := h.Repository.UpdateUserMembership(ctx, userID, quoted, role); err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, fmt.Sprintf("Failed to update membership: %v", err))
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+
+	input, err := h.buildUserListPartialInput(ctx, slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
+
+// AdminCreateOAuthCommitteeGroupRule creates a committee OAuth group-to-role rule.
+func (h *Handler) AdminCreateOAuthCommitteeGroupRule(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.UserListPartialInput, *routes.ResponseMeta, error) {
+	slug := params.Slug
+	if !h.oauthAuthEnabled() {
+		input, err := h.buildUserListPartialInput(ctx, slug, "OAuth provider is disabled")
+		if err != nil {
+			return nil, nil, err
+		}
+		return input, nil, nil
+	}
+	if err := r.ParseForm(); err != nil {
+		input, err := h.buildUserListPartialInput(ctx, slug, "Invalid form submission")
+		if err != nil {
+			return nil, nil, err
+		}
+		return input, nil, nil
+	}
+	groupName := strings.TrimSpace(r.FormValue("group_name"))
+	role := strings.TrimSpace(r.FormValue("role"))
+	if groupName == "" || (role != "member" && role != "chairperson") {
+		input, err := h.buildUserListPartialInput(ctx, slug, "Group and role are required")
+		if err != nil {
+			return nil, nil, err
+		}
+		return input, nil, nil
+	}
+	if _, err := h.Repository.CreateOAuthCommitteeGroupRuleByCommitteeSlug(ctx, slug, groupName, role); err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, fmt.Sprintf("Failed to create OAuth group rule: %v", err))
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+	input, err := h.buildUserListPartialInput(ctx, slug, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return input, nil, nil
+}
+
+// AdminDeleteOAuthCommitteeGroupRule deletes a committee OAuth group-to-role rule.
+func (h *Handler) AdminDeleteOAuthCommitteeGroupRule(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.UserListPartialInput, *routes.ResponseMeta, error) {
+	slug := params.Slug
+	if !h.oauthAuthEnabled() {
+		input, err := h.buildUserListPartialInput(ctx, slug, "OAuth provider is disabled")
+		if err != nil {
+			return nil, nil, err
+		}
+		return input, nil, nil
+	}
+	ruleID, err := strconv.ParseInt(params.RuleId, 10, 64)
+	if err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, "Invalid OAuth group rule ID")
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
+	if err := h.Repository.DeleteOAuthCommitteeGroupRuleByIDAndCommitteeSlug(ctx, ruleID, slug); err != nil {
+		input, loadErr := h.buildUserListPartialInput(ctx, slug, fmt.Sprintf("Failed to delete OAuth group rule: %v", err))
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		return input, nil, nil
+	}
 	input, err := h.buildUserListPartialInput(ctx, slug, "")
 	if err != nil {
 		return nil, nil, err

@@ -3,8 +3,10 @@
 package e2e_test
 
 import (
+	"context"
 	"testing"
 
+	"github.com/Y4shin/conference-tool/internal/repository/model"
 	playwright "github.com/playwright-community/playwright-go"
 )
 
@@ -212,3 +214,105 @@ func TestAdminDeleteUser(t *testing.T) {
 	}
 }
 
+func TestAdminUpdateMembershipRoleAndQuoted_ForManualMembership(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "editable", "pass123", "Editable User", "member")
+
+	page := newPage(t)
+	adminLogin(t, page, ts.URL)
+
+	if err := page.Locator("a:has-text('Assign Accounts')").Click(); err != nil {
+		t.Fatalf("click Assign Accounts: %v", err)
+	}
+	if err := page.WaitForURL(ts.URL + "/admin/committee/test-committee"); err != nil {
+		t.Fatalf("wait for committee users page: %v", err)
+	}
+
+	row := page.Locator("tr").Filter(playwright.LocatorFilterOptions{HasText: "editable"})
+	if err := row.WaitFor(); err != nil {
+		t.Fatalf("expected editable user row: %v", err)
+	}
+
+	roleValues := []string{"chairperson"}
+	if _, err := row.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
+		t.Fatalf("select updated role: %v", err)
+	}
+	if err := row.Locator("input[name=quoted][type='checkbox']").Check(); err != nil {
+		t.Fatalf("check quoted checkbox: %v", err)
+	}
+	if err := row.Locator("button:has-text('Save')").Click(); err != nil {
+		t.Fatalf("click save membership update: %v", err)
+	}
+
+	updated, err := ts.repo.GetUserByCommitteeAndUsername(context.Background(), "test-committee", "editable")
+	if err != nil {
+		t.Fatalf("load updated membership: %v", err)
+	}
+	if updated.Role != "chairperson" {
+		t.Fatalf("expected updated role chairperson, got %q", updated.Role)
+	}
+	if !updated.Quoted {
+		t.Fatalf("expected updated quoted=true")
+	}
+}
+
+func TestAdminUpdateMembership_OAuthManagedRoleLockedButQuotedEditable(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+
+	committeeID, err := ts.repo.GetCommitteeIDBySlug(context.Background(), "test-committee")
+	if err != nil {
+		t.Fatalf("get committee id: %v", err)
+	}
+	account, err := ts.repo.CreateOAuthAccount(context.Background(), "oidcuser", "OIDC User")
+	if err != nil {
+		t.Fatalf("create oauth account: %v", err)
+	}
+	if err := ts.repo.SyncOAuthCommitteeMemberships(context.Background(), account.ID, []model.OAuthDesiredMembership{
+		{CommitteeID: committeeID, Role: "member"},
+	}); err != nil {
+		t.Fatalf("sync oauth membership: %v", err)
+	}
+
+	page := newPage(t)
+	adminLogin(t, page, ts.URL)
+
+	if err := page.Locator("a:has-text('Assign Accounts')").Click(); err != nil {
+		t.Fatalf("click Assign Accounts: %v", err)
+	}
+	if err := page.WaitForURL(ts.URL + "/admin/committee/test-committee"); err != nil {
+		t.Fatalf("wait for committee users page: %v", err)
+	}
+
+	row := page.Locator("tr").Filter(playwright.LocatorFilterOptions{HasText: "oidcuser"})
+	if err := row.WaitFor(); err != nil {
+		t.Fatalf("expected oidc user row: %v", err)
+	}
+
+	disabled, err := row.Locator("select[name=role]").IsDisabled()
+	if err != nil {
+		t.Fatalf("check role select disabled state: %v", err)
+	}
+	if !disabled {
+		t.Fatalf("expected role select to be disabled for oauth-managed membership")
+	}
+
+	if err := row.Locator("input[name=quoted][type='checkbox']").Check(); err != nil {
+		t.Fatalf("check quoted checkbox: %v", err)
+	}
+	if err := row.Locator("button:has-text('Save')").Click(); err != nil {
+		t.Fatalf("click save membership update: %v", err)
+	}
+
+	updated, err := ts.repo.GetUserByCommitteeAndUsername(context.Background(), "test-committee", "oidcuser")
+	if err != nil {
+		t.Fatalf("load updated oauth-managed membership: %v", err)
+	}
+	if updated.Role != "member" {
+		t.Fatalf("expected oauth-managed role to remain member, got %q", updated.Role)
+	}
+	if !updated.Quoted {
+		t.Fatalf("expected quoted=true update to apply for oauth-managed membership")
+	}
+}

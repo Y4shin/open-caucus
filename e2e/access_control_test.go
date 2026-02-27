@@ -26,6 +26,8 @@
 package e2e_test
 
 import (
+	"context"
+	"strconv"
 	"testing"
 )
 
@@ -141,6 +143,38 @@ func TestAccess_CommitteeDashboard_Member_Allowed(t *testing.T) {
 	}
 	if resp.Status() != 200 {
 		t.Fatalf("expected 200 for member on own committee dashboard, got %d", resp.Status())
+	}
+}
+
+// TestAccess_MeetingPage_Member_NonActiveMeetingForbidden verifies that a regular member
+// can only access the currently active meeting page.
+func TestAccess_MeetingPage_Member_NonActiveMeetingForbidden(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "member1", "pass123", "Regular Member", "member")
+	ts.seedMeeting(t, "test-committee", "Active Meeting", "")
+	ts.seedMeeting(t, "test-committee", "Old Meeting", "")
+
+	activeMeetingIDStr := ts.getMeetingID(t, "test-committee", "Active Meeting")
+	activeMeetingID, err := strconv.ParseInt(activeMeetingIDStr, 10, 64)
+	if err != nil {
+		t.Fatalf("parse active meeting id: %v", err)
+	}
+	if err := ts.repo.SetActiveMeeting(context.Background(), "test-committee", &activeMeetingID); err != nil {
+		t.Fatalf("set active meeting: %v", err)
+	}
+
+	oldMeetingID := ts.getMeetingID(t, "test-committee", "Old Meeting")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")
+
+	resp, err := page.Goto(ts.URL + "/committee/test-committee/meeting/" + oldMeetingID)
+	if err != nil {
+		t.Fatalf("goto old meeting page as member: %v", err)
+	}
+	if resp.Status() != 403 {
+		t.Fatalf("expected 403 for member on non-active meeting page, got %d", resp.Status())
 	}
 }
 

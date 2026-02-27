@@ -12,6 +12,7 @@ type User struct {
 	FullName      string
 	Quoted        bool   // Whether the user uses quoted speech
 	Role          string // 'chairperson' or 'member'
+	OAuthManaged  bool   // True when membership is synchronized by OAuth group rules
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

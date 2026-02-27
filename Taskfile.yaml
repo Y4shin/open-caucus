@@ -24,6 +24,21 @@ tasks:
     cmds:
       - go run {{.MAIN_PATH}} serve
 
+  populate-env:
+    desc: Create/update a ready-to-use local .env for app + dev OIDC
+    cmds:
+      - go run {{.MAIN_PATH}} oidc-dev populate-env
+
+  oidc-dev:run:
+    desc: Run the local OAuth/OIDC development provider
+    cmds:
+      - go run {{.MAIN_PATH}} oidc-dev serve
+
+  oidc-dev:generate-users:
+    desc: Generate example local OIDC users YAML
+    cmds:
+      - go run {{.MAIN_PATH}} oidc-dev generate-users {{.CLI_ARGS}}
+
   build:
     desc: Build the application
     deps: [generate]

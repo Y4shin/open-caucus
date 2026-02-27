@@ -18,9 +18,11 @@ import (
 )
 
 type AdminAccountsInput struct {
-	Accounts   []AccountItem
-	Pagination pagination.Page
-	Error      string
+	Accounts        []AccountItem
+	Pagination      pagination.Page
+	Error           string
+	PasswordEnabled bool
+	OAuthEnabled    bool
 }
 
 type AccountItem struct {
@@ -31,9 +33,11 @@ type AccountItem struct {
 }
 
 type AccountListPartialInput struct {
-	Accounts   []AccountItem
-	Pagination pagination.Page
-	Error      string
+	Accounts        []AccountItem
+	Pagination      pagination.Page
+	Error           string
+	PasswordEnabled bool
+	OAuthEnabled    bool
 }
 
 func (i *AdminAccountsInput) AdminDashboardGet(ctx context.Context) templ.SafeURL {
@@ -126,7 +130,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.add_heading"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 71, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 75, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -139,7 +143,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(input.AdminCreateAccountPostStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 74, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 78, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -169,15 +173,17 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = FormField(FormFieldInput{
-			ID:       "password",
-			Name:     "password",
-			Label:    i18n.T(ctx, "admin_accounts.password_label"),
-			Type:     "password",
-			Required: true,
-		}).Render(ctx, templ_7745c5c3_Buffer)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
+		if input.PasswordEnabled {
+			templ_7745c5c3_Err = FormField(FormFieldInput{
+				ID:       "password",
+				Name:     "password",
+				Label:    i18n.T(ctx, "admin_accounts.password_label"),
+				Type:     "password",
+				Required: true,
+			}).Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<button class=\"btn btn-sm\" type=\"submit\">")
 		if templ_7745c5c3_Err != nil {
@@ -186,7 +192,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.create_button"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 100, Col: 90}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 106, Col: 90}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -221,7 +227,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.existing_heading"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 104, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 110, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -239,7 +245,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.empty_state"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 106, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 112, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -275,7 +281,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.col_username"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 111, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 117, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -288,7 +294,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.col_fullname"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 112, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 118, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -301,7 +307,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "admin_accounts.col_admin"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 113, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 119, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
@@ -319,7 +325,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(account.Username)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 119, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 125, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
@@ -332,7 +338,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(account.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 120, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 126, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -346,7 +352,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 					var templ_7745c5c3_Var18 string
 					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.yes"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 123, Col: 37}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 129, Col: 37}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 					if templ_7745c5c3_Err != nil {
@@ -356,7 +362,7 @@ func AccountListPartial(input AccountListPartialInput) templ.Component {
 					var templ_7745c5c3_Var19 string
 					templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.no"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 125, Col: 36}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `admin_accounts.templ`, Line: 131, Col: 36}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 					if templ_7745c5c3_Err != nil {
@@ -441,9 +447,11 @@ func AdminAccountsContent(input AdminAccountsInput) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = AccountListPartial(AccountListPartialInput{
-			Accounts:   input.Accounts,
-			Pagination: input.Pagination,
-			Error:      input.Error,
+			Accounts:        input.Accounts,
+			Pagination:      input.Pagination,
+			Error:           input.Error,
+			PasswordEnabled: input.PasswordEnabled,
+			OAuthEnabled:    input.OAuthEnabled,
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

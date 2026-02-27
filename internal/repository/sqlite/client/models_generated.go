@@ -100,6 +100,33 @@ type Motion struct {
 	UpdatedAt      string
 }
 
+type OauthCommitteeGroupRule struct {
+	ID          int64
+	CommitteeID int64
+	GroupName   string
+	Role        string
+	CreatedAt   string
+	UpdatedAt   string
+}
+
+type OauthIdentity struct {
+	ID         int64
+	Issuer     string
+	Subject    string
+	AccountID  int64
+	Username   sql.NullString
+	FullName   sql.NullString
+	Email      sql.NullString
+	GroupsJson sql.NullString
+	CreatedAt  string
+	UpdatedAt  string
+}
+
+type OauthManagedMembership struct {
+	UserID       int64
+	LastSyncedAt string
+}
+
 type PasswordCredential struct {
 	ID           int64
 	AccountID    int64

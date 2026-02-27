@@ -196,6 +196,132 @@ func (r *Repository) GetPasswordCredential(ctx context.Context, accountID int64)
 	return passwordCredentialFromClient(&cred), nil
 }
 
+// CreateOAuthAccount creates a new sitewide account with auth_method='oauth' and no password credential.
+func (r *Repository) CreateOAuthAccount(ctx context.Context, username, fullName string) (*model.Account, error) {
+	var (
+		id         int64
+		outUser    string
+		authMethod string
+		isAdmin    bool
+		createdAt  string
+		updatedAt  string
+		fullNameNS sql.NullString
+	)
+	if err := r.DB.QueryRowContext(
+		ctx,
+		`INSERT INTO accounts (username, full_name, auth_method, created_at, updated_at)
+		 VALUES (?, ?, 'oauth', datetime('now'), datetime('now'))
+		 RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name`,
+		username,
+		sql.NullString{String: fullName, Valid: strings.TrimSpace(fullName) != ""},
+	).Scan(&id, &outUser, &authMethod, &isAdmin, &createdAt, &updatedAt, &fullNameNS); err != nil {
+		return nil, fmt.Errorf("create oauth account: %w", err)
+	}
+	created, _ := time.Parse(time.RFC3339, createdAt)
+	updated, _ := time.Parse(time.RFC3339, updatedAt)
+	return &model.Account{
+		ID:         id,
+		Username:   outUser,
+		FullName:   nullStringValue(fullNameNS, outUser),
+		AuthMethod: authMethod,
+		IsAdmin:    isAdmin,
+		CreatedAt:  created,
+		UpdatedAt:  updated,
+	}, nil
+}
+
+// GetOAuthIdentityByIssuerSubject retrieves an OAuth identity mapping by issuer and subject.
+func (r *Repository) GetOAuthIdentityByIssuerSubject(ctx context.Context, issuer, subject string) (*model.OAuthIdentity, error) {
+	row := r.DB.QueryRowContext(
+		ctx,
+		`SELECT id, issuer, subject, account_id, username, full_name, email, groups_json, created_at, updated_at
+		 FROM oauth_identities
+		 WHERE issuer = ? AND subject = ?`,
+		issuer, subject,
+	)
+	var (
+		m         model.OAuthIdentity
+		username  sql.NullString
+		fullName  sql.NullString
+		email     sql.NullString
+		groups    sql.NullString
+		createdAt string
+		updatedAt string
+	)
+	if err := row.Scan(
+		&m.ID,
+		&m.Issuer,
+		&m.Subject,
+		&m.AccountID,
+		&username,
+		&fullName,
+		&email,
+		&groups,
+		&createdAt,
+		&updatedAt,
+	); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("oauth identity not found")
+		}
+		return nil, fmt.Errorf("get oauth identity: %w", err)
+	}
+	if username.Valid {
+		m.Username = &username.String
+	}
+	if fullName.Valid {
+		m.FullName = &fullName.String
+	}
+	if email.Valid {
+		m.Email = &email.String
+	}
+	if groups.Valid {
+		m.GroupsJSON = &groups.String
+	}
+	m.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+	m.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+	return &m, nil
+}
+
+// UpsertOAuthIdentity creates or updates an OAuth identity mapping.
+func (r *Repository) UpsertOAuthIdentity(
+	ctx context.Context,
+	issuer, subject string,
+	accountID int64,
+	username, fullName, email *string,
+	groupsJSON *string,
+) (*model.OAuthIdentity, error) {
+	toNull := func(v *string) sql.NullString {
+		if v == nil {
+			return sql.NullString{}
+		}
+		return sql.NullString{String: *v, Valid: true}
+	}
+	if _, err := r.DB.ExecContext(
+		ctx,
+		`INSERT INTO oauth_identities (
+		     issuer, subject, account_id, username, full_name, email, groups_json, created_at, updated_at
+		 )
+		 VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+		 ON CONFLICT (issuer, subject) DO UPDATE
+		 SET account_id = excluded.account_id,
+		     username = excluded.username,
+		     full_name = excluded.full_name,
+		     email = excluded.email,
+		     groups_json = excluded.groups_json,
+		     updated_at = datetime('now')`,
+		issuer,
+		subject,
+		accountID,
+		toNull(username),
+		toNull(fullName),
+		toNull(email),
+		toNull(groupsJSON),
+	); err != nil {
+		return nil, fmt.Errorf("upsert oauth identity: %w", err)
+	}
+	return r.GetOAuthIdentityByIssuerSubject(ctx, issuer, subject)
+}
+
 // GetUserByCommitteeAndUsername retrieves a committee membership by committee slug and username
 func (r *Repository) GetUserByCommitteeAndUsername(ctx context.Context, slug, username string) (*model.User, error) {
 	row, err := r.Queries.GetUserMembershipByAccountAndCommittee(ctx, client.GetUserMembershipByAccountAndCommitteeParams{
@@ -261,6 +387,150 @@ func (r *Repository) ListCommitteesByAccountID(ctx context.Context, accountID in
 		result[i] = committeeFromListByAccountIDRow(&rows[i])
 	}
 	return result, nil
+}
+
+// SyncOAuthCommitteeMemberships applies OAuth-derived committee access and role updates.
+// It performs full sync for OAuth-managed memberships and leaves manual memberships unchanged.
+func (r *Repository) SyncOAuthCommitteeMemberships(ctx context.Context, accountID int64, desired []model.OAuthDesiredMembership) error {
+	type existingMembership struct {
+		UserID       int64
+		CommitteeID  int64
+		Role         string
+		Quoted       bool
+		OAuthManaged bool
+	}
+
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("sync oauth memberships begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.QueryContext(
+		ctx,
+		`SELECT u.id, u.committee_id, u.role, u.quoted,
+		        CASE WHEN om.user_id IS NULL THEN 0 ELSE 1 END AS oauth_managed
+		   FROM users u
+		   LEFT JOIN oauth_managed_memberships om ON om.user_id = u.id
+		  WHERE u.account_id = ?`,
+		accountID,
+	)
+	if err != nil {
+		return fmt.Errorf("sync oauth memberships list existing: %w", err)
+	}
+	defer rows.Close()
+
+	byCommittee := map[int64]existingMembership{}
+	for rows.Next() {
+		var m existingMembership
+		var oauthManaged int64
+		if err := rows.Scan(&m.UserID, &m.CommitteeID, &m.Role, &m.Quoted, &oauthManaged); err != nil {
+			return fmt.Errorf("sync oauth memberships scan existing: %w", err)
+		}
+		m.OAuthManaged = oauthManaged == 1
+		byCommittee[m.CommitteeID] = m
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("sync oauth memberships iterate existing: %w", err)
+	}
+
+	desiredMap := make(map[int64]string, len(desired))
+	for _, d := range desired {
+		currentRole, exists := desiredMap[d.CommitteeID]
+		if !exists {
+			desiredMap[d.CommitteeID] = d.Role
+			continue
+		}
+		if d.Role == "chairperson" || currentRole != "chairperson" {
+			desiredMap[d.CommitteeID] = d.Role
+		}
+	}
+
+	for committeeID, role := range desiredMap {
+		current, exists := byCommittee[committeeID]
+		if !exists {
+			var userID int64
+			if err := tx.QueryRowContext(
+				ctx,
+				`INSERT INTO users (account_id, committee_id, role, quoted, created_at, updated_at)
+				 VALUES (?, ?, ?, 0, datetime('now'), datetime('now'))
+				 RETURNING id`,
+				accountID, committeeID, role,
+			).Scan(&userID); err != nil {
+				return fmt.Errorf("sync oauth memberships create membership: %w", err)
+			}
+			if _, err := tx.ExecContext(
+				ctx,
+				`INSERT INTO oauth_managed_memberships (user_id, last_synced_at)
+				 VALUES (?, datetime('now'))
+				 ON CONFLICT (user_id) DO UPDATE SET last_synced_at = datetime('now')`,
+				userID,
+			); err != nil {
+				return fmt.Errorf("sync oauth memberships mark managed: %w", err)
+			}
+			continue
+		}
+		if current.OAuthManaged {
+			if current.Role != role {
+				if _, err := tx.ExecContext(
+					ctx,
+					`UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?`,
+					role, current.UserID,
+				); err != nil {
+					return fmt.Errorf("sync oauth memberships update role: %w", err)
+				}
+			}
+			if _, err := tx.ExecContext(
+				ctx,
+				`INSERT INTO oauth_managed_memberships (user_id, last_synced_at)
+				 VALUES (?, datetime('now'))
+				 ON CONFLICT (user_id) DO UPDATE SET last_synced_at = datetime('now')`,
+				current.UserID,
+			); err != nil {
+				return fmt.Errorf("sync oauth memberships refresh managed marker: %w", err)
+			}
+			continue
+		}
+		// Manual memberships are not OAuth-managed, but we still raise their role if OAuth
+		// currently grants a higher permission for the same committee.
+		if oauthRoleRank(role) > oauthRoleRank(current.Role) {
+			if _, err := tx.ExecContext(
+				ctx,
+				`UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?`,
+				role, current.UserID,
+			); err != nil {
+				return fmt.Errorf("sync oauth memberships promote manual role: %w", err)
+			}
+		}
+	}
+
+	for committeeID, current := range byCommittee {
+		if !current.OAuthManaged {
+			continue
+		}
+		if _, stillDesired := desiredMap[committeeID]; stillDesired {
+			continue
+		}
+		if _, err := tx.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, current.UserID); err != nil {
+			return fmt.Errorf("sync oauth memberships delete stale membership: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("sync oauth memberships commit tx: %w", err)
+	}
+	return nil
+}
+
+func oauthRoleRank(role string) int {
+	switch role {
+	case "chairperson":
+		return 2
+	case "member":
+		return 1
+	default:
+		return 0
+	}
 }
 
 // CreateSession stores a new session in the database
@@ -418,15 +688,16 @@ func userFromListRow(r *client.ListUsersInCommitteeRow) *model.User {
 	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
 
 	return &model.User{
-		ID:          r.ID,
-		AccountID:   r.AccountID,
-		CommitteeID: r.CommitteeID,
-		Username:    r.Username,
-		FullName:    nullStringValue(r.FullName, r.Username),
-		Quoted:      r.Quoted,
-		Role:        r.Role,
-		CreatedAt:   createdAt,
-		UpdatedAt:   updatedAt,
+		ID:           r.ID,
+		AccountID:    r.AccountID,
+		CommitteeID:  r.CommitteeID,
+		Username:     r.Username,
+		FullName:     nullStringValue(r.FullName, r.Username),
+		Quoted:       r.Quoted,
+		Role:         r.Role,
+		OAuthManaged: r.OauthManaged == 1,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
 	}
 }
 
@@ -658,6 +929,34 @@ func (r *Repository) AssignAccountToCommittee(ctx context.Context, committeeID, 
 	return nil
 }
 
+// UpdateUserMembership updates quoted/role for an existing membership row.
+func (r *Repository) UpdateUserMembership(ctx context.Context, userID int64, quoted bool, role string) error {
+	err := r.Queries.UpdateMembership(ctx, client.UpdateMembershipParams{
+		Quoted: quoted,
+		Role:   role,
+		ID:     userID,
+	})
+	if err != nil {
+		return fmt.Errorf("update user membership: %w", err)
+	}
+	return nil
+}
+
+// IsOAuthManagedMembership returns true when a user membership is OAuth-managed.
+func (r *Repository) IsOAuthManagedMembership(ctx context.Context, userID int64) (bool, error) {
+	var exists int64
+	if err := r.DB.QueryRowContext(
+		ctx,
+		`SELECT CASE WHEN EXISTS (
+			SELECT 1 FROM oauth_managed_memberships WHERE user_id = ?
+		) THEN 1 ELSE 0 END`,
+		userID,
+	).Scan(&exists); err != nil {
+		return false, fmt.Errorf("check oauth managed membership: %w", err)
+	}
+	return exists == 1, nil
+}
+
 // CountAllAccounts returns the total number of accounts.
 func (r *Repository) CountAllAccounts(ctx context.Context) (int64, error) {
 	count, err := r.Queries.CountAllAccounts(ctx)
@@ -694,6 +993,143 @@ func (r *Repository) ListUnassignedAccountsForCommittee(ctx context.Context, com
 		result[i] = accountFromClient(&accounts[i])
 	}
 	return result, nil
+}
+
+// ListOAuthCommitteeGroupRulesByCommitteeSlug lists OAuth group-to-role mappings for one committee.
+func (r *Repository) ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx context.Context, slug string) ([]*model.OAuthCommitteeGroupRule, error) {
+	rows, err := r.DB.QueryContext(
+		ctx,
+		`SELECT r.id, r.committee_id, c.slug, r.group_name, r.role, r.created_at, r.updated_at
+		   FROM oauth_committee_group_rules r
+		   JOIN committees c ON c.id = r.committee_id
+		  WHERE c.slug = ?
+		  ORDER BY r.group_name`,
+		slug,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list oauth committee group rules by slug: %w", err)
+	}
+	defer rows.Close()
+
+	var result []*model.OAuthCommitteeGroupRule
+	for rows.Next() {
+		var (
+			item      model.OAuthCommitteeGroupRule
+			createdAt string
+			updatedAt string
+		)
+		if err := rows.Scan(
+			&item.ID,
+			&item.CommitteeID,
+			&item.CommitteeSlug,
+			&item.GroupName,
+			&item.Role,
+			&createdAt,
+			&updatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan oauth committee group rule by slug: %w", err)
+		}
+		item.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+		item.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+		result = append(result, &item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate oauth committee group rules by slug: %w", err)
+	}
+	return result, nil
+}
+
+// ListAllOAuthCommitteeGroupRules lists all OAuth group rules across committees.
+func (r *Repository) ListAllOAuthCommitteeGroupRules(ctx context.Context) ([]*model.OAuthCommitteeGroupRule, error) {
+	rows, err := r.DB.QueryContext(
+		ctx,
+		`SELECT r.id, r.committee_id, c.slug, r.group_name, r.role, r.created_at, r.updated_at
+		   FROM oauth_committee_group_rules r
+		   JOIN committees c ON c.id = r.committee_id
+		  ORDER BY r.committee_id, r.group_name`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list all oauth committee group rules: %w", err)
+	}
+	defer rows.Close()
+
+	var result []*model.OAuthCommitteeGroupRule
+	for rows.Next() {
+		var (
+			item      model.OAuthCommitteeGroupRule
+			createdAt string
+			updatedAt string
+		)
+		if err := rows.Scan(
+			&item.ID,
+			&item.CommitteeID,
+			&item.CommitteeSlug,
+			&item.GroupName,
+			&item.Role,
+			&createdAt,
+			&updatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan oauth committee group rule: %w", err)
+		}
+		item.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+		item.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+		result = append(result, &item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate oauth committee group rules: %w", err)
+	}
+	return result, nil
+}
+
+// CreateOAuthCommitteeGroupRuleByCommitteeSlug creates a group rule for a committee.
+func (r *Repository) CreateOAuthCommitteeGroupRuleByCommitteeSlug(ctx context.Context, slug, groupName, role string) (*model.OAuthCommitteeGroupRule, error) {
+	var (
+		item      model.OAuthCommitteeGroupRule
+		createdAt string
+		updatedAt string
+	)
+	if err := r.DB.QueryRowContext(
+		ctx,
+		`INSERT INTO oauth_committee_group_rules (
+		     committee_id, group_name, role, created_at, updated_at
+		 )
+		 SELECT c.id, ?, ?, datetime('now'), datetime('now')
+		 FROM committees c
+		 WHERE c.slug = ?
+		 RETURNING id, committee_id, group_name, role, created_at, updated_at`,
+		groupName, role, slug,
+	).Scan(
+		&item.ID,
+		&item.CommitteeID,
+		&item.GroupName,
+		&item.Role,
+		&createdAt,
+		&updatedAt,
+	); err != nil {
+		return nil, fmt.Errorf("create oauth committee group rule: %w", err)
+	}
+	item.CommitteeSlug = slug
+	item.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+	item.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+	return &item, nil
+}
+
+// DeleteOAuthCommitteeGroupRuleByIDAndCommitteeSlug deletes a group rule scoped to a committee slug.
+func (r *Repository) DeleteOAuthCommitteeGroupRuleByIDAndCommitteeSlug(ctx context.Context, id int64, slug string) error {
+	res, err := r.DB.ExecContext(
+		ctx,
+		`DELETE FROM oauth_committee_group_rules
+		  WHERE id = ?
+		    AND committee_id = (SELECT c.id FROM committees c WHERE c.slug = ?)`,
+		id, slug,
+	)
+	if err != nil {
+		return fmt.Errorf("delete oauth committee group rule: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return fmt.Errorf("oauth committee group rule not found")
+	}
+	return nil
 }
 
 // ListMeetingsForCommittee retrieves a page of meetings for a committee by slug

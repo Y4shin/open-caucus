@@ -26,7 +26,10 @@ func (h *Handler) LoginPage(ctx context.Context, r *http.Request) (*templates.Lo
 		return nil, meta, nil
 	}
 
-	return &templates.LoginPageInput{}, nil, nil
+	return &templates.LoginPageInput{
+		PasswordEnabled: h.passwordAuthEnabled(),
+		OAuthEnabled:    h.oauthAuthEnabled(),
+	}, nil, nil
 }
 
 // LoginSubmit processes login credentials
@@ -34,7 +37,9 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 	// Parse form
 	if err := r.ParseForm(); err != nil {
 		return &templates.LoginPageInput{
-			Error: "Invalid form submission",
+			Error:           "Invalid form submission",
+			PasswordEnabled: h.passwordAuthEnabled(),
+			OAuthEnabled:    h.oauthAuthEnabled(),
 		}, nil, nil
 	}
 
@@ -44,8 +49,10 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 	// Validate inputs
 	if username == "" || password == "" {
 		return &templates.LoginPageInput{
-			Error:    "All fields are required",
-			Username: username,
+			Error:           "All fields are required",
+			Username:        username,
+			PasswordEnabled: h.passwordAuthEnabled(),
+			OAuthEnabled:    h.oauthAuthEnabled(),
 		}, nil, nil
 	}
 
@@ -53,23 +60,29 @@ func (h *Handler) LoginSubmit(ctx context.Context, r *http.Request) (*templates.
 	account, err := h.Repository.GetAccountByUsername(ctx, username)
 	if err != nil {
 		return &templates.LoginPageInput{
-			Error:    "Invalid credentials",
-			Username: username,
+			Error:           "Invalid credentials",
+			Username:        username,
+			PasswordEnabled: h.passwordAuthEnabled(),
+			OAuthEnabled:    h.oauthAuthEnabled(),
 		}, nil, nil
 	}
 
 	cred, err := h.Repository.GetPasswordCredential(ctx, account.ID)
 	if err != nil {
 		return &templates.LoginPageInput{
-			Error:    "Invalid credentials",
-			Username: username,
+			Error:           "Invalid credentials",
+			Username:        username,
+			PasswordEnabled: h.passwordAuthEnabled(),
+			OAuthEnabled:    h.oauthAuthEnabled(),
 		}, nil, nil
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(cred.PasswordHash), []byte(password)); err != nil {
 		return &templates.LoginPageInput{
-			Error:    "Invalid credentials",
-			Username: username,
+			Error:           "Invalid credentials",
+			Username:        username,
+			PasswordEnabled: h.passwordAuthEnabled(),
+			OAuthEnabled:    h.oauthAuthEnabled(),
 		}, nil, nil
 	}
 
@@ -253,6 +266,19 @@ func (h *Handler) buildCommitteePageInput(ctx context.Context, slug, formError s
 				SignupOpen:  m.SignupOpen,
 				IsActive:    isActive,
 			})
+		}
+	} else if role == "member" && committee.CurrentMeetingID != nil {
+		meeting, err := h.Repository.GetMeetingByID(ctx, *committee.CurrentMeetingID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load active meeting: %w", err)
+		}
+		input.ActiveMeeting = &templates.MeetingItem{
+			ID:          meeting.ID,
+			IDString:    strconv.FormatInt(meeting.ID, 10),
+			Name:        meeting.Name,
+			Description: meeting.Description,
+			SignupOpen:  meeting.SignupOpen,
+			IsActive:    true,
 		}
 	}
 

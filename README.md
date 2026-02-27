@@ -263,6 +263,55 @@ The middleware registry resolves names to `func(http.Handler) http.Handler` valu
 
 ---
 
+### Authentication Providers
+
+The app supports provider-gated authentication:
+
+- Password login (`AUTH_PASSWORD_ENABLED=true|false`)
+- OAuth/OIDC login (`AUTH_OAUTH_ENABLED=true|false`)
+
+Startup validation enforces that at least one provider is enabled. If both are disabled, the server fails to start.
+
+When OAuth is enabled, these values are required:
+
+- `OAUTH_ISSUER_URL`
+- `OAUTH_CLIENT_ID`
+- `OAUTH_CLIENT_SECRET`
+- `OAUTH_REDIRECT_URL`
+
+Additional OAuth settings include:
+
+- `OAUTH_SCOPES` (default `openid,profile,email`)
+- `OAUTH_GROUPS_CLAIM` (default `groups`)
+- `OAUTH_USERNAME_CLAIMS`
+- `OAUTH_FULL_NAME_CLAIMS`
+- `OAUTH_PROVISIONING_MODE` (`preprovisioned` or `auto_create`)
+- `OAUTH_REQUIRED_GROUPS`
+- `OAUTH_ADMIN_GROUP`
+- `OAUTH_STATE_TTL_SECONDS`
+
+If password login is disabled, password login submit endpoints return `404`.
+
+Important compatibility note:
+
+- Changing enabled auth providers for an already-populated database is intentionally undefined/unsupported in this phase.
+- No migration/backfill guarantees are provided for converting existing password accounts to OAuth accounts (or vice versa).
+
+Local interactive OIDC provider:
+
+0. Generate a ready local `.env`: `task populate-env`.
+1. Generate users file: `task oidc-dev:generate-users`.
+2. Configure shared OAuth env vars in `.env` if needed (`OAUTH_ISSUER_URL`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `OAUTH_REDIRECT_URL`).
+3. Configure `OIDC_DEV_USERS_FILE` if needed (default `dev/users.yaml`).
+4. Start provider: `task run:oidc-dev`.
+5. Start app with same `.env`: `task run` or `task dev`.
+
+By default, generated env uses `OAUTH_ADMIN_GROUP=ca-admin`, and generated users include Alice in `ca-admin` and `committee-a-chair`.
+
+The local provider reads users (including groups) from YAML and exposes groups in the claim configured by `OIDC_DEV_GROUPS_CLAIM` (default `groups`).
+
+---
+
 ### Internationalisation (i18n)
 
 - Locale resolution order: URL prefix → `locale` cookie → `Accept-Language` header → default (`en`).
