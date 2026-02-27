@@ -234,6 +234,13 @@ tasks:
     cmds:
       - go tool github.com/playwright-community/playwright-go/cmd/playwright {{.CLI_ARGS}}
 
+  docs:capture:all:
+    desc: Regenerate all internal documentation images and GIFs (requires app running at BASE_URL)
+    vars:
+      BASE_URL: http://127.0.0.1:8080
+    cmds:
+      - go run {{.MAIN_PATH}} docs-capture run --base-url {{.BASE_URL}}
+
   deps:check:
     desc: Check that required tools are installed (go, node, npm)
     cmds:

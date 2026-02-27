@@ -97,6 +97,10 @@
               playwright-driver
               nodejs
 
+              # ffmpeg for creating documentation gifs
+              ffmpeg
+              gifsicle
+
               # MCP servers for AI assistance
               mcp-gopls
               mcp-taskfile-server
