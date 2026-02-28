@@ -887,7 +887,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-on::after-request=\"if(event.detail.successful) this.reset()\" class=\"grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end\" data-testid=\"manage-add-guest-form\"><div class=\"w-full min-w-0 flex-1\"><label class=\"label p-0 text-sm font-medium\" for=\"full_name\">Add guest</label> <input class=\"input input-bordered input-sm w-full\" type=\"text\" id=\"full_name\" name=\"full_name\" placeholder=\"Display name\" required></div><label class=\"label cursor-pointer justify-start gap-2 p-0 sm:mb-1 whitespace-nowrap\" for=\"manage_guest_gender_quoted\"><span class=\"text-sm font-medium\">Gender quoted</span> <input class=\"checkbox checkbox-sm\" type=\"checkbox\" id=\"manage_guest_gender_quoted\" name=\"gender_quoted\" value=\"true\"></label> <button class=\"btn btn-sm sm:mb-1\" type=\"submit\">Add</button></form></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-on::after-request=\"if(event.detail.successful){ this.reset(); var speakerSearch=document.getElementById('speaker-add-search-input') || document.getElementById('moderate-speaker-search'); if(speakerSearch && window.htmx){ htmx.trigger(speakerSearch,'search'); } }\" class=\"grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end\" data-testid=\"manage-add-guest-form\"><div class=\"w-full min-w-0 flex-1\"><label class=\"label p-0 text-sm font-medium\" for=\"full_name\">Add guest</label> <input class=\"input input-bordered input-sm w-full\" type=\"text\" id=\"full_name\" name=\"full_name\" placeholder=\"Display name\" required></div><label class=\"label cursor-pointer justify-start gap-2 p-0 sm:mb-1 whitespace-nowrap\" for=\"manage_guest_gender_quoted\"><span class=\"text-sm font-medium\">Gender quoted</span> <input class=\"checkbox checkbox-sm\" type=\"checkbox\" id=\"manage_guest_gender_quoted\" name=\"gender_quoted\" value=\"true\"></label> <button class=\"btn btn-sm sm:mb-1\" type=\"submit\">Add</button></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -902,27 +902,27 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			for _, a := range input.Attendees {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<li class=\"list-row items-center gap-3\" data-testid=\"manage-attendee-card\"><div class=\"w-12 shrink-0 text-base-content/70\">#")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<li class=\"list-row grid-cols-1 items-center gap-3\" data-testid=\"manage-attendee-card\"><div class=\"col-span-full w-full min-w-0 space-y-2\"><div class=\"flex min-w-0 items-center gap-2\"><div class=\"w-12 shrink-0 text-base-content/70\">#")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var3 string
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(a.AttendeeNumber, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 870, Col: 96}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 872, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"list-col-grow min-w-0\"><div class=\"truncate font-semibold\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"min-w-0 flex-1 overflow-x-hidden\"><div class=\"truncate overflow-x-hidden font-semibold\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 872, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 874, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -933,7 +933,7 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				if a.IsGuest || a.IsChair || a.Quoted {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"mt-1 flex flex-wrap items-center gap-1\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"mt-1 hidden flex-wrap items-center gap-1 sm:flex\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -976,208 +976,25 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><div class=\"shrink-0 self-center\"><div class=\"flex flex-col gap-1\"><form hx-post=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var5 string
-				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeToggleChairPostStr(ctx, &a))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 898, Col: 60}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-trigger=\"change\" class=\"inline-flex\"><label class=\"label cursor-pointer justify-start gap-2 p-0\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var6 = []any{"toggle toggle-sm", templ.KV("toggle-primary", a.IsChair)}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<input class=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var7 string
-				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var6).String())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1, Col: 0}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\" type=\"checkbox\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				if a.IsChair {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, " checked")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, " title=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var8 string
-				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeChairToggleLabel(a.IsChair))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 910, Col: 54}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" aria-label=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var9 string
-				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeChairToggleLabel(a.IsChair))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 911, Col: 59}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\"> <span class=\"text-xs leading-none\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var10 string
-				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeChairToggleLabel(a.IsChair))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 913, Col: 82}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span></label></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><div class=\"ml-auto shrink-0 self-center\"><div class=\"join sm:join-vertical\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if a.IsGuest {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<form hx-post=\"")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<a href=\"")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var11 string
-					templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeToggleQuotedPostStr(ctx, &a))
+					var templ_7745c5c3_Var5 templ.SafeURL
+					templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinURLErrs(input.AttendeeRecoveryGet(ctx, &a))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 918, Col: 62}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 901, Col: 53}
 					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-trigger=\"change\" class=\"inline-flex\"><label class=\"label cursor-pointer justify-start gap-2 p-0\">")
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					var templ_7745c5c3_Var12 = []any{"toggle toggle-sm", templ.KV("toggle-info", a.Quoted)}
-					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<input class=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var13 string
-					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var12).String())
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1, Col: 0}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" type=\"checkbox\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					if a.Quoted {
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, " checked")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, " title=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var14 string
-					templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeGenderQuotedToggleLabel(a.Quoted))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 930, Col: 61}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\" aria-label=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var15 string
-					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeGenderQuotedToggleLabel(a.Quoted))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 931, Col: 66}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\"> <span class=\"text-xs leading-none\">")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var16 string
-					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeGenderQuotedToggleLabel(a.Quoted))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 933, Col: 89}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</span></label></form>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div class=\"h-6\" aria-hidden=\"true\"></div>")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</div></div><div class=\"shrink-0 self-center\"><div class=\"join join-vertical\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				if a.IsGuest {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<a href=\"")
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					var templ_7745c5c3_Var17 templ.SafeURL
-					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs(input.AttendeeRecoveryGet(ctx, &a))
-					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 945, Col: 51}
-					}
-					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
-					if templ_7745c5c3_Err != nil {
-						return templ_7745c5c3_Err
-					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" class=\"join-item btn btn-sm btn-square tooltip tooltip-left\" data-tip=\"Recovery link\" title=\"Recovery link\" aria-label=\"Recovery link\">")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" class=\"join-item btn btn-sm btn-square tooltip tooltip-left\" data-tip=\"Recovery link\" title=\"Recovery link\" aria-label=\"Recovery link\">")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1185,25 +1002,25 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</a>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</a>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<form hx-post=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<form hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var18 string
-				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeDeletePostStr(ctx, &a))
+				var templ_7745c5c3_Var6 string
+				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeDeletePostStr(ctx, &a))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 955, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 911, Col: 57}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-confirm=\"Remove this attendee?\" class=\"inline-flex\"><button type=\"submit\" class=\"join-item btn btn-sm btn-square btn-error tooltip tooltip-left\" data-tip=\"Remove attendee\" title=\"Remove attendee\" aria-label=\"Remove attendee\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-confirm=\"Remove this attendee?\" class=\"inline-flex\"><button type=\"submit\" class=\"join-item btn btn-sm btn-square btn-error tooltip tooltip-left\" data-tip=\"Remove attendee\" title=\"Remove attendee\" aria-label=\"Remove attendee\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1211,7 +1028,190 @@ func AttendeeListPartial(input AttendeeListPartialInput) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</button></form></div></div></li>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</button></form></div></div></div><div class=\"flex items-center justify-between gap-3\"><form hx-post=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var7 string
+				templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeToggleChairPostStr(ctx, &a))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 933, Col: 60}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-trigger=\"change\" class=\"inline-flex\"><label class=\"label cursor-pointer justify-start gap-2 p-0\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var8 = []any{"toggle toggle-sm", templ.KV("toggle-primary", a.IsChair)}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var8...)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "<input class=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var9 string
+				templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var8).String())
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1, Col: 0}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" type=\"checkbox\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if a.IsChair {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, " checked")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, " title=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var10 string
+				templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeChairToggleLabel(a.IsChair))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 945, Col: 54}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\" aria-label=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var11 string
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeChairToggleLabel(a.IsChair))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 946, Col: 59}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\"> <span class=\"text-xs leading-none\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var12 string
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeChairToggleLabel(a.IsChair))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 948, Col: 82}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "</span></label></form>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if a.IsGuest {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<form hx-post=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var13 string
+					templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(input.AttendeeToggleQuotedPostStr(ctx, &a))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 953, Col: 62}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\" hx-target=\"#attendee-list-container\" hx-swap=\"outerHTML\" hx-vals=\"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}\" hx-trigger=\"change\" class=\"inline-flex\"><label class=\"label cursor-pointer justify-start gap-2 p-0\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var14 = []any{"toggle toggle-sm", templ.KV("toggle-info", a.Quoted)}
+					templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<input class=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var15 string
+					templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var14).String())
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1, Col: 0}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" type=\"checkbox\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					if a.Quoted {
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, " checked")
+						if templ_7745c5c3_Err != nil {
+							return templ_7745c5c3_Err
+						}
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, " title=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var16 string
+					templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeGenderQuotedToggleLabel(a.Quoted))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 965, Col: 61}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" aria-label=\"")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var17 string
+					templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeGenderQuotedToggleLabel(a.Quoted))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 966, Col: 66}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\"> <span class=\"text-xs leading-none\">")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					var templ_7745c5c3_Var18 string
+					templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(attendeeGenderQuotedToggleLabel(a.Quoted))
+					if templ_7745c5c3_Err != nil {
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 968, Col: 89}
+					}
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</span></label></form>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				} else {
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<div class=\"inline-flex items-center text-xs leading-none text-base-content/50\">Gender quoted unavailable</div>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</div></div></li>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1331,7 +1331,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(input.SetMeetingQuotationPostStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1007, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1009, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -1384,7 +1384,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(input.SetMeetingModeratorPostStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1033, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1035, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
@@ -1412,7 +1412,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1042, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1044, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -1435,7 +1435,7 @@ func MeetingSettingsContent(input MeetingSettingsPartialInput) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1042, Col: 116}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1044, Col: 116}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -1529,7 +1529,7 @@ func ModerateSpeakerSettingsContent(input SpeakersListPartialInput) templ.Compon
 			var templ_7745c5c3_Var28 string
 			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointQuotationPostStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1065, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1067, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 			if templ_7745c5c3_Err != nil {
@@ -1676,7 +1676,7 @@ func ModerateSpeakerSettingsContent(input SpeakersListPartialInput) templ.Compon
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointModeratorPostStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1111, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1113, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -1704,7 +1704,7 @@ func ModerateSpeakerSettingsContent(input SpeakersListPartialInput) templ.Compon
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1120, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1122, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -1727,7 +1727,7 @@ func ModerateSpeakerSettingsContent(input SpeakersListPartialInput) templ.Compon
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1120, Col: 117}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1122, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -1775,7 +1775,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var37 string
 		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%t", input.ImportModalOpen()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1130, Col: 118}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1132, Col: 118}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
@@ -1796,7 +1796,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var38 string
 		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointCreatePostStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1135, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1137, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 		if templ_7745c5c3_Err != nil {
@@ -1814,7 +1814,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var39 string
 			templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(p.IDString)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1150, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1152, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 			if templ_7745c5c3_Err != nil {
@@ -1827,7 +1827,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var40 string
 			templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(p.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1150, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1152, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 			if templ_7745c5c3_Err != nil {
@@ -1853,7 +1853,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var41 string
 		templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.open_button"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1163, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1165, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 		if templ_7745c5c3_Err != nil {
@@ -1902,7 +1902,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var44 string
 				templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointDisplayNumber(ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1183, Col: 88}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1185, Col: 88}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 				if templ_7745c5c3_Err != nil {
@@ -1915,7 +1915,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var45 string
 				templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(ap.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1185, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1187, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 				if templ_7745c5c3_Err != nil {
@@ -1944,7 +1944,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var46 string
 				templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointMoveUpPostStr(ctx, &ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1200, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1202, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 				if templ_7745c5c3_Err != nil {
@@ -1975,7 +1975,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var47 string
 				templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointMoveDownPostStr(ctx, &ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1217, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1219, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 				if templ_7745c5c3_Err != nil {
@@ -2011,7 +2011,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var48 string
 					templ_7745c5c3_Var48, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointActivatePostStr(ctx, &ap))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1235, Col: 63}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1237, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var48))
 					if templ_7745c5c3_Err != nil {
@@ -2037,7 +2037,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var49 templ.SafeURL
 				templ_7745c5c3_Var49, templ_7745c5c3_Err = templ.JoinURLErrs(input.AgendaPointToolsGet(ctx, &ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1252, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1254, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var49))
 				if templ_7745c5c3_Err != nil {
@@ -2058,7 +2058,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var50 string
 				templ_7745c5c3_Var50, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointDeletePostStr(ctx, &ap))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1261, Col: 60}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1263, Col: 60}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var50))
 				if templ_7745c5c3_Err != nil {
@@ -2089,7 +2089,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var51 string
 		templ_7745c5c3_Var51, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.title"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1287, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1289, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var51))
 		if templ_7745c5c3_Err != nil {
@@ -2102,7 +2102,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var52 string
 		templ_7745c5c3_Var52, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.close"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1288, Col: 117}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1290, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var52))
 		if templ_7745c5c3_Err != nil {
@@ -2120,7 +2120,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var53 string
 			templ_7745c5c3_Var53, templ_7745c5c3_Err = templ.JoinStringErrs(input.Import.Warning)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1292, Col: 69}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1294, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var53))
 			if templ_7745c5c3_Err != nil {
@@ -2138,7 +2138,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var54 string
 		templ_7745c5c3_Var54, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(input.ImportCurrentStep()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1298, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1300, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var54))
 		if templ_7745c5c3_Err != nil {
@@ -2173,7 +2173,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var57 string
 		templ_7745c5c3_Var57, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.step_source"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1304, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1306, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var57))
 		if templ_7745c5c3_Err != nil {
@@ -2208,7 +2208,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var60 string
 		templ_7745c5c3_Var60, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.step_correction"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1308, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1310, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var60))
 		if templ_7745c5c3_Err != nil {
@@ -2243,7 +2243,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var63 string
 		templ_7745c5c3_Var63, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.step_diff"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1312, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1314, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var63))
 		if templ_7745c5c3_Err != nil {
@@ -2278,7 +2278,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var66 string
 		templ_7745c5c3_Var66, templ_7745c5c3_Err = templ.JoinStringErrs(input.ImportExtractPostStr(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1317, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1319, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var66))
 		if templ_7745c5c3_Err != nil {
@@ -2291,7 +2291,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var67 string
 		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.source_label"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1322, Col: 123}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1324, Col: 123}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {
@@ -2304,7 +2304,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var68 string
 		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.source_placeholder"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1327, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1329, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 		if templ_7745c5c3_Err != nil {
@@ -2317,7 +2317,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var69 string
 		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(input.Import.SourceText)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1328, Col: 34}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1330, Col: 34}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 		if templ_7745c5c3_Err != nil {
@@ -2330,7 +2330,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 		var templ_7745c5c3_Var70 string
 		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.extract_button"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1337, Col: 107}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1339, Col: 107}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 		if templ_7745c5c3_Err != nil {
@@ -2366,7 +2366,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var73 string
 			templ_7745c5c3_Var73, templ_7745c5c3_Err = templ.JoinStringErrs(input.ImportDiffPostStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1346, Col: 47}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1348, Col: 47}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var73))
 			if templ_7745c5c3_Err != nil {
@@ -2379,7 +2379,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var74 string
 			templ_7745c5c3_Var74, templ_7745c5c3_Err = templ.JoinStringErrs(input.Import.SourceText)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1351, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1353, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var74))
 			if templ_7745c5c3_Err != nil {
@@ -2392,7 +2392,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var75 string
 			templ_7745c5c3_Var75, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.correction_heading"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1352, Col: 94}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1354, Col: 94}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var75))
 			if templ_7745c5c3_Err != nil {
@@ -2405,7 +2405,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var76 string
 			templ_7745c5c3_Var76, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.correction_hint"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1353, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1355, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var76))
 			if templ_7745c5c3_Err != nil {
@@ -2423,7 +2423,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var77 string
 				templ_7745c5c3_Var77, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(line.LineNo))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1358, Col: 82}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1360, Col: 82}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var77))
 				if templ_7745c5c3_Err != nil {
@@ -2436,7 +2436,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var78 string
 				templ_7745c5c3_Var78, templ_7745c5c3_Err = templ.JoinStringErrs(line.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1359, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1361, Col: 68}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var78))
 				if templ_7745c5c3_Err != nil {
@@ -2449,7 +2449,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var79 string
 				templ_7745c5c3_Var79, templ_7745c5c3_Err = templ.JoinStringErrs(line.DetectedState)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1360, Col: 87}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1362, Col: 87}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var79))
 				if templ_7745c5c3_Err != nil {
@@ -2462,7 +2462,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var80 string
 				templ_7745c5c3_Var80, templ_7745c5c3_Err = templ.JoinStringErrs(line.State)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1361, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1363, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var80))
 				if templ_7745c5c3_Err != nil {
@@ -2475,7 +2475,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var81 string
 				templ_7745c5c3_Var81, templ_7745c5c3_Err = templ.JoinStringErrs(line.State)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1366, Col: 37}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1368, Col: 37}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var81))
 				if templ_7745c5c3_Err != nil {
@@ -2488,7 +2488,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var82 string
 				templ_7745c5c3_Var82, templ_7745c5c3_Err = templ.JoinStringErrs(line.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1369, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1371, Col: 77}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var82))
 				if templ_7745c5c3_Err != nil {
@@ -2501,7 +2501,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var83 string
 				templ_7745c5c3_Var83, templ_7745c5c3_Err = templ.JoinStringErrs(line.Text)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1369, Col: 91}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1371, Col: 91}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var83))
 				if templ_7745c5c3_Err != nil {
@@ -2519,7 +2519,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var84 string
 			templ_7745c5c3_Var84, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.back_button"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1376, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1378, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var84))
 			if templ_7745c5c3_Err != nil {
@@ -2532,7 +2532,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var85 string
 			templ_7745c5c3_Var85, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.generate_diff_button"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1377, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1379, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var85))
 			if templ_7745c5c3_Err != nil {
@@ -2569,7 +2569,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var88 string
 			templ_7745c5c3_Var88, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.diff_heading"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1386, Col: 88}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1388, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var88))
 			if templ_7745c5c3_Err != nil {
@@ -2582,7 +2582,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var89 string
 			templ_7745c5c3_Var89, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.diff_column_current"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1398, Col: 66}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1400, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var89))
 			if templ_7745c5c3_Err != nil {
@@ -2595,7 +2595,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var90 string
 			templ_7745c5c3_Var90, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.diff_column_change"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1399, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1401, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var90))
 			if templ_7745c5c3_Err != nil {
@@ -2608,7 +2608,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var91 string
 			templ_7745c5c3_Var91, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.diff_column_imported"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1400, Col: 67}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1402, Col: 67}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var91))
 			if templ_7745c5c3_Err != nil {
@@ -2649,7 +2649,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var94 string
 					templ_7745c5c3_Var94, templ_7745c5c3_Err = templ.JoinStringErrs(agendaDiffHoverKey(item.BeforePairKey, fmt.Sprintf("row-%d-before", idx)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1409, Col: 110}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1411, Col: 110}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var94))
 					if templ_7745c5c3_Err != nil {
@@ -2662,7 +2662,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var95 string
 					templ_7745c5c3_Var95, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.diff_column_current"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1411, Col: 158}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1413, Col: 158}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var95))
 					if templ_7745c5c3_Err != nil {
@@ -2675,7 +2675,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var96 string
 					templ_7745c5c3_Var96, templ_7745c5c3_Err = templ.JoinStringErrs(item.BeforeLabel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1414, Col: 77}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1416, Col: 77}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var96))
 					if templ_7745c5c3_Err != nil {
@@ -2688,7 +2688,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var97 string
 					templ_7745c5c3_Var97, templ_7745c5c3_Err = templ.JoinStringErrs(item.BeforeTitle)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1415, Col: 57}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1417, Col: 57}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var97))
 					if templ_7745c5c3_Err != nil {
@@ -2733,7 +2733,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				var templ_7745c5c3_Var100 string
 				templ_7745c5c3_Var100, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, agendaDiffOperationTooltipKey(item.Operation)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1425, Col: 84}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1427, Col: 84}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var100))
 				if templ_7745c5c3_Err != nil {
@@ -2777,7 +2777,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var103 string
 					templ_7745c5c3_Var103, templ_7745c5c3_Err = templ.JoinStringErrs(agendaDiffHoverKey(item.AfterPairKey, fmt.Sprintf("row-%d-after", idx)))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1434, Col: 108}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1436, Col: 108}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var103))
 					if templ_7745c5c3_Err != nil {
@@ -2790,7 +2790,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var104 string
 					templ_7745c5c3_Var104, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.diff_column_imported"))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1436, Col: 159}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1438, Col: 159}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var104))
 					if templ_7745c5c3_Err != nil {
@@ -2803,7 +2803,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var105 string
 					templ_7745c5c3_Var105, templ_7745c5c3_Err = templ.JoinStringErrs(item.AfterLabel)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1439, Col: 76}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1441, Col: 76}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var105))
 					if templ_7745c5c3_Err != nil {
@@ -2816,7 +2816,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 					var templ_7745c5c3_Var106 string
 					templ_7745c5c3_Var106, templ_7745c5c3_Err = templ.JoinStringErrs(item.AfterTitle)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1440, Col: 56}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1442, Col: 56}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var106))
 					if templ_7745c5c3_Err != nil {
@@ -2844,7 +2844,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var107 string
 			templ_7745c5c3_Var107, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.destructive_warning"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1451, Col: 100}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1453, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var107))
 			if templ_7745c5c3_Err != nil {
@@ -2857,7 +2857,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var108 string
 			templ_7745c5c3_Var108, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.back_button"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1453, Col: 131}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1455, Col: 131}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var108))
 			if templ_7745c5c3_Err != nil {
@@ -2870,7 +2870,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var109 string
 			templ_7745c5c3_Var109, templ_7745c5c3_Err = templ.JoinStringErrs(input.ImportApplyPostStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1455, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1457, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var109))
 			if templ_7745c5c3_Err != nil {
@@ -2883,7 +2883,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var110 string
 			templ_7745c5c3_Var110, templ_7745c5c3_Err = templ.JoinStringErrs(input.Import.Fingerprint)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1461, Col: 83}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1463, Col: 83}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var110))
 			if templ_7745c5c3_Err != nil {
@@ -2896,7 +2896,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var111 string
 			templ_7745c5c3_Var111, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.accept_button"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1462, Col: 108}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1464, Col: 108}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var111))
 			if templ_7745c5c3_Err != nil {
@@ -2909,7 +2909,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 			var templ_7745c5c3_Var112 string
 			templ_7745c5c3_Var112, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "agenda_import.deny_button"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1464, Col: 128}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1466, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var112))
 			if templ_7745c5c3_Err != nil {
@@ -2920,7 +2920,7 @@ func AgendaPointListPartial(input AgendaPointListPartialInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 213, "</div></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog><script>\n\t\t\t(function() {\n\t\t\t\tfunction nextImportLineState(state) {\n\t\t\t\t\tswitch (state) {\n\t\t\t\t\t\tcase \"ignore\":\n\t\t\t\t\t\t\treturn \"heading\";\n\t\t\t\t\t\tcase \"heading\":\n\t\t\t\t\t\t\treturn \"subheading\";\n\t\t\t\t\t\tdefault:\n\t\t\t\t\t\t\treturn \"ignore\";\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction setImportLineVisualState(row, state) {\n\t\t\t\t\trow.setAttribute(\"data-state\", state);\n\t\t\t\t\trow.classList.remove(\"border-base-300\", \"bg-base-100\", \"border-primary/30\", \"bg-primary/10\", \"border-info/30\", \"bg-info/10\", \"opacity-60\");\n\t\t\t\t\tswitch (state) {\n\t\t\t\t\t\tcase \"heading\":\n\t\t\t\t\t\t\trow.classList.add(\"border-primary/30\", \"bg-primary/10\");\n\t\t\t\t\t\t\tbreak;\n\t\t\t\t\t\tcase \"subheading\":\n\t\t\t\t\t\t\trow.classList.add(\"border-info/30\", \"bg-info/10\");\n\t\t\t\t\t\t\tbreak;\n\t\t\t\t\t\tdefault:\n\t\t\t\t\t\trow.classList.add(\"border-base-300\", \"bg-base-100\", \"opacity-60\");\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction setAgendaImportStep(flow, step) {\n\t\t\t\t\tif (!(flow instanceof Element)) { return; }\n\t\t\t\t\tvar parsedStep = parseInt(step, 10);\n\t\t\t\t\tif (!Number.isFinite(parsedStep)) {\n\t\t\t\t\t\tparsedStep = 1;\n\t\t\t\t\t}\n\t\t\t\t\tif (parsedStep < 1) { parsedStep = 1; }\n\t\t\t\t\tif (parsedStep > 3) { parsedStep = 3; }\n\t\t\t\t\tflow.setAttribute(\"data-agenda-import-step\", String(parsedStep));\n\n\t\t\t\t\tvar panels = flow.querySelectorAll(\"[data-agenda-import-panel]\");\n\t\t\t\t\tfor (var i = 0; i < panels.length; i++) {\n\t\t\t\t\t\tvar panel = panels[i];\n\t\t\t\t\t\tvar panelStep = parseInt(panel.getAttribute(\"data-agenda-import-panel\") || \"\", 10);\n\t\t\t\t\t\tvar isVisible = panelStep === parsedStep;\n\t\t\t\t\t\tpanel.classList.toggle(\"hidden\", !isVisible);\n\t\t\t\t\t}\n\n\t\t\t\t\tvar stepItems = flow.querySelectorAll(\"[data-agenda-import-step-item]\");\n\t\t\t\t\tfor (var j = 0; j < stepItems.length; j++) {\n\t\t\t\t\t\tvar stepItem = stepItems[j];\n\t\t\t\t\t\tvar itemStep = parseInt(stepItem.getAttribute(\"data-agenda-import-step-item\") || \"\", 10);\n\t\t\t\t\t\tstepItem.classList.toggle(\"step-primary\", itemStep <= parsedStep);\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction recomputeAgendaImportDetectedNumbers(scope) {\n\t\t\t\t\tvar root = scope instanceof Element ? scope : document;\n\t\t\t\t\tvar containers = [];\n\t\t\t\t\tif (root instanceof Element && root.matches(\"[data-agenda-import-lines]\")) {\n\t\t\t\t\t\tcontainers.push(root);\n\t\t\t\t\t}\n\t\t\t\t\tvar nested = root.querySelectorAll(\"[data-agenda-import-lines]\");\n\t\t\t\t\tfor (var n = 0; n < nested.length; n++) {\n\t\t\t\t\t\tcontainers.push(nested[n]);\n\t\t\t\t\t}\n\t\t\t\t\tfor (var c = 0; c < containers.length; c++) {\n\t\t\t\t\t\tvar topIndex = 0;\n\t\t\t\t\t\tvar subIndex = 0;\n\t\t\t\t\t\tvar rows = containers[c].querySelectorAll(\"[data-import-line-row]\");\n\t\t\t\t\t\tfor (var i = 0; i < rows.length; i++) {\n\t\t\t\t\t\t\tvar row = rows[i];\n\t\t\t\t\t\t\tvar state = row.getAttribute(\"data-state\") || \"ignore\";\n\t\t\t\t\t\t\tvar prefix = row.querySelector(\"[data-import-line-prefix]\");\n\t\t\t\t\t\t\tvar label = \"\";\n\t\t\t\t\t\t\tif (state === \"heading\") {\n\t\t\t\t\t\t\t\ttopIndex++;\n\t\t\t\t\t\t\t\tsubIndex = 0;\n\t\t\t\t\t\t\t\tlabel = \"TOP \" + topIndex;\n\t\t\t\t\t\t\t} else if (state === \"subheading\" && topIndex > 0) {\n\t\t\t\t\t\t\t\tsubIndex++;\n\t\t\t\t\t\t\t\tlabel = \"TOP \" + topIndex + \".\" + subIndex;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\tif (prefix) {\n\t\t\t\t\t\t\t\tprefix.textContent = label;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction syncAgendaImportLineStates(scope) {\n\t\t\t\t\tvar root = scope instanceof Element ? scope : document;\n\t\t\t\t\tvar rows = root.querySelectorAll(\"[data-import-line-row]\");\n\t\t\t\t\tfor (var i = 0; i < rows.length; i++) {\n\t\t\t\t\t\tvar row = rows[i];\n\t\t\t\t\t\tvar container = row.parentElement;\n\t\t\t\t\t\tif (!container) { continue; }\n\t\t\t\t\t\tvar hiddenState = container.querySelector(\"[data-import-line-state]\");\n\t\t\t\t\t\tvar state = \"ignore\";\n\t\t\t\t\t\tif (hiddenState instanceof HTMLInputElement) {\n\t\t\t\t\t\t\tstate = hiddenState.value;\n\t\t\t\t\t\t}\n\t\t\t\t\t\tif (state !== \"ignore\" && state !== \"heading\" && state !== \"subheading\") {\n\t\t\t\t\t\t\tstate = \"ignore\";\n\t\t\t\t\t\t\tif (hiddenState instanceof HTMLInputElement) {\n\t\t\t\t\t\t\t\thiddenState.value = state;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tsetImportLineVisualState(row, state);\n\t\t\t\t\t}\n\t\t\t\t\trecomputeAgendaImportDetectedNumbers(root);\n\t\t\t\t}\n\n\t\t\t\tfunction clearAgendaImportDiffHover() {\n\t\t\t\t\tvar hovered = document.querySelectorAll(\"#agenda-import-diff-grid [data-diff-cell][data-hovered='true']\");\n\t\t\t\t\tfor (var i = 0; i < hovered.length; i++) {\n\t\t\t\t\t\thovered[i].removeAttribute(\"data-hovered\");\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction applyAgendaImportDiffHover(key) {\n\t\t\t\t\tclearAgendaImportDiffHover();\n\t\t\t\t\tif (!key) { return; }\n\t\t\t\t\tvar safeKey = key.replace(/\"/g, '\\\\\"');\n\t\t\t\t\tvar selector = \"#agenda-import-diff-grid [data-diff-cell][data-diff-hover-key=\\\"\" + safeKey + \"\\\"]\";\n\t\t\t\t\tvar cells = document.querySelectorAll(selector);\n\t\t\t\t\tfor (var i = 0; i < cells.length; i++) {\n\t\t\t\t\t\tcells[i].setAttribute(\"data-hovered\", \"true\");\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tif (!window.__agendaImportFileWired) {\n\t\t\t\t\tdocument.addEventListener(\"change\", function(event) {\n\t\t\t\t\t\tvar input = event.target;\n\t\t\t\t\t\tif (!(input instanceof HTMLInputElement) || !input.matches(\"[data-agenda-import-file]\")) { return; }\n\t\t\t\t\t\tif (!input.files || input.files.length === 0) { return; }\n\t\t\t\t\t\tvar file = input.files[0];\n\t\t\t\t\t\tvar targetID = input.getAttribute(\"data-target\");\n\t\t\t\t\t\tif (!targetID) { return; }\n\t\t\t\t\t\tfile.text().then(function(content) {\n\t\t\t\t\t\t\tvar target = document.getElementById(targetID);\n\t\t\t\t\t\t\tif (target instanceof HTMLTextAreaElement) {\n\t\t\t\t\t\t\t\ttarget.value = content;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t});\n\t\t\t\t\t});\n\t\t\t\t\twindow.__agendaImportFileWired = true;\n\t\t\t\t}\n\n\t\t\t\tif (!window.__agendaImportCorrectionWired) {\n\t\t\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\t\t\tvar target = event.target;\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\n\t\t\t\t\t\tvar row = target.closest(\"[data-import-line-row]\");\n\t\t\t\t\t\tif (!row) { return; }\n\t\t\t\t\t\tvar container = row.parentElement;\n\t\t\t\t\t\tif (!container) { return; }\n\t\t\t\t\t\tvar hiddenState = container.querySelector(\"[data-import-line-state]\");\n\t\t\t\t\t\tif (!(hiddenState instanceof HTMLInputElement)) { return; }\n\t\t\t\t\t\tvar next = nextImportLineState(hiddenState.value);\n\t\t\t\t\t\thiddenState.value = next;\n\t\t\t\t\t\tsetImportLineVisualState(row, next);\n\t\t\t\t\t\trecomputeAgendaImportDetectedNumbers(row.closest(\"[data-agenda-import-lines]\"));\n\t\t\t\t\t});\n\t\t\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\n\t\t\t\t\t\tvar target = event.target;\n\t\t\t\t\t\tif (target instanceof Element) {\n\t\t\t\t\t\t\tsyncAgendaImportLineStates(target);\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\t\t\t\t\t\tsyncAgendaImportLineStates(document);\n\t\t\t\t\t});\n\t\t\t\t\twindow.__agendaImportCorrectionWired = true;\n\t\t\t\t}\n\n\t\t\t\tif (!window.__agendaImportDiffHoverWired) {\n\t\t\t\t\tdocument.addEventListener(\"mouseover\", function(event) {\n\t\t\t\t\t\tvar target = event.target;\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\n\t\t\t\t\t\tvar cell = target.closest(\"#agenda-import-diff-grid [data-diff-cell]\");\n\t\t\t\t\t\tif (!cell) { return; }\n\t\t\t\t\t\tapplyAgendaImportDiffHover(cell.getAttribute(\"data-diff-hover-key\") || \"\");\n\t\t\t\t\t});\n\t\t\t\t\tdocument.addEventListener(\"mouseout\", function(event) {\n\t\t\t\t\t\tvar target = event.target;\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\n\t\t\t\t\t\tvar cell = target.closest(\"#agenda-import-diff-grid [data-diff-cell]\");\n\t\t\t\t\t\tif (!cell) { return; }\n\t\t\t\t\t\tvar related = event.relatedTarget;\n\t\t\t\t\t\tif (related instanceof Element) {\n\t\t\t\t\t\t\tvar nextCell = related.closest(\"#agenda-import-diff-grid [data-diff-cell]\");\n\t\t\t\t\t\t\tif (nextCell) {\n\t\t\t\t\t\t\t\tapplyAgendaImportDiffHover(nextCell.getAttribute(\"data-diff-hover-key\") || \"\");\n\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\tclearAgendaImportDiffHover();\n\t\t\t\t\t});\n\t\t\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function() {\n\t\t\t\t\t\tclearAgendaImportDiffHover();\n\t\t\t\t\t});\n\t\t\t\t\twindow.__agendaImportDiffHoverWired = true;\n\t\t\t\t}\n\n\t\t\t\tif (!window.__agendaImportStepWired) {\n\t\t\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\t\t\tvar target = event.target;\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\n\t\t\t\t\t\tvar backButton = target.closest(\"[data-agenda-import-back]\");\n\t\t\t\t\t\tif (!backButton) { return; }\n\t\t\t\t\t\tvar flow = backButton.closest(\"[data-agenda-import-flow]\");\n\t\t\t\t\t\tif (!(flow instanceof Element)) { return; }\n\t\t\t\t\t\tvar nextStep = backButton.getAttribute(\"data-agenda-import-back\") || \"\";\n\t\t\t\t\t\tsetAgendaImportStep(flow, nextStep);\n\t\t\t\t\t});\n\t\t\t\t\twindow.__agendaImportStepWired = true;\n\t\t\t\t}\n\n\t\t\t\tvar root = document.getElementById(\"agenda-point-list-container\");\n\t\t\t\tvar modal = document.getElementById(\"moderate-agenda-import-dialog\");\n\t\t\t\tif (!root || !modal || typeof modal.showModal !== \"function\") { return; }\n\t\t\t\tsyncAgendaImportLineStates(root);\n\t\t\t\tvar flow = root.querySelector(\"[data-agenda-import-flow]\");\n\t\t\t\tif (flow) {\n\t\t\t\t\tsetAgendaImportStep(flow, flow.getAttribute(\"data-agenda-import-step\") || \"1\");\n\t\t\t\t}\n\t\t\t\tif (root.getAttribute(\"data-import-open\") === \"true\" && !modal.open) {\n\t\t\t\t\tmodal.showModal();\n\t\t\t\t}\n\t\t\t})();\n\t\t</script></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 213, "</div></div></div><form method=\"dialog\" class=\"modal-backdrop\"><button aria-label=\"Close\">close</button></form></dialog><script>\r\n\t\t\t(function() {\r\n\t\t\t\tfunction nextImportLineState(state) {\r\n\t\t\t\t\tswitch (state) {\r\n\t\t\t\t\t\tcase \"ignore\":\r\n\t\t\t\t\t\t\treturn \"heading\";\r\n\t\t\t\t\t\tcase \"heading\":\r\n\t\t\t\t\t\t\treturn \"subheading\";\r\n\t\t\t\t\t\tdefault:\r\n\t\t\t\t\t\t\treturn \"ignore\";\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\r\n\t\t\t\tfunction setImportLineVisualState(row, state) {\n\t\t\t\t\trow.setAttribute(\"data-state\", state);\n\t\t\t\t\trow.classList.remove(\"border-base-300\", \"bg-base-100\", \"border-primary/30\", \"bg-primary/10\", \"border-info/30\", \"bg-info/10\", \"opacity-60\");\n\t\t\t\t\tswitch (state) {\r\n\t\t\t\t\t\tcase \"heading\":\r\n\t\t\t\t\t\t\trow.classList.add(\"border-primary/30\", \"bg-primary/10\");\r\n\t\t\t\t\t\t\tbreak;\r\n\t\t\t\t\t\tcase \"subheading\":\r\n\t\t\t\t\t\t\trow.classList.add(\"border-info/30\", \"bg-info/10\");\r\n\t\t\t\t\t\t\tbreak;\r\n\t\t\t\t\t\tdefault:\r\n\t\t\t\t\t\trow.classList.add(\"border-base-300\", \"bg-base-100\", \"opacity-60\");\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction setAgendaImportStep(flow, step) {\n\t\t\t\t\tif (!(flow instanceof Element)) { return; }\n\t\t\t\t\tvar parsedStep = parseInt(step, 10);\n\t\t\t\t\tif (!Number.isFinite(parsedStep)) {\n\t\t\t\t\t\tparsedStep = 1;\n\t\t\t\t\t}\n\t\t\t\t\tif (parsedStep < 1) { parsedStep = 1; }\n\t\t\t\t\tif (parsedStep > 3) { parsedStep = 3; }\n\t\t\t\t\tflow.setAttribute(\"data-agenda-import-step\", String(parsedStep));\n\n\t\t\t\t\tvar panels = flow.querySelectorAll(\"[data-agenda-import-panel]\");\n\t\t\t\t\tfor (var i = 0; i < panels.length; i++) {\n\t\t\t\t\t\tvar panel = panels[i];\n\t\t\t\t\t\tvar panelStep = parseInt(panel.getAttribute(\"data-agenda-import-panel\") || \"\", 10);\n\t\t\t\t\t\tvar isVisible = panelStep === parsedStep;\n\t\t\t\t\t\tpanel.classList.toggle(\"hidden\", !isVisible);\n\t\t\t\t\t}\n\n\t\t\t\t\tvar stepItems = flow.querySelectorAll(\"[data-agenda-import-step-item]\");\n\t\t\t\t\tfor (var j = 0; j < stepItems.length; j++) {\n\t\t\t\t\t\tvar stepItem = stepItems[j];\n\t\t\t\t\t\tvar itemStep = parseInt(stepItem.getAttribute(\"data-agenda-import-step-item\") || \"\", 10);\n\t\t\t\t\t\tstepItem.classList.toggle(\"step-primary\", itemStep <= parsedStep);\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tfunction recomputeAgendaImportDetectedNumbers(scope) {\n\t\t\t\t\tvar root = scope instanceof Element ? scope : document;\n\t\t\t\t\tvar containers = [];\n\t\t\t\t\tif (root instanceof Element && root.matches(\"[data-agenda-import-lines]\")) {\r\n\t\t\t\t\t\tcontainers.push(root);\r\n\t\t\t\t\t}\r\n\t\t\t\t\tvar nested = root.querySelectorAll(\"[data-agenda-import-lines]\");\r\n\t\t\t\t\tfor (var n = 0; n < nested.length; n++) {\r\n\t\t\t\t\t\tcontainers.push(nested[n]);\r\n\t\t\t\t\t}\r\n\t\t\t\t\tfor (var c = 0; c < containers.length; c++) {\r\n\t\t\t\t\t\tvar topIndex = 0;\r\n\t\t\t\t\t\tvar subIndex = 0;\r\n\t\t\t\t\t\tvar rows = containers[c].querySelectorAll(\"[data-import-line-row]\");\r\n\t\t\t\t\t\tfor (var i = 0; i < rows.length; i++) {\r\n\t\t\t\t\t\t\tvar row = rows[i];\r\n\t\t\t\t\t\t\tvar state = row.getAttribute(\"data-state\") || \"ignore\";\r\n\t\t\t\t\t\t\tvar prefix = row.querySelector(\"[data-import-line-prefix]\");\r\n\t\t\t\t\t\t\tvar label = \"\";\r\n\t\t\t\t\t\t\tif (state === \"heading\") {\r\n\t\t\t\t\t\t\t\ttopIndex++;\r\n\t\t\t\t\t\t\t\tsubIndex = 0;\r\n\t\t\t\t\t\t\t\tlabel = \"TOP \" + topIndex;\r\n\t\t\t\t\t\t\t} else if (state === \"subheading\" && topIndex > 0) {\r\n\t\t\t\t\t\t\t\tsubIndex++;\r\n\t\t\t\t\t\t\t\tlabel = \"TOP \" + topIndex + \".\" + subIndex;\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tif (prefix) {\r\n\t\t\t\t\t\t\t\tprefix.textContent = label;\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\r\n\t\t\t\tfunction syncAgendaImportLineStates(scope) {\r\n\t\t\t\t\tvar root = scope instanceof Element ? scope : document;\r\n\t\t\t\t\tvar rows = root.querySelectorAll(\"[data-import-line-row]\");\r\n\t\t\t\t\tfor (var i = 0; i < rows.length; i++) {\r\n\t\t\t\t\t\tvar row = rows[i];\r\n\t\t\t\t\t\tvar container = row.parentElement;\r\n\t\t\t\t\t\tif (!container) { continue; }\r\n\t\t\t\t\t\tvar hiddenState = container.querySelector(\"[data-import-line-state]\");\r\n\t\t\t\t\t\tvar state = \"ignore\";\r\n\t\t\t\t\t\tif (hiddenState instanceof HTMLInputElement) {\r\n\t\t\t\t\t\t\tstate = hiddenState.value;\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\tif (state !== \"ignore\" && state !== \"heading\" && state !== \"subheading\") {\r\n\t\t\t\t\t\t\tstate = \"ignore\";\r\n\t\t\t\t\t\t\tif (hiddenState instanceof HTMLInputElement) {\r\n\t\t\t\t\t\t\t\thiddenState.value = state;\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\tsetImportLineVisualState(row, state);\r\n\t\t\t\t\t}\r\n\t\t\t\t\trecomputeAgendaImportDetectedNumbers(root);\r\n\t\t\t\t}\r\n\r\n\t\t\t\tfunction clearAgendaImportDiffHover() {\r\n\t\t\t\t\tvar hovered = document.querySelectorAll(\"#agenda-import-diff-grid [data-diff-cell][data-hovered='true']\");\r\n\t\t\t\t\tfor (var i = 0; i < hovered.length; i++) {\r\n\t\t\t\t\t\thovered[i].removeAttribute(\"data-hovered\");\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\r\n\t\t\t\tfunction applyAgendaImportDiffHover(key) {\r\n\t\t\t\t\tclearAgendaImportDiffHover();\r\n\t\t\t\t\tif (!key) { return; }\r\n\t\t\t\t\tvar safeKey = key.replace(/\"/g, '\\\\\"');\r\n\t\t\t\t\tvar selector = \"#agenda-import-diff-grid [data-diff-cell][data-diff-hover-key=\\\"\" + safeKey + \"\\\"]\";\r\n\t\t\t\t\tvar cells = document.querySelectorAll(selector);\r\n\t\t\t\t\tfor (var i = 0; i < cells.length; i++) {\r\n\t\t\t\t\t\tcells[i].setAttribute(\"data-hovered\", \"true\");\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\r\n\t\t\t\tif (!window.__agendaImportFileWired) {\r\n\t\t\t\t\tdocument.addEventListener(\"change\", function(event) {\r\n\t\t\t\t\t\tvar input = event.target;\r\n\t\t\t\t\t\tif (!(input instanceof HTMLInputElement) || !input.matches(\"[data-agenda-import-file]\")) { return; }\r\n\t\t\t\t\t\tif (!input.files || input.files.length === 0) { return; }\r\n\t\t\t\t\t\tvar file = input.files[0];\r\n\t\t\t\t\t\tvar targetID = input.getAttribute(\"data-target\");\r\n\t\t\t\t\t\tif (!targetID) { return; }\r\n\t\t\t\t\t\tfile.text().then(function(content) {\r\n\t\t\t\t\t\t\tvar target = document.getElementById(targetID);\r\n\t\t\t\t\t\t\tif (target instanceof HTMLTextAreaElement) {\r\n\t\t\t\t\t\t\t\ttarget.value = content;\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t});\r\n\t\t\t\t\t});\r\n\t\t\t\t\twindow.__agendaImportFileWired = true;\r\n\t\t\t\t}\r\n\r\n\t\t\t\tif (!window.__agendaImportCorrectionWired) {\r\n\t\t\t\t\tdocument.addEventListener(\"click\", function(event) {\r\n\t\t\t\t\t\tvar target = event.target;\r\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\r\n\t\t\t\t\t\tvar row = target.closest(\"[data-import-line-row]\");\r\n\t\t\t\t\t\tif (!row) { return; }\r\n\t\t\t\t\t\tvar container = row.parentElement;\r\n\t\t\t\t\t\tif (!container) { return; }\r\n\t\t\t\t\t\tvar hiddenState = container.querySelector(\"[data-import-line-state]\");\r\n\t\t\t\t\t\tif (!(hiddenState instanceof HTMLInputElement)) { return; }\r\n\t\t\t\t\t\tvar next = nextImportLineState(hiddenState.value);\r\n\t\t\t\t\t\thiddenState.value = next;\r\n\t\t\t\t\t\tsetImportLineVisualState(row, next);\r\n\t\t\t\t\t\trecomputeAgendaImportDetectedNumbers(row.closest(\"[data-agenda-import-lines]\"));\r\n\t\t\t\t\t});\r\n\t\t\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\r\n\t\t\t\t\t\tvar target = event.target;\r\n\t\t\t\t\t\tif (target instanceof Element) {\r\n\t\t\t\t\t\t\tsyncAgendaImportLineStates(target);\r\n\t\t\t\t\t\t\treturn;\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\tsyncAgendaImportLineStates(document);\r\n\t\t\t\t\t});\r\n\t\t\t\t\twindow.__agendaImportCorrectionWired = true;\r\n\t\t\t\t}\r\n\r\n\t\t\t\tif (!window.__agendaImportDiffHoverWired) {\n\t\t\t\t\tdocument.addEventListener(\"mouseover\", function(event) {\r\n\t\t\t\t\t\tvar target = event.target;\r\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\r\n\t\t\t\t\t\tvar cell = target.closest(\"#agenda-import-diff-grid [data-diff-cell]\");\r\n\t\t\t\t\t\tif (!cell) { return; }\r\n\t\t\t\t\t\tapplyAgendaImportDiffHover(cell.getAttribute(\"data-diff-hover-key\") || \"\");\r\n\t\t\t\t\t});\r\n\t\t\t\t\tdocument.addEventListener(\"mouseout\", function(event) {\r\n\t\t\t\t\t\tvar target = event.target;\r\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\r\n\t\t\t\t\t\tvar cell = target.closest(\"#agenda-import-diff-grid [data-diff-cell]\");\r\n\t\t\t\t\t\tif (!cell) { return; }\r\n\t\t\t\t\t\tvar related = event.relatedTarget;\r\n\t\t\t\t\t\tif (related instanceof Element) {\r\n\t\t\t\t\t\t\tvar nextCell = related.closest(\"#agenda-import-diff-grid [data-diff-cell]\");\r\n\t\t\t\t\t\t\tif (nextCell) {\r\n\t\t\t\t\t\t\t\tapplyAgendaImportDiffHover(nextCell.getAttribute(\"data-diff-hover-key\") || \"\");\r\n\t\t\t\t\t\t\t\treturn;\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\tclearAgendaImportDiffHover();\r\n\t\t\t\t\t});\r\n\t\t\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function() {\r\n\t\t\t\t\t\tclearAgendaImportDiffHover();\r\n\t\t\t\t\t});\r\n\t\t\t\t\twindow.__agendaImportDiffHoverWired = true;\n\t\t\t\t}\n\n\t\t\t\tif (!window.__agendaImportStepWired) {\n\t\t\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\t\t\tvar target = event.target;\n\t\t\t\t\t\tif (!(target instanceof Element)) { return; }\n\t\t\t\t\t\tvar backButton = target.closest(\"[data-agenda-import-back]\");\n\t\t\t\t\t\tif (!backButton) { return; }\n\t\t\t\t\t\tvar flow = backButton.closest(\"[data-agenda-import-flow]\");\n\t\t\t\t\t\tif (!(flow instanceof Element)) { return; }\n\t\t\t\t\t\tvar nextStep = backButton.getAttribute(\"data-agenda-import-back\") || \"\";\n\t\t\t\t\t\tsetAgendaImportStep(flow, nextStep);\n\t\t\t\t\t});\n\t\t\t\t\twindow.__agendaImportStepWired = true;\n\t\t\t\t}\n\n\t\t\t\tvar root = document.getElementById(\"agenda-point-list-container\");\n\t\t\t\tvar modal = document.getElementById(\"moderate-agenda-import-dialog\");\n\t\t\t\tif (!root || !modal || typeof modal.showModal !== \"function\") { return; }\n\t\t\t\tsyncAgendaImportLineStates(root);\n\t\t\t\tvar flow = root.querySelector(\"[data-agenda-import-flow]\");\n\t\t\t\tif (flow) {\n\t\t\t\t\tsetAgendaImportStep(flow, flow.getAttribute(\"data-agenda-import-step\") || \"1\");\n\t\t\t\t}\n\t\t\t\tif (root.getAttribute(\"data-import-open\") === \"true\" && !modal.open) {\n\t\t\t\t\tmodal.showModal();\n\t\t\t\t}\n\t\t\t})();\r\n\t\t</script></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -3040,7 +3040,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var116 string
 			templ_7745c5c3_Var116, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointQuotationPostStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1738, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1740, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var116))
 			if templ_7745c5c3_Err != nil {
@@ -3187,7 +3187,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var121 string
 			templ_7745c5c3_Var121, templ_7745c5c3_Err = templ.JoinStringErrs(input.AgendaPointModeratorPostStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1784, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1786, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var121))
 			if templ_7745c5c3_Err != nil {
@@ -3215,7 +3215,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var122 string
 				templ_7745c5c3_Var122, templ_7745c5c3_Err = templ.JoinStringErrs(a.IDString)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1793, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1795, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var122))
 				if templ_7745c5c3_Err != nil {
@@ -3238,7 +3238,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var123 string
 				templ_7745c5c3_Var123, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1793, Col: 117}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1795, Col: 117}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var123))
 				if templ_7745c5c3_Err != nil {
@@ -3269,7 +3269,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var124 string
 				templ_7745c5c3_Var124, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerEndPostStr(ctx, current))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1816, Col: 52}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1818, Col: 52}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var124))
 				if templ_7745c5c3_Err != nil {
@@ -3295,7 +3295,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 				var templ_7745c5c3_Var125 string
 				templ_7745c5c3_Var125, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerStartPostStr(ctx, next))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1835, Col: 51}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1837, Col: 51}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var125))
 				if templ_7745c5c3_Err != nil {
@@ -3364,7 +3364,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var126 string
 			templ_7745c5c3_Var126, templ_7745c5c3_Err = templ.JoinStringErrs(input.SearchQuery)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1895, Col: 31}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1897, Col: 31}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var126))
 			if templ_7745c5c3_Err != nil {
@@ -3377,7 +3377,7 @@ func SpeakersListContent(input SpeakersListPartialInput) templ.Component {
 			var templ_7745c5c3_Var127 string
 			templ_7745c5c3_Var127, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerAddCandidatesPartialGetStr(ctx))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1897, Col: 59}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1899, Col: 59}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var127))
 			if templ_7745c5c3_Err != nil {
@@ -3439,7 +3439,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var129 string
 				templ_7745c5c3_Var129, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatInt(a.AttendeeNumber, 10))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1918, Col: 83}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1920, Col: 83}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var129))
 				if templ_7745c5c3_Err != nil {
@@ -3452,7 +3452,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var130 string
 				templ_7745c5c3_Var130, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1919, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1921, Col: 61}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var130))
 				if templ_7745c5c3_Err != nil {
@@ -3465,7 +3465,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var131 string
 				templ_7745c5c3_Var131, templ_7745c5c3_Err = templ.JoinStringErrs(a.FullName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1919, Col: 76}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1921, Col: 76}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var131))
 				if templ_7745c5c3_Err != nil {
@@ -3487,7 +3487,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var133 string
 				templ_7745c5c3_Var133, templ_7745c5c3_Err = templ.JoinStringErrs(input.SpeakerAddPostStr(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1922, Col: 44}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1924, Col: 44}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var133))
 				if templ_7745c5c3_Err != nil {
@@ -3500,7 +3500,7 @@ func SpeakerAddCandidatesPartial(input SpeakersListPartialInput) templ.Component
 				var templ_7745c5c3_Var134 string
 				templ_7745c5c3_Var134, templ_7745c5c3_Err = templ.JoinStringErrs("{\"attendee_id\":\"" + a.IDString + "\"}")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1925, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1927, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var134))
 				if templ_7745c5c3_Err != nil {
@@ -3724,7 +3724,7 @@ func ManageAttendeesCard(input AttendeeListPartialInput) templ.Component {
 		var templ_7745c5c3_Var140 templ.SafeURL
 		templ_7745c5c3_Var140, templ_7745c5c3_Err = templ.JoinURLErrs(input.ManageJoinQRGet(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1992, Col: 37}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 1994, Col: 37}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var140))
 		if templ_7745c5c3_Err != nil {
@@ -3853,7 +3853,7 @@ func MeetingManageContent(input MeetingManageInput) templ.Component {
 		var templ_7745c5c3_Var144 string
 		templ_7745c5c3_Var144, templ_7745c5c3_Err = templ.JoinStringErrs(string(input.ManageStreamGet(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 2025, Col: 54}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_manage.templ`, Line: 2027, Col: 54}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var144))
 		if templ_7745c5c3_Err != nil {
@@ -3871,7 +3871,7 @@ func MeetingManageContent(input MeetingManageInput) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 303, "</div></div><script>\n\t\t(function() {\n\t\t\tfunction formatElapsed(totalSeconds) {\n\t\t\t\tvar mins = Math.floor(totalSeconds / 60);\n\t\t\t\tvar secs = totalSeconds % 60;\n\t\t\t\treturn String(mins).padStart(2, \"0\") + \":\" + String(secs).padStart(2, \"0\");\n\t\t\t}\n\n\t\t\tfunction updateSpeakingTimers() {\n\t\t\t\tvar nowSec = Math.floor(Date.now() / 1000);\n\t\t\t\tvar timers = document.querySelectorAll(\"[data-speaking-since]\");\n\t\t\t\tfor (var i = 0; i < timers.length; i++) {\n\t\t\t\t\tvar el = timers[i];\n\t\t\t\t\tvar since = Number(el.getAttribute(\"data-speaking-since\"));\n\t\t\t\t\tif (!Number.isFinite(since) || since <= 0) {\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tvar elapsed = Math.max(0, nowSec - since);\n\t\t\t\t\tel.textContent = formatElapsed(elapsed);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction wireManageDialogs() {\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\n\t\t\t\t\tvar openBtn = event.target.closest(\"[data-manage-dialog-open]\");\n\t\t\t\t\tif (openBtn) {\n\t\t\t\t\t\tvar dialogID = openBtn.getAttribute(\"aria-controls\");\n\t\t\t\t\t\tvar dialog = dialogID ? document.getElementById(dialogID) : null;\n\t\t\t\t\t\tif (dialog && typeof dialog.showModal === \"function\") {\n\t\t\t\t\t\t\tdialog.showModal();\n\t\t\t\t\t\t}\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tvar closeBtn = event.target.closest(\"[data-manage-dialog-close]\");\n\t\t\t\t\tif (closeBtn) {\n\t\t\t\t\t\tvar closeDialog = closeBtn.closest(\"dialog\");\n\t\t\t\t\t\tif (closeDialog && typeof closeDialog.close === \"function\") {\n\t\t\t\t\t\t\tcloseDialog.close();\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\n\t\t\t\t\tvar dialog = event.target;\n\t\t\t\t\tif (!(dialog instanceof HTMLDialogElement) || !dialog.hasAttribute(\"data-manage-dialog\")) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tvar rect = dialog.getBoundingClientRect();\n\t\t\t\t\tvar outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;\n\t\t\t\t\tif (outside) {\n\t\t\t\t\t\tdialog.close();\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tfunction getManageSpeakersViewport() {\n\t\t\t\tvar scopedContainer = document.querySelector(\"[data-testid='manage-speakers-card'] #speakers-list-container\");\n\t\t\t\tif (scopedContainer) {\n\t\t\t\t\tvar scopedViewport = scopedContainer.querySelector(\"[data-manage-speakers-viewport]\");\n\t\t\t\t\tif (scopedViewport) {\n\t\t\t\t\t\treturn scopedViewport;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tvar viewports = document.querySelectorAll(\"#speakers-list-container [data-manage-speakers-viewport]\");\n\t\t\t\tvar best = null;\n\t\t\t\tvar bestScore = -1;\n\t\t\t\tfor (var i = 0; i < viewports.length; i++) {\n\t\t\t\t\tvar viewport = viewports[i];\n\t\t\t\t\tvar score = Math.max(viewport.scrollHeight || 0, viewport.clientHeight || 0);\n\t\t\t\t\tif (score > bestScore) {\n\t\t\t\t\t\tbestScore = score;\n\t\t\t\t\t\tbest = viewport;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\treturn best;\n\t\t\t}\n\n\t\t\tfunction applyManageSpeakersInitialScroll() {\n\t\t\t\tvar viewport = getManageSpeakersViewport();\n\t\t\t\tif (!viewport) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tfunction nudgePreviousRowOut(anchor) {\n\t\t\t\t\tvar prevRow = anchor ? anchor.previousElementSibling : null;\n\t\t\t\t\tif (!prevRow) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tvar prevRect = prevRow.getBoundingClientRect();\n\t\t\t\t\tvar vpRect = viewport.getBoundingClientRect();\n\t\t\t\t\tvar overlap = prevRect.bottom - (vpRect.top + 1);\n\t\t\t\t\tif (overlap > -1) {\n\t\t\t\t\t\tviewport.scrollTop = Math.max(0, viewport.scrollTop + overlap + 8);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\tvar anchor = viewport.querySelector(\"[data-manage-scroll-anchor='true']\");\n\t\t\t\tif (anchor) {\n\t\t\t\t\tvar anchorTop = anchor.offsetTop - viewport.offsetTop;\n\t\t\t\t\tvar anchorMarginTop = parseFloat(window.getComputedStyle(anchor).marginTop || \"0\");\n\t\t\t\t\tviewport.scrollTop = Math.max(0, anchorTop + anchorMarginTop + 2);\n\t\t\t\t\tnudgePreviousRowOut(anchor);\n\t\t\t\t\twindow.requestAnimationFrame(function() {\n\t\t\t\t\t\tnudgePreviousRowOut(anchor);\n\t\t\t\t\t});\n\t\t\t\t} else {\n\t\t\t\t\tviewport.scrollTop = 0;\n\t\t\t\t}\n\t\t\t\tviewport.dataset.initialScrollTop = String(viewport.scrollTop);\n\t\t\t}\n\n\t\t\tfunction restoreManageSpeakersInitialScroll() {\n\t\t\t\tvar viewport = getManageSpeakersViewport();\n\t\t\t\tif (!viewport) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar saved = Number(viewport.dataset.initialScrollTop);\n\t\t\t\tif (Number.isFinite(saved)) {\n\t\t\t\t\tviewport.scrollTop = saved;\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tapplyManageSpeakersInitialScroll();\n\t\t\t}\n\n\t\t\tfunction wireManageSpeakersControls() {\n\t\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\t\tvar resetBtn = event.target.closest(\"[data-manage-speakers-reset-scroll]\");\n\t\t\t\t\tif (!resetBtn) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\trestoreManageSpeakersInitialScroll();\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tfunction wireSpeakerSearchEnterAdd() {\n\t\t\t\tfunction isSearchInput(target) {\n\t\t\t\t\treturn target instanceof HTMLInputElement && (target.id === \"speaker-add-search-input\" || target.id === \"moderate-speaker-search\");\n\t\t\t\t}\n\n\t\t\t\tfunction clearAndRefocus(input) {\n\t\t\t\t\tinput.value = \"\";\n\t\t\t\t\tinput.dispatchEvent(new Event(\"input\", { bubbles: true }));\n\t\t\t\t\tfunction applyFocus() {\n\t\t\t\t\t\tif (typeof input.focus === \"function\") {\n\t\t\t\t\t\t\tinput.focus({ preventScroll: true });\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\twindow.requestAnimationFrame(function() {\n\t\t\t\t\t\tapplyFocus();\n\t\t\t\t\t});\n\t\t\t\t\twindow.setTimeout(applyFocus, 50);\n\t\t\t\t\twindow.setTimeout(applyFocus, 150);\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener(\"keydown\", function(event) {\n\t\t\t\t\tif (event.key !== \"Enter\") {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tvar input = event.target;\n\t\t\t\t\tif (!isSearchInput(input)) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tif (input.value.trim() === \"\") {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\tvar candidates = document.getElementById(\"speaker-add-candidates-container\");\n\t\t\t\t\tif (!candidates) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tvar firstRegularButton = candidates.querySelector(\"button[data-speaker-add-regular='true']\");\n\t\t\t\t\tif (!(firstRegularButton instanceof HTMLButtonElement) || firstRegularButton.disabled) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tinput.dataset.enterAddPending = \"true\";\n\t\t\t\t\tfirstRegularButton.click();\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function(event) {\n\t\t\t\t\tvar source = event.detail && event.detail.elt;\n\t\t\t\t\tif (!(source instanceof Element) || !source.closest(\"#speaker-add-candidates-container\")) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tvar pendingInput = document.querySelector(\"input[data-enter-add-pending='true']\");\n\t\t\t\t\tif (!(pendingInput instanceof HTMLInputElement)) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\n\t\t\t\t\tdelete pendingInput.dataset.enterAddPending;\n\t\t\t\t\tif (!event.detail.successful) {\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\tclearAndRefocus(pendingInput);\n\t\t\t\t});\n\t\t\t}\n\n\t\t\tvar root = document.getElementById(\"manage-sse-root\");\n\t\t\tif (!root) return;\n\n\t\t\tvar key = \"manageClientId\";\n\t\t\tvar clientID = sessionStorage.getItem(key);\n\t\t\tif (!clientID) {\n\t\t\t\tif (window.crypto && typeof window.crypto.randomUUID === \"function\") {\n\t\t\t\t\tclientID = window.crypto.randomUUID();\n\t\t\t\t} else {\n\t\t\t\t\tclientID = Date.now().toString(36) + Math.random().toString(36).slice(2);\n\t\t\t\t}\n\t\t\t\tsessionStorage.setItem(key, clientID);\n\t\t\t}\n\t\t\troot.dataset.clientId = clientID;\n\n\t\t\tvar streamURL = root.getAttribute(\"data-stream-url\");\n\t\t\tif (!streamURL) return;\n\t\t\tvar separator = streamURL.indexOf(\"?\") >= 0 ? \"&\" : \"?\";\n\t\t\troot.setAttribute(\"sse-connect\", streamURL + separator + \"client_id=\" + encodeURIComponent(clientID));\n\t\t\tif (window.htmx && typeof window.htmx.process === \"function\") {\n\t\t\t\twindow.htmx.process(root);\n\t\t\t}\n\n\t\t\tupdateSpeakingTimers();\n\t\t\tapplyManageSpeakersInitialScroll();\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 40);\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 180);\n\t\t\twindow.setInterval(updateSpeakingTimers, 1000);\n\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\n\t\t\t\tupdateSpeakingTimers();\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof Element)) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tif (target.id !== \"speakers-list-container\" && !target.closest(\"#speakers-list-container\")) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 0);\n\t\t\t});\n\t\t\twireManageDialogs();\n\t\t\twireManageSpeakersControls();\n\t\t\twireSpeakerSearchEnterAdd();\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 303, "</div></div><script>\r\n\t\t(function() {\r\n\t\t\tfunction formatElapsed(totalSeconds) {\r\n\t\t\t\tvar mins = Math.floor(totalSeconds / 60);\r\n\t\t\t\tvar secs = totalSeconds % 60;\r\n\t\t\t\treturn String(mins).padStart(2, \"0\") + \":\" + String(secs).padStart(2, \"0\");\r\n\t\t\t}\r\n\r\n\t\t\tfunction updateSpeakingTimers() {\r\n\t\t\t\tvar nowSec = Math.floor(Date.now() / 1000);\r\n\t\t\t\tvar timers = document.querySelectorAll(\"[data-speaking-since]\");\r\n\t\t\t\tfor (var i = 0; i < timers.length; i++) {\r\n\t\t\t\t\tvar el = timers[i];\r\n\t\t\t\t\tvar since = Number(el.getAttribute(\"data-speaking-since\"));\r\n\t\t\t\t\tif (!Number.isFinite(since) || since <= 0) {\r\n\t\t\t\t\t\tcontinue;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tvar elapsed = Math.max(0, nowSec - since);\r\n\t\t\t\t\tel.textContent = formatElapsed(elapsed);\r\n\t\t\t\t}\r\n\t\t\t}\r\n\r\n\t\t\tfunction wireManageDialogs() {\r\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\r\n\t\t\t\t\tvar openBtn = event.target.closest(\"[data-manage-dialog-open]\");\r\n\t\t\t\t\tif (openBtn) {\r\n\t\t\t\t\t\tvar dialogID = openBtn.getAttribute(\"aria-controls\");\r\n\t\t\t\t\t\tvar dialog = dialogID ? document.getElementById(dialogID) : null;\r\n\t\t\t\t\t\tif (dialog && typeof dialog.showModal === \"function\") {\r\n\t\t\t\t\t\t\tdialog.showModal();\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tvar closeBtn = event.target.closest(\"[data-manage-dialog-close]\");\r\n\t\t\t\t\tif (closeBtn) {\r\n\t\t\t\t\t\tvar closeDialog = closeBtn.closest(\"dialog\");\r\n\t\t\t\t\t\tif (closeDialog && typeof closeDialog.close === \"function\") {\r\n\t\t\t\t\t\t\tcloseDialog.close();\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t}\r\n\t\t\t\t});\r\n\r\n\t\t\t\tdocument.addEventListener(\"click\", function (event) {\r\n\t\t\t\t\tvar dialog = event.target;\r\n\t\t\t\t\tif (!(dialog instanceof HTMLDialogElement) || !dialog.hasAttribute(\"data-manage-dialog\")) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tvar rect = dialog.getBoundingClientRect();\r\n\t\t\t\t\tvar outside = event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;\r\n\t\t\t\t\tif (outside) {\r\n\t\t\t\t\t\tdialog.close();\r\n\t\t\t\t\t}\r\n\t\t\t\t});\r\n\t\t\t}\r\n\r\n\t\t\tfunction getManageSpeakersViewport() {\r\n\t\t\t\tvar scopedContainer = document.querySelector(\"[data-testid='manage-speakers-card'] #speakers-list-container\");\r\n\t\t\t\tif (scopedContainer) {\r\n\t\t\t\t\tvar scopedViewport = scopedContainer.querySelector(\"[data-manage-speakers-viewport]\");\r\n\t\t\t\t\tif (scopedViewport) {\r\n\t\t\t\t\t\treturn scopedViewport;\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t\tvar viewports = document.querySelectorAll(\"#speakers-list-container [data-manage-speakers-viewport]\");\r\n\t\t\t\tvar best = null;\r\n\t\t\t\tvar bestScore = -1;\r\n\t\t\t\tfor (var i = 0; i < viewports.length; i++) {\r\n\t\t\t\t\tvar viewport = viewports[i];\r\n\t\t\t\t\tvar score = Math.max(viewport.scrollHeight || 0, viewport.clientHeight || 0);\r\n\t\t\t\t\tif (score > bestScore) {\r\n\t\t\t\t\t\tbestScore = score;\r\n\t\t\t\t\t\tbest = viewport;\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t\treturn best;\r\n\t\t\t}\r\n\r\n\t\t\tfunction applyManageSpeakersInitialScroll() {\r\n\t\t\t\tvar viewport = getManageSpeakersViewport();\r\n\t\t\t\tif (!viewport) {\r\n\t\t\t\t\treturn;\r\n\t\t\t\t}\r\n\t\t\t\tfunction nudgePreviousRowOut(anchor) {\r\n\t\t\t\t\tvar prevRow = anchor ? anchor.previousElementSibling : null;\r\n\t\t\t\t\tif (!prevRow) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tvar prevRect = prevRow.getBoundingClientRect();\r\n\t\t\t\t\tvar vpRect = viewport.getBoundingClientRect();\r\n\t\t\t\t\tvar overlap = prevRect.bottom - (vpRect.top + 1);\r\n\t\t\t\t\tif (overlap > -1) {\r\n\t\t\t\t\t\tviewport.scrollTop = Math.max(0, viewport.scrollTop + overlap + 8);\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t\tvar anchor = viewport.querySelector(\"[data-manage-scroll-anchor='true']\");\r\n\t\t\t\tif (anchor) {\r\n\t\t\t\t\tvar anchorTop = anchor.offsetTop - viewport.offsetTop;\r\n\t\t\t\t\tvar anchorMarginTop = parseFloat(window.getComputedStyle(anchor).marginTop || \"0\");\r\n\t\t\t\t\tviewport.scrollTop = Math.max(0, anchorTop + anchorMarginTop + 2);\r\n\t\t\t\t\tnudgePreviousRowOut(anchor);\r\n\t\t\t\t\twindow.requestAnimationFrame(function() {\r\n\t\t\t\t\t\tnudgePreviousRowOut(anchor);\r\n\t\t\t\t\t});\r\n\t\t\t\t} else {\r\n\t\t\t\t\tviewport.scrollTop = 0;\r\n\t\t\t\t}\r\n\t\t\t\tviewport.dataset.initialScrollTop = String(viewport.scrollTop);\r\n\t\t\t}\r\n\r\n\t\t\tfunction restoreManageSpeakersInitialScroll() {\r\n\t\t\t\tvar viewport = getManageSpeakersViewport();\r\n\t\t\t\tif (!viewport) {\r\n\t\t\t\t\treturn;\r\n\t\t\t\t}\r\n\t\t\t\tvar saved = Number(viewport.dataset.initialScrollTop);\r\n\t\t\t\tif (Number.isFinite(saved)) {\r\n\t\t\t\t\tviewport.scrollTop = saved;\r\n\t\t\t\t\treturn;\r\n\t\t\t\t}\r\n\t\t\t\tapplyManageSpeakersInitialScroll();\r\n\t\t\t}\r\n\r\n\t\t\tfunction wireManageSpeakersControls() {\r\n\t\t\t\tdocument.addEventListener(\"click\", function(event) {\r\n\t\t\t\t\tvar resetBtn = event.target.closest(\"[data-manage-speakers-reset-scroll]\");\r\n\t\t\t\t\tif (!resetBtn) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\t\t\t\t\trestoreManageSpeakersInitialScroll();\r\n\t\t\t\t});\r\n\t\t\t}\r\n\r\n\t\t\tfunction wireSpeakerSearchEnterAdd() {\r\n\t\t\t\tfunction isSearchInput(target) {\r\n\t\t\t\t\treturn target instanceof HTMLInputElement && (target.id === \"speaker-add-search-input\" || target.id === \"moderate-speaker-search\");\r\n\t\t\t\t}\r\n\r\n\t\t\t\tfunction clearAndRefocus(input) {\r\n\t\t\t\t\tinput.value = \"\";\r\n\t\t\t\t\tinput.dispatchEvent(new Event(\"input\", { bubbles: true }));\r\n\t\t\t\t\tfunction applyFocus() {\r\n\t\t\t\t\t\tif (typeof input.focus === \"function\") {\r\n\t\t\t\t\t\t\tinput.focus({ preventScroll: true });\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t}\r\n\t\t\t\t\twindow.requestAnimationFrame(function() {\r\n\t\t\t\t\t\tapplyFocus();\r\n\t\t\t\t\t});\r\n\t\t\t\t\twindow.setTimeout(applyFocus, 50);\r\n\t\t\t\t\twindow.setTimeout(applyFocus, 150);\r\n\t\t\t\t}\r\n\r\n\t\t\t\tdocument.addEventListener(\"keydown\", function(event) {\r\n\t\t\t\t\tif (event.key !== \"Enter\") {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tvar input = event.target;\r\n\t\t\t\t\tif (!isSearchInput(input)) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tif (input.value.trim() === \"\") {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tevent.preventDefault();\r\n\t\t\t\t\tvar candidates = document.getElementById(\"speaker-add-candidates-container\");\r\n\t\t\t\t\tif (!candidates) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tvar firstRegularButton = candidates.querySelector(\"button[data-speaker-add-regular='true']\");\r\n\t\t\t\t\tif (!(firstRegularButton instanceof HTMLButtonElement) || firstRegularButton.disabled) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tinput.dataset.enterAddPending = \"true\";\r\n\t\t\t\t\tfirstRegularButton.click();\r\n\t\t\t\t});\r\n\r\n\t\t\t\tdocument.addEventListener(\"htmx:afterRequest\", function(event) {\r\n\t\t\t\t\tvar source = event.detail && event.detail.elt;\r\n\t\t\t\t\tif (!(source instanceof Element) || !source.closest(\"#speaker-add-candidates-container\")) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tvar pendingInput = document.querySelector(\"input[data-enter-add-pending='true']\");\r\n\t\t\t\t\tif (!(pendingInput instanceof HTMLInputElement)) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\r\n\t\t\t\t\tdelete pendingInput.dataset.enterAddPending;\r\n\t\t\t\t\tif (!event.detail.successful) {\r\n\t\t\t\t\t\treturn;\r\n\t\t\t\t\t}\r\n\t\t\t\t\tclearAndRefocus(pendingInput);\r\n\t\t\t\t});\r\n\t\t\t}\r\n\r\n\t\t\tvar root = document.getElementById(\"manage-sse-root\");\r\n\t\t\tif (!root) return;\r\n\r\n\t\t\tvar key = \"manageClientId\";\r\n\t\t\tvar clientID = sessionStorage.getItem(key);\r\n\t\t\tif (!clientID) {\r\n\t\t\t\tif (window.crypto && typeof window.crypto.randomUUID === \"function\") {\r\n\t\t\t\t\tclientID = window.crypto.randomUUID();\r\n\t\t\t\t} else {\r\n\t\t\t\t\tclientID = Date.now().toString(36) + Math.random().toString(36).slice(2);\r\n\t\t\t\t}\r\n\t\t\t\tsessionStorage.setItem(key, clientID);\r\n\t\t\t}\r\n\t\t\troot.dataset.clientId = clientID;\r\n\r\n\t\t\tvar streamURL = root.getAttribute(\"data-stream-url\");\r\n\t\t\tif (!streamURL) return;\r\n\t\t\tvar separator = streamURL.indexOf(\"?\") >= 0 ? \"&\" : \"?\";\r\n\t\t\troot.setAttribute(\"sse-connect\", streamURL + separator + \"client_id=\" + encodeURIComponent(clientID));\r\n\t\t\tif (window.htmx && typeof window.htmx.process === \"function\") {\r\n\t\t\t\twindow.htmx.process(root);\r\n\t\t\t}\r\n\r\n\t\t\tupdateSpeakingTimers();\r\n\t\t\tapplyManageSpeakersInitialScroll();\r\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 40);\r\n\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 180);\r\n\t\t\twindow.setInterval(updateSpeakingTimers, 1000);\r\n\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\r\n\t\t\t\tupdateSpeakingTimers();\r\n\t\t\t\tvar target = event.target;\r\n\t\t\t\tif (!(target instanceof Element)) {\r\n\t\t\t\t\treturn;\r\n\t\t\t\t}\r\n\t\t\t\tif (target.id !== \"speakers-list-container\" && !target.closest(\"#speakers-list-container\")) {\r\n\t\t\t\t\treturn;\r\n\t\t\t\t}\r\n\t\t\t\twindow.setTimeout(applyManageSpeakersInitialScroll, 0);\r\n\t\t\t});\r\n\t\t\twireManageDialogs();\r\n\t\t\twireManageSpeakersControls();\r\n\t\t\twireSpeakerSearchEnterAdd();\r\n\t\t})();\r\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -846,7 +846,7 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 				hx-target="#attendee-list-container"
 				hx-swap="outerHTML"
 				hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-				hx-on::after-request="if(event.detail.successful) this.reset()"
+				hx-on::after-request="if(event.detail.successful){ this.reset(); var speakerSearch=document.getElementById('speaker-add-search-input') || document.getElementById('moderate-speaker-search'); if(speakerSearch && window.htmx){ htmx.trigger(speakerSearch,'search'); } }"
 				class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"
 				data-testid="manage-add-guest-form"
 			>
@@ -866,34 +866,69 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 		} else {
 			<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="manage-attendee-grid">
 				for _, a := range input.Attendees {
-					<li class="list-row items-center gap-3" data-testid="manage-attendee-card">
-						<div class="w-12 shrink-0 text-base-content/70">#{ strconv.FormatInt(a.AttendeeNumber, 10) }</div>
-						<div class="list-col-grow min-w-0">
-							<div class="truncate font-semibold">{ a.FullName }</div>
-							if a.IsGuest || a.IsChair || a.Quoted {
-								<div class="mt-1 flex flex-wrap items-center gap-1">
-									if a.IsGuest {
-										<span class="badge badge-neutral badge-sm">Guest</span>
-									}
-									if a.IsChair {
-										<span class="tooltip tooltip-right" data-tip="Chair">
-											<span class="badge badge-success badge-sm">
-												@Icon(IconCrown, "", "h-3.5 w-3.5")
-											</span>
-										</span>
-									}
-									if a.Quoted {
-										<span class="tooltip tooltip-right" data-tip="Gender quoted">
-											<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge">
-												@Icon(IconTransgender, "", "h-3.5 w-3.5")
-											</span>
-										</span>
+					<li class="list-row grid-cols-1 items-center gap-3" data-testid="manage-attendee-card">
+						<div class="col-span-full w-full min-w-0 space-y-2">
+							<div class="flex min-w-0 items-center gap-2">
+								<div class="w-12 shrink-0 text-base-content/70">#{ strconv.FormatInt(a.AttendeeNumber, 10) }</div>
+								<div class="min-w-0 flex-1 overflow-x-hidden">
+									<div class="truncate overflow-x-hidden font-semibold">{ a.FullName }</div>
+									if a.IsGuest || a.IsChair || a.Quoted {
+										<div class="mt-1 hidden flex-wrap items-center gap-1 sm:flex">
+											if a.IsGuest {
+												<span class="badge badge-neutral badge-sm">Guest</span>
+											}
+											if a.IsChair {
+												<span class="tooltip tooltip-right" data-tip="Chair">
+													<span class="badge badge-success badge-sm">
+														@Icon(IconCrown, "", "h-3.5 w-3.5")
+													</span>
+												</span>
+											}
+											if a.Quoted {
+												<span class="tooltip tooltip-right" data-tip="Gender quoted">
+													<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge">
+														@Icon(IconTransgender, "", "h-3.5 w-3.5")
+													</span>
+												</span>
+											}
+										</div>
 									}
 								</div>
-							}
-						</div>
-						<div class="shrink-0 self-center">
-							<div class="flex flex-col gap-1">
+								<div class="ml-auto shrink-0 self-center">
+									<div class="join sm:join-vertical">
+										if a.IsGuest {
+											<a
+												href={ input.AttendeeRecoveryGet(ctx, &a) }
+												class="join-item btn btn-sm btn-square tooltip tooltip-left"
+												data-tip="Recovery link"
+												title="Recovery link"
+												aria-label="Recovery link"
+											>
+												@Icon(IconHistory, "", "h-4 w-4")
+											</a>
+										}
+										<form
+											hx-post={ input.AttendeeDeletePostStr(ctx, &a) }
+											hx-target="#attendee-list-container"
+											hx-swap="outerHTML"
+											hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
+											hx-confirm="Remove this attendee?"
+											class="inline-flex"
+										>
+											<button
+												type="submit"
+												class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left"
+												data-tip="Remove attendee"
+												title="Remove attendee"
+												aria-label="Remove attendee"
+											>
+												@Icon(IconDelete, "", "h-4 w-4")
+											</button>
+										</form>
+									</div>
+								</div>
+							</div>
+							<div class="flex items-center justify-between gap-3">
 								<form
 									hx-post={ input.AttendeeToggleChairPostStr(ctx, &a) }
 									hx-target="#attendee-list-container"
@@ -934,41 +969,8 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 										</label>
 									</form>
 								} else {
-									<div class="h-6" aria-hidden="true"></div>
+									<div class="inline-flex items-center text-xs leading-none text-base-content/50">Gender quoted unavailable</div>
 								}
-							</div>
-						</div>
-						<div class="shrink-0 self-center">
-							<div class="join join-vertical">
-								if a.IsGuest {
-									<a
-										href={ input.AttendeeRecoveryGet(ctx, &a) }
-										class="join-item btn btn-sm btn-square tooltip tooltip-left"
-										data-tip="Recovery link"
-										title="Recovery link"
-										aria-label="Recovery link"
-									>
-										@Icon(IconHistory, "", "h-4 w-4")
-									</a>
-								}
-								<form
-									hx-post={ input.AttendeeDeletePostStr(ctx, &a) }
-									hx-target="#attendee-list-container"
-									hx-swap="outerHTML"
-									hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-									hx-confirm="Remove this attendee?"
-									class="inline-flex"
-								>
-									<button
-										type="submit"
-										class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left"
-										data-tip="Remove attendee"
-										title="Remove attendee"
-										aria-label="Remove attendee"
-									>
-										@Icon(IconDelete, "", "h-4 w-4")
-									</button>
-								</form>
 							</div>
 						</div>
 					</li>

@@ -254,13 +254,13 @@ templ ModerateManageAttendeesCard(input AttendeeListPartialInput) {
 	<section class="min-h-0" data-testid="manage-attendees-card">
 		<div class="mb-3 flex items-center justify-between gap-2">
 			<h2 class="text-lg font-semibold">Attendees</h2>
-			<div class="flex items-center gap-2">
+			<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
 				<form
 					hx-post={ input.ToggleSignupOpenPostStr(ctx) }
 					hx-target="#attendee-list-container"
 					hx-swap="outerHTML"
 					hx-trigger="change"
-					class="inline-flex"
+					class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start"
 					title={ attendeeSignupStateLabel(input.SignupOpen) }
 				>
 					@SignupToggleField("manage_signup_open", "signup_open", attendeeSignupToggleLabel(), input.SignupOpen, "")
@@ -340,14 +340,14 @@ templ ModerateLeftWorkspace(input ModeratePageInput) {
 	<section
 		id="moderate-left-controls"
 		data-meeting-id={ input.IDString }
-		class="order-2 card min-h-0 border border-base-300 bg-base-100 shadow-sm lg:order-1"
+		class="order-2 card min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:h-full lg:self-stretch"
 	>
-		<div class="card-body min-h-0 p-4">
-			<div role="tablist" class="tabs tabs-border tabs-sm w-full">
-				<button type="button" class="tab tab-active flex-1 justify-center" data-moderate-left-tab="agenda">Agenda</button>
-				<button type="button" class="tab flex-1 justify-center" data-moderate-left-tab="tools">Tools</button>
-				<button type="button" class="tab flex-1 justify-center" data-moderate-left-tab="attendees">Attendees</button>
-				<button type="button" class="tab flex-1 justify-center" data-moderate-left-tab="settings">Settings</button>
+		<div class="card-body flex h-full min-h-0 flex-col p-4">
+			<div role="tablist" class="tabs tabs-border tabs-sm grid w-full grid-cols-4 [--tab-p:0.35rem] sm:[--tab-p:0.75rem]">
+				<button type="button" class="tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="agenda">Agenda</button>
+				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="tools">Tools</button>
+				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="attendees">Attendees</button>
+				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="settings">Settings</button>
 			</div>
 			<div class="mt-3 min-h-0 flex-1 overflow-y-auto">
 				<div id="moderate-left-panel-agenda" data-moderate-left-panel="agenda">
@@ -446,7 +446,7 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 
 // Keeps id="speakers-list-container" for compatibility with existing swaps/tests.
 templ ModerateSpeakersCard(input SpeakersListPartialInput) {
-	<section class="card min-h-0 flex-[2] border border-base-300 bg-base-100 shadow-sm" data-testid="manage-speakers-card">
+	<section id="moderate-speakers-card" class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none" data-testid="manage-speakers-card">
 		<div class="card-body flex min-h-0 flex-col p-4">
 			<div class="mb-3 flex items-center justify-between gap-2">
 				<h2 class="text-lg font-semibold">Speakers</h2>
@@ -490,11 +490,11 @@ templ ModerateSpeakersCard(input SpeakersListPartialInput) {
 }
 
 templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
-	<section class="card min-h-0 flex-1 border border-base-300 bg-base-100 shadow-sm">
+	<section id="moderate-attendees-card" class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none">
 		<div class="card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4">
-			<div class="flex flex-wrap items-center justify-between gap-3">
+			<div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
 				<h2 class="text-lg font-semibold">Add Speaker</h2>
-				<div class="join w-full max-w-full sm:w-auto sm:min-w-[24rem]">
+				<div class="join min-w-0 w-full max-w-full sm:w-auto sm:min-w-[24rem]">
 					<input class="input input-bordered input-sm join-item min-w-0 flex-1"
 						type="text"
 						id="speaker-add-search-input"
@@ -546,10 +546,26 @@ templ ModerateDependentContent(input ModerateDependentPartialInput) {
 		id="moderate-dependent-container"
 		sse-swap="moderate-updated"
 		hx-swap="outerHTML"
-		class="order-1 flex min-h-0 flex-col gap-4 lg:order-2"
+		class="order-1 flex min-h-0 min-w-0 flex-col lg:order-2 lg:h-full lg:self-stretch"
 	>
-		@ModerateSpeakersCard(input.Speakers)
-		@ModerateAttendeesCard(input.Speakers)
+		<div
+			id="moderate-right-resizable-stack"
+			data-meeting-id={ input.IDString }
+			class="flex min-h-0 flex-1 flex-col gap-4 lg:h-full lg:gap-0"
+		>
+			@ModerateSpeakersCard(input.Speakers)
+			<div
+				id="moderate-right-resizer"
+				class="hidden h-4 shrink-0 cursor-row-resize select-none items-center justify-center lg:flex"
+				role="separator"
+				aria-orientation="horizontal"
+				aria-label="Resize speakers and add speaker panels"
+				tabindex="0"
+			>
+				<span class="h-1 w-16 rounded-full bg-base-300"></span>
+			</div>
+			@ModerateAttendeesCard(input.Speakers)
+		</div>
 	</div>
 }
 
@@ -581,7 +597,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 		id="moderate-sse-root"
 		hx-ext="sse"
 		data-stream-url={ input.moderateStreamGetStr(ctx) }
-		class="grid min-h-0 flex-1 gap-4 lg:grid-cols-2 lg:[grid-auto-rows:minmax(0,1fr)]"
+		class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:h-full lg:grid-cols-2 lg:grid-rows-1 lg:items-start lg:overflow-visible"
 	>
 		@ModerateLeftWorkspace(input)
 		@ModerateDependentContent(ModerateDependentPartialInput{
@@ -719,6 +735,169 @@ templ MeetingModerateContent(input ModeratePageInput) {
 				activate(root.dataset.activeTab);
 			}
 
+			function wireModerateRightResizer() {
+				var stack = document.getElementById("moderate-right-resizable-stack");
+				var speakersCard = document.getElementById("moderate-speakers-card");
+				var attendeesCard = document.getElementById("moderate-attendees-card");
+				var handle = document.getElementById("moderate-right-resizer");
+				if (!(stack instanceof HTMLElement) || !(speakersCard instanceof HTMLElement) || !(attendeesCard instanceof HTMLElement) || !(handle instanceof HTMLElement)) {
+					return;
+				}
+
+				var desktop = window.matchMedia("(min-width: 1024px)").matches;
+				if (!desktop) {
+					var stackRect = stack.getBoundingClientRect();
+					var viewportBottom = window.innerHeight || document.documentElement.clientHeight || 0;
+					if (window.visualViewport && Number.isFinite(window.visualViewport.height)) {
+						viewportBottom = Math.min(viewportBottom, window.visualViewport.height);
+					}
+					var rootEl = document.getElementById("moderate-sse-root");
+					if (rootEl instanceof HTMLElement) {
+						var rootRect = rootEl.getBoundingClientRect();
+						viewportBottom = Math.min(viewportBottom, rootRect.bottom);
+						var rootStyle = window.getComputedStyle(rootEl);
+						var rootPaddingBottom = Number.parseFloat(rootStyle.paddingBottom || "0");
+						if (Number.isFinite(rootPaddingBottom) && rootPaddingBottom > 0) {
+							viewportBottom -= rootPaddingBottom;
+						}
+					}
+					var available = Math.max(0, viewportBottom - Math.max(0, stackRect.top));
+					var stackStyle = window.getComputedStyle(stack);
+					var gap = Number.parseFloat(stackStyle.rowGap || stackStyle.gap || "0");
+					if (!Number.isFinite(gap) || gap < 0) {
+						gap = 0;
+					}
+					var each = Math.max(0, Math.floor((available - gap - 2) / 2));
+					if (each > 0) {
+						speakersCard.style.height = String(each) + "px";
+						attendeesCard.style.height = String(each) + "px";
+					} else {
+						speakersCard.style.height = "";
+						attendeesCard.style.height = "";
+					}
+					return;
+				}
+
+				var defaultRatio = 2 / 3;
+				var minRatio = 0.2;
+				var maxRatio = 0.8;
+				var meetingID = stack.getAttribute("data-meeting-id") || "";
+				var storageKey = "moderateRightSplit:" + meetingID;
+
+				function clampRatio(value) {
+					if (!Number.isFinite(value)) { return defaultRatio; }
+					return Math.min(maxRatio, Math.max(minRatio, value));
+				}
+
+				function readSavedRatio() {
+					try {
+						var saved = Number(sessionStorage.getItem(storageKey));
+						if (Number.isFinite(saved) && saved > 0) {
+							return saved;
+						}
+					} catch (error) {
+					}
+					var current = Number(stack.dataset.splitRatio);
+					if (Number.isFinite(current) && current > 0) {
+						return current;
+					}
+					return defaultRatio;
+				}
+
+				function saveRatio(value) {
+					try {
+						sessionStorage.setItem(storageKey, String(value));
+					} catch (error) {
+					}
+				}
+
+				function applyRatio(value, persist) {
+					var divider = handle.offsetHeight || 0;
+					var total = stack.clientHeight - divider;
+					if (total <= 0) { return; }
+
+					var ratio = clampRatio(value);
+					var topPx = Math.round(total * ratio);
+					var bottomPx = total - topPx;
+					var minPx = Math.min(220, Math.max(140, Math.floor(total * minRatio)));
+
+					if (topPx < minPx) {
+						topPx = minPx;
+						bottomPx = total - topPx;
+					}
+					if (bottomPx < minPx) {
+						bottomPx = minPx;
+						topPx = total - bottomPx;
+					}
+					if (topPx < 0 || bottomPx < 0) { return; }
+
+					speakersCard.style.height = String(topPx) + "px";
+					attendeesCard.style.height = String(bottomPx) + "px";
+
+					var appliedRatio = total > 0 ? (topPx / total) : defaultRatio;
+					stack.dataset.splitRatio = String(appliedRatio);
+					if (persist) {
+						saveRatio(appliedRatio);
+					}
+				}
+
+				function applyFromPointerY(clientY) {
+					var rect = stack.getBoundingClientRect();
+					var divider = handle.offsetHeight || 0;
+					var total = stack.clientHeight - divider;
+					if (total <= 0) { return; }
+					var offset = clientY - rect.top - (divider / 2);
+					applyRatio(offset / total, true);
+				}
+
+				if (handle.dataset.resizerWired !== "true") {
+					handle.addEventListener("pointerdown", function(event) {
+						event.preventDefault();
+						handle.setPointerCapture(event.pointerId);
+
+						function onMove(moveEvent) {
+							applyFromPointerY(moveEvent.clientY);
+						}
+
+						function onStop(stopEvent) {
+							handle.removeEventListener("pointermove", onMove);
+							handle.removeEventListener("pointerup", onStop);
+							handle.removeEventListener("pointercancel", onStop);
+							try {
+								handle.releasePointerCapture(stopEvent.pointerId);
+							} catch (error) {
+							}
+						}
+
+						handle.addEventListener("pointermove", onMove);
+						handle.addEventListener("pointerup", onStop);
+						handle.addEventListener("pointercancel", onStop);
+					});
+
+					handle.addEventListener("keydown", function(event) {
+						if (event.key !== "ArrowUp" && event.key !== "ArrowDown") { return; }
+						event.preventDefault();
+						var current = Number(stack.dataset.splitRatio);
+						if (!Number.isFinite(current) || current <= 0) {
+							current = readSavedRatio();
+						}
+						var step = event.key === "ArrowUp" ? -0.03 : 0.03;
+						applyRatio(current + step, true);
+					});
+
+					handle.dataset.resizerWired = "true";
+				}
+
+				if (!window.__moderateRightResizerResizeWired) {
+					window.addEventListener("resize", function() {
+						wireModerateRightResizer();
+					});
+					window.__moderateRightResizerResizeWired = true;
+				}
+
+				applyRatio(readSavedRatio(), false);
+			}
+
 			function getManageSpeakersViewport() {
 				var viewports = document.querySelectorAll("#speakers-list-container [data-manage-speakers-viewport]");
 				var best = null;
@@ -853,6 +1032,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 			applyManageSpeakersInitialScroll();
 			wireModerateLeftTabs();
 			wireModerateSettingsTabs();
+			wireModerateRightResizer();
 			window.setTimeout(applyManageSpeakersInitialScroll, 40);
 			window.setTimeout(applyManageSpeakersInitialScroll, 180);
 			window.setInterval(updateSpeakingTimers, 1000);
@@ -860,6 +1040,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 				updateSpeakingTimers();
 				wireModerateLeftTabs();
 				wireModerateSettingsTabs();
+				wireModerateRightResizer();
 				var target = event.target;
 				if (!(target instanceof Element)) { return; }
 				if (target.id !== "speakers-list-container" && !target.closest("#speakers-list-container")) { return; }
