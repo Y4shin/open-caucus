@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Y4shin/conference-tool/internal/repository"
@@ -59,6 +60,7 @@ func ExecuteConfig(ctx context.Context, cfg Config, opts ExecuteOptions) (Execut
 	}
 
 	result.ActionResults = make([]ActionResult, 0, len(cfg.Actions))
+	result.VerificationChecks = make([]VerificationCheck, 0)
 	result.InvariantFailures = make([]string, 0)
 
 	for i, action := range cfg.Actions {
@@ -108,6 +110,14 @@ func ExecuteConfig(ctx context.Context, cfg Config, opts ExecuteOptions) (Execut
 		for _, failure := range compareTallies(result.ExpectedTallies, result.ActualTallies) {
 			result.InvariantFailures = append(result.InvariantFailures, failure)
 		}
+	}
+
+	verificationChecks, verificationFailures, err := runVerificationSpotChecks(ctx, repo, fixture, result.ActionResults)
+	if err != nil {
+		result.InvariantFailures = append(result.InvariantFailures, fmt.Sprintf("run verification spot checks: %v", err))
+	} else {
+		result.VerificationChecks = verificationChecks
+		result.InvariantFailures = append(result.InvariantFailures, verificationFailures...)
 	}
 
 	if result.FinalVoteState == "" {
@@ -160,6 +170,7 @@ func executeAction(ctx context.Context, repo *reposqlite.Repository, fx executio
 		if receiptToken == "" {
 			receiptToken = fmt.Sprintf("open-%d", actionResult.Index+1)
 		}
+		actionResult.ReceiptToken = receiptToken
 		source := action.Source
 		if source == "" {
 			source = model.VoteCastSourceSelfSubmission
@@ -185,6 +196,7 @@ func executeAction(ctx context.Context, repo *reposqlite.Repository, fx executio
 		if receiptToken == "" {
 			receiptToken = fmt.Sprintf("secret-%d", actionResult.Index+1)
 		}
+		actionResult.ReceiptToken = receiptToken
 		payload := append([]byte(nil), action.EncryptedPayload...)
 		if len(payload) == 0 {
 			payload = []byte{byte((actionResult.Index + 1) % 255), 0xAB}
@@ -521,4 +533,166 @@ func compareTallies(expected, actual map[int64]int64) []string {
 		}
 	}
 	return failures
+}
+
+func runVerificationSpotChecks(
+	ctx context.Context,
+	repo *reposqlite.Repository,
+	fx executionFixture,
+	actionResults []ActionResult,
+) ([]VerificationCheck, []string, error) {
+	vote, err := repo.GetVoteDefinitionByID(ctx, fx.voteDefinitionID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("load vote definition: %w", err)
+	}
+
+	openCandidates := make([]ActionResult, 0)
+	secretCandidates := make([]ActionResult, 0)
+	for _, result := range actionResults {
+		if !result.Success || result.ReceiptToken == "" {
+			continue
+		}
+		switch result.Action.Kind {
+		case ActionSubmitOpenBallot:
+			openCandidates = append(openCandidates, result)
+		case ActionSubmitSecretBallot:
+			secretCandidates = append(secretCandidates, result)
+		}
+	}
+
+	limit := 2
+	if len(openCandidates) > limit {
+		openCandidates = openCandidates[:limit]
+	}
+	if len(secretCandidates) > limit {
+		secretCandidates = secretCandidates[:limit]
+	}
+
+	checks := make([]VerificationCheck, 0, len(openCandidates)+len(secretCandidates))
+	failures := make([]string, 0)
+
+	expectBlocked := vote.State == model.VoteStateCounting
+	for _, candidate := range openCandidates {
+		check := VerificationCheck{
+			Index:           candidate.Index,
+			Kind:            "open",
+			ReceiptToken:    candidate.ReceiptToken,
+			ExpectedBlocked: expectBlocked,
+		}
+		verification, verifyErr := repo.VerifyOpenBallotByReceipt(ctx, fx.voteDefinitionID, candidate.ReceiptToken)
+		if expectBlocked {
+			if verifyErr == nil || !strings.Contains(verifyErr.Error(), "counting") {
+				check.Passed = false
+				check.Message = fmt.Sprintf("expected blocked open verification in counting, got: %v", verifyErr)
+				failures = append(failures, fmt.Sprintf("open verification not blocked for receipt %s", candidate.ReceiptToken))
+			} else {
+				check.Passed = true
+			}
+			checks = append(checks, check)
+			continue
+		}
+		if verifyErr != nil {
+			check.Passed = false
+			check.Message = verifyErr.Error()
+			failures = append(failures, fmt.Sprintf("open verification failed for receipt %s: %v", candidate.ReceiptToken, verifyErr))
+			checks = append(checks, check)
+			continue
+		}
+		expectedAttendeeID := int64(0)
+		if candidate.Action.AttendeeKey != nil {
+			expectedAttendeeID = fx.attendeeIDByKey[*candidate.Action.AttendeeKey]
+		}
+		if verification.AttendeeID != expectedAttendeeID {
+			check.Passed = false
+			check.Message = fmt.Sprintf("attendee mismatch expected=%d actual=%d", expectedAttendeeID, verification.AttendeeID)
+			failures = append(failures, fmt.Sprintf("open verification attendee mismatch for receipt %s", candidate.ReceiptToken))
+			checks = append(checks, check)
+			continue
+		}
+		if verification.VoteName != vote.Name {
+			check.Passed = false
+			check.Message = fmt.Sprintf("vote name mismatch expected=%q actual=%q", vote.Name, verification.VoteName)
+			failures = append(failures, fmt.Sprintf("open verification vote name mismatch for receipt %s", candidate.ReceiptToken))
+			checks = append(checks, check)
+			continue
+		}
+		if !equalInt64Sets(candidate.AppliedOptionIDs, verification.ChoiceOptionIDs) {
+			check.Passed = false
+			check.Message = fmt.Sprintf("choice mismatch expected=%v actual=%v", candidate.AppliedOptionIDs, verification.ChoiceOptionIDs)
+			failures = append(failures, fmt.Sprintf("open verification choices mismatch for receipt %s", candidate.ReceiptToken))
+			checks = append(checks, check)
+			continue
+		}
+		check.Passed = true
+		checks = append(checks, check)
+	}
+
+	for _, candidate := range secretCandidates {
+		check := VerificationCheck{
+			Index:           candidate.Index,
+			Kind:            "secret",
+			ReceiptToken:    candidate.ReceiptToken,
+			ExpectedBlocked: expectBlocked,
+		}
+		verification, verifyErr := repo.VerifySecretBallotByReceipt(ctx, fx.voteDefinitionID, candidate.ReceiptToken)
+		if expectBlocked {
+			if verifyErr == nil || !strings.Contains(verifyErr.Error(), "counting") {
+				check.Passed = false
+				check.Message = fmt.Sprintf("expected blocked secret verification in counting, got: %v", verifyErr)
+				failures = append(failures, fmt.Sprintf("secret verification not blocked for receipt %s", candidate.ReceiptToken))
+			} else {
+				check.Passed = true
+			}
+			checks = append(checks, check)
+			continue
+		}
+		if verifyErr != nil {
+			check.Passed = false
+			check.Message = verifyErr.Error()
+			failures = append(failures, fmt.Sprintf("secret verification failed for receipt %s: %v", candidate.ReceiptToken, verifyErr))
+			checks = append(checks, check)
+			continue
+		}
+		if verification.VoteName != vote.Name {
+			check.Passed = false
+			check.Message = fmt.Sprintf("vote name mismatch expected=%q actual=%q", vote.Name, verification.VoteName)
+			failures = append(failures, fmt.Sprintf("secret verification vote name mismatch for receipt %s", candidate.ReceiptToken))
+			checks = append(checks, check)
+			continue
+		}
+		if verification.ReceiptToken != candidate.ReceiptToken {
+			check.Passed = false
+			check.Message = fmt.Sprintf("receipt mismatch expected=%q actual=%q", candidate.ReceiptToken, verification.ReceiptToken)
+			failures = append(failures, fmt.Sprintf("secret verification receipt mismatch for receipt %s", candidate.ReceiptToken))
+			checks = append(checks, check)
+			continue
+		}
+		if len(verification.EncryptedCommitment) == 0 || verification.CommitmentCipher == "" || verification.CommitmentVersion <= 0 {
+			check.Passed = false
+			check.Message = "secret verification returned incomplete commitment metadata"
+			failures = append(failures, fmt.Sprintf("secret verification commitment incomplete for receipt %s", candidate.ReceiptToken))
+			checks = append(checks, check)
+			continue
+		}
+		check.Passed = true
+		checks = append(checks, check)
+	}
+
+	return checks, failures, nil
+}
+
+func equalInt64Sets(expected, actual []int64) bool {
+	if len(expected) != len(actual) {
+		return false
+	}
+	expectedCopy := append([]int64(nil), expected...)
+	actualCopy := append([]int64(nil), actual...)
+	sort.Slice(expectedCopy, func(i, j int) bool { return expectedCopy[i] < expectedCopy[j] })
+	sort.Slice(actualCopy, func(i, j int) bool { return actualCopy[i] < actualCopy[j] })
+	for i := range expectedCopy {
+		if expectedCopy[i] != actualCopy[i] {
+			return false
+		}
+	}
+	return true
 }

@@ -450,22 +450,6 @@ routes:
           type: MotionListPartial
           input_type: MotionListPartialInput
 
-  # Motion Record Vote
-  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/vote
-    methods:
-      - verb: POST
-        handler: ManageMotionRecordVote
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MotionItemPartial
-          input_type: MotionItemPartialInput
-
   # Blob Download (serves the raw file)
   - path: /committee/{slug}/meeting/{meeting_id}/blob/{blob_id}
     methods:

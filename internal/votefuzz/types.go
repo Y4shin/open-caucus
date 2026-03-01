@@ -85,6 +85,7 @@ type ActionResult struct {
 	Error            string  `yaml:"error,omitempty"`
 	VoteStateAfter   string  `yaml:"vote_state_after,omitempty"`
 	CloseOutcome     string  `yaml:"close_outcome,omitempty"`
+	ReceiptToken     string  `yaml:"receipt_token,omitempty"`
 	AppliedOptionIDs []int64 `yaml:"applied_option_ids,omitempty"`
 }
 
@@ -106,17 +107,27 @@ type ExecuteOptions struct {
 }
 
 type ExecutionResult struct {
-	Seed              uint64          `yaml:"seed"`
-	StartedAt         time.Time       `yaml:"started_at"`
-	FinishedAt        time.Time       `yaml:"finished_at"`
-	Config            Config          `yaml:"config"`
-	ActionResults     []ActionResult  `yaml:"action_results"`
-	InvariantFailures []string        `yaml:"invariant_failures"`
-	ExpectedTallies   map[int64]int64 `yaml:"expected_tallies"`
-	ActualTallies     map[int64]int64 `yaml:"actual_tallies"`
-	FinalVoteState    string          `yaml:"final_vote_state"`
-	Passed            bool            `yaml:"passed"`
-	StatusMessage     string          `yaml:"status_message"`
+	Seed               uint64              `yaml:"seed"`
+	StartedAt          time.Time           `yaml:"started_at"`
+	FinishedAt         time.Time           `yaml:"finished_at"`
+	Config             Config              `yaml:"config"`
+	ActionResults      []ActionResult      `yaml:"action_results"`
+	VerificationChecks []VerificationCheck `yaml:"verification_checks"`
+	InvariantFailures  []string            `yaml:"invariant_failures"`
+	ExpectedTallies    map[int64]int64     `yaml:"expected_tallies"`
+	ActualTallies      map[int64]int64     `yaml:"actual_tallies"`
+	FinalVoteState     string              `yaml:"final_vote_state"`
+	Passed             bool                `yaml:"passed"`
+	StatusMessage      string              `yaml:"status_message"`
+}
+
+type VerificationCheck struct {
+	Index           int    `yaml:"index"`
+	Kind            string `yaml:"kind"`
+	ReceiptToken    string `yaml:"receipt_token"`
+	ExpectedBlocked bool   `yaml:"expected_blocked"`
+	Passed          bool   `yaml:"passed"`
+	Message         string `yaml:"message,omitempty"`
 }
 
 type FuzzInvocation struct {

@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	docembed "github.com/Y4shin/conference-tool/doc"
@@ -148,8 +150,41 @@ var serveCmd = &cobra.Command{
 
 		addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
 		slog.Info("starting server", "addr", addr, "env", cfg.Application.Environment)
+		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+		defer cancel()
 
-		return http.ListenAndServe(addr, handlerWithLocale)
+		server := &http.Server{
+			Addr:    addr,
+			Handler: handlerWithLocale,
+		}
+
+		serverErr := make(chan error, 1)
+		go func() {
+			err := server.ListenAndServe()
+			if err != nil && !errors.Is(err, http.ErrServerClosed) {
+				serverErr <- err
+				return
+			}
+			serverErr <- nil
+		}()
+
+		select {
+		case err := <-serverErr:
+			return err
+		case <-ctx.Done():
+			slog.Info("shutdown signal received", "signal", ctx.Err())
+		}
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("graceful shutdown failed: %w", err)
+		}
+		if err := <-serverErr; err != nil {
+			return err
+		}
+		slog.Info("server shutdown complete")
+		return nil
 	},
 }
 

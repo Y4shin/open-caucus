@@ -176,56 +176,6 @@ func TestMotions_DeleteMotion_RemovesFromList(t *testing.T) {
 	}
 }
 
-// TestMotions_RecordVote_ShowsTally verifies that recording votes replaces
-// the vote form with the tally via HTMX without a full page reload.
-func TestMotions_RecordVote_ShowsTally(t *testing.T) {
-	ts := newTestServer(t)
-	ts.seedCommittee(t, "Test Committee", "test-committee")
-	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
-	ts.seedMeeting(t, "test-committee", "Spring Meeting", "")
-	meetingID := ts.getMeetingID(t, "test-committee", "Spring Meeting")
-	apID := ts.seedAgendaPoint(t, "test-committee", "Spring Meeting", "Budget")
-	ts.seedMotion(t, apID, "Budget Approval")
-
-	page := newPage(t)
-	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-
-	if _, err := page.Goto(agendaPointToolsURL(ts.URL, "test-committee", meetingID, apID)); err != nil {
-		t.Fatalf("goto agenda-point tools page: %v", err)
-	}
-
-	if err := page.Locator("input[name=votes_for]").WaitFor(); err != nil {
-		t.Fatalf("vote form not visible: %v", err)
-	}
-
-	urlBefore := page.URL()
-
-	if err := page.Locator("input[name=votes_for]").Fill("10"); err != nil {
-		t.Fatalf("fill votes_for: %v", err)
-	}
-	if err := page.Locator("input[name=votes_against]").Fill("3"); err != nil {
-		t.Fatalf("fill votes_against: %v", err)
-	}
-	if err := page.Locator("input[name=votes_abstained]").Fill("2"); err != nil {
-		t.Fatalf("fill votes_abstained: %v", err)
-	}
-	if err := page.Locator("input[name=votes_eligible]").Fill("15"); err != nil {
-		t.Fatalf("fill votes_eligible: %v", err)
-	}
-
-	if err := page.Locator("button:has-text('Record Votes')").Click(); err != nil {
-		t.Fatalf("click Record Votes: %v", err)
-	}
-
-	if err := page.Locator("p:has-text('For: 10')").WaitFor(); err != nil {
-		t.Fatalf("expected vote tally to appear: %v", err)
-	}
-
-	if page.URL() != urlBefore {
-		t.Errorf("HTMX swap caused unexpected navigation: before=%s after=%s", urlBefore, page.URL())
-	}
-}
-
 // mustReadFile reads a file and returns its contents, failing the test on error.
 func mustReadFile(t *testing.T, path string) []byte {
 	t.Helper()
