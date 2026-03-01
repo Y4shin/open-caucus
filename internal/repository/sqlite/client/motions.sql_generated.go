@@ -7,13 +7,12 @@ package client
 
 import (
 	"context"
-	"database/sql"
 )
 
 const createMotion = `-- name: CreateMotion :one
 INSERT INTO motions (agenda_point_id, blob_id, title)
 VALUES (?, ?, ?)
-RETURNING id, agenda_point_id, blob_id, title, votes_for, votes_against, votes_abstained, votes_eligible, created_at, updated_at
+RETURNING id, agenda_point_id, blob_id, title, created_at, updated_at
 `
 
 type CreateMotionParams struct {
@@ -30,10 +29,6 @@ func (q *Queries) CreateMotion(ctx context.Context, arg CreateMotionParams) (Mot
 		&i.AgendaPointID,
 		&i.BlobID,
 		&i.Title,
-		&i.VotesFor,
-		&i.VotesAgainst,
-		&i.VotesAbstained,
-		&i.VotesEligible,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -50,7 +45,7 @@ func (q *Queries) DeleteMotion(ctx context.Context, id int64) error {
 }
 
 const getMotionByID = `-- name: GetMotionByID :one
-SELECT id, agenda_point_id, blob_id, title, votes_for, votes_against, votes_abstained, votes_eligible, created_at, updated_at
+SELECT id, agenda_point_id, blob_id, title, created_at, updated_at
 FROM motions WHERE id = ?
 `
 
@@ -62,10 +57,6 @@ func (q *Queries) GetMotionByID(ctx context.Context, id int64) (Motion, error) {
 		&i.AgendaPointID,
 		&i.BlobID,
 		&i.Title,
-		&i.VotesFor,
-		&i.VotesAgainst,
-		&i.VotesAbstained,
-		&i.VotesEligible,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -73,7 +64,7 @@ func (q *Queries) GetMotionByID(ctx context.Context, id int64) (Motion, error) {
 }
 
 const listMotionsForAgendaPoint = `-- name: ListMotionsForAgendaPoint :many
-SELECT id, agenda_point_id, blob_id, title, votes_for, votes_against, votes_abstained, votes_eligible, created_at, updated_at
+SELECT id, agenda_point_id, blob_id, title, created_at, updated_at
 FROM motions WHERE agenda_point_id = ? ORDER BY created_at ASC
 `
 
@@ -91,10 +82,6 @@ func (q *Queries) ListMotionsForAgendaPoint(ctx context.Context, agendaPointID i
 			&i.AgendaPointID,
 			&i.BlobID,
 			&i.Title,
-			&i.VotesFor,
-			&i.VotesAgainst,
-			&i.VotesAbstained,
-			&i.VotesEligible,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -109,30 +96,4 @@ func (q *Queries) ListMotionsForAgendaPoint(ctx context.Context, agendaPointID i
 		return nil, err
 	}
 	return items, nil
-}
-
-const setMotionVotes = `-- name: SetMotionVotes :exec
-UPDATE motions
-SET votes_for = ?, votes_against = ?, votes_abstained = ?, votes_eligible = ?,
-    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-WHERE id = ?
-`
-
-type SetMotionVotesParams struct {
-	VotesFor       sql.NullInt64
-	VotesAgainst   sql.NullInt64
-	VotesAbstained sql.NullInt64
-	VotesEligible  sql.NullInt64
-	ID             int64
-}
-
-func (q *Queries) SetMotionVotes(ctx context.Context, arg SetMotionVotesParams) error {
-	_, err := q.db.ExecContext(ctx, setMotionVotes,
-		arg.VotesFor,
-		arg.VotesAgainst,
-		arg.VotesAbstained,
-		arg.VotesEligible,
-		arg.ID,
-	)
-	return err
 }

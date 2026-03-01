@@ -33,6 +33,12 @@ func TestMigrateUp(t *testing.T) {
 		"binary_blobs",
 		"agenda_attachments",
 		"motions",
+		"vote_definitions",
+		"vote_options",
+		"eligible_voters",
+		"vote_casts",
+		"vote_ballots",
+		"vote_ballot_selections",
 	}
 
 	for _, table := range tables {
@@ -55,6 +61,55 @@ func TestMigrateUpIdempotent(t *testing.T) {
 
 	if err := repo.MigrateUp(); err != nil {
 		t.Fatalf("second MigrateUp should be idempotent: %v", err)
+	}
+}
+
+func TestMigrate027To028_PreservesVoteDefinitionsAndAllowsCounting(t *testing.T) {
+	repo := newTestRepo(t)
+
+	if err := repo.MigrateVersion(27); err != nil {
+		t.Fatalf("MigrateVersion(27) failed: %v", err)
+	}
+
+	if _, err := repo.DB.Exec("INSERT INTO accounts (username) VALUES ('user1')"); err != nil {
+		t.Fatalf("insert account: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO committees (name, slug) VALUES ('committee', 'committee')"); err != nil {
+		t.Fatalf("insert committee: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO users (account_id, committee_id, role) VALUES (1, 1, 'member')"); err != nil {
+		t.Fatalf("insert user membership: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO meetings (committee_id, name, secret, signup_open) VALUES (1, 'meeting1', 'secret1', 0)"); err != nil {
+		t.Fatalf("insert meeting: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO agenda_points (meeting_id, position, title) VALUES (1, 1, 'point1')"); err != nil {
+		t.Fatalf("insert agenda point: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO binary_blobs (filename, content_type, size_bytes, storage_path) VALUES ('f.pdf', 'application/pdf', 100, '/blobs/1')"); err != nil {
+		t.Fatalf("insert binary blob: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO motions (agenda_point_id, blob_id, title) VALUES (1, 1, 'motion1')"); err != nil {
+		t.Fatalf("insert motion: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO vote_definitions (meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections) VALUES (1, 1, 1, 'vote-before-028', 'secret', 'open', 0, 1)"); err != nil {
+		t.Fatalf("insert vote_definition before migration 028: %v", err)
+	}
+
+	if err := repo.MigrateVersion(28); err != nil {
+		t.Fatalf("MigrateVersion(28) failed: %v", err)
+	}
+
+	var preservedState string
+	if err := repo.DB.QueryRow("SELECT state FROM vote_definitions WHERE name = 'vote-before-028'").Scan(&preservedState); err != nil {
+		t.Fatalf("load vote_definition after migration 028: %v", err)
+	}
+	if preservedState != "open" {
+		t.Fatalf("expected preserved state 'open', got %q", preservedState)
+	}
+
+	if _, err := repo.DB.Exec("INSERT INTO vote_definitions (meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections) VALUES (1, 1, 1, 'vote-counting-028', 'secret', 'counting', 0, 1)"); err != nil {
+		t.Fatalf("insert vote_definition with counting state after migration 028: %v", err)
 	}
 }
 
@@ -146,14 +201,26 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 	}
 
 	// Create accounts, committee, membership, meeting, and agenda point for FK satisfaction
-	repo.DB.Exec("INSERT INTO accounts (username) VALUES ('user1')")
-	repo.DB.Exec("INSERT INTO committees (name) VALUES ('test')")
-	repo.DB.Exec("INSERT INTO users (account_id, committee_id, role) VALUES (1, 1, 'member')")
-	repo.DB.Exec("INSERT INTO meetings (committee_id, name) VALUES (1, 'meeting1')")
-	repo.DB.Exec("INSERT INTO agenda_points (meeting_id, position, title) VALUES (1, 1, 'point1')")
+	if _, err := repo.DB.Exec("INSERT INTO accounts (username) VALUES ('user1')"); err != nil {
+		t.Fatalf("insert account user1: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO committees (name, slug) VALUES ('test', 'test')"); err != nil {
+		t.Fatalf("insert committee: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO users (account_id, committee_id, role) VALUES (1, 1, 'member')"); err != nil {
+		t.Fatalf("insert user membership: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO meetings (committee_id, name, secret, signup_open) VALUES (1, 'meeting1', 'secret1', 0)"); err != nil {
+		t.Fatalf("insert meeting: %v", err)
+	}
+	if _, err := repo.DB.Exec("INSERT INTO agenda_points (meeting_id, position, title) VALUES (1, 1, 'point1')"); err != nil {
+		t.Fatalf("insert agenda point: %v", err)
+	}
 
 	// Invalid role should fail
-	repo.DB.Exec("INSERT INTO accounts (username) VALUES ('bad')")
+	if _, err := repo.DB.Exec("INSERT INTO accounts (username) VALUES ('bad')"); err != nil {
+		t.Fatalf("insert bad account: %v", err)
+	}
 	_, err := repo.DB.Exec(
 		"INSERT INTO users (account_id, committee_id, role) VALUES (2, 1, 'admin')",
 	)
@@ -185,18 +252,110 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 		t.Error("expected CHECK constraint violation for invalid status")
 	}
 
-	// Motions with partial vote fields should fail
+	// Seed minimal motion context
 	_, err = repo.DB.Exec(
 		"INSERT INTO binary_blobs (filename, content_type, size_bytes, storage_path) VALUES ('f.pdf', 'application/pdf', 100, '/blobs/1')",
 	)
 	if err != nil {
 		t.Fatalf("failed to insert binary_blob: %v", err)
 	}
-
 	_, err = repo.DB.Exec(
-		"INSERT INTO motions (agenda_point_id, blob_id, title, votes_for) VALUES (1, 1, 'motion1', 5)",
+		`INSERT INTO motions (agenda_point_id, blob_id, title)
+		 VALUES (
+		     (SELECT id FROM agenda_points ORDER BY id LIMIT 1),
+		     (SELECT id FROM binary_blobs ORDER BY id LIMIT 1),
+		     'motion1'
+		 )`,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert motion: %v", err)
+	}
+	_, err = repo.DB.Exec(
+		`INSERT INTO vote_definitions (meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections)
+		 VALUES (
+		     (SELECT id FROM meetings ORDER BY id LIMIT 1),
+		     (SELECT id FROM agenda_points ORDER BY id LIMIT 1),
+		     (SELECT id FROM motions ORDER BY id LIMIT 1),
+		     'vote1',
+		     'open',
+		     'open',
+		     1,
+		     2
+		 )`,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert vote_definition: %v", err)
+	}
+	_, err = repo.DB.Exec(
+		`INSERT INTO vote_definitions (meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections)
+		 VALUES (
+		     (SELECT id FROM meetings ORDER BY id LIMIT 1),
+		     (SELECT id FROM agenda_points ORDER BY id LIMIT 1),
+		     (SELECT id FROM motions ORDER BY id LIMIT 1),
+		     'vote2',
+		     'secret',
+		     'counting',
+		     0,
+		     1
+		 )`,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert vote_definition in counting state: %v", err)
+	}
+	_, err = repo.DB.Exec(
+		`INSERT INTO attendees (meeting_id, full_name, secret, quoted, attendee_number)
+		 VALUES ((SELECT id FROM meetings ORDER BY id LIMIT 1), 'A', 'secret-a', 0, 1)`,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert attendee: %v", err)
+	}
+	_, err = repo.DB.Exec(
+		`INSERT INTO eligible_voters (vote_definition_id, meeting_id, attendee_id)
+		 VALUES (
+		     (SELECT id FROM vote_definitions ORDER BY id LIMIT 1),
+		     (SELECT id FROM meetings ORDER BY id LIMIT 1),
+		     (SELECT id FROM attendees ORDER BY id LIMIT 1)
+		 )`,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert eligible_voter: %v", err)
+	}
+	_, err = repo.DB.Exec(
+		`INSERT INTO vote_casts (vote_definition_id, meeting_id, attendee_id, source)
+		 VALUES (
+		     (SELECT id FROM vote_definitions ORDER BY id LIMIT 1),
+		     (SELECT id FROM meetings ORDER BY id LIMIT 1),
+		     (SELECT id FROM attendees ORDER BY id LIMIT 1),
+		     'self_submission'
+		 )`,
+	)
+	if err != nil {
+		t.Fatalf("failed to insert vote_cast: %v", err)
+	}
+
+	// Open ballot branch with commitment data should fail.
+	_, err = repo.DB.Exec(
+		`INSERT INTO vote_ballots (vote_definition_id, cast_id, attendee_id, receipt_token, encrypted_commitment, commitment_cipher, commitment_version)
+		 VALUES (
+		     (SELECT id FROM vote_definitions ORDER BY id LIMIT 1),
+		     (SELECT id FROM vote_casts ORDER BY id LIMIT 1),
+		     (SELECT id FROM attendees ORDER BY id LIMIT 1),
+		     'r1',
+		     x'01',
+		     'aes',
+		     1
+		 )`,
 	)
 	if err == nil {
-		t.Error("expected CHECK constraint violation for partial vote fields on motion")
+		t.Error("expected CHECK constraint violation for open ballot branch with commitment columns set")
+	}
+
+	// Secret ballot branch without commitment should fail.
+	_, err = repo.DB.Exec(
+		`INSERT INTO vote_ballots (vote_definition_id, receipt_token)
+		 VALUES ((SELECT id FROM vote_definitions ORDER BY id LIMIT 1), 'r2')`,
+	)
+	if err == nil {
+		t.Error("expected CHECK constraint violation for secret ballot branch without commitment columns")
 	}
 }

@@ -2249,24 +2249,10 @@ func (r *Repository) DeleteMotion(ctx context.Context, id int64) error {
 	return nil
 }
 
-// SetMotionVotes records the vote tally for a motion.
-func (r *Repository) SetMotionVotes(ctx context.Context, id, votesFor, votesAgainst, votesAbstained, votesEligible int64) error {
-	if err := r.Queries.SetMotionVotes(ctx, client.SetMotionVotesParams{
-		ID:             id,
-		VotesFor:       sql.NullInt64{Int64: votesFor, Valid: true},
-		VotesAgainst:   sql.NullInt64{Int64: votesAgainst, Valid: true},
-		VotesAbstained: sql.NullInt64{Int64: votesAbstained, Valid: true},
-		VotesEligible:  sql.NullInt64{Int64: votesEligible, Valid: true},
-	}); err != nil {
-		return fmt.Errorf("set motion votes: %w", err)
-	}
-	return nil
-}
-
 func motionFromClient(m *client.Motion) *model.Motion {
 	createdAt, _ := time.Parse(time.RFC3339, m.CreatedAt)
 	updatedAt, _ := time.Parse(time.RFC3339, m.UpdatedAt)
-	motion := &model.Motion{
+	return &model.Motion{
 		ID:            m.ID,
 		AgendaPointID: m.AgendaPointID,
 		BlobID:        m.BlobID,
@@ -2274,17 +2260,749 @@ func motionFromClient(m *client.Motion) *model.Motion {
 		CreatedAt:     createdAt,
 		UpdatedAt:     updatedAt,
 	}
-	if m.VotesFor.Valid {
-		motion.VotesFor = &m.VotesFor.Int64
+}
+
+// CreateVoteDefinition inserts a new vote definition in draft state.
+func (r *Repository) CreateVoteDefinition(
+	ctx context.Context,
+	meetingID, agendaPointID int64,
+	motionID *int64,
+	name, visibility string,
+	minSelections, maxSelections int64,
+) (*model.VoteDefinition, error) {
+	row, err := r.Queries.CreateVoteDefinition(ctx, client.CreateVoteDefinitionParams{
+		MeetingID:     meetingID,
+		AgendaPointID: agendaPointID,
+		MotionID:      ptrToNullInt64(motionID),
+		Name:          name,
+		Visibility:    visibility,
+		MinSelections: minSelections,
+		MaxSelections: maxSelections,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create vote definition: %w", err)
 	}
-	if m.VotesAgainst.Valid {
-		motion.VotesAgainst = &m.VotesAgainst.Int64
+	return voteDefinitionFromClient(&row), nil
+}
+
+// UpdateVoteDefinitionDraft updates a draft vote definition.
+func (r *Repository) UpdateVoteDefinitionDraft(
+	ctx context.Context,
+	id int64,
+	meetingID, agendaPointID int64,
+	motionID *int64,
+	name, visibility string,
+	minSelections, maxSelections int64,
+) (*model.VoteDefinition, error) {
+	row, err := r.Queries.UpdateVoteDefinitionDraft(ctx, client.UpdateVoteDefinitionDraftParams{
+		MeetingID:     meetingID,
+		AgendaPointID: agendaPointID,
+		MotionID:      ptrToNullInt64(motionID),
+		Name:          name,
+		Visibility:    visibility,
+		MinSelections: minSelections,
+		MaxSelections: maxSelections,
+		ID:            id,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not in draft state")
+		}
+		return nil, fmt.Errorf("update vote definition draft: %w", err)
 	}
-	if m.VotesAbstained.Valid {
-		motion.VotesAbstained = &m.VotesAbstained.Int64
+	return voteDefinitionFromClient(&row), nil
+}
+
+// OpenVoteWithEligibleVoters atomically snapshots eligible voters and opens a vote.
+func (r *Repository) OpenVoteWithEligibleVoters(ctx context.Context, voteDefinitionID int64, attendeeIDs []int64) (*model.VoteDefinition, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("open vote begin tx: %w", err)
 	}
-	if m.VotesEligible.Valid {
-		motion.VotesEligible = &m.VotesEligible.Int64
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+	vd, err := qtx.GetVoteDefinitionByID(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not found")
+		}
+		return nil, fmt.Errorf("load vote definition: %w", err)
 	}
-	return motion
+	if vd.State != model.VoteStateDraft {
+		return nil, fmt.Errorf("vote definition not in draft state")
+	}
+
+	existingEligible, err := qtx.CountEligibleVotersForVoteDefinition(ctx, voteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("count existing eligible voters: %w", err)
+	}
+	if existingEligible > 0 {
+		return nil, fmt.Errorf("eligible voters already exist for vote")
+	}
+
+	seen := make(map[int64]struct{}, len(attendeeIDs))
+	for _, attendeeID := range attendeeIDs {
+		if _, ok := seen[attendeeID]; ok {
+			continue
+		}
+		seen[attendeeID] = struct{}{}
+		if err := qtx.InsertEligibleVoter(ctx, client.InsertEligibleVoterParams{
+			VoteDefinitionID: voteDefinitionID,
+			MeetingID:        vd.MeetingID,
+			AttendeeID:       attendeeID,
+		}); err != nil {
+			return nil, fmt.Errorf("insert eligible voter %d: %w", attendeeID, err)
+		}
+	}
+
+	opened, err := qtx.SetVoteDefinitionOpen(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition cannot be opened")
+		}
+		return nil, fmt.Errorf("set vote definition open: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("open vote commit tx: %w", err)
+	}
+	return voteDefinitionFromClient(&opened), nil
+}
+
+// CloseVote transitions an open/counting vote according to visibility and outstanding secret ballots.
+func (r *Repository) CloseVote(ctx context.Context, voteDefinitionID int64) (*model.CloseVoteResult, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("close vote begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+	vd, err := qtx.GetVoteDefinitionByID(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not found")
+		}
+		return nil, fmt.Errorf("load vote definition: %w", err)
+	}
+
+	transitionToClosedFrom := func(state string) (*model.CloseVoteResult, error) {
+		var closed client.VoteDefinition
+		if state == model.VoteStateOpen {
+			closed, err = qtx.SetVoteDefinitionClosedFromOpen(ctx, voteDefinitionID)
+		} else {
+			closed, err = qtx.SetVoteDefinitionClosedFromCounting(ctx, voteDefinitionID)
+		}
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, model.VoteCloseStateError{State: state}
+			}
+			return nil, fmt.Errorf("set vote definition closed: %w", err)
+		}
+		if err := tx.Commit(); err != nil {
+			return nil, fmt.Errorf("close vote commit tx: %w", err)
+		}
+		return &model.CloseVoteResult{
+			Vote:    voteDefinitionFromClient(&closed),
+			Outcome: model.CloseVoteOutcomeClosed,
+		}, nil
+	}
+
+	switch vd.State {
+	case model.VoteStateOpen:
+		if vd.Visibility == model.VoteVisibilitySecret {
+			castCount, err := qtx.CountVoteCastsForVoteDefinition(ctx, voteDefinitionID)
+			if err != nil {
+				return nil, fmt.Errorf("count vote casts: %w", err)
+			}
+			secretBallotCount, err := qtx.CountSecretVoteBallots(ctx, voteDefinitionID)
+			if err != nil {
+				return nil, fmt.Errorf("count secret vote ballots: %w", err)
+			}
+
+			if castCount > secretBallotCount {
+				counting, err := qtx.SetVoteDefinitionCountingFromOpen(ctx, voteDefinitionID)
+				if err != nil {
+					if errors.Is(err, sql.ErrNoRows) {
+						return nil, model.VoteCloseStateError{State: vd.State}
+					}
+					return nil, fmt.Errorf("set vote definition counting: %w", err)
+				}
+				if err := tx.Commit(); err != nil {
+					return nil, fmt.Errorf("close vote commit tx: %w", err)
+				}
+				return &model.CloseVoteResult{
+					Vote:    voteDefinitionFromClient(&counting),
+					Outcome: model.CloseVoteOutcomeEnteredCounting,
+				}, nil
+			}
+		}
+		return transitionToClosedFrom(model.VoteStateOpen)
+	case model.VoteStateCounting:
+		castCount, err := qtx.CountVoteCastsForVoteDefinition(ctx, voteDefinitionID)
+		if err != nil {
+			return nil, fmt.Errorf("count vote casts: %w", err)
+		}
+		secretBallotCount, err := qtx.CountSecretVoteBallots(ctx, voteDefinitionID)
+		if err != nil {
+			return nil, fmt.Errorf("count secret vote ballots: %w", err)
+		}
+		if castCount > secretBallotCount {
+			if err := tx.Commit(); err != nil {
+				return nil, fmt.Errorf("close vote commit tx: %w", err)
+			}
+			return &model.CloseVoteResult{
+				Vote:    voteDefinitionFromClient(&vd),
+				Outcome: model.CloseVoteOutcomeStillCounting,
+			}, nil
+		}
+		return transitionToClosedFrom(model.VoteStateCounting)
+	case model.VoteStateClosed, model.VoteStateArchived:
+		return nil, model.VoteCloseStateError{State: vd.State}
+	default:
+		return nil, model.VoteCloseStateError{State: vd.State}
+	}
+}
+
+// ArchiveVote transitions a closed vote definition to archived.
+func (r *Repository) ArchiveVote(ctx context.Context, voteDefinitionID int64) (*model.VoteDefinition, error) {
+	row, err := r.Queries.SetVoteDefinitionArchived(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not closed")
+		}
+		return nil, fmt.Errorf("archive vote definition: %w", err)
+	}
+	return voteDefinitionFromClient(&row), nil
+}
+
+// GetVoteDefinitionByID returns one vote definition.
+func (r *Repository) GetVoteDefinitionByID(ctx context.Context, id int64) (*model.VoteDefinition, error) {
+	row, err := r.Queries.GetVoteDefinitionByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not found")
+		}
+		return nil, fmt.Errorf("get vote definition: %w", err)
+	}
+	return voteDefinitionFromClient(&row), nil
+}
+
+// ListVoteDefinitionsForAgendaPoint lists vote definitions for one agenda point.
+func (r *Repository) ListVoteDefinitionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.VoteDefinition, error) {
+	rows, err := r.Queries.ListVoteDefinitionsForAgendaPoint(ctx, agendaPointID)
+	if err != nil {
+		return nil, fmt.Errorf("list vote definitions: %w", err)
+	}
+	result := make([]*model.VoteDefinition, len(rows))
+	for i := range rows {
+		result[i] = voteDefinitionFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// ReplaceVoteOptions overwrites vote options for a draft vote definition.
+func (r *Repository) ReplaceVoteOptions(ctx context.Context, voteDefinitionID int64, options []repository.VoteOptionInput) error {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("replace vote options begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+	vd, err := qtx.GetVoteDefinitionByID(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("vote definition not found")
+		}
+		return fmt.Errorf("load vote definition: %w", err)
+	}
+	if vd.State != model.VoteStateDraft {
+		return fmt.Errorf("vote definition not in draft state")
+	}
+
+	if err := qtx.DeleteVoteOptionsForVoteDefinition(ctx, voteDefinitionID); err != nil {
+		return fmt.Errorf("delete previous vote options: %w", err)
+	}
+
+	for _, option := range options {
+		if _, err := qtx.CreateVoteOption(ctx, client.CreateVoteOptionParams{
+			VoteDefinitionID: voteDefinitionID,
+			Label:            option.Label,
+			Position:         option.Position,
+		}); err != nil {
+			return fmt.Errorf("create vote option: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("replace vote options commit tx: %w", err)
+	}
+	return nil
+}
+
+// ListVoteOptions lists all options for one vote definition.
+func (r *Repository) ListVoteOptions(ctx context.Context, voteDefinitionID int64) ([]*model.VoteOption, error) {
+	rows, err := r.Queries.ListVoteOptionsForVoteDefinition(ctx, voteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("list vote options: %w", err)
+	}
+	result := make([]*model.VoteOption, len(rows))
+	for i := range rows {
+		result[i] = voteOptionFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// ListEligibleVoters lists the eligibility snapshot for a vote definition.
+func (r *Repository) ListEligibleVoters(ctx context.Context, voteDefinitionID int64) ([]*model.EligibleVoter, error) {
+	rows, err := r.Queries.ListEligibleVotersForVoteDefinition(ctx, voteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("list eligible voters: %w", err)
+	}
+	result := make([]*model.EligibleVoter, len(rows))
+	for i := range rows {
+		result[i] = eligibleVoterFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// RegisterVoteCast records that one eligible attendee has cast a vote.
+func (r *Repository) RegisterVoteCast(ctx context.Context, voteDefinitionID, meetingID, attendeeID int64, source string) (*model.VoteCast, error) {
+	vd, err := r.Queries.GetVoteDefinitionByID(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not found")
+		}
+		return nil, fmt.Errorf("load vote definition: %w", err)
+	}
+	if vd.State != model.VoteStateOpen {
+		return nil, fmt.Errorf("vote definition not open")
+	}
+	if vd.MeetingID != meetingID {
+		return nil, fmt.Errorf("meeting mismatch for vote definition")
+	}
+
+	row, err := r.Queries.CreateVoteCast(ctx, client.CreateVoteCastParams{
+		VoteDefinitionID: voteDefinitionID,
+		MeetingID:        meetingID,
+		AttendeeID:       attendeeID,
+		Source:           source,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create vote cast: %w", err)
+	}
+	return voteCastFromClient(&row), nil
+}
+
+// ListVoteCasts lists all cast rows for a vote definition.
+func (r *Repository) ListVoteCasts(ctx context.Context, voteDefinitionID int64) ([]*model.VoteCast, error) {
+	rows, err := r.Queries.ListVoteCastsForVoteDefinition(ctx, voteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("list vote casts: %w", err)
+	}
+	result := make([]*model.VoteCast, len(rows))
+	for i := range rows {
+		result[i] = voteCastFromClient(&rows[i])
+	}
+	return result, nil
+}
+
+// SubmitOpenBallot creates an open ballot and selections in one transaction.
+func (r *Repository) SubmitOpenBallot(ctx context.Context, submission repository.OpenBallotSubmission) (*model.VoteBallot, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("submit open ballot begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+	vd, err := qtx.GetVoteDefinitionByID(ctx, submission.VoteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not found")
+		}
+		return nil, fmt.Errorf("load vote definition: %w", err)
+	}
+	if vd.State != model.VoteStateOpen {
+		return nil, fmt.Errorf("vote definition not open")
+	}
+	if vd.Visibility != model.VoteVisibilityOpen {
+		return nil, fmt.Errorf("vote definition is not open-visibility")
+	}
+	if vd.MeetingID != submission.MeetingID {
+		return nil, fmt.Errorf("meeting mismatch for vote definition")
+	}
+
+	if err := validateVoteSelectionInput(ctx, qtx, vd, submission.OptionIDs); err != nil {
+		return nil, err
+	}
+
+	castRow, err := qtx.GetVoteCastByVoteAndAttendee(ctx, client.GetVoteCastByVoteAndAttendeeParams{
+		VoteDefinitionID: submission.VoteDefinitionID,
+		AttendeeID:       submission.AttendeeID,
+	})
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("load vote cast: %w", err)
+		}
+		castRow, err = qtx.CreateVoteCast(ctx, client.CreateVoteCastParams{
+			VoteDefinitionID: submission.VoteDefinitionID,
+			MeetingID:        submission.MeetingID,
+			AttendeeID:       submission.AttendeeID,
+			Source:           submission.Source,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("create vote cast: %w", err)
+		}
+	}
+
+	ballotRow, err := qtx.CreateOpenVoteBallot(ctx, client.CreateOpenVoteBallotParams{
+		VoteDefinitionID: submission.VoteDefinitionID,
+		CastID:           sql.NullInt64{Int64: castRow.ID, Valid: true},
+		AttendeeID:       sql.NullInt64{Int64: submission.AttendeeID, Valid: true},
+		ReceiptToken:     submission.ReceiptToken,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create open vote ballot: %w", err)
+	}
+
+	for _, optionID := range submission.OptionIDs {
+		if err := qtx.CreateVoteBallotSelection(ctx, client.CreateVoteBallotSelectionParams{
+			BallotID:         ballotRow.ID,
+			VoteDefinitionID: submission.VoteDefinitionID,
+			OptionID:         optionID,
+		}); err != nil {
+			return nil, fmt.Errorf("create vote ballot selection: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("submit open ballot commit tx: %w", err)
+	}
+	return voteBallotFromClient(&ballotRow), nil
+}
+
+// SubmitSecretBallot creates one secret ballot and its selections.
+func (r *Repository) SubmitSecretBallot(ctx context.Context, submission repository.SecretBallotSubmission) (*model.VoteBallot, error) {
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("submit secret ballot begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	qtx := r.Queries.WithTx(tx)
+	vd, err := qtx.GetVoteDefinitionByID(ctx, submission.VoteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("vote definition not found")
+		}
+		return nil, fmt.Errorf("load vote definition: %w", err)
+	}
+	if vd.State != model.VoteStateOpen && vd.State != model.VoteStateCounting {
+		return nil, fmt.Errorf("vote definition not open or counting")
+	}
+	if vd.Visibility != model.VoteVisibilitySecret {
+		return nil, fmt.Errorf("vote definition is not secret-visibility")
+	}
+
+	if err := validateVoteSelectionInput(ctx, qtx, vd, submission.OptionIDs); err != nil {
+		return nil, err
+	}
+
+	secretBallotCount, err := qtx.CountSecretVoteBallots(ctx, submission.VoteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("count secret vote ballots: %w", err)
+	}
+	castCount, err := qtx.CountVoteCastsForVoteDefinition(ctx, submission.VoteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("count vote casts: %w", err)
+	}
+	if secretBallotCount >= castCount {
+		return nil, fmt.Errorf("cannot create secret ballot without available cast rows")
+	}
+
+	ballotRow, err := qtx.CreateSecretVoteBallot(ctx, client.CreateSecretVoteBallotParams{
+		VoteDefinitionID:    submission.VoteDefinitionID,
+		ReceiptToken:        submission.ReceiptToken,
+		EncryptedCommitment: submission.EncryptedCommitment,
+		CommitmentCipher:    sql.NullString{String: submission.CommitmentCipher, Valid: true},
+		CommitmentVersion:   sql.NullInt64{Int64: submission.CommitmentVersion, Valid: true},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("create secret vote ballot: %w", err)
+	}
+
+	for _, optionID := range submission.OptionIDs {
+		if err := qtx.CreateVoteBallotSelection(ctx, client.CreateVoteBallotSelectionParams{
+			BallotID:         ballotRow.ID,
+			VoteDefinitionID: submission.VoteDefinitionID,
+			OptionID:         optionID,
+		}); err != nil {
+			return nil, fmt.Errorf("create vote ballot selection: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("submit secret ballot commit tx: %w", err)
+	}
+	return voteBallotFromClient(&ballotRow), nil
+}
+
+// VerifyOpenBallotByReceipt returns open ballot verification data by vote+receipt.
+func (r *Repository) VerifyOpenBallotByReceipt(ctx context.Context, voteDefinitionID int64, receiptToken string) (*model.VoteOpenVerification, error) {
+	if err := r.ensureVoteResultsReadable(ctx, voteDefinitionID); err != nil {
+		return nil, err
+	}
+
+	rows, err := r.Queries.GetOpenVoteVerificationRows(ctx, client.GetOpenVoteVerificationRowsParams{
+		VoteDefinitionID: voteDefinitionID,
+		ReceiptToken:     receiptToken,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("verify open vote ballot: %w", err)
+	}
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("open ballot not found")
+	}
+
+	first := rows[0]
+	if !first.AttendeeNumber.Valid {
+		return nil, fmt.Errorf("attendee number missing for verified ballot")
+	}
+
+	result := &model.VoteOpenVerification{
+		VoteDefinitionID: first.VoteDefinitionID,
+		VoteName:         first.VoteName,
+		AttendeeID:       first.AttendeeID,
+		AttendeeNumber:   first.AttendeeNumber.Int64,
+		ReceiptToken:     first.ReceiptToken,
+		ChoiceLabels:     make([]string, 0, len(rows)),
+		ChoiceOptionIDs:  make([]int64, 0, len(rows)),
+	}
+	for _, row := range rows {
+		if row.OptionID.Valid {
+			result.ChoiceOptionIDs = append(result.ChoiceOptionIDs, row.OptionID.Int64)
+		}
+		if row.OptionLabel.Valid {
+			result.ChoiceLabels = append(result.ChoiceLabels, row.OptionLabel.String)
+		}
+	}
+	return result, nil
+}
+
+// VerifySecretBallotByReceipt returns secret ballot verification data by vote+receipt.
+func (r *Repository) VerifySecretBallotByReceipt(ctx context.Context, voteDefinitionID int64, receiptToken string) (*model.VoteSecretVerification, error) {
+	if err := r.ensureVoteResultsReadable(ctx, voteDefinitionID); err != nil {
+		return nil, err
+	}
+
+	row, err := r.Queries.GetSecretVoteVerification(ctx, client.GetSecretVoteVerificationParams{
+		VoteDefinitionID: voteDefinitionID,
+		ReceiptToken:     receiptToken,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("secret ballot not found")
+		}
+		return nil, fmt.Errorf("verify secret vote ballot: %w", err)
+	}
+	if !row.CommitmentCipher.Valid || !row.CommitmentVersion.Valid {
+		return nil, fmt.Errorf("secret ballot commitment metadata incomplete")
+	}
+
+	return &model.VoteSecretVerification{
+		VoteDefinitionID:    row.VoteDefinitionID,
+		VoteName:            row.VoteName,
+		ReceiptToken:        row.ReceiptToken,
+		EncryptedCommitment: row.EncryptedCommitment,
+		CommitmentCipher:    row.CommitmentCipher.String,
+		CommitmentVersion:   row.CommitmentVersion.Int64,
+	}, nil
+}
+
+// GetVoteTallies aggregates per-option ballot counts.
+func (r *Repository) GetVoteTallies(ctx context.Context, voteDefinitionID int64) ([]*model.VoteTallyRow, error) {
+	if err := r.ensureVoteResultsReadable(ctx, voteDefinitionID); err != nil {
+		return nil, err
+	}
+
+	rows, err := r.Queries.GetVoteTallies(ctx, voteDefinitionID)
+	if err != nil {
+		return nil, fmt.Errorf("get vote tallies: %w", err)
+	}
+	result := make([]*model.VoteTallyRow, len(rows))
+	for i := range rows {
+		result[i] = &model.VoteTallyRow{
+			OptionID: rows[i].OptionID,
+			Label:    rows[i].OptionLabel,
+			Count:    rows[i].TallyCount,
+		}
+	}
+	return result, nil
+}
+
+// GetVoteSubmissionStats returns cast/ballot/eligible counts for one vote definition.
+func (r *Repository) GetVoteSubmissionStats(ctx context.Context, voteDefinitionID int64) (*model.VoteSubmissionStats, error) {
+	if err := r.ensureVoteResultsReadable(ctx, voteDefinitionID); err != nil {
+		return nil, err
+	}
+
+	row, err := r.Queries.GetVoteSubmissionStats(ctx, client.GetVoteSubmissionStatsParams{
+		VoteDefinitionID:   voteDefinitionID,
+		VoteDefinitionID_2: voteDefinitionID,
+		VoteDefinitionID_3: voteDefinitionID,
+		VoteDefinitionID_4: voteDefinitionID,
+		VoteDefinitionID_5: voteDefinitionID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get vote submission stats: %w", err)
+	}
+	return &model.VoteSubmissionStats{
+		EligibleCount:     row.EligibleCount,
+		CastCount:         row.CastCount,
+		BallotCount:       row.BallotCount,
+		OpenBallotCount:   row.OpenBallotCount,
+		SecretBallotCount: row.SecretBallotCount,
+	}, nil
+}
+
+func (r *Repository) ensureVoteResultsReadable(ctx context.Context, voteDefinitionID int64) error {
+	vd, err := r.Queries.GetVoteDefinitionByID(ctx, voteDefinitionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("vote definition not found")
+		}
+		return fmt.Errorf("load vote definition: %w", err)
+	}
+	if vd.State == model.VoteStateCounting {
+		return fmt.Errorf("vote results unavailable while counting")
+	}
+	return nil
+}
+
+func validateVoteSelectionInput(ctx context.Context, qtx *client.Queries, vd client.VoteDefinition, optionIDs []int64) error {
+	selectedCount := int64(len(optionIDs))
+	if selectedCount < vd.MinSelections || selectedCount > vd.MaxSelections {
+		return fmt.Errorf("invalid number of selections: got %d, expected between %d and %d", selectedCount, vd.MinSelections, vd.MaxSelections)
+	}
+
+	seenSelected := make(map[int64]struct{}, len(optionIDs))
+	for _, optionID := range optionIDs {
+		if _, exists := seenSelected[optionID]; exists {
+			return fmt.Errorf("duplicate selected option id %d", optionID)
+		}
+		seenSelected[optionID] = struct{}{}
+	}
+
+	allowedOptionIDs, err := qtx.ListVoteOptionIDsForVoteDefinition(ctx, vd.ID)
+	if err != nil {
+		return fmt.Errorf("list vote option ids: %w", err)
+	}
+	allowed := make(map[int64]struct{}, len(allowedOptionIDs))
+	for _, optionID := range allowedOptionIDs {
+		allowed[optionID] = struct{}{}
+	}
+	for _, optionID := range optionIDs {
+		if _, ok := allowed[optionID]; !ok {
+			return fmt.Errorf("option %d does not belong to vote definition %d", optionID, vd.ID)
+		}
+	}
+	return nil
+}
+
+func ptrToNullInt64(v *int64) sql.NullInt64 {
+	if v == nil {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{Int64: *v, Valid: true}
+}
+
+func parseNullRFC3339(value sql.NullString) *time.Time {
+	if !value.Valid || value.String == "" {
+		return nil
+	}
+	parsed, err := time.Parse(time.RFC3339, value.String)
+	if err != nil {
+		return nil
+	}
+	return &parsed
+}
+
+func voteDefinitionFromClient(v *client.VoteDefinition) *model.VoteDefinition {
+	createdAt, _ := time.Parse(time.RFC3339, v.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, v.UpdatedAt)
+	return &model.VoteDefinition{
+		ID:            v.ID,
+		MeetingID:     v.MeetingID,
+		AgendaPointID: v.AgendaPointID,
+		MotionID:      nullInt64ToPtr(v.MotionID),
+		Name:          v.Name,
+		Visibility:    v.Visibility,
+		State:         v.State,
+		MinSelections: v.MinSelections,
+		MaxSelections: v.MaxSelections,
+		OpenedAt:      parseNullRFC3339(v.OpenedAt),
+		ClosedAt:      parseNullRFC3339(v.ClosedAt),
+		ArchivedAt:    parseNullRFC3339(v.ArchivedAt),
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+}
+
+func voteOptionFromClient(v *client.VoteOption) *model.VoteOption {
+	createdAt, _ := time.Parse(time.RFC3339, v.CreatedAt)
+	return &model.VoteOption{
+		ID:               v.ID,
+		VoteDefinitionID: v.VoteDefinitionID,
+		Label:            v.Label,
+		Position:         v.Position,
+		CreatedAt:        createdAt,
+	}
+}
+
+func eligibleVoterFromClient(v *client.EligibleVoter) *model.EligibleVoter {
+	createdAt, _ := time.Parse(time.RFC3339, v.CreatedAt)
+	return &model.EligibleVoter{
+		VoteDefinitionID: v.VoteDefinitionID,
+		MeetingID:        v.MeetingID,
+		AttendeeID:       v.AttendeeID,
+		CreatedAt:        createdAt,
+	}
+}
+
+func voteCastFromClient(v *client.VoteCast) *model.VoteCast {
+	createdAt, _ := time.Parse(time.RFC3339, v.CreatedAt)
+	return &model.VoteCast{
+		ID:               v.ID,
+		VoteDefinitionID: v.VoteDefinitionID,
+		MeetingID:        v.MeetingID,
+		AttendeeID:       v.AttendeeID,
+		Source:           v.Source,
+		CreatedAt:        createdAt,
+	}
+}
+
+func voteBallotFromClient(v *client.VoteBallot) *model.VoteBallot {
+	createdAt, _ := time.Parse(time.RFC3339, v.CreatedAt)
+	result := &model.VoteBallot{
+		ID:                v.ID,
+		VoteDefinitionID:  v.VoteDefinitionID,
+		CastID:            nullInt64ToPtr(v.CastID),
+		AttendeeID:        nullInt64ToPtr(v.AttendeeID),
+		ReceiptToken:      v.ReceiptToken,
+		CommitmentCipher:  nil,
+		CommitmentVersion: nullInt64ToPtr(v.CommitmentVersion),
+		CreatedAt:         createdAt,
+	}
+	if v.EncryptedCommitment != nil {
+		commitment := append([]byte(nil), v.EncryptedCommitment...)
+		result.EncryptedCommitment = &commitment
+	}
+	if v.CommitmentCipher.Valid {
+		cipher := v.CommitmentCipher.String
+		result.CommitmentCipher = &cipher
+	}
+	return result
 }

@@ -2,7 +2,6 @@ package templates
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
 	"github.com/invopop/ctxi18n/i18n"
@@ -10,20 +9,12 @@ import (
 
 // MotionItem holds display data for a single motion.
 type MotionItem struct {
-	ID             int64
-	IDString       string
-	BlobID         int64
-	BlobIDString   string
-	Title          string
-	Filename       string
-	VotesFor       *int64
-	VotesAgainst   *int64
-	VotesAbstained *int64
-	VotesEligible  *int64
-}
-
-func (m *MotionItem) HasVotes() bool {
-	return m.VotesFor != nil
+	ID           int64
+	IDString     string
+	BlobID       int64
+	BlobIDString string
+	Title        string
+	Filename     string
 }
 
 // MotionListPartialInput is the input for the per-agenda-point motion list.
@@ -82,12 +73,6 @@ func (i *MotionItemPartialInput) MotionDeletePostStr(ctx context.Context) string
 	).ManageMotionDeletePost(ctx, "")
 }
 
-func (i *MotionItemPartialInput) MotionVotePostStr(ctx context.Context) string {
-	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdMotionMotionIdVoteRoute(
-		i.CommitteeSlug, i.MeetingIDString, i.AgendaPointIDStr, i.Motion.IDString,
-	).ManageMotionRecordVotePost(ctx, "")
-}
-
 func (i *MotionItemPartialInput) BlobDownloadGetStr(ctx context.Context) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(
 		i.CommitteeSlug, i.MeetingIDString, i.Motion.BlobIDString,
@@ -112,27 +97,6 @@ templ MotionItemPartial(input MotionItemPartialInput) {
 		{ " " }
 		<a href={ templ.URL(input.BlobDownloadGetStr(ctx)) }>{ input.Motion.Filename }</a>
 		@ErrorMessage(input.Error)
-		if input.Motion.HasVotes() {
-			<p>
-				{ i18n.T(ctx, "motion.vote_for_label") } { strconv.FormatInt(*input.Motion.VotesFor, 10) } |
-				{ i18n.T(ctx, "motion.vote_against_label") } { strconv.FormatInt(*input.Motion.VotesAgainst, 10) } |
-				{ i18n.T(ctx, "motion.vote_abstained_label") } { strconv.FormatInt(*input.Motion.VotesAbstained, 10) } |
-				{ i18n.T(ctx, "motion.vote_eligible_label") } { strconv.FormatInt(*input.Motion.VotesEligible, 10) }
-			</p>
-		} else {
-			<form
-				hx-post={ input.MotionVotePostStr(ctx) }
-				hx-target={ "#" + input.containerID() }
-				hx-swap="outerHTML"
-				class={ "inline-form inline" }
-			>
-				<label>{ i18n.T(ctx, "motion.vote_for_label") } <input class="input input-bordered input-sm" type="number" name="votes_for" min="0" required/></label>
-				<label>{ i18n.T(ctx, "motion.vote_against_label") } <input class="input input-bordered input-sm" type="number" name="votes_against" min="0" required/></label>
-				<label>{ i18n.T(ctx, "motion.vote_abstained_label") } <input class="input input-bordered input-sm" type="number" name="votes_abstained" min="0" required/></label>
-				<label>{ i18n.T(ctx, "motion.vote_eligible_label") } <input class="input input-bordered input-sm" type="number" name="votes_eligible" min="0" required/></label>
-				<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "motion.record_vote_button") }</button>
-			</form>
-		}
 		<form
 			hx-post={ input.MotionDeletePostStr(ctx) }
 			hx-target={ "#" + input.motionListContainerID() }

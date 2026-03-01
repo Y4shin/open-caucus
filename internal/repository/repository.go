@@ -17,6 +17,32 @@ type AgendaApplyPoint struct {
 	Position   int64
 }
 
+// VoteOptionInput represents one vote option to be persisted.
+type VoteOptionInput struct {
+	Label    string
+	Position int64
+}
+
+// OpenBallotSubmission contains inputs for one open ballot submission.
+type OpenBallotSubmission struct {
+	VoteDefinitionID int64
+	MeetingID        int64
+	AttendeeID       int64
+	Source           string
+	ReceiptToken     string
+	OptionIDs        []int64
+}
+
+// SecretBallotSubmission contains inputs for one secret ballot submission.
+type SecretBallotSubmission struct {
+	VoteDefinitionID    int64
+	ReceiptToken        string
+	EncryptedCommitment []byte
+	CommitmentCipher    string
+	CommitmentVersion   int64
+	OptionIDs           []int64
+}
+
 // Repository defines the interface for data persistence and migration management.
 type Repository interface {
 	// Close closes the underlying database connection.
@@ -107,7 +133,26 @@ type Repository interface {
 	GetMotionByID(ctx context.Context, id int64) (*model.Motion, error)
 	ListMotionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.Motion, error)
 	DeleteMotion(ctx context.Context, id int64) error
-	SetMotionVotes(ctx context.Context, id, votesFor, votesAgainst, votesAbstained, votesEligible int64) error
+
+	// Voting
+	CreateVoteDefinition(ctx context.Context, meetingID, agendaPointID int64, motionID *int64, name, visibility string, minSelections, maxSelections int64) (*model.VoteDefinition, error)
+	UpdateVoteDefinitionDraft(ctx context.Context, id int64, meetingID, agendaPointID int64, motionID *int64, name, visibility string, minSelections, maxSelections int64) (*model.VoteDefinition, error)
+	OpenVoteWithEligibleVoters(ctx context.Context, voteDefinitionID int64, attendeeIDs []int64) (*model.VoteDefinition, error)
+	CloseVote(ctx context.Context, voteDefinitionID int64) (*model.CloseVoteResult, error)
+	ArchiveVote(ctx context.Context, voteDefinitionID int64) (*model.VoteDefinition, error)
+	GetVoteDefinitionByID(ctx context.Context, id int64) (*model.VoteDefinition, error)
+	ListVoteDefinitionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.VoteDefinition, error)
+	ReplaceVoteOptions(ctx context.Context, voteDefinitionID int64, options []VoteOptionInput) error
+	ListVoteOptions(ctx context.Context, voteDefinitionID int64) ([]*model.VoteOption, error)
+	ListEligibleVoters(ctx context.Context, voteDefinitionID int64) ([]*model.EligibleVoter, error)
+	RegisterVoteCast(ctx context.Context, voteDefinitionID, meetingID, attendeeID int64, source string) (*model.VoteCast, error)
+	ListVoteCasts(ctx context.Context, voteDefinitionID int64) ([]*model.VoteCast, error)
+	SubmitOpenBallot(ctx context.Context, submission OpenBallotSubmission) (*model.VoteBallot, error)
+	SubmitSecretBallot(ctx context.Context, submission SecretBallotSubmission) (*model.VoteBallot, error)
+	VerifyOpenBallotByReceipt(ctx context.Context, voteDefinitionID int64, receiptToken string) (*model.VoteOpenVerification, error)
+	VerifySecretBallotByReceipt(ctx context.Context, voteDefinitionID int64, receiptToken string) (*model.VoteSecretVerification, error)
+	GetVoteTallies(ctx context.Context, voteDefinitionID int64) ([]*model.VoteTallyRow, error)
+	GetVoteSubmissionStats(ctx context.Context, voteDefinitionID int64) (*model.VoteSubmissionStats, error)
 
 	// Agenda points
 	CreateAgendaPoint(ctx context.Context, meetingID int64, title string) (*model.AgendaPoint, error)

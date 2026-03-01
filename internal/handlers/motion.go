@@ -22,12 +22,6 @@ func buildMotionItem(m *model.Motion, blob *model.BinaryBlob) templates.MotionIt
 		Title:        m.Title,
 		Filename:     blob.Filename,
 	}
-	if m.VotesFor != nil {
-		item.VotesFor = m.VotesFor
-		item.VotesAgainst = m.VotesAgainst
-		item.VotesAbstained = m.VotesAbstained
-		item.VotesEligible = m.VotesEligible
-	}
 	return item
 }
 
@@ -168,66 +162,6 @@ func (h *Handler) ManageMotionDelete(ctx context.Context, r *http.Request, param
 
 	partial, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, ap)
 	return partial, nil, err
-}
-
-// ManageMotionRecordVote records a vote tally for a motion and returns the updated motion item partial.
-func (h *Handler) ManageMotionRecordVote(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MotionItemPartialInput, *routes.ResponseMeta, error) {
-	motionID, err := strconv.ParseInt(params.MotionId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid motion ID")
-	}
-
-	if err := r.ParseForm(); err != nil {
-		return nil, nil, fmt.Errorf("failed to parse form: %w", err)
-	}
-
-	votesFor, err := strconv.ParseInt(r.FormValue("votes_for"), 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid votes_for value")
-	}
-	votesAgainst, err := strconv.ParseInt(r.FormValue("votes_against"), 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid votes_against value")
-	}
-	votesAbstained, err := strconv.ParseInt(r.FormValue("votes_abstained"), 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid votes_abstained value")
-	}
-	votesEligible, err := strconv.ParseInt(r.FormValue("votes_eligible"), 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid votes_eligible value")
-	}
-
-	if err := h.Repository.SetMotionVotes(ctx, motionID, votesFor, votesAgainst, votesAbstained, votesEligible); err != nil {
-		return nil, nil, fmt.Errorf("failed to record votes: %w", err)
-	}
-
-	motion, err := h.Repository.GetMotionByID(ctx, motionID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to reload motion: %w", err)
-	}
-
-	blob, err := h.Repository.GetBlobByID(ctx, motion.BlobID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load blob: %w", err)
-	}
-
-	motionItem := buildMotionItem(motion, blob)
-	apID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid agenda point ID")
-	}
-	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load agenda point: %w", err)
-	}
-	return &templates.MotionItemPartialInput{
-		CommitteeSlug:    params.Slug,
-		MeetingIDString:  params.MeetingId,
-		AgendaPointIDStr: params.AgendaPointId,
-		Motion:           motionItem,
-		CurrentMotionID:  ap.CurrentMotionID,
-	}, nil, nil
 }
 
 // ServeBlobDownload streams a stored file to the client.

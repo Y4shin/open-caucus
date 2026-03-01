@@ -72,6 +72,13 @@ type Committee struct {
 	CurrentMeetingID sql.NullInt64
 }
 
+type EligibleVoter struct {
+	VoteDefinitionID int64
+	MeetingID        int64
+	AttendeeID       int64
+	CreatedAt        string
+}
+
 type Meeting struct {
 	ID                           int64
 	CommitteeID                  int64
@@ -88,16 +95,12 @@ type Meeting struct {
 }
 
 type Motion struct {
-	ID             int64
-	AgendaPointID  int64
-	BlobID         int64
-	Title          string
-	VotesFor       sql.NullInt64
-	VotesAgainst   sql.NullInt64
-	VotesAbstained sql.NullInt64
-	VotesEligible  sql.NullInt64
-	CreatedAt      string
-	UpdatedAt      string
+	ID            int64
+	AgendaPointID int64
+	BlobID        int64
+	Title         string
+	CreatedAt     string
+	UpdatedAt     string
 }
 
 type OauthCommitteeGroupRule struct {
@@ -168,4 +171,57 @@ type User struct {
 	Quoted      bool
 	CreatedAt   string
 	UpdatedAt   string
+}
+
+type VoteBallot struct {
+	ID                  int64
+	VoteDefinitionID    int64
+	CastID              sql.NullInt64
+	AttendeeID          sql.NullInt64
+	ReceiptToken        string
+	EncryptedCommitment []byte
+	CommitmentCipher    sql.NullString
+	CommitmentVersion   sql.NullInt64
+	CreatedAt           string
+}
+
+type VoteBallotSelection struct {
+	BallotID         int64
+	VoteDefinitionID int64
+	OptionID         int64
+	CreatedAt        string
+}
+
+type VoteCast struct {
+	ID               int64
+	VoteDefinitionID int64
+	MeetingID        int64
+	AttendeeID       int64
+	Source           string
+	CreatedAt        string
+}
+
+type VoteDefinition struct {
+	ID            int64
+	MeetingID     int64
+	AgendaPointID int64
+	MotionID      sql.NullInt64
+	Name          string
+	Visibility    string
+	State         string
+	MinSelections int64
+	MaxSelections int64
+	OpenedAt      sql.NullString
+	ClosedAt      sql.NullString
+	ArchivedAt    sql.NullString
+	CreatedAt     string
+	UpdatedAt     string
+}
+
+type VoteOption struct {
+	ID               int64
+	VoteDefinitionID int64
+	Label            string
+	Position         int64
+	CreatedAt        string
 }

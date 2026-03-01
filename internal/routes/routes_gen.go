@@ -88,7 +88,6 @@ type Handler interface {
 	ManageSpeakersListPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageMotionCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageMotionDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
-	ManageMotionRecordVote(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionItemPartialInput, *ResponseMeta, error)
 	ServeBlobDownload(w http.ResponseWriter, r *http.Request, params RouteParams) error
 	ServeCurrentDocument(w http.ResponseWriter, r *http.Request, params RouteParams) error
 	ManageAttachmentCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
@@ -403,13 +402,6 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete", rt.wrapMiddleware(
 		rt.handleManageMotionDelete,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/vote", rt.wrapMiddleware(
-		rt.handleManageMotionRecordVote,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/vote", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
@@ -1614,38 +1606,6 @@ func (rt *Router) handleManageMotionDelete(w http.ResponseWriter, r *http.Reques
 	}
 
 	templates.MotionListPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleManageMotionRecordVote(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-		MotionId:      r.PathValue("motion_id"),
-	}
-
-	input, meta, err := rt.handler.ManageMotionRecordVote(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MotionItemPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleServeBlobDownload(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
