@@ -171,16 +171,15 @@ func (q *Queries) CreateVoteCast(ctx context.Context, arg CreateVoteCastParams) 
 
 const createVoteDefinition = `-- name: CreateVoteDefinition :one
 INSERT INTO vote_definitions (
-    meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections
+    meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections
 )
-VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+VALUES (?, ?, ?, ?, 'draft', ?, ?)
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 type CreateVoteDefinitionParams struct {
 	MeetingID     int64
 	AgendaPointID int64
-	MotionID      sql.NullInt64
 	Name          string
 	Visibility    string
 	MinSelections int64
@@ -191,7 +190,6 @@ func (q *Queries) CreateVoteDefinition(ctx context.Context, arg CreateVoteDefini
 	row := q.db.QueryRowContext(ctx, createVoteDefinition,
 		arg.MeetingID,
 		arg.AgendaPointID,
-		arg.MotionID,
 		arg.Name,
 		arg.Visibility,
 		arg.MinSelections,
@@ -202,7 +200,6 @@ func (q *Queries) CreateVoteDefinition(ctx context.Context, arg CreateVoteDefini
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -383,7 +380,7 @@ func (q *Queries) GetVoteCastByVoteAndAttendee(ctx context.Context, arg GetVoteC
 }
 
 const getVoteDefinitionByID = `-- name: GetVoteDefinitionByID :one
-SELECT id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at FROM vote_definitions WHERE id = ?
+SELECT id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at FROM vote_definitions WHERE id = ?
 `
 
 func (q *Queries) GetVoteDefinitionByID(ctx context.Context, id int64) (VoteDefinition, error) {
@@ -393,7 +390,6 @@ func (q *Queries) GetVoteDefinitionByID(ctx context.Context, id int64) (VoteDefi
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -582,7 +578,7 @@ func (q *Queries) ListVoteCastsForVoteDefinition(ctx context.Context, voteDefini
 }
 
 const listVoteDefinitionsForAgendaPoint = `-- name: ListVoteDefinitionsForAgendaPoint :many
-SELECT id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+SELECT id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 FROM vote_definitions
 WHERE agenda_point_id = ?
 ORDER BY created_at ASC
@@ -601,7 +597,6 @@ func (q *Queries) ListVoteDefinitionsForAgendaPoint(ctx context.Context, agendaP
 			&i.ID,
 			&i.MeetingID,
 			&i.AgendaPointID,
-			&i.MotionID,
 			&i.Name,
 			&i.Visibility,
 			&i.State,
@@ -697,7 +692,7 @@ SET state = 'archived',
     archived_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 WHERE id = ? AND state = 'closed'
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 func (q *Queries) SetVoteDefinitionArchived(ctx context.Context, id int64) (VoteDefinition, error) {
@@ -707,7 +702,6 @@ func (q *Queries) SetVoteDefinitionArchived(ctx context.Context, id int64) (Vote
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -728,7 +722,7 @@ SET state = 'closed',
     closed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 WHERE id = ? AND state = 'counting'
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 func (q *Queries) SetVoteDefinitionClosedFromCounting(ctx context.Context, id int64) (VoteDefinition, error) {
@@ -738,7 +732,6 @@ func (q *Queries) SetVoteDefinitionClosedFromCounting(ctx context.Context, id in
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -759,7 +752,7 @@ SET state = 'closed',
     closed_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 WHERE id = ? AND state = 'open'
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 func (q *Queries) SetVoteDefinitionClosedFromOpen(ctx context.Context, id int64) (VoteDefinition, error) {
@@ -769,7 +762,6 @@ func (q *Queries) SetVoteDefinitionClosedFromOpen(ctx context.Context, id int64)
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -789,7 +781,7 @@ UPDATE vote_definitions
 SET state = 'counting',
     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 WHERE id = ? AND state = 'open'
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 func (q *Queries) SetVoteDefinitionCountingFromOpen(ctx context.Context, id int64) (VoteDefinition, error) {
@@ -799,7 +791,6 @@ func (q *Queries) SetVoteDefinitionCountingFromOpen(ctx context.Context, id int6
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -820,7 +811,7 @@ SET state = 'open',
     opened_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 WHERE id = ? AND state = 'draft'
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 func (q *Queries) SetVoteDefinitionOpen(ctx context.Context, id int64) (VoteDefinition, error) {
@@ -830,7 +821,6 @@ func (q *Queries) SetVoteDefinitionOpen(ctx context.Context, id int64) (VoteDefi
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,
@@ -849,20 +839,18 @@ const updateVoteDefinitionDraft = `-- name: UpdateVoteDefinitionDraft :one
 UPDATE vote_definitions
 SET meeting_id = ?,
     agenda_point_id = ?,
-    motion_id = ?,
     name = ?,
     visibility = ?,
     min_selections = ?,
     max_selections = ?,
     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
 WHERE id = ? AND state = 'draft'
-RETURNING id, meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
+RETURNING id, meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections, opened_at, closed_at, archived_at, created_at, updated_at
 `
 
 type UpdateVoteDefinitionDraftParams struct {
 	MeetingID     int64
 	AgendaPointID int64
-	MotionID      sql.NullInt64
 	Name          string
 	Visibility    string
 	MinSelections int64
@@ -874,7 +862,6 @@ func (q *Queries) UpdateVoteDefinitionDraft(ctx context.Context, arg UpdateVoteD
 	row := q.db.QueryRowContext(ctx, updateVoteDefinitionDraft,
 		arg.MeetingID,
 		arg.AgendaPointID,
-		arg.MotionID,
 		arg.Name,
 		arg.Visibility,
 		arg.MinSelections,
@@ -886,7 +873,6 @@ func (q *Queries) UpdateVoteDefinitionDraft(ctx context.Context, arg UpdateVoteD
 		&i.ID,
 		&i.MeetingID,
 		&i.AgendaPointID,
-		&i.MotionID,
 		&i.Name,
 		&i.Visibility,
 		&i.State,

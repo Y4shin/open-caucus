@@ -49,7 +49,7 @@ templ PageTemplate(title string, htmx bool, htmxSSE bool, scaffold ScaffoldInput
 			<script src={ paths.Route.HtmxExtSseMinJs() }></script>
 		}
 	</head>
-	<body class={ "app-shell min-h-screen bg-base-100 text-base-content flex flex-col" }>
+	<body class={ "app-shell h-dvh min-h-screen bg-base-100 text-base-content flex flex-col overflow-hidden" }>
 		@HeaderFooterScaffold(scaffold, content)
 	</body>
 	</html>
@@ -217,6 +217,41 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 				return parsed;
 			}
 
+			function notificationKey(item) {
+				var tone = item.getAttribute("data-notification-tone") || "";
+				var message = (item.textContent || "").replace(/\s+/g, " ").trim();
+				return tone + "|" + message;
+			}
+
+			function collectNotifications(root) {
+				var items = [];
+				if (root instanceof Element && root.matches("[data-notification-item]")) {
+					items.push(root);
+				}
+				if (root instanceof Element || root instanceof Document) {
+					var nested = root.querySelectorAll("[data-notification-item]");
+					for (var i = 0; i < nested.length; i++) {
+						items.push(nested[i]);
+					}
+				}
+				return items;
+			}
+
+			function findExistingByKey(host, key, exclude) {
+				var current = host.querySelectorAll("[data-notification-item]");
+				for (var i = 0; i < current.length; i++) {
+					var candidate = current[i];
+					if (candidate === exclude) {
+						continue;
+					}
+					var candidateKey = candidate.getAttribute("data-notification-key") || notificationKey(candidate);
+					if (candidateKey === key) {
+						return candidate;
+					}
+				}
+				return null;
+			}
+
 			function dismissNotification(item) {
 				if (!(item instanceof HTMLElement) || item.dataset.notificationDismissed === "1") {
 					return;
@@ -253,13 +288,27 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 				if (!(root instanceof Element) && !(root instanceof Document)) {
 					root = document;
 				}
-				var items = root.querySelectorAll("[data-notification-item]");
+				var items = collectNotifications(root);
 				for (var i = 0; i < items.length; i++) {
 					var item = items[i];
+					var key = notificationKey(item);
+					item.setAttribute("data-notification-key", key);
+					var existing = findExistingByKey(host, key, item);
+					if (existing && existing !== item) {
+						if (item.parentNode) {
+							item.parentNode.removeChild(item);
+						}
+						continue;
+					}
 					if (!host.contains(item)) {
 						host.prepend(item);
 					}
 					initializeNotification(item);
+				}
+				var maxItems = 3;
+				var current = host.querySelectorAll("[data-notification-item]");
+				for (var j = maxItems; j < current.length; j++) {
+					dismissNotification(current[j]);
 				}
 			}
 
@@ -278,9 +327,11 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 
 			document.addEventListener("htmx:afterSwap", function(event) {
 				routeNotifications(event.target);
+				routeNotifications(getHost());
 			});
 			document.addEventListener("htmx:oobAfterSwap", function(event) {
 				routeNotifications(event.target);
+				routeNotifications(getHost());
 			});
 
 			if (document.readyState === "loading") {

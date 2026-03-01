@@ -128,15 +128,9 @@ type Repository interface {
 	ListAttachmentsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.AgendaAttachment, error)
 	DeleteAttachment(ctx context.Context, id int64) error
 
-	// Motions
-	CreateMotion(ctx context.Context, agendaPointID, blobID int64, title string) (*model.Motion, error)
-	GetMotionByID(ctx context.Context, id int64) (*model.Motion, error)
-	ListMotionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.Motion, error)
-	DeleteMotion(ctx context.Context, id int64) error
-
 	// Voting
-	CreateVoteDefinition(ctx context.Context, meetingID, agendaPointID int64, motionID *int64, name, visibility string, minSelections, maxSelections int64) (*model.VoteDefinition, error)
-	UpdateVoteDefinitionDraft(ctx context.Context, id int64, meetingID, agendaPointID int64, motionID *int64, name, visibility string, minSelections, maxSelections int64) (*model.VoteDefinition, error)
+	CreateVoteDefinition(ctx context.Context, meetingID, agendaPointID int64, name, visibility string, minSelections, maxSelections int64) (*model.VoteDefinition, error)
+	UpdateVoteDefinitionDraft(ctx context.Context, id int64, meetingID, agendaPointID int64, name, visibility string, minSelections, maxSelections int64) (*model.VoteDefinition, error)
 	OpenVoteWithEligibleVoters(ctx context.Context, voteDefinitionID int64, attendeeIDs []int64) (*model.VoteDefinition, error)
 	CloseVote(ctx context.Context, voteDefinitionID int64) (*model.CloseVoteResult, error)
 	ArchiveVote(ctx context.Context, voteDefinitionID int64) (*model.VoteDefinition, error)
@@ -153,6 +147,7 @@ type Repository interface {
 	VerifySecretBallotByReceipt(ctx context.Context, voteDefinitionID int64, receiptToken string) (*model.VoteSecretVerification, error)
 	GetVoteTallies(ctx context.Context, voteDefinitionID int64) ([]*model.VoteTallyRow, error)
 	GetVoteSubmissionStats(ctx context.Context, voteDefinitionID int64) (*model.VoteSubmissionStats, error)
+	GetVoteSubmissionStatsLive(ctx context.Context, voteDefinitionID int64) (*model.VoteSubmissionStats, error)
 
 	// Agenda points
 	CreateAgendaPoint(ctx context.Context, meetingID int64, title string) (*model.AgendaPoint, error)
@@ -167,7 +162,6 @@ type Repository interface {
 	ApplyAgendaPoints(ctx context.Context, meetingID int64, points []AgendaApplyPoint, deleteIDs []int64) error
 	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error
 	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
-	SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error
 	ClearCurrentDocument(ctx context.Context, agendaPointID int64) error
 	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error
 	SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error

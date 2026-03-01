@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -156,4 +157,31 @@ func (h *Handler) ManageAttachmentDelete(ctx context.Context, r *http.Request, p
 
 	partial, err := h.loadAttachmentListPartial(ctx, params.Slug, params.MeetingId, ap)
 	return partial, nil, err
+}
+
+// ServeBlobDownload streams an attachment blob by blob ID.
+func (h *Handler) ServeBlobDownload(w http.ResponseWriter, r *http.Request, params routes.RouteParams) error {
+	blobID, err := strconv.ParseInt(params.BlobId, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid blob ID")
+	}
+
+	blob, err := h.Repository.GetBlobByID(r.Context(), blobID)
+	if err != nil {
+		return fmt.Errorf("failed to load blob: %w", err)
+	}
+
+	reader, err := h.Storage.Open(blob.StoragePath)
+	if err != nil {
+		return fmt.Errorf("failed to open blob: %w", err)
+	}
+	defer reader.Close()
+
+	w.Header().Set("Content-Type", blob.ContentType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", blob.Filename))
+	w.Header().Set("Content-Length", strconv.FormatInt(blob.SizeBytes, 10))
+	if _, err := io.Copy(w, reader); err != nil {
+		return fmt.Errorf("failed to stream blob: %w", err)
+	}
+	return nil
 }

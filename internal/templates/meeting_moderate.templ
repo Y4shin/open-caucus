@@ -17,7 +17,7 @@ type ModeratePageInput struct {
 	HasActiveAP      bool
 	ActiveAPTitle    string
 	Attachments      AttachmentListPartialInput // for active AP
-	Motions          MotionListPartialInput     // for active AP
+	Votes            VoteModeratorPanelInput
 	MeetingSettings  MeetingSettingsPartialInput
 	// Right column
 	Speakers  SpeakersListPartialInput
@@ -30,6 +30,7 @@ type ModerateDependentPartialInput struct {
 	IDString         string // meeting ID
 	Speakers         SpeakersListPartialInput
 	Attendees        AttendeeListPartialInput
+	Votes            VoteModeratorPanelInput
 	MeetingSettings  MeetingSettingsPartialInput
 }
 
@@ -157,62 +158,46 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 }
 
 templ ModerateToolsCard(input ModeratePageInput) {
-	<section class="min-h-0 space-y-5">
-		<h2 class="text-lg font-semibold">Tools</h2>
-		if !input.HasActiveAP {
-			<p class="text-sm text-base-content/70">No active agenda point.</p>
-		} else {
-			<div class="space-y-2">
-					<div class="flex items-center justify-between gap-2">
-						<strong class="text-base">Attachments</strong>
-						<button class="btn btn-sm btn-outline"
-							type="button"
-							data-manage-dialog-open
-							aria-controls={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
-						>Manage Files</button>
+	<section class="flex h-full min-h-0 flex-col overflow-hidden">
+		<div class="flex items-center justify-between gap-2">
+			<h2 class="text-lg font-semibold">Tools</h2>
+		</div>
+		<div class="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+			if !input.HasActiveAP {
+				<p class="text-sm text-base-content/70">No active agenda point.</p>
+			} else {
+				<div class="space-y-5">
+					<div class="space-y-2">
+						<div class="flex items-center justify-between gap-2">
+							<strong class="text-base">Attachments</strong>
+							<button class="btn btn-sm btn-outline"
+								type="button"
+								data-manage-dialog-open
+								aria-controls={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
+							>Manage Files</button>
+						</div>
+						if len(input.Attachments.Attachments) == 0 {
+							<p class="text-sm text-base-content/70">No attachments.</p>
+						} else {
+							<ul class="list rounded-box border border-base-300 bg-base-100">
+								for _, a := range input.Attachments.Attachments {
+									<li class="list-row">
+										<a class="link link-primary" href={ templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)) }>
+											if a.Label != "" {
+												{ a.Label } ({ a.Filename })
+											} else {
+												{ a.Filename }
+											}
+										</a>
+									</li>
+								}
+							</ul>
+						}
 					</div>
-					if len(input.Attachments.Attachments) == 0 {
-						<p class="text-sm text-base-content/70">No attachments.</p>
-					} else {
-						<ul class="list rounded-box border border-base-300 bg-base-100">
-							for _, a := range input.Attachments.Attachments {
-								<li class="list-row">
-									<a class="link link-primary" href={ templ.URL(input.Attachments.blobDownloadGetStr(ctx, &a)) }>
-										if a.Label != "" {
-											{ a.Label } ({ a.Filename })
-										} else {
-											{ a.Filename }
-										}
-									</a>
-								</li>
-							}
-						</ul>
-					}
-			</div>
-			<div class="space-y-2">
-					<div class="flex items-center justify-between gap-2">
-						<strong class="text-base">Motions</strong>
-						<button class="btn btn-sm btn-outline"
-							type="button"
-							data-manage-dialog-open
-							aria-controls={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
-						>Manage Motions</button>
-					</div>
-					if len(input.Motions.Motions) == 0 {
-						<p class="text-sm text-base-content/70">No motions.</p>
-					} else {
-						<ul class="list rounded-box border border-base-300 bg-base-100">
-							for _, m := range input.Motions.Motions {
-								<li class="list-row">
-									<a class="link link-primary" href={ templ.URL(paths.NewCommitteeSlugMeetingMeetingIdBlobBlobIdRoute(input.CommitteeSlug, input.IDString, m.BlobIDString).ServeBlobDownloadGet(ctx, "")) }>
-										{ m.Title } ({ m.Filename })
-									</a>
-								</li>
-							}
-						</ul>
-					}
-			</div>
-		}
+					@VoteModeratorPanelPartial(input.Votes)
+				</div>
+			}
+		</div>
 		if input.HasActiveAP {
 			<dialog
 				id={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
@@ -225,22 +210,6 @@ templ ModerateToolsCard(input ModeratePageInput) {
 						<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
 					</div>
 					@AttachmentListPartial(input.Attachments)
-				</div>
-				<form method="dialog" class="modal-backdrop">
-					<button aria-label="Close">close</button>
-				</form>
-			</dialog>
-			<dialog
-				id={ "moderate-motions-dialog-" + input.Motions.AgendaPointIDStr }
-				class="modal"
-				data-manage-dialog
-			>
-				<div class="modal-box w-11/12 max-w-5xl">
-					<div class="mb-4 flex items-center justify-between gap-2">
-						<h3 class="text-lg font-semibold">{ input.ActiveAPTitle } - Motions</h3>
-						<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
-					</div>
-					@MotionListPartial(input.Motions)
 				</div>
 				<form method="dialog" class="modal-backdrop">
 					<button aria-label="Close">close</button>
@@ -340,26 +309,26 @@ templ ModerateLeftWorkspace(input ModeratePageInput) {
 	<section
 		id="moderate-left-controls"
 		data-meeting-id={ input.IDString }
-		class="order-2 card min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:h-full lg:self-stretch"
+		class="order-2 card min-h-0 min-w-0 overflow-hidden border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:h-full lg:self-stretch"
 	>
-		<div class="card-body flex h-full min-h-0 flex-col p-4">
+		<div class="card-body flex h-full min-h-0 flex-col overflow-hidden p-4">
 			<div role="tablist" class="tabs tabs-border tabs-sm grid w-full grid-cols-4 [--tab-p:0.35rem] sm:[--tab-p:0.75rem]">
 				<button type="button" class="tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="agenda">Agenda</button>
 				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="tools">Tools</button>
 				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="attendees">Attendees</button>
 				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="settings">Settings</button>
 			</div>
-			<div class="mt-3 min-h-0 flex-1 overflow-y-auto">
-				<div id="moderate-left-panel-agenda" data-moderate-left-panel="agenda">
+			<div class="mt-3 min-h-0 flex-1">
+				<div id="moderate-left-panel-agenda" data-moderate-left-panel="agenda" class="h-full min-h-0 overflow-y-auto pr-1">
 					@ModerateAgendaCard(input.AgendaPoints)
 				</div>
-				<div id="moderate-left-panel-tools" data-moderate-left-panel="tools" class="hidden">
+				<div id="moderate-left-panel-tools" data-moderate-left-panel="tools" class="hidden h-full min-h-0 overflow-hidden">
 					@ModerateToolsCard(input)
 				</div>
-				<div id="moderate-left-panel-attendees" data-moderate-left-panel="attendees" class="hidden">
+				<div id="moderate-left-panel-attendees" data-moderate-left-panel="attendees" class="hidden h-full min-h-0 overflow-y-auto pr-1">
 					@ModerateManageAttendeesCard(input.Attendees)
 				</div>
-				<div id="moderate-left-panel-settings" data-moderate-left-panel="settings" class="hidden">
+				<div id="moderate-left-panel-settings" data-moderate-left-panel="settings" class="hidden h-full min-h-0 overflow-y-auto pr-1">
 					@ModerateSettingsCard(input)
 				</div>
 			</div>
@@ -581,6 +550,9 @@ templ ModerateDependentPartial(input ModerateDependentPartialInput) {
 	<div id="moderate-speaker-settings-container" hx-swap-oob="outerHTML">
 		@ModerateSpeakerSettingsContent(input.Speakers)
 	</div>
+	<template>
+		@VoteModeratorPanelPartial(voteModeratorPanelInputWithOOB(input.Votes))
+	</template>
 }
 
 templ MeetingModerateTemplate(input ModeratePageInput) {
@@ -597,7 +569,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 		id="moderate-sse-root"
 		hx-ext="sse"
 		data-stream-url={ input.moderateStreamGetStr(ctx) }
-		class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:h-full lg:grid-cols-2 lg:grid-rows-1 lg:items-start lg:overflow-visible"
+		class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:h-full lg:grid-cols-2 lg:grid-rows-1 lg:overflow-hidden"
 	>
 		@ModerateLeftWorkspace(input)
 		@ModerateDependentContent(ModerateDependentPartialInput{
@@ -605,6 +577,7 @@ templ MeetingModerateContent(input ModeratePageInput) {
 			IDString:        input.IDString,
 			Speakers:        input.Speakers,
 			Attendees:       input.Attendees,
+			Votes:           input.Votes,
 			MeetingSettings: input.MeetingSettings,
 		})
 	</div>

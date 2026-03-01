@@ -477,6 +477,7 @@ func (h *Handler) ManageAgendaPointCreate(ctx context.Context, r *http.Request, 
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	h.publishSpeakersUpdated(meetingID)
+	h.publishMeetingVotesChanged(meetingID)
 	return partial, nil, err
 }
 
@@ -495,6 +496,7 @@ func (h *Handler) ManageAgendaPointDelete(ctx context.Context, r *http.Request, 
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	h.publishSpeakersUpdated(meetingID)
+	h.publishMeetingVotesChanged(meetingID)
 	return partial, nil, err
 }
 
@@ -538,6 +540,7 @@ func (h *Handler) ManageActivateAgendaPoint(ctx context.Context, r *http.Request
 	}
 	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
 	h.publishSpeakersUpdated(meetingID)
+	h.publishMeetingVotesChanged(meetingID)
 	return partial, nil, err
 }
 

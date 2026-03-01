@@ -30,6 +30,7 @@ import (
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the HTTP server",
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if _, err := os.Stat(".env"); err == nil {
 			if loadErr := godotenv.Load(".env"); loadErr != nil {
@@ -150,8 +151,9 @@ var serveCmd = &cobra.Command{
 
 		addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
 		slog.Info("starting server", "addr", addr, "env", cfg.Application.Environment)
-		ctx, cancel := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
-		defer cancel()
+		sigCh := make(chan os.Signal, 2)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+		defer signal.Stop(sigCh)
 
 		server := &http.Server{
 			Addr:    addr,
@@ -171,19 +173,50 @@ var serveCmd = &cobra.Command{
 		select {
 		case err := <-serverErr:
 			return err
-		case <-ctx.Done():
-			slog.Info("shutdown signal received", "signal", ctx.Err())
+		case sig := <-sigCh:
+			slog.Info("shutdown signal received", "signal", sig.String())
 		}
 
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer shutdownCancel()
-		if err := server.Shutdown(shutdownCtx); err != nil {
-			return fmt.Errorf("graceful shutdown failed: %w", err)
+
+		shutdownErrCh := make(chan error, 1)
+		go func() {
+			shutdownErrCh <- server.Shutdown(shutdownCtx)
+		}()
+
+		forceClosed := false
+		select {
+		case err := <-shutdownErrCh:
+			if err != nil {
+				if errors.Is(err, context.DeadlineExceeded) {
+					slog.Warn("graceful shutdown timeout reached; forcing immediate close")
+					if closeErr := server.Close(); closeErr != nil && !errors.Is(closeErr, http.ErrServerClosed) {
+						return fmt.Errorf("force close after graceful shutdown timeout: %w", closeErr)
+					}
+				} else {
+					return fmt.Errorf("graceful shutdown failed: %w", err)
+				}
+			}
+		case sig := <-sigCh:
+			slog.Warn("second shutdown signal received; forcing immediate close", "signal", sig.String())
+			forceClosed = true
+			shutdownCancel()
+			if err := server.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				return fmt.Errorf("force close failed: %w", err)
+			}
+		case err := <-serverErr:
+			return err
 		}
+
 		if err := <-serverErr; err != nil {
 			return err
 		}
-		slog.Info("server shutdown complete")
+		if forceClosed {
+			slog.Info("server shutdown complete (forced)")
+		} else {
+			slog.Info("server shutdown complete")
+		}
 		return nil
 	},
 }

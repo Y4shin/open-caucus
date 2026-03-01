@@ -189,20 +189,6 @@ en:
     col_name: "Name"
     col_type: "Type"
 
-  motion:
-    heading: "Motions"
-    title_label: "Title:"
-    file_label: "Document:"
-    upload_button: "Upload Motion"
-    empty_state: "No motions for this agenda point."
-    vote_for_label: "For:"
-    vote_against_label: "Against:"
-    vote_abstained_label: "Abstained:"
-    vote_eligible_label: "Eligible:"
-    record_vote_button: "Record Votes"
-    delete_button: "Delete"
-    delete_confirm: "Delete this motion and its document?"
-
   attachment:
     heading: "Attachments"
     label_label: "Label (optional):"

@@ -13,7 +13,6 @@ import (
 type votingFixture struct {
 	meetingID          int64
 	agendaPointID      int64
-	motionID           int64
 	otherMeetingID     int64
 	attendeeID1        int64
 	attendeeID2        int64
@@ -39,8 +38,6 @@ func seedVotingFixture(t *testing.T, repo *Repository) votingFixture {
 	committeeID := mustExecInsertID(t, repo, "INSERT INTO committees (name, slug) VALUES ('Committee', 'committee')")
 	meetingID := mustExecInsertID(t, repo, "INSERT INTO meetings (committee_id, name, secret, signup_open) VALUES (?, 'Meeting', 'secret-m', 0)", committeeID)
 	agendaPointID := mustExecInsertID(t, repo, "INSERT INTO agenda_points (meeting_id, position, title) VALUES (?, 1, 'Agenda')", meetingID)
-	blobID := mustExecInsertID(t, repo, "INSERT INTO binary_blobs (filename, content_type, size_bytes, storage_path) VALUES ('f.pdf', 'application/pdf', 10, '/tmp/f.pdf')")
-	motionID := mustExecInsertID(t, repo, "INSERT INTO motions (agenda_point_id, blob_id, title) VALUES (?, ?, 'Motion')", agendaPointID, blobID)
 
 	attendeeID1 := mustExecInsertID(t, repo, "INSERT INTO attendees (meeting_id, full_name, secret, quoted, attendee_number) VALUES (?, 'Alice', 's-alice', 0, 1)", meetingID)
 	attendeeID2 := mustExecInsertID(t, repo, "INSERT INTO attendees (meeting_id, full_name, secret, quoted, attendee_number) VALUES (?, 'Bob', 's-bob', 0, 2)", meetingID)
@@ -51,7 +48,6 @@ func seedVotingFixture(t *testing.T, repo *Repository) votingFixture {
 	return votingFixture{
 		meetingID:          meetingID,
 		agendaPointID:      agendaPointID,
-		motionID:           motionID,
 		otherMeetingID:     otherMeetingID,
 		attendeeID1:        attendeeID1,
 		attendeeID2:        attendeeID2,
@@ -61,7 +57,7 @@ func seedVotingFixture(t *testing.T, repo *Repository) votingFixture {
 
 func createDraftVote(t *testing.T, repo *Repository, fx votingFixture, visibility string, minSelections, maxSelections int64) *model.VoteDefinition {
 	t.Helper()
-	vote, err := repo.CreateVoteDefinition(context.Background(), fx.meetingID, fx.agendaPointID, &fx.motionID, "Vote", visibility, minSelections, maxSelections)
+	vote, err := repo.CreateVoteDefinition(context.Background(), fx.meetingID, fx.agendaPointID, "Vote", visibility, minSelections, maxSelections)
 	if err != nil {
 		t.Fatalf("create vote definition: %v", err)
 	}
@@ -123,7 +119,7 @@ func TestVoteDraftOnlyMutability(t *testing.T) {
 		t.Fatalf("expected replace vote options to fail outside draft")
 	}
 
-	if _, err := repo.UpdateVoteDefinitionDraft(context.Background(), vote.ID, fx.meetingID, fx.agendaPointID, &fx.motionID, "Changed", model.VoteVisibilityOpen, 1, 1); err == nil {
+	if _, err := repo.UpdateVoteDefinitionDraft(context.Background(), vote.ID, fx.meetingID, fx.agendaPointID, "Changed", model.VoteVisibilityOpen, 1, 1); err == nil {
 		t.Fatalf("expected update vote definition draft to fail outside draft")
 	}
 }

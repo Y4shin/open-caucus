@@ -20,6 +20,7 @@ type AttendeeSpeakersListPartialInput struct {
 	HasActiveAP       bool
 	ModeratorName     string
 	CurrentDoc        *LiveCurrentDocInfo
+	Votes             VoteLivePanelInput
 	Error             string
 }
 
@@ -391,6 +392,9 @@ templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
 	<div id="live-speakers-panel-meta" hx-swap-oob="innerHTML" hidden>
 		@LiveSpeakersPanelMetaFromPartial(input)
 	</div>
+	<template>
+		@LiveVotesPanelPartial(voteLivePanelInputWithOOB(input.Votes))
+	</template>
 	<div id="live-doc-fab-oob" hx-swap-oob="innerHTML:#live-doc-fab-wrapper" hidden>
 		@LiveDocFabContent(input.toCurrentDocInput())
 	</div>
@@ -505,6 +509,7 @@ type MeetingLiveInput struct {
 	CanModerate   bool
 	AgendaPoints  []AgendaPointItem
 	Speakers      AttendeeSpeakersListPartialInput
+	Votes         VoteLivePanelInput
 	CurrentDoc    *LiveCurrentDocInfo
 }
 
@@ -631,7 +636,7 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 			})();
 		</script>
 	</head>
-	<body class={ "app-shell min-h-screen bg-base-200 text-base-content flex flex-col", "live-body" }>
+	<body class={ "app-shell h-dvh min-h-screen bg-base-200 text-base-content flex flex-col overflow-hidden", "live-body" }>
 		@HeaderFooterScaffold(ScaffoldInput{
 			Title:    input.MeetingName,
 			Subtitle: input.CommitteeName,
@@ -642,7 +647,12 @@ templ MeetingLiveTemplate(input MeetingLiveInput) {
 }
 
 templ MeetingLiveContent(input MeetingLiveInput) {
-	<div class={ "live-grid grid min-h-0 flex-1 gap-4 [grid-template-rows:auto_minmax(0,1fr)] lg:grid-cols-2 lg:[grid-template-rows:minmax(0,1fr)] lg:[grid-auto-rows:minmax(0,1fr)]", "live-mobile-layout" }>
+	<div
+		id="live-sse-root"
+		hx-ext="sse"
+		sse-connect={ string(input.SSEStreamURL(ctx)) }
+		class={ "live-grid grid min-h-0 flex-1 gap-4 [grid-template-rows:auto_minmax(0,1fr)] lg:grid-cols-2 lg:[grid-template-rows:minmax(0,1fr)_auto] lg:[grid-auto-rows:minmax(0,1fr)]", "live-mobile-layout" }
+	>
 		<section class="card relative min-h-0 border border-base-300 bg-base-100 shadow-sm">
 			<div class="flex h-full min-h-0 flex-col p-4">
 				<div class="mb-3 flex items-center justify-between gap-2">
@@ -715,11 +725,16 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 				<div id="live-speakers-panel-meta" class="mb-2">
 					@LiveSpeakersPanelMetaFromPartial(input.Speakers)
 				</div>
-				<div class={ "live-speakers-sse min-h-0 flex-1", "live-speakers-sse" } hx-ext="sse" sse-connect={ string(input.SSEStreamURL(ctx)) }>
+				<div class={ "live-speakers-sse min-h-0 flex-1", "live-speakers-sse" }>
 					<div id="attendee-speakers-list" sse-swap="speakers-updated" class="flex h-full min-h-0 flex-col">
 						@AttendeeSpeakersListPartial(input.Speakers)
 					</div>
 				</div>
+			</div>
+		</section>
+		<section class="card min-h-0 border border-base-300 bg-base-100 shadow-sm lg:col-span-2">
+			<div class="p-4">
+				@LiveVotesPanelPartial(input.Votes)
 			</div>
 		</section>
 	</div>

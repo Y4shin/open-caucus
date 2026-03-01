@@ -36,7 +36,6 @@ type VoteDefinition struct {
 	ID            int64
 	MeetingID     int64
 	AgendaPointID int64
-	MotionID      *int64
 	Name          string
 	Visibility    string
 	State         string

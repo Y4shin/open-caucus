@@ -203,28 +203,6 @@ func (ts *testServer) seedAgendaPoint(t *testing.T, slug, meetingName, title str
 	return strconv.FormatInt(ap.ID, 10)
 }
 
-// seedMotion creates a motion (with a dummy PDF blob) under the given agenda point and returns its string ID.
-func (ts *testServer) seedMotion(t *testing.T, agendaPointIDStr, motionTitle string) string {
-	t.Helper()
-	apID, err := strconv.ParseInt(agendaPointIDStr, 10, 64)
-	if err != nil {
-		t.Fatalf("parse agenda point ID %q: %v", agendaPointIDStr, err)
-	}
-	storagePath, sizeBytes, err := ts.storage.Store("document.pdf", "application/pdf", strings.NewReader("dummy pdf content"))
-	if err != nil {
-		t.Fatalf("store blob for motion %q: %v", motionTitle, err)
-	}
-	blob, err := ts.repo.CreateBlob(context.Background(), "document.pdf", "application/pdf", sizeBytes, storagePath)
-	if err != nil {
-		t.Fatalf("create blob for motion %q: %v", motionTitle, err)
-	}
-	motion, err := ts.repo.CreateMotion(context.Background(), apID, blob.ID, motionTitle)
-	if err != nil {
-		t.Fatalf("seed motion %q: %v", motionTitle, err)
-	}
-	return strconv.FormatInt(motion.ID, 10)
-}
-
 // seedAttachment creates an attachment (with a dummy blob) under the given agenda point and returns its string ID.
 func (ts *testServer) seedAttachment(t *testing.T, agendaPointIDStr string, label *string) string {
 	t.Helper()

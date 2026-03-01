@@ -11,7 +11,7 @@ The voting subsystem is normalized and built around:
 - `vote_ballots`: persisted ballots and receipt token linkage
 - `vote_ballot_selections`: selected options per ballot
 
-`motions.votes_*` legacy tally columns are removed. Ballot-level data is now the source of truth.
+Motions are removed end-to-end. Votes are bound to agenda points only. Ballot-level data is the source of truth.
 
 ## Lifecycle
 
@@ -103,6 +103,40 @@ Counting-phase read restriction:
   - `VerifySecretBallotByReceipt`
   - `GetVoteTallies`
   - `GetVoteSubmissionStats`
+
+## UI Surface
+
+Moderator flow (`/committee/{slug}/meeting/{meeting_id}/moderate` tools tab):
+
+- create draft votes for the active agenda point
+- edit draft vote metadata/options
+- open vote (eligibility snapshot = all current attendees)
+- adaptive close (`open -> counting/closed`, `counting -> closed`)
+- archive closed votes
+- register manual casts for secret votes
+- count secret ballots in open/counting with receipt tokens
+- see final tallies/stats once vote is closed/archived
+
+Participant/live flow (`/committee/{slug}/meeting/{meeting_id}`):
+
+- shows open votes for the active agenda point
+- self-submit open or secret ballots
+- receives receipt string after successful submission
+- stores receipts in browser `IndexedDB`
+
+Receipt vault and public verification:
+
+- public page: `/receipts`
+- public APIs:
+  - `POST /api/votes/verify/open`
+  - `POST /api/votes/verify/secret`
+- counting-state restrictions apply to these endpoints as described above
+
+SSE propagation:
+
+- vote mutations publish `meeting-votes-changed`
+- moderate and live SSE payloads include vote-panel OOB updates
+- agenda-point activation/create/delete also publishes vote updates so the active-point vote panel stays in sync
 
 ## Security and Integrity Invariants
 

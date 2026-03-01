@@ -191,6 +191,31 @@
   min-height: 22rem;
 }
 
+.app-notification-target {
+  position: fixed;
+  top: calc(3.75rem + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  pointer-events: none;
+}
+
+.app-notification {
+  width: min(56rem, calc(100vw - 1rem));
+  pointer-events: auto;
+}
+
+.app-notification-leave {
+  opacity: 0;
+  transform: translateY(-0.4rem);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .live-speaker-list [data-testid="live-speaker-item"][data-speaker-state="speaking"] {
     animation: none;
@@ -211,5 +236,15 @@
   .manage-speaker-candidate-grid,
   .manage-agenda-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-notification-target {
+    top: calc(3.25rem + env(safe-area-inset-top));
+    padding-inline: 0.5rem;
+  }
+
+  .app-notification {
+    width: calc(100vw - 0.75rem);
+    font-size: 0.95rem;
   }
 }

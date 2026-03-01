@@ -24,11 +24,11 @@ type RouteParams struct {
 	BlobId        string
 	DocPath       string
 	MeetingId     string
-	MotionId      string
 	RuleId        string
 	Slug          string
 	SpeakerId     string
 	UserId        string
+	VoteId        string
 }
 
 // ModerateStreamEvent is the union type for all ModerateStream SSE events
@@ -54,6 +54,13 @@ type SpeakersUpdatedEvent struct {
 }
 
 func (e SpeakersUpdatedEvent) IsAttendeeSpeakersStreamEvent() {}
+
+// VotesUpdatedEvent represents a VotesUpdated event
+type VotesUpdatedEvent struct {
+	Data templates.VoteLivePanelInput
+}
+
+func (e VotesUpdatedEvent) IsAttendeeSpeakersStreamEvent() {}
 
 // Handler interface with all route methods
 type Handler interface {
@@ -86,16 +93,12 @@ type Handler interface {
 	ManageToggleSignupOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageMeetingSettingsPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingSettingsPartialInput, *ResponseMeta, error)
 	ManageSpeakersListPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
-	ManageMotionCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
-	ManageMotionDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ServeBlobDownload(w http.ResponseWriter, r *http.Request, params RouteParams) error
 	ServeCurrentDocument(w http.ResponseWriter, r *http.Request, params RouteParams) error
 	ManageAttachmentCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
 	ManageAttachmentDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
 	SetCurrentAttachment(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
-	SetCurrentMotion(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ClearCurrentDocument(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttachmentListPartialInput, *ResponseMeta, error)
-	ClearCurrentDocumentMotion(ctx context.Context, r *http.Request, params RouteParams) (*templates.MotionListPartialInput, *ResponseMeta, error)
 	ManageAttendeeCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeSelfSignup(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
@@ -111,6 +114,15 @@ type Handler interface {
 	ManageAgendaImportDiff(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaImportApply(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointToolsPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingAgendaPointToolsInput, *ResponseMeta, error)
+	ModerateVotesPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteUpdateDraft(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteOpen(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteClose(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteArchive(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteRegisterCast(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteCountSecretBallot(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
+	ModerateVoteCountOpenBallot(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteModeratorPanelInput, *ResponseMeta, error)
 	ManageSpeakerAdd(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerAddCandidates(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
 	ManageSpeakerRemove(ctx context.Context, r *http.Request, params RouteParams) (*templates.SpeakersListPartialInput, *ResponseMeta, error)
@@ -133,8 +145,14 @@ type Handler interface {
 	AttendeeSpeakersStream(ctx context.Context, r *http.Request, params RouteParams) (<-chan AttendeeSpeakersStreamEvent, error)
 	AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeSpeakersListPartialInput, *ResponseMeta, error)
 	AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request, params RouteParams) (*templates.AttendeeSpeakersListPartialInput, *ResponseMeta, error)
+	LiveVotesPartial(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteLivePanelInput, *ResponseMeta, error)
+	LiveSubmitOpenBallot(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteLivePanelInput, *ResponseMeta, error)
+	LiveSubmitSecretBallot(ctx context.Context, r *http.Request, params RouteParams) (*templates.VoteLivePanelInput, *ResponseMeta, error)
 	MeetingLiveLegacyRedirect(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingLiveInput, *ResponseMeta, error)
 	LogoutSubmit(ctx context.Context, r *http.Request) (*templates.LoginPageInput, *ResponseMeta, error)
+	ReceiptsVaultPage(ctx context.Context, r *http.Request) (*templates.ReceiptsVaultInput, *ResponseMeta, error)
+	PublicVerifyOpenVoteReceipt(w http.ResponseWriter, r *http.Request) error
+	PublicVerifySecretVoteReceipt(w http.ResponseWriter, r *http.Request) error
 	DocsPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.DocsElementInput, *ResponseMeta, error)
 	DocsPageOOB(ctx context.Context, r *http.Request, params RouteParams) (*templates.DocsElementInput, *ResponseMeta, error)
 	DocsSearch(ctx context.Context, r *http.Request) (*templates.DocsSearchResultsInput, *ResponseMeta, error)
@@ -392,20 +410,6 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create", rt.wrapMiddleware(
-		rt.handleManageMotionCreate,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete", rt.wrapMiddleware(
-		rt.handleManageMotionDelete,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/blob/{blob_id}", rt.wrapMiddleware(
 		rt.handleServeBlobDownload,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/blob/{blob_id}", groups),
@@ -441,23 +445,9 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/set-current", rt.wrapMiddleware(
-		rt.handleSetCurrentMotion,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/set-current", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current", rt.wrapMiddleware(
 		rt.handleClearCurrentDocument,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current", groups),
-		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
-		false,
-	))
-
-	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current-motion", rt.wrapMiddleware(
-		rt.handleClearCurrentDocumentMotion,
-		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current-motion", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
@@ -563,6 +553,69 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools", rt.wrapMiddleware(
 		rt.handleManageAgendaPointToolsPage,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/votes/partial", rt.wrapMiddleware(
+		rt.handleModerateVotesPartial,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/partial", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/create", rt.wrapMiddleware(
+		rt.handleModerateVoteCreate,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/create", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/update-draft", rt.wrapMiddleware(
+		rt.handleModerateVoteUpdateDraft,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/update-draft", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/open", rt.wrapMiddleware(
+		rt.handleModerateVoteOpen,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/open", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/close", rt.wrapMiddleware(
+		rt.handleModerateVoteClose,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/close", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/archive", rt.wrapMiddleware(
+		rt.handleModerateVoteArchive,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/archive", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/cast/register", rt.wrapMiddleware(
+		rt.handleModerateVoteRegisterCast,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/cast/register", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/ballot/secret", rt.wrapMiddleware(
+		rt.handleModerateVoteCountSecretBallot,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/ballot/secret", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/ballot/open", rt.wrapMiddleware(
+		rt.handleModerateVoteCountOpenBallot,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/ballot/open", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
@@ -721,6 +774,27 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		false,
 	))
 
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/votes/live/partial", rt.wrapMiddleware(
+		rt.handleLiveVotesPartial,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/live/partial", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/submit/open", rt.wrapMiddleware(
+		rt.handleLiveSubmitOpenBallot,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/submit/open", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/submit/secret", rt.wrapMiddleware(
+		rt.handleLiveSubmitSecretBallot,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/submit/secret", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access"},
+		false,
+	))
+
 	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/live", rt.wrapMiddleware(
 		rt.handleMeetingLiveLegacyRedirect,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/live", groups),
@@ -732,6 +806,27 @@ func (rt *Router) RegisterRoutes() http.Handler {
 		rt.handleLogoutSubmit,
 		getMiddlewareForPath("/logout", groups),
 		[]string{"session"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /receipts", rt.wrapMiddleware(
+		rt.handleReceiptsVaultPage,
+		getMiddlewareForPath("/receipts", groups),
+		[]string{},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /api/votes/verify/open", rt.wrapMiddleware(
+		rt.handlePublicVerifyOpenVoteReceipt,
+		getMiddlewareForPath("/api/votes/verify/open", groups),
+		[]string{},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /api/votes/verify/secret", rt.wrapMiddleware(
+		rt.handlePublicVerifySecretVoteReceipt,
+		getMiddlewareForPath("/api/votes/verify/secret", groups),
+		[]string{},
 		false,
 	))
 
@@ -1544,69 +1639,6 @@ func (rt *Router) handleManageSpeakersListPartial(w http.ResponseWriter, r *http
 
 	templates.SpeakersListSSEPartial(*input).Render(r.Context(), w)
 }
-func (rt *Router) handleManageMotionCreate(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-	}
-
-	input, meta, err := rt.handler.ManageMotionCreate(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MotionListPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleManageMotionDelete(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-		MotionId:      r.PathValue("motion_id"),
-	}
-
-	input, meta, err := rt.handler.ManageMotionDelete(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MotionListPartial(*input).Render(r.Context(), w)
-}
 func (rt *Router) handleServeBlobDownload(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug:      r.PathValue("slug"),
@@ -1723,38 +1755,6 @@ func (rt *Router) handleSetCurrentAttachment(w http.ResponseWriter, r *http.Requ
 
 	templates.AttachmentListPartial(*input).Render(r.Context(), w)
 }
-func (rt *Router) handleSetCurrentMotion(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-		MotionId:      r.PathValue("motion_id"),
-	}
-
-	input, meta, err := rt.handler.SetCurrentMotion(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MotionListPartial(*input).Render(r.Context(), w)
-}
 func (rt *Router) handleClearCurrentDocument(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug:          r.PathValue("slug"),
@@ -1785,37 +1785,6 @@ func (rt *Router) handleClearCurrentDocument(w http.ResponseWriter, r *http.Requ
 	}
 
 	templates.AttachmentListPartial(*input).Render(r.Context(), w)
-}
-func (rt *Router) handleClearCurrentDocumentMotion(w http.ResponseWriter, r *http.Request) {
-	params := RouteParams{
-		Slug:          r.PathValue("slug"),
-		MeetingId:     r.PathValue("meeting_id"),
-		AgendaPointId: r.PathValue("agenda_point_id"),
-	}
-
-	input, meta, err := rt.handler.ClearCurrentDocumentMotion(r.Context(), r, params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Set cookies and headers
-	if meta != nil {
-		for _, cookie := range meta.Cookies {
-			http.SetCookie(w, cookie)
-		}
-		for key, value := range meta.Headers {
-			w.Header().Set(key, value)
-		}
-	}
-
-	// Handle redirect
-	if meta != nil && meta.Redirect != nil {
-		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
-		return
-	}
-
-	templates.MotionListPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleManageAttendeeCreate(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
@@ -2275,6 +2244,283 @@ func (rt *Router) handleManageAgendaPointToolsPage(w http.ResponseWriter, r *htt
 	}
 
 	templates.MeetingAgendaPointToolsTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVotesPartial(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVotesPartial(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteCreate(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteCreate(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteUpdateDraft(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteUpdateDraft(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteOpen(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteOpen(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteClose(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteClose(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteArchive(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteArchive(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteRegisterCast(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteRegisterCast(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteCountSecretBallot(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteCountSecretBallot(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleModerateVoteCountOpenBallot(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.ModerateVoteCountOpenBallot(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.VoteModeratorPanelPartial(*input).Render(r.Context(), w)
 }
 func (rt *Router) handleManageSpeakerAdd(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
@@ -2891,6 +3137,12 @@ func (rt *Router) handleAttendeeSpeakersStream(w http.ResponseWriter, r *http.Re
 				fmt.Fprintf(w, "event: speakers-updated\ndata: %s\n\n", strings.ReplaceAll(buf.String(), "\n", ""))
 				flusher.Flush()
 
+			case VotesUpdatedEvent:
+				var buf bytes.Buffer
+				templates.LiveVotesPanelPartial(e.Data).Render(r.Context(), &buf)
+				fmt.Fprintf(w, "event: votes-updated\ndata: %s\n\n", strings.ReplaceAll(buf.String(), "\n", ""))
+				flusher.Flush()
+
 			}
 		}
 	}
@@ -2955,6 +3207,98 @@ func (rt *Router) handleAttendeeSpeakerSelfYield(w http.ResponseWriter, r *http.
 
 	templates.AttendeeSpeakersListPartial(*input).Render(r.Context(), w)
 }
+func (rt *Router) handleLiveVotesPartial(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.LiveVotesPartial(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.LiveVotesPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleLiveSubmitOpenBallot(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.LiveSubmitOpenBallot(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.LiveVotesPanelPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleLiveSubmitSecretBallot(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+		VoteId:    r.PathValue("vote_id"),
+	}
+
+	input, meta, err := rt.handler.LiveSubmitSecretBallot(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.LiveVotesPanelPartial(*input).Render(r.Context(), w)
+}
 func (rt *Router) handleMeetingLiveLegacyRedirect(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{
 		Slug:      r.PathValue("slug"),
@@ -3009,6 +3353,41 @@ func (rt *Router) handleLogoutSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.LoginPageTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleReceiptsVaultPage(w http.ResponseWriter, r *http.Request) {
+	input, meta, err := rt.handler.ReceiptsVaultPage(r.Context(), r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.ReceiptsVaultTemplate(*input).Render(r.Context(), w)
+}
+func (rt *Router) handlePublicVerifyOpenVoteReceipt(w http.ResponseWriter, r *http.Request) {
+	if err := rt.handler.PublicVerifyOpenVoteReceipt(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+func (rt *Router) handlePublicVerifySecretVoteReceipt(w http.ResponseWriter, r *http.Request) {
+	if err := rt.handler.PublicVerifySecretVoteReceipt(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 func (rt *Router) handleDocsPage(w http.ResponseWriter, r *http.Request) {
 	params := RouteParams{

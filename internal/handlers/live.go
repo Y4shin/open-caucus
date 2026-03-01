@@ -15,7 +15,7 @@ import (
 
 // loadAttendeeSpeakersPartial loads the speakers list for the meeting's active agenda
 // point and returns an AttendeeSpeakersListPartialInput ready for rendering.
-func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, attendeeID int64) (*templates.AttendeeSpeakersListPartialInput, error) {
+func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, slug, meetingIDStr string, meetingID, attendeeID int64) (*templates.AttendeeSpeakersListPartialInput, error) {
 	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load meeting: %w", err)
@@ -37,6 +37,10 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 	moderatorName := ""
 	var effectiveModeratorID *int64
 	var currentDoc *templates.LiveCurrentDocInfo
+	votesPanel, err := h.loadLiveVotesPanel(ctx, slug, meetingIDStr, meetingID, attendeeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load live votes panel: %w", err)
+	}
 
 	if meeting.CurrentAgendaPointID != nil {
 		hasActiveAP = true
@@ -67,8 +71,8 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 	}
 
 	return &templates.AttendeeSpeakersListPartialInput{
-		CommitteeSlug:     "",
-		IDString:          strconv.FormatInt(meetingID, 10),
+		CommitteeSlug:     slug,
+		IDString:          meetingIDStr,
 		Speakers:          buildSpeakerItems(speakers),
 		AgendaPoints:      buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
 		CurrentAttendeeID: attendeeID,
@@ -76,6 +80,7 @@ func (h *Handler) loadAttendeeSpeakersPartial(ctx context.Context, meetingID, at
 		HasActiveAP:       hasActiveAP,
 		ModeratorName:     moderatorName,
 		CurrentDoc:        currentDoc,
+		Votes:             *votesPanel,
 	}, nil
 }
 
@@ -118,19 +123,39 @@ func (h *Handler) AttendeeSpeakersStream(ctx context.Context, r *http.Request, p
 				if !ok {
 					return
 				}
-				if evt.Event != "speakers-updated" {
+				if evt.MeetingID != nil && *evt.MeetingID != meetingID {
 					continue
 				}
-				partial, err := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
-				if err != nil {
-					continue
-				}
-				partial.CommitteeSlug = params.Slug
-				partial.IDString = params.MeetingId
-				select {
-				case eventCh <- routes.SpeakersUpdatedEvent{Data: *partial}:
-				default:
-					// drop if consumer is slow
+
+				switch evt.Event {
+				case "speakers-updated":
+					partial, err := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
+					if err != nil {
+						continue
+					}
+					partial.CommitteeSlug = params.Slug
+					partial.IDString = params.MeetingId
+					partial.Votes.CommitteeSlug = params.Slug
+					partial.Votes.MeetingIDStr = params.MeetingId
+					partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
+					select {
+					case eventCh <- routes.SpeakersUpdatedEvent{Data: *partial}:
+					default:
+						// drop if consumer is slow
+					}
+				case meetingVotesChangedEvent:
+					votes, err := h.loadLiveVotesPanel(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
+					if err != nil {
+						continue
+					}
+					votes.CommitteeSlug = params.Slug
+					votes.MeetingIDStr = params.MeetingId
+					votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
+					select {
+					case eventCh <- routes.VotesUpdatedEvent{Data: *votes}:
+					default:
+						// drop if consumer is slow
+					}
 				}
 			}
 		}
@@ -152,12 +177,15 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 
 	speakerType := r.FormValue("type")
 	if speakerType != "regular" && speakerType != "ropm" {
-		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, 0)
+		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, 0)
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
 		partial.CommitteeSlug = params.Slug
 		partial.IDString = params.MeetingId
+		partial.Votes.CommitteeSlug = params.Slug
+		partial.Votes.MeetingIDStr = params.MeetingId
+		partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 		partial.Error = "Invalid speaker type."
 		return partial, nil, nil
 	}
@@ -174,12 +202,15 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
 	}
 	if meeting.CurrentAgendaPointID == nil {
-		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
 		partial.CommitteeSlug = params.Slug
 		partial.IDString = params.MeetingId
+		partial.Votes.CommitteeSlug = params.Slug
+		partial.Votes.MeetingIDStr = params.MeetingId
+		partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 		partial.Error = "No active agenda point."
 		return partial, nil, nil
 	}
@@ -191,12 +222,15 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 	}
 	for _, e := range entries {
 		if e.AttendeeID == attendeeID && e.Type == speakerType && e.Status != "DONE" {
-			partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+			partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 			if loadErr != nil {
 				return nil, nil, loadErr
 			}
 			partial.CommitteeSlug = params.Slug
 			partial.IDString = params.MeetingId
+			partial.Votes.CommitteeSlug = params.Slug
+			partial.Votes.MeetingIDStr = params.MeetingId
+			partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 			partial.Error = fmt.Sprintf("You already have a non-done %s entry.", speakerType)
 			return partial, nil, nil
 		}
@@ -230,12 +264,15 @@ func (h *Handler) AttendeeSpeakerSelfAdd(ctx context.Context, r *http.Request, p
 	}
 	h.publishSpeakersUpdated(meetingID)
 
-	partial, err := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+	partial, err := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 	if err != nil {
 		return nil, nil, err
 	}
 	partial.CommitteeSlug = params.Slug
 	partial.IDString = params.MeetingId
+	partial.Votes.CommitteeSlug = params.Slug
+	partial.Votes.MeetingIDStr = params.MeetingId
+	partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 	return partial, nil, nil
 }
 
@@ -258,12 +295,15 @@ func (h *Handler) AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request,
 		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
 	}
 	if meeting.CurrentAgendaPointID == nil {
-		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
 		partial.CommitteeSlug = params.Slug
 		partial.IDString = params.MeetingId
+		partial.Votes.CommitteeSlug = params.Slug
+		partial.Votes.MeetingIDStr = params.MeetingId
+		partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 		partial.Error = "No active agenda point."
 		return partial, nil, nil
 	}
@@ -282,12 +322,15 @@ func (h *Handler) AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request,
 		}
 	}
 	if speakingEntryID == 0 {
-		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+		partial, loadErr := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 		if loadErr != nil {
 			return nil, nil, loadErr
 		}
 		partial.CommitteeSlug = params.Slug
 		partial.IDString = params.MeetingId
+		partial.Votes.CommitteeSlug = params.Slug
+		partial.Votes.MeetingIDStr = params.MeetingId
+		partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 		partial.Error = "You are not currently speaking."
 		return partial, nil, nil
 	}
@@ -300,11 +343,14 @@ func (h *Handler) AttendeeSpeakerSelfYield(ctx context.Context, r *http.Request,
 	}
 	h.publishSpeakersUpdated(meetingID)
 
-	partial, err := h.loadAttendeeSpeakersPartial(ctx, meetingID, attendeeID)
+	partial, err := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 	if err != nil {
 		return nil, nil, err
 	}
 	partial.CommitteeSlug = params.Slug
 	partial.IDString = params.MeetingId
+	partial.Votes.CommitteeSlug = params.Slug
+	partial.Votes.MeetingIDStr = params.MeetingId
+	partial.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 	return partial, nil, nil
 }

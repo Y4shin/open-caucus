@@ -333,12 +333,15 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 	}
 	agendaPoints := flattenAgendaPoints(topLevelAgendaPoints, subAgendaPoints)
 
-	speakersInput, err := h.loadAttendeeSpeakersPartial(ctx, meeting.ID, attendeeID)
+	speakersInput, err := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meeting.ID, attendeeID)
 	if err != nil {
 		return nil, nil, err
 	}
 	speakersInput.CommitteeSlug = params.Slug
 	speakersInput.IDString = params.MeetingId
+	speakersInput.Votes.CommitteeSlug = params.Slug
+	speakersInput.Votes.MeetingIDStr = params.MeetingId
+	speakersInput.Votes.RefreshURL = fmt.Sprintf("/committee/%s/meeting/%s/votes/live/partial", params.Slug, params.MeetingId)
 
 	return &templates.MeetingLiveInput{
 		CommitteeName: committee.Name,
@@ -350,6 +353,7 @@ func (h *Handler) MeetingLivePage(ctx context.Context, r *http.Request, params r
 		CanModerate:   canModerate,
 		AgendaPoints:  buildAgendaPointItems(agendaPoints, meeting.CurrentAgendaPointID),
 		Speakers:      *speakersInput,
+		Votes:         speakersInput.Votes,
 		CurrentDoc:    speakersInput.CurrentDoc,
 	}, nil, nil
 }

@@ -1,15 +1,14 @@
 -- name: CreateVoteDefinition :one
 INSERT INTO vote_definitions (
-    meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections
+    meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections
 )
-VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)
+VALUES (?, ?, ?, ?, 'draft', ?, ?)
 RETURNING *;
 
 -- name: UpdateVoteDefinitionDraft :one
 UPDATE vote_definitions
 SET meeting_id = ?,
     agenda_point_id = ?,
-    motion_id = ?,
     name = ?,
     visibility = ?,
     min_selections = ?,

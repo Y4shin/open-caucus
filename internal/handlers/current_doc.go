@@ -25,18 +25,6 @@ func (h *Handler) resolveCurrentDocumentBlob(ctx context.Context, ap *model.Agen
 		return blob, nil
 	}
 
-	if ap.CurrentMotionID != nil {
-		motion, err := h.Repository.GetMotionByID(ctx, *ap.CurrentMotionID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load current motion: %w", err)
-		}
-		blob, err := h.Repository.GetBlobByID(ctx, motion.BlobID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load motion blob: %w", err)
-		}
-		return blob, nil
-	}
-
 	return nil, nil
 }
 
@@ -153,47 +141,6 @@ func (h *Handler) SetCurrentAttachment(ctx context.Context, r *http.Request, par
 	return partial, nil, err
 }
 
-// SetCurrentMotion marks a motion as the active live document for an agenda point.
-func (h *Handler) SetCurrentMotion(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MotionListPartialInput, *routes.ResponseMeta, error) {
-	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid meeting ID")
-	}
-	agendaPointID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid agenda point ID")
-	}
-	motionID, err := strconv.ParseInt(params.MotionId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid motion ID")
-	}
-
-	ap, err := h.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID)
-	if err != nil {
-		return nil, nil, err
-	}
-	motion, err := h.Repository.GetMotionByID(ctx, motionID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load motion: %w", err)
-	}
-	if motion.AgendaPointID != ap.ID {
-		return nil, nil, fmt.Errorf("motion does not belong to agenda point")
-	}
-
-	if err := h.Repository.SetCurrentMotion(ctx, ap.ID, motionID); err != nil {
-		return nil, nil, fmt.Errorf("failed to set current motion: %w", err)
-	}
-	h.publishCurrentDocumentChanged(meetingID)
-
-	ap, err = h.Repository.GetAgendaPointByID(ctx, ap.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to reload agenda point: %w", err)
-	}
-
-	partial, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, ap)
-	return partial, nil, err
-}
-
 // ClearCurrentDocument clears the active live document and refreshes the attachment partial.
 func (h *Handler) ClearCurrentDocument(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AttachmentListPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
@@ -221,35 +168,5 @@ func (h *Handler) ClearCurrentDocument(ctx context.Context, r *http.Request, par
 	}
 
 	partial, err := h.loadAttachmentListPartial(ctx, params.Slug, params.MeetingId, ap)
-	return partial, nil, err
-}
-
-// ClearCurrentDocumentMotion clears the active live document and refreshes the motion partial.
-func (h *Handler) ClearCurrentDocumentMotion(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MotionListPartialInput, *routes.ResponseMeta, error) {
-	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid meeting ID")
-	}
-	agendaPointID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
-	if err != nil {
-		return nil, nil, fmt.Errorf("invalid agenda point ID")
-	}
-
-	ap, err := h.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if err := h.Repository.ClearCurrentDocument(ctx, ap.ID); err != nil {
-		return nil, nil, fmt.Errorf("failed to clear current document: %w", err)
-	}
-	h.publishCurrentDocumentChanged(meetingID)
-
-	ap, err = h.Repository.GetAgendaPointByID(ctx, ap.ID)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to reload agenda point: %w", err)
-	}
-
-	partial, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, ap)
 	return partial, nil, err
 }

@@ -17,7 +17,6 @@ import (
 type executionFixture struct {
 	meetingID        int64
 	agendaPointID    int64
-	motionID         int64
 	voteDefinitionID int64
 	attendeeIDByKey  map[string]int64
 	optionIDByKey    map[string]int64
@@ -269,15 +268,6 @@ func seedExecutionFixture(ctx context.Context, repo *reposqlite.Repository, cfg 
 	if err != nil {
 		return executionFixture{}, fmt.Errorf("insert agenda point: %w", err)
 	}
-	blobID, err := insertID(repo.DB, "INSERT INTO binary_blobs (filename, content_type, size_bytes, storage_path) VALUES ('fuzz.pdf', 'application/pdf', 1, '/tmp/fuzz.pdf')")
-	if err != nil {
-		return executionFixture{}, fmt.Errorf("insert blob: %w", err)
-	}
-	motionID, err := insertID(repo.DB, "INSERT INTO motions (agenda_point_id, blob_id, title) VALUES (?, ?, ?)", agendaPointID, blobID, "Fuzz Motion")
-	if err != nil {
-		return executionFixture{}, fmt.Errorf("insert motion: %w", err)
-	}
-
 	userIDByKey := make(map[string]int64, len(cfg.Users))
 	for _, user := range cfg.Users {
 		account, err := repo.CreateAccount(ctx, user.Username, user.FullName, "member-hash")
@@ -316,7 +306,6 @@ func seedExecutionFixture(ctx context.Context, repo *reposqlite.Repository, cfg 
 		ctx,
 		meetingID,
 		agendaPointID,
-		&motionID,
 		fmt.Sprintf("Vote %d", cfg.Seed),
 		cfg.Visibility,
 		int64(cfg.MinSelections),
@@ -367,7 +356,6 @@ func seedExecutionFixture(ctx context.Context, repo *reposqlite.Repository, cfg 
 	return executionFixture{
 		meetingID:        meetingID,
 		agendaPointID:    agendaPointID,
-		motionID:         motionID,
 		voteDefinitionID: voteDefinition.ID,
 		attendeeIDByKey:  attendeeIDByKey,
 		optionIDByKey:    optionIDByKey,

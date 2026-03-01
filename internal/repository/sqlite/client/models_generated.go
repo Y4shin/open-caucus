@@ -39,7 +39,6 @@ type AgendaPoint struct {
 	FirstSpeakerQuotationEnabled sql.NullBool
 	ModeratorID                  sql.NullInt64
 	CurrentAttachmentID          sql.NullInt64
-	CurrentMotionID              sql.NullInt64
 }
 
 type Attendee struct {
@@ -92,15 +91,6 @@ type Meeting struct {
 	GenderQuotationEnabled       bool
 	FirstSpeakerQuotationEnabled bool
 	ModeratorID                  sql.NullInt64
-}
-
-type Motion struct {
-	ID            int64
-	AgendaPointID int64
-	BlobID        int64
-	Title         string
-	CreatedAt     string
-	UpdatedAt     string
 }
 
 type OauthCommitteeGroupRule struct {
@@ -205,7 +195,6 @@ type VoteDefinition struct {
 	ID            int64
 	MeetingID     int64
 	AgendaPointID int64
-	MotionID      sql.NullInt64
 	Name          string
 	Visibility    string
 	State         string

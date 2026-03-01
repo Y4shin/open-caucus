@@ -23,7 +23,7 @@ func (q *Queries) BumpAgendaPointPositionsForMeeting(ctx context.Context, meetin
 
 const clearCurrentDocument = `-- name: ClearCurrentDocument :exec
 UPDATE agenda_points
-SET current_attachment_id = NULL, current_motion_id = NULL
+SET current_attachment_id = NULL
 WHERE id = ?
 `
 
@@ -37,7 +37,7 @@ INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, NULL, ?, ?)
 RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-          current_attachment_id, current_motion_id
+          current_attachment_id
 `
 
 type CreateAgendaPointParams struct {
@@ -62,7 +62,6 @@ func (q *Queries) CreateAgendaPoint(ctx context.Context, arg CreateAgendaPointPa
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.CurrentAttachmentID,
-		&i.CurrentMotionID,
 	)
 	return i, err
 }
@@ -72,7 +71,7 @@ INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, ?, ?, ?)
 RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-          current_attachment_id, current_motion_id
+          current_attachment_id
 `
 
 type CreateSubAgendaPointParams struct {
@@ -103,7 +102,6 @@ func (q *Queries) CreateSubAgendaPoint(ctx context.Context, arg CreateSubAgendaP
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.CurrentAttachmentID,
-		&i.CurrentMotionID,
 	)
 	return i, err
 }
@@ -120,7 +118,7 @@ func (q *Queries) DeleteAgendaPoint(ctx context.Context, id int64) error {
 const getAgendaPointByID = `-- name: GetAgendaPointByID :one
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id, current_motion_id
+       current_attachment_id
 FROM agenda_points WHERE id = ?
 `
 
@@ -140,7 +138,6 @@ func (q *Queries) GetAgendaPointByID(ctx context.Context, id int64) (AgendaPoint
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.CurrentAttachmentID,
-		&i.CurrentMotionID,
 	)
 	return i, err
 }
@@ -177,7 +174,7 @@ func (q *Queries) GetMaxSubAgendaPointPosition(ctx context.Context, arg GetMaxSu
 const listAgendaPointsForMeeting = `-- name: ListAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id, current_motion_id
+       current_attachment_id
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NULL
 ORDER BY position ASC
@@ -205,7 +202,6 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.CurrentAttachmentID,
-			&i.CurrentMotionID,
 		); err != nil {
 			return nil, err
 		}
@@ -223,7 +219,7 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 const listSubAgendaPointsForMeeting = `-- name: ListSubAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id, current_motion_id
+       current_attachment_id
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NOT NULL
 ORDER BY parent_id ASC, position ASC
@@ -251,7 +247,6 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.CurrentAttachmentID,
-			&i.CurrentMotionID,
 		); err != nil {
 			return nil, err
 		}
@@ -269,7 +264,7 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 const listSubAgendaPointsForParent = `-- name: ListSubAgendaPointsForParent :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id, current_motion_id
+       current_attachment_id
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id = ?
 ORDER BY position ASC
@@ -302,7 +297,6 @@ func (q *Queries) ListSubAgendaPointsForParent(ctx context.Context, arg ListSubA
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.CurrentAttachmentID,
-			&i.CurrentMotionID,
 		); err != nil {
 			return nil, err
 		}
@@ -391,7 +385,7 @@ func (q *Queries) SetCurrentAgendaPoint(ctx context.Context, arg SetCurrentAgend
 
 const setCurrentAttachment = `-- name: SetCurrentAttachment :exec
 UPDATE agenda_points
-SET current_attachment_id = ?, current_motion_id = NULL
+SET current_attachment_id = ?
 WHERE id = ?
 `
 
@@ -402,22 +396,6 @@ type SetCurrentAttachmentParams struct {
 
 func (q *Queries) SetCurrentAttachment(ctx context.Context, arg SetCurrentAttachmentParams) error {
 	_, err := q.db.ExecContext(ctx, setCurrentAttachment, arg.CurrentAttachmentID, arg.ID)
-	return err
-}
-
-const setCurrentMotion = `-- name: SetCurrentMotion :exec
-UPDATE agenda_points
-SET current_motion_id = ?, current_attachment_id = NULL
-WHERE id = ?
-`
-
-type SetCurrentMotionParams struct {
-	CurrentMotionID sql.NullInt64
-	ID              int64
-}
-
-func (q *Queries) SetCurrentMotion(ctx context.Context, arg SetCurrentMotionParams) error {
-	_, err := q.db.ExecContext(ctx, setCurrentMotion, arg.CurrentMotionID, arg.ID)
 	return err
 }
 

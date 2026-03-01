@@ -418,38 +418,6 @@ routes:
           type: SpeakersListSSEPartial
           input_type: SpeakersListPartialInput
 
-  # Motion Create (upload document + title for an agenda point)
-  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/create
-    methods:
-      - verb: POST
-        handler: ManageMotionCreate
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MotionListPartial
-          input_type: MotionListPartialInput
-
-  # Motion Delete
-  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/delete
-    methods:
-      - verb: POST
-        handler: ManageMotionDelete
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MotionListPartial
-          input_type: MotionListPartialInput
-
   # Blob Download (serves the raw file)
   - path: /committee/{slug}/meeting/{meeting_id}/blob/{blob_id}
     methods:
@@ -523,22 +491,6 @@ routes:
           type: AttachmentListPartial
           input_type: AttachmentListPartialInput
 
-  # Set Current Motion (for live document preview)
-  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/motion/{motion_id}/set-current
-    methods:
-      - verb: POST
-        handler: SetCurrentMotion
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MotionListPartial
-          input_type: MotionListPartialInput
-
   # Clear Current Document (for live document preview)
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current
     methods:
@@ -554,22 +506,6 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: AttachmentListPartial
           input_type: AttachmentListPartialInput
-
-  # Clear Current Document (motion list refresh variant)
-  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/clear-current-motion
-    methods:
-      - verb: POST
-        handler: ClearCurrentDocumentMotion
-        middleware:
-          - session
-          - auth
-          - committee_access
-          - meeting_access
-          - moderate_access
-        template:
-          package: github.com/Y4shin/conference-tool/internal/templates
-          type: MotionListPartial
-          input_type: MotionListPartialInput
 
   # Attendee Create (add guest manually from manage page)
   - path: /committee/{slug}/meeting/{meeting_id}/attendee/create
@@ -795,7 +731,7 @@ routes:
           type: AgendaPointListPartial
           input_type: AgendaPointListPartialInput
 
-  # Agenda Point Tools Page (attachments + motions)
+  # Agenda Point Tools Page (attachments)
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools
     methods:
       - verb: GET
@@ -810,6 +746,150 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: MeetingAgendaPointToolsTemplate
           input_type: MeetingAgendaPointToolsInput
+
+  # Moderate Vote Panel Partial
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/partial
+    methods:
+      - verb: GET
+        handler: ModerateVotesPartial
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Create Draft (active agenda point)
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/create
+    methods:
+      - verb: POST
+        handler: ModerateVoteCreate
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Update Draft
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/update-draft
+    methods:
+      - verb: POST
+        handler: ModerateVoteUpdateDraft
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Open
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/open
+    methods:
+      - verb: POST
+        handler: ModerateVoteOpen
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Close (adaptive for secret counting)
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/close
+    methods:
+      - verb: POST
+        handler: ModerateVoteClose
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Archive
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/archive
+    methods:
+      - verb: POST
+        handler: ModerateVoteArchive
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Register Cast (manual slip intake)
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/cast/register
+    methods:
+      - verb: POST
+        handler: ModerateVoteRegisterCast
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Count Secret Ballot (manual counting phase)
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/ballot/secret
+    methods:
+      - verb: POST
+        handler: ModerateVoteCountSecretBallot
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
+
+  # Vote Count Open Ballot (manual entry)
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/ballot/open
+    methods:
+      - verb: POST
+        handler: ModerateVoteCountOpenBallot
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: VoteModeratorPanelPartial
+          input_type: VoteModeratorPanelInput
 
   # Speaker Add
   - path: /committee/{slug}/meeting/{meeting_id}/speaker/add
@@ -1102,6 +1182,11 @@ routes:
               package: github.com/Y4shin/conference-tool/internal/templates
               type: AttendeeSpeakersListPartial
               input_type: AttendeeSpeakersListPartialInput
+          - name: VotesUpdated
+            template:
+              package: github.com/Y4shin/conference-tool/internal/templates
+              type: LiveVotesPanelPartial
+              input_type: VoteLivePanelInput
 
   # Attendee Speaker Self Add (live page quick actions)
   - path: /committee/{slug}/meeting/{meeting_id}/speaker/self-add
@@ -1133,6 +1218,51 @@ routes:
           type: AttendeeSpeakersListPartial
           input_type: AttendeeSpeakersListPartialInput
 
+  # Live Vote Panel Partial
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/live/partial
+    methods:
+      - verb: GET
+        handler: LiveVotesPartial
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: LiveVotesPanelPartial
+          input_type: VoteLivePanelInput
+
+  # Live Open Vote Submission
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/submit/open
+    methods:
+      - verb: POST
+        handler: LiveSubmitOpenBallot
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: LiveVotesPanelPartial
+          input_type: VoteLivePanelInput
+
+  # Live Secret Vote Submission
+  - path: /committee/{slug}/meeting/{meeting_id}/votes/{vote_id}/submit/secret
+    methods:
+      - verb: POST
+        handler: LiveSubmitSecretBallot
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: LiveVotesPanelPartial
+          input_type: VoteLivePanelInput
+
   # Meeting Live Page
   - path: /committee/{slug}/meeting/{meeting_id}/live
     methods:
@@ -1159,6 +1289,30 @@ routes:
           package: github.com/Y4shin/conference-tool/internal/templates
           type: LoginPageTemplate
           input_type: LoginPageInput
+
+  # Receipt Vault (public)
+  - path: /receipts
+    methods:
+      - verb: GET
+        handler: ReceiptsVaultPage
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: ReceiptsVaultTemplate
+          input_type: ReceiptsVaultInput
+
+  # Public Verify Open Vote Receipt
+  - path: /api/votes/verify/open
+    methods:
+      - verb: POST
+        handler: PublicVerifyOpenVoteReceipt
+        raw: true
+
+  # Public Verify Secret Vote Receipt
+  - path: /api/votes/verify/secret
+    methods:
+      - verb: POST
+        handler: PublicVerifySecretVoteReceipt
+        raw: true
 
   # Documentation Element (localized markdown by logical path)
   - path: /docs/{doc_path...}

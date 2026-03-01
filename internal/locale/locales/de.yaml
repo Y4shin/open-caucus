@@ -189,20 +189,6 @@ de:
     col_name: "Name"
     col_type: "Typ"
 
-  motion:
-    heading: "Antraege"
-    title_label: "Titel:"
-    file_label: "Dokument:"
-    upload_button: "Antrag hochladen"
-    empty_state: "Keine Antraege fuer diesen Tagesordnungspunkt."
-    vote_for_label: "Dafuer:"
-    vote_against_label: "Dagegen:"
-    vote_abstained_label: "Enthaltungen:"
-    vote_eligible_label: "Stimmberechtigt:"
-    record_vote_button: "Stimmen erfassen"
-    delete_button: "Loeschen"
-    delete_confirm: "Diesen Antrag und sein Dokument loeschen?"
-
   attachment:
     heading: "Anhaenge"
     label_label: "Bezeichnung (optional):"

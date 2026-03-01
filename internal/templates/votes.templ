@@ -1,0 +1,1201 @@
+package templates
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+type VoteOptionDisplay struct {
+	ID       int64
+	IDString string
+	Label    string
+	Position int64
+	Count    int64
+}
+
+type VoteModeratorItem struct {
+	ID                     int64
+	IDString               string
+	Name                   string
+	Visibility             string
+	State                  string
+	MinSelections          int64
+	MaxSelections          int64
+	Options                []VoteOptionDisplay
+	OptionsText            string
+	CreateOrUpdateURL      string
+	OpenURL                string
+	CloseURL               string
+	ArchiveURL             string
+	RegisterCastURL        string
+	CountOpenBallotURL     string
+	CountSecretBallotURL   string
+	HasResults             bool
+	ResultsBlockedCounting bool
+	EligibleCount          int64
+	CastCount              int64
+	BallotCount            int64
+	OpenBallotCount        int64
+	SecretBallotCount      int64
+	OutstandingCount       int64
+	Tallies                []VoteOptionDisplay
+}
+
+type VoteModeratorPanelInput struct {
+	CommitteeSlug  string
+	MeetingIDStr   string
+	HasActiveAgenda bool
+	ActiveAPTitle  string
+	CreateURL      string
+	RefreshURL     string
+	Votes          []VoteModeratorItem
+	Attendees      []AttendeeItem
+	Error          string
+	Notice         string
+	SwapOOB        bool
+}
+
+func voteStateBadgeClass(state string) string {
+	switch state {
+	case "draft":
+		return "badge badge-neutral badge-sm"
+	case "open":
+		return "badge badge-success badge-sm"
+	case "counting":
+		return "badge badge-warning badge-sm"
+	case "closed":
+		return "badge badge-info badge-sm"
+	case "archived":
+		return "badge badge-ghost badge-sm"
+	default:
+		return "badge badge-sm"
+	}
+}
+
+func voteVisibilityBadgeClass(visibility string) string {
+	if visibility == "secret" {
+		return "badge badge-warning badge-outline badge-sm"
+	}
+	return "badge badge-primary badge-outline badge-sm"
+}
+
+func voteBoundsLabel(minSelections, maxSelections int64) string {
+	if minSelections == maxSelections {
+		return fmt.Sprintf("select exactly %d", minSelections)
+	}
+	return fmt.Sprintf("select %d to %d", minSelections, maxSelections)
+}
+
+func voteSourceSelected(source, value string) bool {
+	return strings.TrimSpace(source) == value
+}
+
+func voteDefaultOptionLabels() []string {
+	return []string{"Yes", "No", "Abstain", ""}
+}
+
+func voteLabelsForEdit(vote VoteModeratorItem) []string {
+	labels := make([]string, 0, len(vote.Options)+1)
+	for _, option := range vote.Options {
+		labels = append(labels, option.Label)
+	}
+	if len(labels) < 2 {
+		labels = append(labels, "Yes", "No")
+	}
+	labels = append(labels, "")
+	return labels
+}
+
+templ VoteModeratorProgressCard(vote VoteModeratorItem) {
+	<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
+		<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Live Submission Tally</div>
+		<div class="grid gap-1 text-sm sm:grid-cols-2">
+			<div class="flex items-center justify-between gap-2">
+				<span>Eligible</span>
+				<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.EligibleCount, 10) }</span>
+			</div>
+			<div class="flex items-center justify-between gap-2">
+				<span>Casts</span>
+				<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.CastCount, 10) }</span>
+			</div>
+			<div class="flex items-center justify-between gap-2">
+				<span>Counted Ballots</span>
+				<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.BallotCount, 10) }</span>
+			</div>
+			if vote.Visibility == "secret" {
+				<div class="flex items-center justify-between gap-2">
+					<span>Outstanding</span>
+					<span class={ "badge badge-sm", templ.KV("badge-warning", vote.OutstandingCount > 0), templ.KV("badge-success", vote.OutstandingCount <= 0) }>{ strconv.FormatInt(vote.OutstandingCount, 10) }</span>
+				</div>
+			} else {
+				<div class="flex items-center justify-between gap-2">
+					<span>Open Ballots</span>
+					<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.OpenBallotCount, 10) }</span>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeItem) {
+	<div class="rounded-box border border-base-300 bg-base-200/20 p-2 space-y-2">
+		<div class="text-xs font-semibold uppercase text-base-content/70">Manual Submission</div>
+		if vote.Visibility == "open" {
+			if vote.State == "open" {
+				<form class="space-y-2"
+					hx-post={ vote.CountOpenBallotURL }
+					hx-target="#moderate-votes-panel"
+					hx-swap="outerHTML"
+				>
+					<div class="text-xs font-semibold uppercase text-base-content/70">Open Ballot Entry</div>
+					<div class={ "grid gap-1 text-sm", templ.KV("grid-cols-1", vote.MaxSelections == 1), templ.KV("grid-cols-2", vote.MaxSelections > 1) }>
+						for _, opt := range vote.Options {
+							<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+								if vote.MaxSelections == 1 {
+									<input class="radio radio-sm" type="radio" name="option_id" value={ opt.IDString }/>
+								} else {
+									<input class="checkbox checkbox-sm" type="checkbox" name="option_id" value={ opt.IDString }/>
+								}
+								<span>{ opt.Label }</span>
+							</label>
+						}
+					</div>
+					if len(attendees) == 0 {
+						<p class="text-xs text-warning">No attendees available for manual entry.</p>
+					} else {
+						<div class="join w-full">
+							<input
+								class="input input-bordered input-sm join-item w-full"
+								name="attendee_query"
+								list={ "vote-manual-open-attendee-list-" + vote.IDString }
+								placeholder="Search attendee by number or name"
+								required
+							/>
+							<button type="submit" class="btn btn-sm btn-primary join-item">Submit Ballot</button>
+						</div>
+						<datalist id={ "vote-manual-open-attendee-list-" + vote.IDString }>
+							for _, a := range attendees {
+								<option value={ fmt.Sprintf("%d %s", a.AttendeeNumber, a.FullName) }></option>
+							}
+						</datalist>
+						<p class="text-xs text-base-content/70">Press Enter after typing just an attendee number for quick casting.</p>
+					}
+				</form>
+			} else {
+				<p class="text-xs text-base-content/70">Manual open-ballot entry is available while the vote is in state <span class="font-semibold">open</span>.</p>
+			}
+		} else {
+			<p class="text-xs text-base-content/70">Secret flow: register incoming slips in open state, then count ballots during open or counting state.</p>
+			if vote.State == "open" || vote.State == "counting" {
+				<div class={ "grid gap-2", templ.KV("md:grid-cols-2", vote.State == "open"), templ.KV("md:grid-cols-1", vote.State != "open") }>
+					if vote.State == "open" {
+						<form class="rounded-box border border-base-300 p-2 space-y-2"
+							hx-post={ vote.RegisterCastURL }
+							hx-target="#moderate-votes-panel"
+							hx-swap="outerHTML"
+						>
+							<div class="text-xs font-semibold uppercase text-base-content/70">1. Register Cast</div>
+							<input type="hidden" name="source" value="manual_submission"/>
+							if len(attendees) == 0 {
+								<p class="text-xs text-warning">No attendees available for cast registration.</p>
+							} else {
+								<div class="join w-full">
+									<input
+										class="input input-bordered input-sm join-item w-full"
+										name="attendee_query"
+										list={ "vote-manual-secret-attendee-list-" + vote.IDString }
+										placeholder="Search attendee by number or name"
+										required
+									/>
+									<button type="submit" class="btn btn-sm join-item">Register Cast</button>
+								</div>
+								<datalist id={ "vote-manual-secret-attendee-list-" + vote.IDString }>
+									for _, a := range attendees {
+										<option value={ fmt.Sprintf("%d %s", a.AttendeeNumber, a.FullName) }></option>
+									}
+								</datalist>
+								<p class="text-xs text-base-content/70">Press Enter after typing just an attendee number for quick registration.</p>
+							}
+						</form>
+					}
+					<form class="rounded-box border border-base-300 p-2 space-y-2"
+						hx-post={ vote.CountSecretBallotURL }
+						hx-target="#moderate-votes-panel"
+						hx-swap="outerHTML"
+					>
+						<div class="text-xs font-semibold uppercase text-base-content/70">2. Count Secret Ballot</div>
+						<input class="input input-bordered input-sm w-full" name="receipt_token" placeholder="Receipt token (optional)"/>
+						<input type="hidden" name="commitment_cipher" value="xchacha20poly1305"/>
+						<input type="hidden" name="commitment_version" value="1"/>
+						<input class="input input-bordered input-sm w-full" name="encrypted_commitment_b64" placeholder="Encrypted commitment (optional base64)"/>
+						<div class="grid grid-cols-2 gap-1 text-sm">
+							for _, opt := range vote.Options {
+								<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+									<input class="checkbox checkbox-sm" type="checkbox" name="option_id" value={ opt.IDString }/>
+									<span>{ opt.Label }</span>
+								</label>
+							}
+						</div>
+						<button type="submit" class="btn btn-sm btn-primary">Count Ballot</button>
+					</form>
+				</div>
+			} else {
+				<p class="text-xs text-base-content/70">Manual secret actions are available while vote is in state <span class="font-semibold">open</span> or <span class="font-semibold">counting</span>.</p>
+			}
+		}
+	</div>
+}
+
+templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeItem) {
+	<details class="collapse collapse-arrow border border-base-300 bg-base-100" open?={ vote.State == "open" || vote.State == "counting" }>
+		<summary class="collapse-title py-3 pr-10">
+			<div class="flex flex-wrap items-center gap-2">
+				<h4 class="font-semibold">{ vote.Name }</h4>
+				<span class={ voteStateBadgeClass(vote.State) }>{ vote.State }</span>
+				<span class={ voteVisibilityBadgeClass(vote.Visibility) }>{ vote.Visibility }</span>
+				<span class="text-xs text-base-content/70">{ voteBoundsLabel(vote.MinSelections, vote.MaxSelections) }</span>
+			</div>
+		</summary>
+		<div class="collapse-content space-y-3">
+			if len(vote.Options) > 0 {
+				<ul class="list rounded-box border border-base-300 bg-base-200/40">
+					for _, opt := range vote.Options {
+						<li class="list-row py-1">
+							<span class="badge badge-outline badge-sm">{ strconv.FormatInt(opt.Position, 10) }</span>
+							<span class="flex-1 truncate">{ opt.Label }</span>
+						</li>
+					}
+				</ul>
+			}
+			@VoteModeratorProgressCard(vote)
+
+			if vote.State == "draft" {
+				<div class="flex flex-wrap gap-2">
+					<button type="button" class="btn btn-sm btn-success" hx-post={ vote.OpenURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Open Vote</button>
+				</div>
+				<details class="collapse collapse-arrow border border-base-300 bg-base-200/30">
+					<summary class="collapse-title text-sm">Edit Draft</summary>
+					<div class="collapse-content">
+						<form class="grid gap-2 md:grid-cols-2"
+							hx-post={ vote.CreateOrUpdateURL }
+							hx-target="#moderate-votes-panel"
+							hx-swap="outerHTML"
+						>
+							<input class="input input-bordered input-sm md:col-span-2" name="name" value={ vote.Name } required/>
+							<select class="select select-bordered select-sm" name="visibility">
+								<option value="open" selected?={ vote.Visibility == "open" }>Open</option>
+								<option value="secret" selected?={ vote.Visibility == "secret" }>Secret</option>
+							</select>
+							<div class="join">
+								<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value={ strconv.FormatInt(vote.MinSelections, 10) } required/>
+								<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value={ strconv.FormatInt(vote.MaxSelections, 10) } required/>
+							</div>
+							<div class="md:col-span-2 space-y-1" data-vote-option-list>
+								<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+								for _, label := range voteLabelsForEdit(vote) {
+									<div data-vote-option-row>
+										<input
+											class="input input-bordered input-sm w-full"
+											name="option_label"
+											value={ label }
+											data-vote-option-input
+											placeholder="Choice"
+											autocomplete="off"
+										/>
+									</div>
+								}
+								<div class="text-xs text-base-content/70" data-vote-option-hint>Leave fields empty to remove choices.</div>
+							</div>
+							<div class="md:col-span-2 flex flex-wrap gap-2">
+								<button type="submit" class="btn btn-sm btn-primary">Save Draft</button>
+							</div>
+						</form>
+					</div>
+				</details>
+			}
+
+			if vote.State == "open" || vote.State == "counting" {
+				<div class="flex flex-wrap gap-2">
+					<button type="button" class="btn btn-sm btn-warning" hx-post={ vote.CloseURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Close Vote</button>
+				</div>
+			}
+
+			@VoteModeratorManualSection(vote, attendees)
+
+			if vote.State == "closed" {
+				<div class="flex flex-wrap gap-2">
+					<button type="button" class="btn btn-sm btn-outline" hx-post={ vote.ArchiveURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Archive Vote</button>
+				</div>
+			}
+
+			if vote.ResultsBlockedCounting {
+				<p class="text-sm text-warning">Results are blocked while vote is in counting state.</p>
+			} else if vote.HasResults {
+				<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
+					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Final Tallies</div>
+					<ul class="space-y-1 text-sm">
+						for _, row := range vote.Tallies {
+							<li class="flex items-center justify-between gap-2">
+								<span class="truncate">{ row.Label }</span>
+								<span class="badge badge-outline badge-sm">{ strconv.FormatInt(row.Count, 10) }</span>
+							</li>
+						}
+					</ul>
+					<div class="mt-2 text-xs text-base-content/70">eligible={ strconv.FormatInt(vote.EligibleCount, 10) } casts={ strconv.FormatInt(vote.CastCount, 10) } ballots={ strconv.FormatInt(vote.BallotCount, 10) }</div>
+				</div>
+			}
+		</div>
+	</details>
+}
+
+func voteReceiptPayloadB64(payload *VoteReceiptPayload) string {
+	if payload == nil {
+		return ""
+	}
+	buf, err := json.Marshal(payload)
+	if err != nil {
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(buf)
+}
+
+func voteModeratorPanelInputWithOOB(input VoteModeratorPanelInput) VoteModeratorPanelInput {
+	input.SwapOOB = true
+	return input
+}
+
+templ VoteModeratorPanelPartial(input VoteModeratorPanelInput) {
+	if input.SwapOOB {
+		<div
+			id="moderate-votes-panel"
+			class="space-y-4"
+			hx-get={ input.RefreshURL }
+			hx-trigger="reload"
+			hx-swap="outerHTML"
+			hx-swap-oob="outerHTML"
+		>
+			@ErrorMessage(input.Error)
+			@NotificationMessage("success", input.Notice)
+			<div class="flex items-center justify-between gap-2">
+				<h3 class="text-base font-semibold">Votes</h3>
+				<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Refresh</button>
+			</div>
+			if !input.HasActiveAgenda {
+				<p class="text-sm text-base-content/70">No active agenda point.</p>
+			} else {
+				<details class="collapse collapse-arrow border border-base-300 bg-base-100">
+					<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
+					<div class="collapse-content">
+						<form class="grid gap-2 md:grid-cols-2"
+							hx-post={ input.CreateURL }
+							hx-target="#moderate-votes-panel"
+							hx-swap="outerHTML"
+						>
+							<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required/>
+							<select class="select select-bordered select-sm" name="visibility">
+								<option value="open">Open</option>
+								<option value="secret">Secret</option>
+							</select>
+							<div class="join">
+								<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required/>
+								<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required/>
+							</div>
+							<div class="md:col-span-2 space-y-1" data-vote-option-list>
+								<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+								for _, label := range voteDefaultOptionLabels() {
+									<div data-vote-option-row>
+										<input
+											class="input input-bordered input-sm w-full"
+											name="option_label"
+											value={ label }
+											data-vote-option-input
+											placeholder="Choice"
+											autocomplete="off"
+										/>
+									</div>
+								}
+								<div class="text-xs text-base-content/70" data-vote-option-hint>Add one choice per field. A new field appears once the last one is filled.</div>
+							</div>
+							<div class="md:col-span-2">
+								<button type="submit" class="btn btn-sm btn-primary">Create Draft Vote</button>
+							</div>
+						</form>
+					</div>
+				</details>
+
+				if len(input.Votes) == 0 {
+					<p class="text-sm text-base-content/70">No votes for { input.ActiveAPTitle }.</p>
+				} else {
+					<div class="space-y-3">
+						for _, vote := range input.Votes {
+							@VoteModeratorAccordionItem(vote, input.Attendees)
+						}
+					</div>
+				}
+			}
+		</div>
+	} else {
+		<div
+			id="moderate-votes-panel"
+			class="space-y-4"
+			hx-get={ input.RefreshURL }
+			hx-trigger="reload"
+			hx-swap="outerHTML"
+		>
+		@ErrorMessage(input.Error)
+		@NotificationMessage("success", input.Notice)
+		<div class="flex items-center justify-between gap-2">
+			<h3 class="text-base font-semibold">Votes</h3>
+			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Refresh</button>
+		</div>
+		if !input.HasActiveAgenda {
+			<p class="text-sm text-base-content/70">No active agenda point.</p>
+		} else {
+			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
+				<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
+				<div class="collapse-content">
+					<form class="grid gap-2 md:grid-cols-2"
+						hx-post={ input.CreateURL }
+						hx-target="#moderate-votes-panel"
+						hx-swap="outerHTML"
+					>
+						<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required/>
+						<select class="select select-bordered select-sm" name="visibility">
+							<option value="open">Open</option>
+							<option value="secret">Secret</option>
+						</select>
+						<div class="join">
+							<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required/>
+							<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required/>
+						</div>
+						<div class="md:col-span-2 space-y-1" data-vote-option-list>
+							<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+							for _, label := range voteDefaultOptionLabels() {
+								<div data-vote-option-row>
+									<input
+										class="input input-bordered input-sm w-full"
+										name="option_label"
+										value={ label }
+										data-vote-option-input
+										placeholder="Choice"
+										autocomplete="off"
+									/>
+								</div>
+							}
+							<div class="text-xs text-base-content/70" data-vote-option-hint>Add one choice per field. A new field appears once the last one is filled.</div>
+						</div>
+						<div class="md:col-span-2">
+							<button type="submit" class="btn btn-sm btn-primary">Create Draft Vote</button>
+						</div>
+					</form>
+				</div>
+			</details>
+
+			if len(input.Votes) == 0 {
+				<p class="text-sm text-base-content/70">No votes for { input.ActiveAPTitle }.</p>
+			} else {
+				<div class="space-y-3">
+					for _, vote := range input.Votes {
+						@VoteModeratorAccordionItem(vote, input.Attendees)
+					}
+				</div>
+			}
+		}
+	</div>
+	}
+	<script>
+		(function() {
+			function optionRows(list) {
+				return Array.prototype.slice.call(list.querySelectorAll("[data-vote-option-row]"));
+			}
+
+			function optionInputFromRow(row) {
+				return row.querySelector("[data-vote-option-input]");
+			}
+
+			function optionHint(list) {
+				return list.querySelector("[data-vote-option-hint]");
+			}
+
+			function appendOptionRow(list, row) {
+				var hint = optionHint(list);
+				if (hint && hint.parentNode === list) {
+					list.insertBefore(row, hint);
+					return;
+				}
+				list.appendChild(row);
+			}
+
+			function createOptionRow() {
+				var row = document.createElement("div");
+				row.setAttribute("data-vote-option-row", "");
+				var input = document.createElement("input");
+				input.type = "text";
+				input.name = "option_label";
+				input.autocomplete = "off";
+				input.placeholder = "Choice";
+				input.className = "input input-bordered input-sm w-full";
+				input.setAttribute("data-vote-option-input", "");
+				row.appendChild(input);
+				return row;
+			}
+
+			function updatePlaceholders(list) {
+				var rows = optionRows(list);
+				for (var i = 0; i < rows.length; i++) {
+					var input = optionInputFromRow(rows[i]);
+					if (!input) { continue; }
+					input.placeholder = "Choice " + String(i + 1);
+				}
+			}
+
+			function normalizeOptionList(list) {
+				if (!(list instanceof HTMLElement)) { return; }
+				var rows = optionRows(list);
+				if (rows.length === 0) {
+					appendOptionRow(list, createOptionRow());
+					rows = optionRows(list);
+				}
+
+				for (var i = rows.length - 2; i >= 0; i--) {
+					var input = optionInputFromRow(rows[i]);
+					if (!input) { continue; }
+					if (input.value.trim() === "" && rows.length > 2) {
+						rows[i].remove();
+						rows = optionRows(list);
+					}
+				}
+
+				rows = optionRows(list);
+				var lastRow = rows[rows.length - 1];
+				var lastInput = optionInputFromRow(lastRow);
+				if (lastInput && lastInput.value.trim() !== "") {
+					appendOptionRow(list, createOptionRow());
+				}
+
+				rows = optionRows(list);
+				var trailingEmpty = 0;
+				for (var j = rows.length - 1; j >= 0; j--) {
+					var trailingInput = optionInputFromRow(rows[j]);
+					if (!trailingInput || trailingInput.value.trim() !== "") {
+						break;
+					}
+					trailingEmpty++;
+				}
+				while (trailingEmpty > 1 && rows.length > 2) {
+					rows[rows.length - 2].remove();
+					rows = optionRows(list);
+					trailingEmpty--;
+				}
+
+				updatePlaceholders(list);
+			}
+
+			function normalizeAllOptionLists() {
+				var lists = document.querySelectorAll("[data-vote-option-list]");
+				for (var i = 0; i < lists.length; i++) {
+					normalizeOptionList(lists[i]);
+				}
+			}
+
+			if (!window.__voteOptionFieldsWired) {
+				document.addEventListener("input", function(event) {
+					var target = event.target;
+					if (!(target instanceof HTMLInputElement) || !target.matches("[data-vote-option-input]")) {
+						return;
+					}
+					var list = target.closest("[data-vote-option-list]");
+					normalizeOptionList(list);
+				});
+				document.addEventListener("htmx:afterSwap", function(event) {
+					var target = event.target;
+					if (!(target instanceof Element)) { return; }
+					if (target.id === "moderate-votes-panel" || target.closest("#moderate-votes-panel")) {
+						normalizeAllOptionLists();
+					}
+				});
+				window.__voteOptionFieldsWired = true;
+			}
+
+			normalizeAllOptionLists();
+		})();
+	</script>
+}
+
+type VoteLiveItem struct {
+	ID               int64
+	IDString         string
+	Name             string
+	Visibility       string
+	MinSelections    int64
+	MaxSelections    int64
+	State            string
+	IsEligible       bool
+	Options          []VoteOptionDisplay
+	SubmitOpenURL    string
+	SubmitSecretURL  string
+	HasTimedResults  bool
+	TimedResults     []VoteOptionDisplay
+	ResultsUntilUnix int64
+	ResultsRemaining int64
+	EligibleCount    int64
+	CastCount        int64
+	BallotCount      int64
+}
+
+type VoteReceiptPayload struct {
+	ID           string `json:"id"`
+	Kind         string `json:"kind"`
+	VoteID       int64  `json:"vote_id"`
+	VoteName     string `json:"vote_name"`
+	ReceiptToken string `json:"receipt_token"`
+	Receipt      string `json:"receipt"`
+	Nonce        string `json:"nonce,omitempty"`
+	AttendeeID   int64  `json:"attendee_id,omitempty"`
+}
+
+type VoteLivePanelInput struct {
+	CommitteeSlug    string
+	MeetingIDStr     string
+	AttendeeID       int64
+	HasActiveAgenda  bool
+	Votes            []VoteLiveItem
+	Error            string
+	Notice           string
+	LastReceipt      *VoteReceiptPayload
+	RefreshURL       string
+	SwapOOB          bool
+}
+
+templ LiveVoteItemCard(vote VoteLiveItem, input VoteLivePanelInput) {
+	<article
+		class="rounded-box border border-base-300 bg-base-100 p-3 space-y-2"
+		data-vote-card
+		data-vote-id={ vote.IDString }
+		data-vote-state={ vote.State }
+		data-vote-results-until={ strconv.FormatInt(vote.ResultsUntilUnix, 10) }
+	>
+		<div class="flex flex-wrap items-center gap-2">
+			<h3 class="font-semibold">{ vote.Name }</h3>
+			<span class={ voteVisibilityBadgeClass(vote.Visibility) }>{ vote.Visibility }</span>
+			<span class={ voteStateBadgeClass(vote.State) }>{ vote.State }</span>
+			<span class="text-xs text-base-content/70">{ voteBoundsLabel(vote.MinSelections, vote.MaxSelections) }</span>
+			if !vote.IsEligible && vote.State == "open" {
+				<span class="badge badge-error badge-outline badge-sm">not eligible</span>
+			}
+		</div>
+		if vote.HasTimedResults {
+			<div class="rounded-box border border-base-300 bg-base-200/40 p-2 space-y-2">
+				<div class="text-xs font-semibold uppercase text-base-content/70">Final Results (visible for 30s)</div>
+				<ul class="space-y-1 text-sm">
+					for _, row := range vote.TimedResults {
+						<li class="flex items-center justify-between gap-2">
+							<span class="truncate">{ row.Label }</span>
+							<span class="badge badge-outline badge-sm">{ strconv.FormatInt(row.Count, 10) }</span>
+						</li>
+					}
+				</ul>
+				<div class="text-xs text-base-content/70">eligible={ strconv.FormatInt(vote.EligibleCount, 10) } casts={ strconv.FormatInt(vote.CastCount, 10) } ballots={ strconv.FormatInt(vote.BallotCount, 10) }</div>
+				<div class="text-xs text-base-content/70">Hiding in <span data-vote-results-countdown>{ strconv.FormatInt(vote.ResultsRemaining, 10) }</span>s</div>
+			</div>
+		} else if vote.State == "counting" {
+			<div class="alert alert-warning text-sm">
+				<span>Vote is in counting phase. Results are not finalized yet.</span>
+			</div>
+		} else if vote.State == "open" {
+			<div class="alert alert-success text-sm hidden" data-vote-submitted-screen>
+				<span>Your vote was submitted. You can wait for close to see results.</span>
+			</div>
+			<div data-vote-inputs>
+				if vote.Visibility == "open" {
+					<form class="space-y-2" hx-post={ vote.SubmitOpenURL } hx-target="#live-votes-panel" hx-swap="outerHTML" data-vote-open-form data-vote-id={ vote.IDString }>
+						<input type="hidden" name="receipt_token"/>
+						<div class={ "grid gap-1", templ.KV("grid-cols-1", vote.MaxSelections == 1), templ.KV("grid-cols-2", vote.MaxSelections > 1) }>
+							for _, opt := range vote.Options {
+								<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+									if vote.MaxSelections == 1 {
+										<input type="radio" class="radio radio-sm" name="option_id" value={ opt.IDString } disabled?={ !vote.IsEligible }/>
+									} else {
+										<input type="checkbox" class="checkbox checkbox-sm" name="option_id" value={ opt.IDString } disabled?={ !vote.IsEligible }/>
+									}
+									<span>{ opt.Label }</span>
+								</label>
+							}
+						</div>
+						<button type="submit" class="btn btn-sm btn-primary" disabled?={ !vote.IsEligible }>Submit Open Ballot</button>
+					</form>
+				} else {
+					<form class="space-y-2" hx-post={ vote.SubmitSecretURL } hx-target="#live-votes-panel" hx-swap="outerHTML" data-vote-secret-form data-vote-id={ vote.IDString } data-attendee-id={ strconv.FormatInt(input.AttendeeID, 10) }>
+						<input type="hidden" name="receipt_token"/>
+						<input type="hidden" name="nonce"/>
+						<input type="hidden" name="encrypted_commitment_b64"/>
+						<input type="hidden" name="commitment_cipher" value="xchacha20poly1305"/>
+						<input type="hidden" name="commitment_version" value="1"/>
+						<div class={ "grid gap-1", templ.KV("grid-cols-1", vote.MaxSelections == 1), templ.KV("grid-cols-2", vote.MaxSelections > 1) }>
+							for _, opt := range vote.Options {
+								<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+									if vote.MaxSelections == 1 {
+										<input type="radio" class="radio radio-sm" name="option_id" value={ opt.IDString } disabled?={ !vote.IsEligible }/>
+									} else {
+										<input type="checkbox" class="checkbox checkbox-sm" name="option_id" value={ opt.IDString } disabled?={ !vote.IsEligible }/>
+									}
+									<span>{ opt.Label }</span>
+								</label>
+							}
+						</div>
+						<button type="submit" class="btn btn-sm btn-primary" disabled?={ !vote.IsEligible }>Submit Secret Ballot</button>
+					</form>
+				}
+			</div>
+		}
+	</article>
+}
+
+func voteLivePanelInputWithOOB(input VoteLivePanelInput) VoteLivePanelInput {
+	input.SwapOOB = true
+	return input
+}
+
+templ LiveVotesPanelPartial(input VoteLivePanelInput) {
+	if input.SwapOOB {
+		<div id="live-votes-panel" class="space-y-3" sse-swap="votes-updated" hx-get={ input.RefreshURL } hx-trigger="reload" hx-swap="outerHTML" hx-swap-oob="outerHTML">
+		@ErrorMessage(input.Error)
+		@NotificationMessage("success", input.Notice, 10000)
+		<div class="flex items-center justify-between gap-2">
+			<h2 class="text-lg font-semibold">Votes</h2>
+			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#live-votes-panel" hx-swap="outerHTML">Refresh</button>
+		</div>
+		if !input.HasActiveAgenda {
+			<p class="text-sm text-base-content/70">No active agenda point.</p>
+		} else if len(input.Votes) == 0 {
+			<p class="text-sm text-base-content/70">No open or recently closed votes right now.</p>
+		} else {
+			<div class="space-y-3">
+				for _, vote := range input.Votes {
+					@LiveVoteItemCard(vote, input)
+				}
+			</div>
+		}
+		<div id="live-vote-last-receipt" class="hidden" data-receipt-b64={ voteReceiptPayloadB64(input.LastReceipt) }></div>
+	</div>
+	} else {
+		<div id="live-votes-panel" class="space-y-3" sse-swap="votes-updated" hx-get={ input.RefreshURL } hx-trigger="reload" hx-swap="outerHTML">
+		@ErrorMessage(input.Error)
+		@NotificationMessage("success", input.Notice, 10000)
+		<div class="flex items-center justify-between gap-2">
+			<h2 class="text-lg font-semibold">Votes</h2>
+			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#live-votes-panel" hx-swap="outerHTML">Refresh</button>
+		</div>
+		if !input.HasActiveAgenda {
+			<p class="text-sm text-base-content/70">No active agenda point.</p>
+		} else if len(input.Votes) == 0 {
+			<p class="text-sm text-base-content/70">No open or recently closed votes right now.</p>
+		} else {
+			<div class="space-y-3">
+				for _, vote := range input.Votes {
+					@LiveVoteItemCard(vote, input)
+				}
+			</div>
+		}
+		<div id="live-vote-last-receipt" class="hidden" data-receipt-b64={ voteReceiptPayloadB64(input.LastReceipt) }></div>
+	</div>
+	}
+	<script>
+		(function() {
+			if (!window.voteReceiptVault) {
+				window.voteReceiptVault = {
+					open: function() {
+						return new Promise(function(resolve, reject) {
+							var req = indexedDB.open("conference_tool_receipts", 1);
+							req.onupgradeneeded = function(event) {
+								var db = event.target.result;
+								if (!db.objectStoreNames.contains("receipts")) {
+									var store = db.createObjectStore("receipts", { keyPath: "id" });
+									store.createIndex("vote_id", "vote_id", { unique: false });
+									store.createIndex("kind", "kind", { unique: false });
+								}
+							};
+							req.onsuccess = function() { resolve(req.result); };
+							req.onerror = function() { reject(req.error); };
+						});
+					},
+					put: function(payload) {
+						if (!payload || !payload.id) { return Promise.resolve(); }
+						return this.open().then(function(db) {
+							return new Promise(function(resolve, reject) {
+								var tx = db.transaction("receipts", "readwrite");
+								tx.objectStore("receipts").put(payload);
+								tx.oncomplete = function() { resolve(); };
+								tx.onerror = function() { reject(tx.error); };
+							});
+						});
+					}
+				};
+			}
+
+			function randomToken() {
+				if (window.crypto && window.crypto.randomUUID) {
+					return window.crypto.randomUUID().replace(/-/g, "");
+				}
+				return String(Date.now()) + String(Math.random()).replace("0.", "");
+			}
+
+			function encodePayload(value) {
+				try {
+					return btoa(unescape(encodeURIComponent(value)));
+				} catch (error) {
+					return "";
+				}
+			}
+
+			function decodeB64JSON(raw) {
+				if (!raw) { return null; }
+				try {
+					return JSON.parse(decodeURIComponent(escape(atob(raw))));
+				} catch (error) {
+					return null;
+				}
+			}
+
+			var submissionStorageKey = "conference_tool_live_vote_submissions";
+			var countdownIntervalID = 0;
+			var refreshTimeoutID = 0;
+
+			function readSubmissionState() {
+				try {
+					var raw = window.sessionStorage.getItem(submissionStorageKey);
+					if (!raw) { return {}; }
+					var parsed = JSON.parse(raw);
+					if (parsed && typeof parsed === "object") {
+						return parsed;
+					}
+				} catch (error) {
+				}
+				return {};
+			}
+
+			function writeSubmissionState(state) {
+				try {
+					window.sessionStorage.setItem(submissionStorageKey, JSON.stringify(state || {}));
+				} catch (error) {
+				}
+			}
+
+			function pruneSubmissionState() {
+				var state = readSubmissionState();
+				var now = Date.now();
+				var maxAgeMs = 24 * 60 * 60 * 1000;
+				var changed = false;
+				for (var key in state) {
+					if (!Object.prototype.hasOwnProperty.call(state, key)) { continue; }
+					var ts = Number(state[key]);
+					if (!Number.isFinite(ts) || now-ts > maxAgeMs) {
+						delete state[key];
+						changed = true;
+					}
+				}
+				if (changed) {
+					writeSubmissionState(state);
+				}
+				return state;
+			}
+
+			function markVoteSubmitted(voteID) {
+				var numeric = Number(voteID);
+				if (!Number.isFinite(numeric) || numeric <= 0) { return; }
+				var state = pruneSubmissionState();
+				state[String(Math.floor(numeric))] = Date.now();
+				writeSubmissionState(state);
+			}
+
+			function applySubmittedScreens() {
+				var panel = document.getElementById("live-votes-panel");
+				if (!panel) { return; }
+				var state = pruneSubmissionState();
+				var cards = panel.querySelectorAll("[data-vote-card]");
+				for (var i = 0; i < cards.length; i++) {
+					var card = cards[i];
+					var voteID = card.getAttribute("data-vote-id") || "";
+					var voteState = card.getAttribute("data-vote-state") || "";
+					var submittedScreen = card.querySelector("[data-vote-submitted-screen]");
+					var voteInputs = card.querySelector("[data-vote-inputs]");
+					if (!submittedScreen || !voteInputs) {
+						continue;
+					}
+					var showSubmitted = voteState === "open" && !!state[voteID];
+					submittedScreen.classList.toggle("hidden", !showSubmitted);
+					voteInputs.classList.toggle("hidden", showSubmitted);
+				}
+			}
+
+			function applyResultsCountdown() {
+				var panel = document.getElementById("live-votes-panel");
+				if (!panel) { return; }
+				var cards = panel.querySelectorAll("[data-vote-card]");
+				var nowMs = Date.now();
+				var soonestExpiryMs = 0;
+				for (var i = 0; i < cards.length; i++) {
+					var card = cards[i];
+					var untilRaw = card.getAttribute("data-vote-results-until") || "";
+					var untilSec = Number.parseInt(untilRaw, 10);
+					if (!Number.isFinite(untilSec) || untilSec <= 0) {
+						continue;
+					}
+					var untilMs = untilSec * 1000;
+					var remainingSec = Math.max(0, Math.ceil((untilMs - nowMs) / 1000));
+					var countdown = card.querySelector("[data-vote-results-countdown]");
+					if (countdown) {
+						countdown.textContent = String(remainingSec);
+					}
+					if (untilMs > nowMs && (soonestExpiryMs === 0 || untilMs < soonestExpiryMs)) {
+						soonestExpiryMs = untilMs;
+					}
+				}
+				if (refreshTimeoutID) {
+					window.clearTimeout(refreshTimeoutID);
+					refreshTimeoutID = 0;
+				}
+				if (soonestExpiryMs > 0) {
+					var delay = Math.max(150, soonestExpiryMs - nowMs + 250);
+					refreshTimeoutID = window.setTimeout(function() {
+						var currentPanel = document.getElementById("live-votes-panel");
+						if (currentPanel && window.htmx) {
+							window.htmx.trigger(currentPanel, "reload");
+						}
+					}, delay);
+				}
+			}
+
+			function applyLiveVoteUIState() {
+				applySubmittedScreens();
+				applyResultsCountdown();
+			}
+
+			function persistLatestReceipt() {
+				var node = document.getElementById("live-vote-last-receipt");
+				if (!node) { return; }
+				var raw = node.getAttribute("data-receipt-b64") || "";
+				if (!raw) { return; }
+				var payload = decodeB64JSON(raw);
+				if (!payload) { return; }
+				window.voteReceiptVault.put(payload);
+				markVoteSubmitted(payload.vote_id);
+				node.setAttribute("data-receipt-b64", "");
+			}
+
+			if (!window.__voteBallotFormsWired) {
+				document.addEventListener("submit", function(event) {
+					var form = event.target;
+					if (!(form instanceof HTMLFormElement)) { return; }
+					if (!form.matches("[data-vote-open-form], [data-vote-secret-form]")) { return; }
+
+					var receiptTokenInput = form.querySelector("input[name='receipt_token']");
+					if (receiptTokenInput && !receiptTokenInput.value) {
+						receiptTokenInput.value = randomToken();
+					}
+
+					if (form.matches("[data-vote-secret-form]")) {
+						var nonceInput = form.querySelector("input[name='nonce']");
+						var payloadInput = form.querySelector("input[name='encrypted_commitment_b64']");
+						if (!nonceInput || !payloadInput) { return; }
+						if (!nonceInput.value) {
+							nonceInput.value = randomToken();
+						}
+						var selected = [];
+						var options = form.querySelectorAll("input[name='option_id']");
+						for (var i = 0; i < options.length; i++) {
+							if (options[i].checked) {
+								selected.push(options[i].value);
+							}
+						}
+						var attendeeID = form.getAttribute("data-attendee-id") || "";
+						payloadInput.value = encodePayload(attendeeID + ":" + selected.join(",") + ":" + nonceInput.value);
+					}
+				});
+				document.addEventListener("htmx:afterSwap", function(event) {
+					if (!event.target) { return; }
+					if (event.target.id === "live-votes-panel" || (event.target.closest && event.target.closest("#live-votes-panel"))) {
+						persistLatestReceipt();
+						applyLiveVoteUIState();
+					}
+				});
+				window.__voteBallotFormsWired = true;
+			}
+
+			persistLatestReceipt();
+			applyLiveVoteUIState();
+			if (!window.__voteResultsCountdownIntervalID) {
+				window.__voteResultsCountdownIntervalID = window.setInterval(applyResultsCountdown, 1000);
+			}
+		})();
+	</script>
+}
+
+type ReceiptsVaultInput struct{}
+
+templ ReceiptsVaultContent() {
+	<div class="mx-auto w-full max-w-5xl space-y-4">
+		<h1 class="text-2xl font-semibold">Receipt Vault</h1>
+		<p class="text-sm text-base-content/70">Receipts are stored locally in your browser. This page verifies them against public vote verification endpoints.</p>
+		<div class="rounded-box border border-base-300 bg-base-100 p-3 space-y-3">
+			<div class="flex flex-wrap items-center gap-2">
+				<button id="receipts-refresh" type="button" class="btn btn-sm btn-outline">Refresh</button>
+				<button id="receipts-clear" type="button" class="btn btn-sm btn-error btn-outline">Clear All</button>
+			</div>
+			<div id="receipts-status" class="text-sm text-base-content/70"></div>
+			<div id="receipts-list" class="space-y-2"></div>
+		</div>
+	</div>
+	<script>
+		(function() {
+			function openDB() {
+				return new Promise(function(resolve, reject) {
+					var req = indexedDB.open("conference_tool_receipts", 1);
+					req.onupgradeneeded = function(event) {
+						var db = event.target.result;
+						if (!db.objectStoreNames.contains("receipts")) {
+							var store = db.createObjectStore("receipts", { keyPath: "id" });
+							store.createIndex("vote_id", "vote_id", { unique: false });
+							store.createIndex("kind", "kind", { unique: false });
+						}
+					};
+					req.onsuccess = function() { resolve(req.result); };
+					req.onerror = function() { reject(req.error); };
+				});
+			}
+
+			function listAll() {
+				return openDB().then(function(db) {
+					return new Promise(function(resolve, reject) {
+						var tx = db.transaction("receipts", "readonly");
+						var req = tx.objectStore("receipts").getAll();
+						req.onsuccess = function() { resolve(req.result || []); };
+						req.onerror = function() { reject(req.error); };
+					});
+				});
+			}
+
+			function clearAll() {
+				return openDB().then(function(db) {
+					return new Promise(function(resolve, reject) {
+						var tx = db.transaction("receipts", "readwrite");
+						tx.objectStore("receipts").clear();
+						tx.oncomplete = function() { resolve(); };
+						tx.onerror = function() { reject(tx.error); };
+					});
+				});
+			}
+
+			function setStatus(msg, error) {
+				var node = document.getElementById("receipts-status");
+				if (!node) { return; }
+				node.textContent = msg;
+				node.className = error ? "text-sm text-error" : "text-sm text-base-content/70";
+			}
+
+			function verifyReceipt(receipt) {
+				var endpoint = receipt.kind === "secret" ? "/api/votes/verify/secret" : "/api/votes/verify/open";
+				var payload = {
+					vote_id: receipt.vote_id,
+					receipt_token: receipt.receipt_token
+				};
+				if (receipt.kind === "open" && receipt.attendee_id) {
+					payload.attendee_id = receipt.attendee_id;
+				}
+				return fetch(endpoint, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload)
+				}).then(function(res) {
+					return res.json().catch(function() { return {}; }).then(function(body) {
+						if (!res.ok) {
+							throw new Error(body.error || ("verify failed with status " + res.status));
+						}
+						return body;
+					});
+				});
+			}
+
+			function render(receipts) {
+				var list = document.getElementById("receipts-list");
+				if (!list) { return; }
+				list.innerHTML = "";
+				if (!receipts.length) {
+					list.innerHTML = "<p class='text-sm text-base-content/70'>No stored receipts.</p>";
+					return;
+				}
+
+				receipts.sort(function(a, b) {
+					var aValue = a.vote_id || 0;
+					var bValue = b.vote_id || 0;
+					if (aValue === bValue) {
+						return String(a.id || "").localeCompare(String(b.id || ""));
+					}
+					return aValue - bValue;
+				});
+
+				receipts.forEach(function(receipt) {
+					var card = document.createElement("div");
+					card.className = "rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2";
+					card.innerHTML = ""
+						+ "<div class='flex flex-wrap items-center gap-2'>"
+						+ "<span class='badge badge-outline badge-sm'>" + (receipt.kind || "unknown") + "</span>"
+						+ "<span class='font-semibold'>" + (receipt.vote_name || "Vote") + "</span>"
+						+ "<span class='text-xs text-base-content/70'>vote #" + (receipt.vote_id || "?") + "</span>"
+						+ "</div>"
+						+ "<div class='text-xs text-base-content/70 break-all'>" + (receipt.receipt || "") + "</div>"
+						+ "<div class='flex flex-wrap items-center gap-2'>"
+						+ "<button type='button' class='btn btn-xs btn-primary'>Verify</button>"
+						+ "<span class='text-xs text-base-content/70' data-result></span>"
+						+ "</div>";
+					var button = card.querySelector("button");
+					var result = card.querySelector("[data-result]");
+					button.addEventListener("click", function() {
+						button.disabled = true;
+						result.textContent = "verifying...";
+						verifyReceipt(receipt).then(function(body) {
+							if (receipt.kind === "open") {
+								var choices = (body.choice_labels || []).join(", ");
+								result.textContent = "OK: " + (choices || "no choices");
+							} else {
+								result.textContent = "OK: commitment returned";
+							}
+							result.className = "text-xs text-success";
+						}).catch(function(err) {
+							result.textContent = "Error: " + err.message;
+							result.className = "text-xs text-error";
+						}).finally(function() {
+							button.disabled = false;
+						});
+					});
+					list.appendChild(card);
+				});
+			}
+
+			function refresh() {
+				setStatus("Loading receipts...", false);
+				listAll().then(function(receipts) {
+					render(receipts);
+					setStatus("Loaded " + receipts.length + " receipt(s).", false);
+				}).catch(function(err) {
+					setStatus("Failed to load receipts: " + err.message, true);
+				});
+			}
+
+			document.getElementById("receipts-refresh")?.addEventListener("click", refresh);
+			document.getElementById("receipts-clear")?.addEventListener("click", function() {
+				clearAll().then(refresh).catch(function(err) {
+					setStatus("Failed to clear receipts: " + err.message, true);
+				});
+			});
+			refresh();
+		})();
+	</script>
+}
+
+templ ReceiptsVaultTemplate(input ReceiptsVaultInput) {
+	@PageTemplate("Receipt Vault", false, false, ScaffoldInput{Title: "Receipt Vault"}, ReceiptsVaultContent())
+}

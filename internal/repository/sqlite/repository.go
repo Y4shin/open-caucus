@@ -1419,7 +1419,6 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 		FirstSpeakerQuotationEnabled: nullBoolToPtr(ap.FirstSpeakerQuotationEnabled),
 		ModeratorID:                  nullInt64ToPtr(ap.ModeratorID),
 		CurrentAttachmentID:          nullInt64ToPtr(ap.CurrentAttachmentID),
-		CurrentMotionID:              nullInt64ToPtr(ap.CurrentMotionID),
 	}
 }
 
@@ -1762,7 +1761,7 @@ func (r *Repository) SetCurrentAgendaPoint(ctx context.Context, meetingID int64,
 	return nil
 }
 
-// SetCurrentAttachment sets an agenda point's current attachment and clears current motion.
+// SetCurrentAttachment sets an agenda point's current attachment.
 func (r *Repository) SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error {
 	if err := r.Queries.SetCurrentAttachment(ctx, client.SetCurrentAttachmentParams{
 		CurrentAttachmentID: sql.NullInt64{Int64: attachmentID, Valid: true},
@@ -1773,18 +1772,7 @@ func (r *Repository) SetCurrentAttachment(ctx context.Context, agendaPointID, at
 	return nil
 }
 
-// SetCurrentMotion sets an agenda point's current motion and clears current attachment.
-func (r *Repository) SetCurrentMotion(ctx context.Context, agendaPointID, motionID int64) error {
-	if err := r.Queries.SetCurrentMotion(ctx, client.SetCurrentMotionParams{
-		CurrentMotionID: sql.NullInt64{Int64: motionID, Valid: true},
-		ID:              agendaPointID,
-	}); err != nil {
-		return fmt.Errorf("set current motion: %w", err)
-	}
-	return nil
-}
-
-// ClearCurrentDocument clears both current attachment and current motion on an agenda point.
+// ClearCurrentDocument clears current attachment on an agenda point.
 func (r *Repository) ClearCurrentDocument(ctx context.Context, agendaPointID int64) error {
 	if err := r.Queries.ClearCurrentDocument(ctx, agendaPointID); err != nil {
 		return fmt.Errorf("clear current document: %w", err)
@@ -2203,77 +2191,16 @@ func blobFromClient(b *client.BinaryBlob) *model.BinaryBlob {
 	}
 }
 
-// CreateMotion inserts a motion row linked to an agenda point and a blob.
-func (r *Repository) CreateMotion(ctx context.Context, agendaPointID, blobID int64, title string) (*model.Motion, error) {
-	m, err := r.Queries.CreateMotion(ctx, client.CreateMotionParams{
-		AgendaPointID: agendaPointID,
-		BlobID:        blobID,
-		Title:         title,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("create motion: %w", err)
-	}
-	return motionFromClient(&m), nil
-}
-
-// GetMotionByID retrieves a motion by its primary key.
-func (r *Repository) GetMotionByID(ctx context.Context, id int64) (*model.Motion, error) {
-	m, err := r.Queries.GetMotionByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("motion not found")
-		}
-		return nil, fmt.Errorf("get motion: %w", err)
-	}
-	return motionFromClient(&m), nil
-}
-
-// ListMotionsForAgendaPoint returns all motions for an agenda point ordered by creation time.
-func (r *Repository) ListMotionsForAgendaPoint(ctx context.Context, agendaPointID int64) ([]*model.Motion, error) {
-	rows, err := r.Queries.ListMotionsForAgendaPoint(ctx, agendaPointID)
-	if err != nil {
-		return nil, fmt.Errorf("list motions: %w", err)
-	}
-	result := make([]*model.Motion, len(rows))
-	for i := range rows {
-		result[i] = motionFromClient(&rows[i])
-	}
-	return result, nil
-}
-
-// DeleteMotion removes a motion by ID.
-func (r *Repository) DeleteMotion(ctx context.Context, id int64) error {
-	if err := r.Queries.DeleteMotion(ctx, id); err != nil {
-		return fmt.Errorf("delete motion: %w", err)
-	}
-	return nil
-}
-
-func motionFromClient(m *client.Motion) *model.Motion {
-	createdAt, _ := time.Parse(time.RFC3339, m.CreatedAt)
-	updatedAt, _ := time.Parse(time.RFC3339, m.UpdatedAt)
-	return &model.Motion{
-		ID:            m.ID,
-		AgendaPointID: m.AgendaPointID,
-		BlobID:        m.BlobID,
-		Title:         m.Title,
-		CreatedAt:     createdAt,
-		UpdatedAt:     updatedAt,
-	}
-}
-
 // CreateVoteDefinition inserts a new vote definition in draft state.
 func (r *Repository) CreateVoteDefinition(
 	ctx context.Context,
 	meetingID, agendaPointID int64,
-	motionID *int64,
 	name, visibility string,
 	minSelections, maxSelections int64,
 ) (*model.VoteDefinition, error) {
 	row, err := r.Queries.CreateVoteDefinition(ctx, client.CreateVoteDefinitionParams{
 		MeetingID:     meetingID,
 		AgendaPointID: agendaPointID,
-		MotionID:      ptrToNullInt64(motionID),
 		Name:          name,
 		Visibility:    visibility,
 		MinSelections: minSelections,
@@ -2290,14 +2217,12 @@ func (r *Repository) UpdateVoteDefinitionDraft(
 	ctx context.Context,
 	id int64,
 	meetingID, agendaPointID int64,
-	motionID *int64,
 	name, visibility string,
 	minSelections, maxSelections int64,
 ) (*model.VoteDefinition, error) {
 	row, err := r.Queries.UpdateVoteDefinitionDraft(ctx, client.UpdateVoteDefinitionDraftParams{
 		MeetingID:     meetingID,
 		AgendaPointID: agendaPointID,
-		MotionID:      ptrToNullInt64(motionID),
 		Name:          name,
 		Visibility:    visibility,
 		MinSelections: minSelections,
@@ -2868,6 +2793,28 @@ func (r *Repository) GetVoteSubmissionStats(ctx context.Context, voteDefinitionI
 	}, nil
 }
 
+// GetVoteSubmissionStatsLive returns cast/ballot/eligible counts for moderator/live progress views.
+// Unlike GetVoteSubmissionStats, it is available in all vote states including counting.
+func (r *Repository) GetVoteSubmissionStatsLive(ctx context.Context, voteDefinitionID int64) (*model.VoteSubmissionStats, error) {
+	row, err := r.Queries.GetVoteSubmissionStats(ctx, client.GetVoteSubmissionStatsParams{
+		VoteDefinitionID:   voteDefinitionID,
+		VoteDefinitionID_2: voteDefinitionID,
+		VoteDefinitionID_3: voteDefinitionID,
+		VoteDefinitionID_4: voteDefinitionID,
+		VoteDefinitionID_5: voteDefinitionID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get live vote submission stats: %w", err)
+	}
+	return &model.VoteSubmissionStats{
+		EligibleCount:     row.EligibleCount,
+		CastCount:         row.CastCount,
+		BallotCount:       row.BallotCount,
+		OpenBallotCount:   row.OpenBallotCount,
+		SecretBallotCount: row.SecretBallotCount,
+	}, nil
+}
+
 func (r *Repository) ensureVoteResultsReadable(ctx context.Context, voteDefinitionID int64) error {
 	vd, err := r.Queries.GetVoteDefinitionByID(ctx, voteDefinitionID)
 	if err != nil {
@@ -2937,7 +2884,6 @@ func voteDefinitionFromClient(v *client.VoteDefinition) *model.VoteDefinition {
 		ID:            v.ID,
 		MeetingID:     v.MeetingID,
 		AgendaPointID: v.AgendaPointID,
-		MotionID:      nullInt64ToPtr(v.MotionID),
 		Name:          v.Name,
 		Visibility:    v.Visibility,
 		State:         v.State,

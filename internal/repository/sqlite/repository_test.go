@@ -32,7 +32,6 @@ func TestMigrateUp(t *testing.T) {
 		"speakers_list",
 		"binary_blobs",
 		"agenda_attachments",
-		"motions",
 		"vote_definitions",
 		"vote_options",
 		"eligible_voters",
@@ -49,6 +48,14 @@ func TestMigrateUp(t *testing.T) {
 		if err != nil {
 			t.Errorf("table %q not found after MigrateUp: %v", table, err)
 		}
+	}
+
+	var motionsTable string
+	err := repo.DB.QueryRow(
+		"SELECT name FROM sqlite_master WHERE type='table' AND name='motions'",
+	).Scan(&motionsTable)
+	if err == nil {
+		t.Errorf("table %q should not exist after latest migration", motionsTable)
 	}
 }
 
@@ -252,30 +259,11 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 		t.Error("expected CHECK constraint violation for invalid status")
 	}
 
-	// Seed minimal motion context
 	_, err = repo.DB.Exec(
-		"INSERT INTO binary_blobs (filename, content_type, size_bytes, storage_path) VALUES ('f.pdf', 'application/pdf', 100, '/blobs/1')",
-	)
-	if err != nil {
-		t.Fatalf("failed to insert binary_blob: %v", err)
-	}
-	_, err = repo.DB.Exec(
-		`INSERT INTO motions (agenda_point_id, blob_id, title)
-		 VALUES (
-		     (SELECT id FROM agenda_points ORDER BY id LIMIT 1),
-		     (SELECT id FROM binary_blobs ORDER BY id LIMIT 1),
-		     'motion1'
-		 )`,
-	)
-	if err != nil {
-		t.Fatalf("failed to insert motion: %v", err)
-	}
-	_, err = repo.DB.Exec(
-		`INSERT INTO vote_definitions (meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections)
+		`INSERT INTO vote_definitions (meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections)
 		 VALUES (
 		     (SELECT id FROM meetings ORDER BY id LIMIT 1),
 		     (SELECT id FROM agenda_points ORDER BY id LIMIT 1),
-		     (SELECT id FROM motions ORDER BY id LIMIT 1),
 		     'vote1',
 		     'open',
 		     'open',
@@ -287,11 +275,10 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 		t.Fatalf("failed to insert vote_definition: %v", err)
 	}
 	_, err = repo.DB.Exec(
-		`INSERT INTO vote_definitions (meeting_id, agenda_point_id, motion_id, name, visibility, state, min_selections, max_selections)
+		`INSERT INTO vote_definitions (meeting_id, agenda_point_id, name, visibility, state, min_selections, max_selections)
 		 VALUES (
 		     (SELECT id FROM meetings ORDER BY id LIMIT 1),
 		     (SELECT id FROM agenda_points ORDER BY id LIMIT 1),
-		     (SELECT id FROM motions ORDER BY id LIMIT 1),
 		     'vote2',
 		     'secret',
 		     'counting',

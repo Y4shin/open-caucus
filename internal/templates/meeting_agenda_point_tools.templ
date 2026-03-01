@@ -14,7 +14,6 @@ type MeetingAgendaPointToolsInput struct {
 	AgendaPointIDStr string
 	AgendaPointTitle string
 	Attachments AttachmentListPartialInput
-	Motions     MotionListPartialInput
 }
 
 func (i *MeetingAgendaPointToolsInput) ManagePageGet(ctx context.Context) templ.SafeURL {
@@ -32,14 +31,10 @@ templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
 }
 
 templ MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) {
-	<div class={ "manage-grid grid gap-4 lg:grid-cols-2" }>
+	<div class={ "manage-grid grid gap-4 lg:grid-cols-1" }>
 		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
 			<h2>Attachments</h2>
 			@AttachmentListPartial(input.Attachments)
-		</section>
-		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
-			<h2>Motions</h2>
-			@MotionListPartial(input.Motions)
 		</section>
 	</div>
 }

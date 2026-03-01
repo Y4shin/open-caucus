@@ -11,7 +11,7 @@ import (
 )
 
 // ManageAgendaPointToolsPage renders the per-agenda-point tools page.
-// It contains only attachments and motions for a single agenda point.
+// It contains attachment management for a single agenda point.
 func (h *Handler) ManageAgendaPointToolsPage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.MeetingAgendaPointToolsInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
 	if err != nil {
@@ -42,10 +42,6 @@ func (h *Handler) ManageAgendaPointToolsPage(ctx context.Context, r *http.Reques
 	if err != nil {
 		return nil, nil, err
 	}
-	motions, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, agendaPoint)
-	if err != nil {
-		return nil, nil, err
-	}
 
 	return &templates.MeetingAgendaPointToolsInput{
 		CommitteeName:    committee.Name,
@@ -55,6 +51,5 @@ func (h *Handler) ManageAgendaPointToolsPage(ctx context.Context, r *http.Reques
 		AgendaPointIDStr: params.AgendaPointId,
 		AgendaPointTitle: agendaPoint.Title,
 		Attachments:      *attachments,
-		Motions:          *motions,
 	}, nil, nil
 }

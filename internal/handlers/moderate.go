@@ -61,6 +61,12 @@ func (h *Handler) MeetingModerate(ctx context.Context, r *http.Request, params r
 		MeetingSettings: *settingsPartial,
 	}
 
+	votesPanel, err := h.loadModeratorVotesPanel(ctx, params.Slug, params.MeetingId, meetingID)
+	if err != nil {
+		return nil, nil, err
+	}
+	input.Votes = *votesPanel
+
 	// Load tools data if there is an active agenda point.
 	if meeting.CurrentAgendaPointID != nil {
 		activeAP, err := h.Repository.GetAgendaPointByID(ctx, *meeting.CurrentAgendaPointID)
@@ -73,15 +79,9 @@ func (h *Handler) MeetingModerate(ctx context.Context, r *http.Request, params r
 			return nil, nil, err
 		}
 
-		motionsPartial, err := h.loadMotionListPartial(ctx, params.Slug, params.MeetingId, activeAP)
-		if err != nil {
-			return nil, nil, err
-		}
-
 		input.HasActiveAP = true
 		input.ActiveAPTitle = activeAP.Title
 		input.Attachments = *attachmentsPartial
-		input.Motions = *motionsPartial
 	}
 
 	return input, nil, nil
@@ -118,7 +118,7 @@ func (h *Handler) ModerateStream(ctx context.Context, r *http.Request, params ro
 				if !ok {
 					return
 				}
-				if evt.Event != meetingAttendeesChangedEvent && evt.Event != speakersUpdatedEvent {
+				if evt.Event != meetingAttendeesChangedEvent && evt.Event != speakersUpdatedEvent && evt.Event != meetingVotesChangedEvent {
 					continue
 				}
 				if evt.MeetingID == nil || *evt.MeetingID != meetingID {
@@ -140,12 +140,17 @@ func (h *Handler) ModerateStream(ctx context.Context, r *http.Request, params ro
 				if err != nil {
 					continue
 				}
+				votesPartial, err := h.loadModeratorVotesPanel(ctx, params.Slug, params.MeetingId, meetingID)
+				if err != nil {
+					continue
+				}
 
 				dependentInput := templates.ModerateDependentPartialInput{
 					CommitteeSlug:   params.Slug,
 					IDString:        params.MeetingId,
 					Speakers:        *speakersPartial,
 					Attendees:       *attendeePartial,
+					Votes:           *votesPartial,
 					MeetingSettings: *settingsPartial,
 				}
 
