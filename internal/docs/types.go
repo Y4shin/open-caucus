@@ -39,6 +39,26 @@ type RenderedDoc struct {
 	Sections []Section
 }
 
+type NavCrumb struct {
+	Title   string
+	Path    string
+	Current bool
+}
+
+type NavNode struct {
+	Title    string
+	Path     string
+	Current  bool
+	Expanded bool
+	Children []NavNode
+}
+
+type Navigation struct {
+	PathDisplay string
+	Crumbs      []NavCrumb
+	Nodes       []NavNode
+}
+
 type SearchHit struct {
 	Ref     string
 	Path    string
@@ -53,6 +73,7 @@ type document struct {
 	Path         string
 	Locale       string
 	Title        string
+	Titles       map[string]string
 	HTMLTemplate string
 	Sections     []Section
 	MediaKeys    []string

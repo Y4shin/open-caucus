@@ -19,8 +19,8 @@ const (
 	defaultViewportHeight = 900
 	defaultMobileWidth    = 390
 	defaultMobileHeight   = 844
-	defaultScreenshotName = "example-admin-login.png"
-	defaultGIFName        = "example-login-flow.gif"
+	defaultScreenshotName = "app-capture.png"
+	defaultGIFName        = "app-capture.gif"
 	defaultGIFFPS         = 8
 	defaultGIFScaleWidth  = 960
 	defaultGIFMaxColors   = 56
@@ -94,6 +94,26 @@ type GIFExampleOptions struct {
 
 type GIFExampleResult struct {
 	GIFPath string
+}
+
+type ScreenshotScenarioOptions struct {
+	Common      CommonOptions
+	Variant     Variant
+	InitialPath string
+	OutputName  string
+	FullPage    bool
+	Scenario    func(page playwright.Page) error
+}
+
+type GIFScenarioOptions struct {
+	Common       CommonOptions
+	Variant      Variant
+	InitialPath  string
+	OutputName   string
+	FPS          int
+	ScaleWidth   int
+	FinalPauseMS float64
+	Scenario     func(page playwright.Page) error
 }
 
 func RunScreenshotExample(opts ScreenshotExampleOptions) (string, error) {
@@ -295,6 +315,167 @@ func RunGIFExample(opts GIFExampleOptions) (GIFExampleResult, error) {
 	return GIFExampleResult{GIFPath: gifPath}, nil
 }
 
+func RunScreenshotScenario(opts ScreenshotScenarioOptions) (string, error) {
+	opts = withScreenshotScenarioDefaults(opts)
+	var err error
+	opts.Variant, err = normalizeVariant(opts.Variant)
+	if err != nil {
+		return "", fmt.Errorf("normalize capture variant: %w", err)
+	}
+
+	targetURL := ""
+	if strings.TrimSpace(opts.InitialPath) != "" {
+		targetURL, err = resolveURL(opts.Common.BaseURL, opts.InitialPath)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	outputPath, err := buildOutputPath(opts.Common.OutDir, opts.OutputName)
+	if err != nil {
+		return "", err
+	}
+
+	browser, cleanup, err := newBrowser(opts.Common)
+	if err != nil {
+		return "", err
+	}
+	defer cleanup()
+
+	ctx, err := newContext(browser, opts.Common, opts.Variant, "")
+	if err != nil {
+		return "", err
+	}
+	defer ctx.Close()
+
+	page, err := ctx.NewPage()
+	if err != nil {
+		return "", fmt.Errorf("create page: %w", err)
+	}
+
+	if targetURL != "" {
+		if _, err := page.Goto(targetURL, playwright.PageGotoOptions{WaitUntil: playwright.WaitUntilStateLoad}); err != nil {
+			return "", fmt.Errorf("navigate to %q: %w", targetURL, err)
+		}
+		if err := page.Locator("body").WaitFor(); err != nil {
+			return "", fmt.Errorf("wait for body on %q: %w", targetURL, err)
+		}
+	}
+
+	if opts.Scenario != nil {
+		if err := opts.Scenario(page); err != nil {
+			return "", err
+		}
+	}
+
+	if _, err := page.Screenshot(playwright.PageScreenshotOptions{
+		Path:       playwright.String(outputPath),
+		FullPage:   playwright.Bool(opts.FullPage),
+		Type:       playwright.ScreenshotTypePng,
+		Animations: playwright.ScreenshotAnimationsDisabled,
+		Caret:      playwright.ScreenshotCaretHide,
+		Scale:      playwright.ScreenshotScaleCss,
+	}); err != nil {
+		return "", fmt.Errorf("capture screenshot: %w", err)
+	}
+
+	return outputPath, nil
+}
+
+func RunGIFScenario(opts GIFScenarioOptions) (GIFExampleResult, error) {
+	opts = withGIFScenarioDefaults(opts)
+	var err error
+	opts.Variant, err = normalizeVariant(opts.Variant)
+	if err != nil {
+		return GIFExampleResult{}, fmt.Errorf("normalize capture variant: %w", err)
+	}
+
+	ffmpegPath, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		return GIFExampleResult{}, fmt.Errorf("ffmpeg not found in PATH; install ffmpeg for GIF generation")
+	}
+	gifsiclePath, _ := exec.LookPath("gifsicle")
+
+	gifPath, err := buildOutputPath(opts.Common.OutDir, opts.OutputName)
+	if err != nil {
+		return GIFExampleResult{}, err
+	}
+
+	browser, cleanup, err := newBrowser(opts.Common)
+	if err != nil {
+		return GIFExampleResult{}, err
+	}
+	defer cleanup()
+
+	tempDir, err := os.MkdirTemp("", "conference-tool-docs-gif-*")
+	if err != nil {
+		return GIFExampleResult{}, fmt.Errorf("create temporary directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+	tempVideoPath := filepath.Join(tempDir, "capture.webm")
+
+	ctx, err := newContext(browser, opts.Common, opts.Variant, tempDir)
+	if err != nil {
+		return GIFExampleResult{}, err
+	}
+	contextClosed := false
+	defer func() {
+		if !contextClosed {
+			_ = ctx.Close()
+		}
+	}()
+
+	page, err := ctx.NewPage()
+	if err != nil {
+		return GIFExampleResult{}, fmt.Errorf("create page: %w", err)
+	}
+	video := page.Video()
+	if video == nil {
+		return GIFExampleResult{}, fmt.Errorf("playwright video recording unavailable")
+	}
+
+	if strings.TrimSpace(opts.InitialPath) != "" {
+		targetURL, err := resolveURL(opts.Common.BaseURL, opts.InitialPath)
+		if err != nil {
+			return GIFExampleResult{}, err
+		}
+		if _, err := page.Goto(targetURL, playwright.PageGotoOptions{WaitUntil: playwright.WaitUntilStateLoad}); err != nil {
+			return GIFExampleResult{}, fmt.Errorf("navigate to %q: %w", targetURL, err)
+		}
+		if err := page.Locator("body").WaitFor(); err != nil {
+			return GIFExampleResult{}, fmt.Errorf("wait for body on %q: %w", targetURL, err)
+		}
+	}
+
+	if opts.Scenario != nil {
+		if err := opts.Scenario(page); err != nil {
+			return GIFExampleResult{}, err
+		}
+	}
+
+	page.WaitForTimeout(opts.FinalPauseMS)
+
+	if err := ctx.Close(); err != nil {
+		return GIFExampleResult{}, fmt.Errorf("close browser context: %w", err)
+	}
+	contextClosed = true
+
+	if err := video.SaveAs(tempVideoPath); err != nil {
+		return GIFExampleResult{}, fmt.Errorf("save intermediate webm: %w", err)
+	}
+
+	if err := convertWebMToGIF(ffmpegPath, tempVideoPath, gifPath, opts.FPS, opts.ScaleWidth, defaultGIFMaxColors); err != nil {
+		return GIFExampleResult{}, err
+	}
+	if gifsiclePath != "" {
+		if err := optimizeGIFWithGifsicle(gifsiclePath, gifPath, defaultGIFMaxColors, defaultGIFLossy); err != nil {
+			return GIFExampleResult{}, err
+		}
+	}
+
+	return GIFExampleResult{GIFPath: gifPath}, nil
+}
+
 func withScreenshotDefaults(opts ScreenshotExampleOptions) ScreenshotExampleOptions {
 	opts.Common = withCommonDefaults(opts.Common)
 	if opts.Path == "" {
@@ -337,6 +518,31 @@ func withGIFDefaults(opts GIFExampleOptions) GIFExampleOptions {
 	}
 	if opts.TypingDelayMS <= 0 {
 		opts.TypingDelayMS = defaultTypingDelayMS
+	}
+	if opts.FinalPauseMS <= 0 {
+		opts.FinalPauseMS = defaultFinalPauseMS
+	}
+	return opts
+}
+
+func withScreenshotScenarioDefaults(opts ScreenshotScenarioOptions) ScreenshotScenarioOptions {
+	opts.Common = withCommonDefaults(opts.Common)
+	if strings.TrimSpace(opts.OutputName) == "" {
+		opts.OutputName = defaultScreenshotName
+	}
+	return opts
+}
+
+func withGIFScenarioDefaults(opts GIFScenarioOptions) GIFScenarioOptions {
+	opts.Common = withCommonDefaults(opts.Common)
+	if strings.TrimSpace(opts.OutputName) == "" {
+		opts.OutputName = defaultGIFName
+	}
+	if opts.FPS <= 0 {
+		opts.FPS = defaultGIFFPS
+	}
+	if opts.ScaleWidth <= 0 {
+		opts.ScaleWidth = defaultGIFScaleWidth
 	}
 	if opts.FinalPauseMS <= 0 {
 		opts.FinalPauseMS = defaultFinalPauseMS

@@ -105,10 +105,10 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 				<button
 					type="button"
 					class="btn btn-sm btn-square btn-ghost"
-					data-manage-dialog-open
-					aria-controls="moderate-agenda-help-dialog"
-					title="Agenda help"
-					aria-label="Agenda help"
+					title="Open agenda help"
+					aria-label="Open agenda help"
+					hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/03-agenda-management-and-import").DocsPageOOBGetWithQuery(ctx, "", paths.DocsPageOOBGetQueryParams{Heading: "agenda-routes"}) }
+					hx-swap="none"
 				>
 					@Icon(IconHelp, "", "h-4 w-4")
 				</button>
@@ -126,22 +126,6 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 			</div>
 		</div>
 		@ModerateAgendaCompactPartial(input)
-		<dialog id="moderate-agenda-help-dialog" class="modal" data-manage-dialog>
-			<div class="modal-box w-11/12 max-w-2xl">
-				<div class="mb-4 flex items-center justify-between gap-2">
-					<h3 class="text-lg font-semibold">Agenda Panel Help</h3>
-					<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
-				</div>
-				<div class="space-y-2 text-sm text-base-content/80">
-					<p>This panel shows all agenda points in order.</p>
-					<p>The active agenda point is highlighted and drives speakers/tools behavior.</p>
-					<p>Use the settings icon to open the full agenda editor.</p>
-				</div>
-			</div>
-			<form method="dialog" class="modal-backdrop">
-				<button aria-label="Close">close</button>
-			</form>
-		</dialog>
 		<dialog id="moderate-agenda-edit-dialog" class="modal" data-manage-dialog>
 			<div class="modal-box w-11/12 max-w-5xl">
 				<div class="mb-4 flex items-center justify-between gap-2">
@@ -422,10 +406,10 @@ templ ModerateSpeakersCard(input SpeakersListPartialInput) {
 				<button
 					type="button"
 					class="btn btn-sm btn-square btn-ghost"
-					data-manage-dialog-open
-					aria-controls="moderate-speakers-help-dialog"
-					title="Speakers help"
-					aria-label="Speakers help"
+					title="Open speakers help"
+					aria-label="Open speakers help"
+					hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/05-speakers-moderator-and-quotation").DocsPageOOBGetWithQuery(ctx, "", paths.DocsPageOOBGetQueryParams{Heading: "speaker-routes"}) }
+					hx-swap="none"
 				>
 					@Icon(IconHelp, "", "h-4 w-4")
 				</button>
@@ -438,22 +422,6 @@ templ ModerateSpeakersCard(input SpeakersListPartialInput) {
 			>
 				@ModerateSpeakersContent(input)
 			</div>
-			<dialog id="moderate-speakers-help-dialog" class="modal" data-manage-dialog>
-				<div class="modal-box w-11/12 max-w-2xl">
-					<div class="mb-4 flex items-center justify-between gap-2">
-						<h3 class="text-lg font-semibold">Speakers Panel Help</h3>
-						<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
-					</div>
-					<div class="space-y-2 text-sm text-base-content/80">
-						<p>This list is the speaking queue for the active agenda point.</p>
-						<p>Use quick controls to start the next speaker or end the current one.</p>
-						<p>Row action buttons let you prioritize, start/stop, or remove entries.</p>
-					</div>
-				</div>
-				<form method="dialog" class="modal-backdrop">
-					<button aria-label="Close">close</button>
-				</form>
-			</dialog>
 		</div>
 	</section>
 }
@@ -478,10 +446,10 @@ templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
 					<button
 						type="button"
 						class="btn btn-sm btn-square btn-ghost join-item border-base-300"
-						data-manage-dialog-open
-						aria-controls="moderate-add-speaker-help-dialog"
-						title="Add speaker help"
-						aria-label="Add speaker help"
+						title="Open add-speaker help"
+						aria-label="Open add-speaker help"
+						hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/05-speakers-moderator-and-quotation").DocsPageOOBGetWithQuery(ctx, "", paths.DocsPageOOBGetQueryParams{Heading: "speaker-routes"}) }
+						hx-swap="none"
 					>
 						@Icon(IconHelp, "", "h-4 w-4")
 					</button>
@@ -490,22 +458,6 @@ templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
 			<div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1">
 				@SpeakerAddCandidatesPartial(speakers)
 			</div>
-			<dialog id="moderate-add-speaker-help-dialog" class="modal" data-manage-dialog>
-				<div class="modal-box w-11/12 max-w-2xl">
-					<div class="mb-4 flex items-center justify-between gap-2">
-						<h3 class="text-lg font-semibold">Add Speaker Help</h3>
-						<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
-					</div>
-					<div class="space-y-2 text-sm text-base-content/80">
-						<p>Search by attendee number or name to filter candidates.</p>
-						<p>Press Enter in the search field to add the top regular candidate.</p>
-						<p>Use the row buttons to add either a regular speech or a rules-of-procedure speech.</p>
-					</div>
-				</div>
-				<form method="dialog" class="modal-backdrop">
-					<button aria-label="Close">close</button>
-				</form>
-			</dialog>
 		</div>
 	</section>
 }

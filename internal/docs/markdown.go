@@ -9,6 +9,8 @@ import (
 	"strings"
 	"unicode"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/parser"
@@ -72,11 +74,16 @@ func loadDocuments(contentFS fs.FS) (map[string]map[string]*document, error) {
 }
 
 func parseLocalizedMarkdown(sourcePath, logicalPath, locale string, source []byte) (*document, error) {
+	titles, markdownBody, err := extractTitleFrontMatter(source)
+	if err != nil {
+		return nil, err
+	}
+
 	md := goldmark.New(
 		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
 	)
 
-	root := md.Parser().Parse(text.NewReader(source))
+	root := md.Parser().Parse(text.NewReader(markdownBody))
 
 	type headingRef struct {
 		node *ast.Heading
@@ -88,14 +95,14 @@ func parseLocalizedMarkdown(sourcePath, logicalPath, locale string, source []byt
 	mediaSet := make(map[string]bool)
 	mediaKeys := make([]string, 0)
 
-	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+	err = ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
 			return ast.WalkContinue, nil
 		}
 
 		heading, ok := node.(*ast.Heading)
 		if ok {
-			title := strings.TrimSpace(extractText(node, source))
+			title := strings.TrimSpace(extractText(node, markdownBody))
 			if title == "" {
 				title = "section"
 			}
@@ -147,7 +154,7 @@ func parseLocalizedMarkdown(sourcePath, logicalPath, locale string, source []byt
 		}
 		switch n := node.(type) {
 		case *ast.Text:
-			textChunk := strings.TrimSpace(string(n.Segment.Value(source)))
+			textChunk := strings.TrimSpace(string(n.Segment.Value(markdownBody)))
 			if textChunk != "" {
 				if sections[currentSection].Text != "" {
 					sections[currentSection].Text += " "
@@ -155,7 +162,7 @@ func parseLocalizedMarkdown(sourcePath, logicalPath, locale string, source []byt
 				sections[currentSection].Text += textChunk
 			}
 		case *ast.CodeSpan:
-			textChunk := strings.TrimSpace(string(n.Text(source)))
+			textChunk := strings.TrimSpace(string(n.Text(markdownBody)))
 			if textChunk != "" {
 				if sections[currentSection].Text != "" {
 					sections[currentSection].Text += " "
@@ -167,26 +174,62 @@ func parseLocalizedMarkdown(sourcePath, logicalPath, locale string, source []byt
 	})
 
 	var rendered bytes.Buffer
-	if err := md.Renderer().Render(&rendered, source, root); err != nil {
+	if err := md.Renderer().Render(&rendered, markdownBody, root); err != nil {
 		return nil, fmt.Errorf("render markdown to html: %w", err)
 	}
 
-	title := path.Base(logicalPath)
-	for _, section := range sections {
-		if section.Level == 1 {
-			title = section.Title
-			break
-		}
+	title := strings.TrimSpace(titles[locale])
+	if title == "" {
+		title = strings.TrimSpace(titles[DefaultLocale])
+	}
+	if title == "" {
+		title = path.Base(logicalPath)
 	}
 
 	return &document{
 		Path:         logicalPath,
 		Locale:       locale,
 		Title:        title,
+		Titles:       titles,
 		HTMLTemplate: rendered.String(),
 		Sections:     sections,
 		MediaKeys:    mediaKeys,
 	}, nil
+}
+
+func extractTitleFrontMatter(source []byte) (map[string]string, []byte, error) {
+	normalized := string(source)
+	normalized = strings.TrimPrefix(normalized, "\ufeff")
+	normalized = strings.ReplaceAll(normalized, "\r\n", "\n")
+
+	const marker = "---\n"
+	if !strings.HasPrefix(normalized, marker) {
+		return nil, nil, fmt.Errorf("missing YAML frontmatter with title-en/title-de")
+	}
+
+	remaining := normalized[len(marker):]
+	frontmatterEnd := strings.Index(remaining, "\n---\n")
+	if frontmatterEnd < 0 {
+		return nil, nil, fmt.Errorf("unterminated YAML frontmatter")
+	}
+
+	var raw map[string]any
+	if err := yaml.Unmarshal([]byte(remaining[:frontmatterEnd]), &raw); err != nil {
+		return nil, nil, fmt.Errorf("invalid YAML frontmatter: %w", err)
+	}
+
+	titles := map[string]string{
+		"en": strings.TrimSpace(fmt.Sprintf("%v", raw["title-en"])),
+		"de": strings.TrimSpace(fmt.Sprintf("%v", raw["title-de"])),
+	}
+	for _, locale := range []string{"en", "de"} {
+		if titles[locale] == "" || titles[locale] == "<nil>" {
+			return nil, nil, fmt.Errorf("frontmatter must include non-empty title-%s", locale)
+		}
+	}
+
+	body := remaining[frontmatterEnd+len("\n---\n"):]
+	return titles, []byte(body), nil
 }
 
 func extractText(node ast.Node, source []byte) string {

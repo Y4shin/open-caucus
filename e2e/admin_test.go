@@ -200,8 +200,9 @@ func TestAdminDeleteUser(t *testing.T) {
 		}
 	})
 
-	// Click Delete for the specific user row
-	deleteBtn := page.Locator("tr").Filter(playwright.LocatorFilterOptions{HasText: "todelete"}).Locator("button[type=submit]")
+	// Click Delete for the specific user row.
+	// The row has both "Save" and "Remove" submit buttons, so target by label.
+	deleteBtn := page.Locator("tr").Filter(playwright.LocatorFilterOptions{HasText: "todelete"}).Locator("button:has-text('Remove')")
 	if err := deleteBtn.Click(); err != nil {
 		t.Fatalf("click delete: %v", err)
 	}

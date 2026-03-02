@@ -19,6 +19,7 @@ type Service struct {
 	assets  map[string][]assetCandidate
 	assetsF fs.FS
 	index   bleve.Index
+	tree    *treeDirNode
 }
 
 func Load(contentFS fs.FS, assetsFS fs.FS) (*Service, error) {
@@ -34,6 +35,10 @@ func Load(contentFS fs.FS, assetsFS fs.FS) (*Service, error) {
 	if len(docs) == 0 {
 		return nil, fmt.Errorf("no localized markdown files found")
 	}
+	tree, err := buildNavigationTree(docs)
+	if err != nil {
+		return nil, fmt.Errorf("validate docs structure: %w", err)
+	}
 
 	index, err := buildIndex(docs)
 	if err != nil {
@@ -45,6 +50,7 @@ func Load(contentFS fs.FS, assetsFS fs.FS) (*Service, error) {
 		assets:  assetCatalog,
 		assetsF: assetsFS,
 		index:   index,
+		tree:    tree,
 	}, nil
 }
 
@@ -59,16 +65,11 @@ func (s *Service) Render(ref DocRef, variant VariantContext) (RenderedDoc, error
 	if s == nil {
 		return RenderedDoc{}, ErrNotFound
 	}
-	pathKey, err := normalizeLogicalPath(ref.Path)
+	_, localized, err := s.resolveDocument(ref.Path)
 	if err != nil {
 		return RenderedDoc{}, ErrNotFound
 	}
 	ref.Heading = normalizeHeading(ref.Heading)
-
-	localized, ok := s.docs[pathKey]
-	if !ok {
-		return RenderedDoc{}, ErrNotFound
-	}
 
 	v := normalizeVariant(variant)
 	doc := localized[v.Language]
@@ -100,6 +101,28 @@ func (s *Service) Render(ref DocRef, variant VariantContext) (RenderedDoc, error
 		HTML:     html,
 		Sections: append([]Section(nil), doc.Sections...),
 	}, nil
+}
+
+func (s *Service) resolveDocument(rawPath string) (string, map[string]*document, error) {
+	if s == nil {
+		return "", nil, ErrNotFound
+	}
+	pathKey, err := normalizeLogicalPath(rawPath)
+	if err != nil {
+		return "", nil, ErrNotFound
+	}
+	localized, ok := s.docs[pathKey]
+	if ok {
+		return pathKey, localized, nil
+	}
+	if pathKey != "index" {
+		indexPath := path.Join(pathKey, "index")
+		localized, ok = s.docs[indexPath]
+		if ok {
+			return indexPath, localized, nil
+		}
+	}
+	return "", nil, ErrNotFound
 }
 
 func (s *Service) ResolveAsset(normalizedKey string, variant VariantContext) (string, error) {

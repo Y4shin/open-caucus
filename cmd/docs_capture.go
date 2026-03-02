@@ -90,8 +90,8 @@ func newDocsCaptureRunCmd(commonOptions func() docscapture.CommonOptions) *cobra
 		Long: `Run one or more capture scripts in isolated self-hosted environments.
 Each selected script is executed for each selected (theme, language, device) variant.`,
 		Example: fmt.Sprintf(
-			`  %s docs-capture run --script "example.*" --theme light --language en --device desktop
-  %s docs-capture run --script "*.gif-*" --theme light,dark --language english,german --device desktop,mobile`,
+			`  %s docs-capture run --script "app.screenshot-*" --theme light --language en --device desktop
+  %s docs-capture run --script "app.gif-*" --theme light,dark --language english,german --device desktop,mobile`,
 			rootCmd.Use,
 			rootCmd.Use,
 		),

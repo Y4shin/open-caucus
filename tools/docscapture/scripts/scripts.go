@@ -20,9 +20,19 @@ type EnvironmentOptions = docscapture.EnvironmentOptions
 
 func All() []Script {
 	return []Script{
-		exampleScreenshotAdminLoginScript(),
-		exampleScreenshotAdminLoginOAuthScript(),
-		exampleGIFLoginFlowScript(),
+		appScreenshotHomeCommitteesScript(),
+		appScreenshotCommitteeDashboardChairScript(),
+		appScreenshotCommitteeDashboardMemberActiveScript(),
+		appScreenshotModerateOverviewScript(),
+		appScreenshotAgendaToolsAttachmentsScript(),
+		appScreenshotLiveViewWithSpeakersScript(),
+		appScreenshotJoinPageMemberScript(),
+		appScreenshotGuestSignupFormScript(),
+		appScreenshotAttendeeLoginScript(),
+		appScreenshotReceiptsVaultScript(),
+		appGIFMemberJoinToLiveScript(),
+		appGIFSpeakerLifecycleModerateToLiveScript(),
+		appGIFVoteLifecycleOpenAndSecretScript(),
 	}
 }
 

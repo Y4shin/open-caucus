@@ -97,6 +97,11 @@ func TestMeetingJoinSubmit_CreatesAttendeeSession(t *testing.T) {
 	ts.seedUser(t, "test-committee", "member1", "pass123", "Alice Member", "member")
 	ts.seedMeeting(t, "test-committee", "Members Only", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Members Only")
+	activeMeetingID := int64(0)
+	fmt.Sscanf(meetingID, "%d", &activeMeetingID)
+	if err := ts.repo.SetActiveMeeting(context.Background(), "test-committee", &activeMeetingID); err != nil {
+		t.Fatalf("set active meeting: %v", err)
+	}
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")

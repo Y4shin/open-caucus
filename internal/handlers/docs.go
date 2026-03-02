@@ -14,6 +14,7 @@ import (
 )
 
 func (h *Handler) buildDocsElementInput(ctx context.Context, r *http.Request, docPath, heading string) (*templates.DocsElementInput, error) {
+	variant := docs.VariantFromRequest(ctx, r)
 	input := &templates.DocsElementInput{
 		Path:  docPath,
 		Title: "Documentation",
@@ -23,7 +24,20 @@ func (h *Handler) buildDocsElementInput(ctx context.Context, r *http.Request, do
 		return input, nil
 	}
 
-	rendered, err := h.DocsService.Render(docs.DocRef{Path: docPath, Heading: heading}, docs.VariantFromRequest(ctx, r))
+	if navigation, err := h.DocsService.Navigation(docPath, variant.Language); err == nil {
+		input.PathDisplay = navigation.PathDisplay
+		input.PathCrumbs = make([]templates.DocsPathCrumb, 0, len(navigation.Crumbs))
+		for _, crumb := range navigation.Crumbs {
+			input.PathCrumbs = append(input.PathCrumbs, templates.DocsPathCrumb{
+				Title:   crumb.Title,
+				Path:    crumb.Path,
+				Current: crumb.Current,
+			})
+		}
+		input.Tree = mapDocsNavigationNodes(navigation.Nodes)
+	}
+
+	rendered, err := h.DocsService.Render(docs.DocRef{Path: docPath, Heading: heading}, variant)
 	if err != nil {
 		if errors.Is(err, docs.ErrNotFound) {
 			input.NotFound = true
@@ -38,6 +52,20 @@ func (h *Handler) buildDocsElementInput(ctx context.Context, r *http.Request, do
 	input.Heading = rendered.Heading
 	input.Body = templates.RawHTML{HTML: rendered.HTML}
 	return input, nil
+}
+
+func mapDocsNavigationNodes(nodes []docs.NavNode) []templates.DocsTreeNode {
+	out := make([]templates.DocsTreeNode, 0, len(nodes))
+	for _, node := range nodes {
+		out = append(out, templates.DocsTreeNode{
+			Title:    node.Title,
+			Path:     node.Path,
+			Current:  node.Current,
+			Expanded: node.Expanded,
+			Children: mapDocsNavigationNodes(node.Children),
+		})
+	}
+	return out
 }
 
 func (h *Handler) DocsPage(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.DocsElementInput, *routes.ResponseMeta, error) {
