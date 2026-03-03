@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -27,6 +28,7 @@ const (
 // Config controls the local OIDC development server.
 type Config struct {
 	IssuerURL    string
+	ListenAddr   string
 	ClientID     string
 	ClientSecret string
 	RedirectURL  string
@@ -45,9 +47,11 @@ type Config struct {
 // Local OIDC dev variables:
 //   - OIDC_DEV_USERS_FILE (default: dev/users.yaml)
 //   - OIDC_DEV_GROUPS_CLAIM (default: groups)
+//   - OIDC_DEV_LISTEN_ADDR (optional; defaults to host:port from OAUTH_ISSUER_URL)
 func LoadConfigFromEnv() (Config, error) {
 	cfg := Config{
 		IssuerURL:    strings.TrimSpace(os.Getenv("OAUTH_ISSUER_URL")),
+		ListenAddr:   strings.TrimSpace(os.Getenv("OIDC_DEV_LISTEN_ADDR")),
 		ClientID:     strings.TrimSpace(os.Getenv("OAUTH_CLIENT_ID")),
 		ClientSecret: strings.TrimSpace(os.Getenv("OAUTH_CLIENT_SECRET")),
 		RedirectURL:  strings.TrimSpace(os.Getenv("OAUTH_REDIRECT_URL")),
@@ -78,6 +82,11 @@ func LoadConfigFromEnv() (Config, error) {
 	if err := validateAbsoluteURL(cfg.RedirectURL, "OAUTH_REDIRECT_URL"); err != nil {
 		return Config{}, err
 	}
+	if cfg.ListenAddr != "" {
+		if err := validateListenAddr(cfg.ListenAddr); err != nil {
+			return Config{}, err
+		}
+	}
 	return cfg, nil
 }
 
@@ -101,9 +110,13 @@ func Run(ctx context.Context, cfg Config) error {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	router := exampleop.SetupServer(cfg.IssuerURL, storage, logger, true)
 
-	addr, err := listenAddrFromIssuer(cfg.IssuerURL)
-	if err != nil {
-		return err
+	addr := cfg.ListenAddr
+	if addr == "" {
+		var err error
+		addr, err = listenAddrFromIssuer(cfg.IssuerURL)
+		if err != nil {
+			return err
+		}
 	}
 
 	server := &http.Server{
@@ -324,6 +337,20 @@ func validateAbsoluteURL(raw, envName string) error {
 	}
 	if u.Scheme == "" || u.Host == "" {
 		return fmt.Errorf("%s must be an absolute URL", envName)
+	}
+	return nil
+}
+
+func validateListenAddr(raw string) error {
+	host, port, err := net.SplitHostPort(raw)
+	if err != nil {
+		return fmt.Errorf("OIDC_DEV_LISTEN_ADDR invalid: %w", err)
+	}
+	if strings.TrimSpace(host) == "" {
+		return fmt.Errorf("OIDC_DEV_LISTEN_ADDR host is required")
+	}
+	if strings.TrimSpace(port) == "" {
+		return fmt.Errorf("OIDC_DEV_LISTEN_ADDR port is required")
 	}
 	return nil
 }

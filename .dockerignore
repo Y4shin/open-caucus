@@ -1,0 +1,10 @@
+.git
+.direnv
+.vscode
+tmp
+node_modules
+conference-tool.exe
+conference-tool
+conference.db
+coverage.out
+coverage.html

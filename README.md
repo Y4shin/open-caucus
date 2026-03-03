@@ -303,8 +303,16 @@ Local interactive OIDC provider:
 1. Generate users file: `task oidc-dev:generate-users`.
 2. Configure shared OAuth env vars in `.env` if needed (`OAUTH_ISSUER_URL`, `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `OAUTH_REDIRECT_URL`).
 3. Configure `OIDC_DEV_USERS_FILE` if needed (default `dev/users.yaml`).
-4. Start provider: `task run:oidc-dev`.
+   Optional: set `OIDC_DEV_LISTEN_ADDR` if you need OIDC to bind a different address than the issuer host:port.
+4. Start provider: `task oidc-dev:run`.
 5. Start app with same `.env`: `task run` or `task dev`.
+
+Docker alternatives:
+
+- Linux host networking: `task docker:up` (or `docker compose up --build app oidc`)
+- Docker Desktop-compatible: `task docker:up:desktop` (or `docker compose -f docker-compose.desktop.yml up --build app oidc`)
+
+Compose runs a one-shot `setup` service first (`populate-env` + `generate-users --force`), then starts OIDC and app together.
 
 By default, generated env uses `OAUTH_ADMIN_GROUP=ca-admin`, and generated users include Alice in `ca-admin` and `committee-a-chair`.
 

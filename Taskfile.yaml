@@ -39,6 +39,35 @@ tasks:
     cmds:
       - go run {{.MAIN_PATH}} oidc-dev generate-users {{.CLI_ARGS}}
 
+  run:with-oidc:
+    desc: Populate local env, generate OIDC users config, then run OIDC provider and app together
+    cmds:
+      - task: env:populate
+      - task: oidc-dev:generate-users
+        vars:
+          CLI_ARGS: --force
+      - task --parallel oidc-dev:run run
+
+  docker:up:
+    desc: Start app + local OIDC in Docker Compose (includes setup bootstrap)
+    cmds:
+      - docker compose up --build app oidc
+
+  docker:down:
+    desc: Stop Docker Compose services and remove orphan containers
+    cmds:
+      - docker compose down --remove-orphans
+
+  docker:up:desktop:
+    desc: Start app + local OIDC with Docker Desktop-compatible compose
+    cmds:
+      - docker compose -f docker-compose.desktop.yml up --build app oidc
+
+  docker:down:desktop:
+    desc: Stop Docker Desktop-compatible compose services and remove orphan containers
+    cmds:
+      - docker compose -f docker-compose.desktop.yml down --remove-orphans
+
   build:
     desc: Build the application
     deps: [generate]

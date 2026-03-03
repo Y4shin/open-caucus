@@ -1,0 +1,51 @@
+# This compose setup uses host networking so the existing local OIDC defaults
+# (127.0.0.1:8080 and 127.0.0.1:9096) work for both browser and containers.
+# Host networking is Linux-oriented; adjust networking/env if running on Docker Desktop.
+services:
+  setup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command:
+      - sh
+      - -lc
+      - conference-tool oidc-dev populate-env && conference-tool oidc-dev generate-users --force
+    restart: "no"
+
+  oidc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["oidc-dev", "serve"]
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9096/.well-known/openid-configuration >/dev/null || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 2s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: host
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["serve"]
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+      oidc:
+        condition: service_healthy

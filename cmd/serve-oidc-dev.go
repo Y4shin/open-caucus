@@ -29,8 +29,9 @@ Required shared env vars:
   OAUTH_REDIRECT_URL
 
 OIDC dev server env vars:
-  OIDC_DEV_USERS_FILE   (default: dev/oidc-users.yaml)
+  OIDC_DEV_USERS_FILE   (default: dev/users.yaml)
   OIDC_DEV_GROUPS_CLAIM (default: groups)
+  OIDC_DEV_LISTEN_ADDR  (optional; e.g. 0.0.0.0:9096)
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if _, err := os.Stat(".env"); err == nil {
