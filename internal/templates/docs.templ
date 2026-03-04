@@ -139,6 +139,9 @@ templ DocsElement(input DocsElementInput) {
 	<section
 		id="app-docs-target"
 		class="fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]"
+		hx-boost="true"
+		hx-target="#app-docs-target"
+		hx-swap="outerHTML"
 		data-docs-open="1"
 	>
 		<button
@@ -160,6 +163,9 @@ templ DocsElementOOB(input DocsElementInput) {
 		id="app-docs-target"
 		class="fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]"
 		hx-swap-oob="outerHTML"
+		hx-boost="true"
+		hx-target="#app-docs-target"
+		hx-swap="outerHTML"
 		data-docs-open="1"
 	>
 		<button
@@ -224,7 +230,7 @@ templ DocsElementContent(input DocsElementInput) {
 	} else if input.NotFound {
 		<p class="mt-3 text-sm text-warning">Document not found.</p>
 	} else if input.Body != nil {
-		<div class="mt-4 space-y-2 text-sm">
+		<div class="docs-markdown mt-4">
 			@input.Body
 		</div>
 	}

@@ -7,21 +7,22 @@ title-de: Abstimmungsmoderation offen und geheim
 
 ![Vote lifecycle gif](../../assets/captures/app-vote-lifecycle-open-and-secret.en.light.desktop.gif)
 
-## Moderator routes
+## Vote Lifecycle
 
-- Create vote draft: `POST /committee/{slug}/meeting/{meeting_id}/votes/create`
-- Update draft: `POST .../votes/{vote_id}/update-draft`
-- Open vote: `POST .../votes/{vote_id}/open`
-- Close vote: `POST .../votes/{vote_id}/close`
-- Archive vote: `POST .../votes/{vote_id}/archive`
+1. Create a draft vote.
+2. Confirm options and limits.
+3. Open the vote.
+4. Monitor submissions.
+5. Close the vote.
+6. Archive once finalized.
 
-## Counting routes
+## Open vs Secret Handling
 
-- Register cast (secret flow): `POST .../votes/{vote_id}/cast/register`
-- Count secret ballot: `POST .../votes/{vote_id}/ballot/secret`
-- Count open ballot: `POST .../votes/{vote_id}/ballot/open`
+- **Open votes** are entered directly by attendee choice.
+- **Secret votes** require cast registration and counting steps.
 
-## Attendee submission routes
+## Moderator Checklist
 
-- Open ballot submit: `POST .../votes/{vote_id}/submit/open`
-- Secret ballot submit: `POST .../votes/{vote_id}/submit/secret`
+- Confirm vote text before opening.
+- Announce when voting opens and closes.
+- Do not archive until results are reviewed.

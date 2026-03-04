@@ -5,21 +5,19 @@ title-de: Zugriff und Rollen
 
 # Access and Roles
 
-## Role overview
+## Roles at a Glance
 
-- `admin`: global administration, accounts, committees, OAuth rules.
-- `chairperson`: committee management, meeting moderation, agenda and vote control.
-- `member`: committee participation and member join flow.
-- `guest attendee`: joins through meeting guest signup and access code login.
+- **Chairperson** runs the meeting: agenda, speaking order, voting, and attendee support.
+- **Member** joins committee meetings and participates from the live page.
+- **Guest attendee** joins through the meeting join page and receives an access code.
+- **Admin** manages platform-level setup (accounts, committees, and policies).
 
-## Entry routes
+## Typical Entry Points
 
-- Admin login: `/admin/login`
-- User login: `/`
-- Committee dashboard: `/committee/{slug}`
-- Join page: `/committee/{slug}/meeting/{meeting_id}/join`
-- Attendee login: `/committee/{slug}/meeting/{meeting_id}/attendee-login`
+- Chairpersons and members sign in from the main login page.
+- Guests join from a meeting join page shared by the chairperson.
+- Attendees who already have a code use the attendee login page.
 
-## Access enforcement
+## Practical Rule
 
-Unauthorized route access returns `403` or redirects to login, depending on route middleware and session state.
+If an action is not visible for your role, use the workflow for your assigned role instead of trying another page.

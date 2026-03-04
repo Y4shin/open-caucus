@@ -3,9 +3,9 @@ title-en: Chairperson
 title-de: Sitzungsleitung
 ---
 
-# Chairperson
+# Chairperson Guide
 
-Chairperson pages cover meeting control, moderation, agenda flow, attendees, speakers, attachments, and votes.
+This section explains how to run a meeting from setup to close.
 
 ## Pages
 

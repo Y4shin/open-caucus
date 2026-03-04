@@ -324,7 +324,7 @@ func DocsElement(input DocsElementInput) templ.Component {
 			templ_7745c5c3_Var11 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<section id=\"app-docs-target\" class=\"fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]\" data-docs-open=\"1\"><button type=\"button\" class=\"absolute inset-0 bg-neutral-950/70 md:hidden\" aria-label=\"Close documentation\" data-docs-close></button><div class=\"absolute inset-x-0 bottom-0 flex h-[67dvh] min-h-[22rem] max-h-[90dvh] min-w-0 flex-col rounded-t-2xl border border-base-300 bg-base-100 shadow-2xl md:relative md:inset-auto md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:border-l md:border-base-300\"><div class=\"min-h-0 flex-1 overflow-y-auto p-4 md:p-5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<section id=\"app-docs-target\" class=\"fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]\" hx-boost=\"true\" hx-target=\"#app-docs-target\" hx-swap=\"outerHTML\" data-docs-open=\"1\"><button type=\"button\" class=\"absolute inset-0 bg-neutral-950/70 md:hidden\" aria-label=\"Close documentation\" data-docs-close></button><div class=\"absolute inset-x-0 bottom-0 flex h-[67dvh] min-h-[22rem] max-h-[90dvh] min-w-0 flex-col rounded-t-2xl border border-base-300 bg-base-100 shadow-2xl md:relative md:inset-auto md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:border-l md:border-base-300\"><div class=\"min-h-0 flex-1 overflow-y-auto p-4 md:p-5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -361,7 +361,7 @@ func DocsElementOOB(input DocsElementInput) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<section id=\"app-docs-target\" class=\"fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]\" hx-swap-oob=\"outerHTML\" data-docs-open=\"1\"><button type=\"button\" class=\"absolute inset-0 bg-neutral-950/70 md:hidden\" aria-label=\"Close documentation\" data-docs-close></button><div class=\"absolute inset-x-0 bottom-0 flex h-[67dvh] min-h-[22rem] max-h-[90dvh] min-w-0 flex-col rounded-t-2xl border border-base-300 bg-base-100 shadow-2xl md:relative md:inset-auto md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:border-l md:border-base-300\"><div class=\"min-h-0 flex-1 overflow-y-auto p-4 md:p-5\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<section id=\"app-docs-target\" class=\"fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]\" hx-swap-oob=\"outerHTML\" hx-boost=\"true\" hx-target=\"#app-docs-target\" hx-swap=\"outerHTML\" data-docs-open=\"1\"><button type=\"button\" class=\"absolute inset-0 bg-neutral-950/70 md:hidden\" aria-label=\"Close documentation\" data-docs-close></button><div class=\"absolute inset-x-0 bottom-0 flex h-[67dvh] min-h-[22rem] max-h-[90dvh] min-w-0 flex-col rounded-t-2xl border border-base-300 bg-base-100 shadow-2xl md:relative md:inset-auto md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:border-l md:border-base-300\"><div class=\"min-h-0 flex-1 overflow-y-auto p-4 md:p-5\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -405,7 +405,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(input.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 182, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 188, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -418,7 +418,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(docsPathDisplay(input))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 183, Col: 73}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 189, Col: 73}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(input.Locale)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 186, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 192, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -444,7 +444,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(input.SearchURL(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 192, Col: 31}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 198, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -482,7 +482,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 				var templ_7745c5c3_Var19 templ.SafeURL
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(crumb.URL(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 208, Col: 30}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 214, Col: 30}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -508,7 +508,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(crumb.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 208, Col: 129}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 214, Col: 129}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -551,7 +551,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(input.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 223, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 229, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -567,7 +567,7 @@ func DocsElementContent(input DocsElementInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else if input.Body != nil {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<div class=\"mt-4 space-y-2 text-sm\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<div class=\"docs-markdown mt-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -617,7 +617,7 @@ func DocsSearchResults(input DocsSearchResultsInput) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(input.Error)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 236, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 242, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -635,7 +635,7 @@ func DocsSearchResults(input DocsSearchResultsInput) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(input.Query)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 238, Col: 78}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 244, Col: 78}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -658,7 +658,7 @@ func DocsSearchResults(input DocsSearchResultsInput) templ.Component {
 				var templ_7745c5c3_Var26 templ.SafeURL
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinURLErrs(hit.URL(ctx))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 243, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 249, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -671,7 +671,7 @@ func DocsSearchResults(input DocsSearchResultsInput) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(hit.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 243, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 249, Col: 70}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -684,7 +684,7 @@ func DocsSearchResults(input DocsSearchResultsInput) templ.Component {
 				var templ_7745c5c3_Var28 string
 				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(hit.Ref)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 244, Col: 55}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 250, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
@@ -702,7 +702,7 @@ func DocsSearchResults(input DocsSearchResultsInput) templ.Component {
 					var templ_7745c5c3_Var29 string
 					templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(hit.Snippet)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 246, Col: 60}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `docs.templ`, Line: 252, Col: 60}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 					if templ_7745c5c3_Err != nil {

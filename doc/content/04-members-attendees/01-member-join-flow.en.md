@@ -7,15 +7,15 @@ title-de: Mitglieds-Beitrittsablauf
 
 ![Member join to live](../../assets/captures/app-member-join-to-live.en.light.desktop.gif)
 
-## Flow
+## What to Do
 
-1. Member logs in at `/`.
-2. Member opens committee page `/committee/{slug}`.
-3. Member clicks active meeting join button.
-4. Join submit posts to `/committee/{slug}/meeting/{meeting_id}/join`.
-5. Successful signup redirects to live page `/committee/{slug}/meeting/{meeting_id}`.
+1. Sign in with your member account.
+2. Open your committee page.
+3. Use the active meeting join button.
+4. Confirm join.
+5. Continue to the live page.
 
-## Not allowed behavior
+## If Join Is Not Available
 
-- Members cannot join inactive meetings via active-meeting shortcut.
-- Joining without committee membership is blocked by `committee_access` middleware.
+- The meeting may not be active yet.
+- Ask the chairperson whether signup is open.

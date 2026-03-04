@@ -5,20 +5,21 @@ title-de: Tagesordnung und Import
 
 # Agenda Management and Import
 
-## Agenda routes
+Agenda quality drives meeting flow. Keep the list clear and keep the active point accurate.
 
-- Create point: `POST /committee/{slug}/meeting/{meeting_id}/agenda-point/create`
-- Delete point: `POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/delete`
-- Move up/down: `.../move-up` and `.../move-down`
-- Activate point: `.../activate`
+## Day-to-Day Actions
 
-## Import flow
+- Add points for planned discussion items.
+- Reorder items as priorities change.
+- Remove points that are no longer needed.
+- Set the active point to match the current discussion.
 
-- extract proposal: `POST /committee/{slug}/meeting/{meeting_id}/agenda/import/extract`
-- compare diff: `POST /committee/{slug}/meeting/{meeting_id}/agenda/import/diff`
-- apply changes: `POST /committee/{slug}/meeting/{meeting_id}/agenda/import/apply`
+## Import Workflow
 
-## Recommendations
+1. Extract the proposed agenda from your source material.
+2. Review differences before applying.
+3. Apply changes only after confirming order and wording.
 
-- Validate imported structure before apply.
-- Keep active agenda point aligned with live discussion.
+## Practical Tip
+
+After import, verify the active point and attachment context so attendees see the right content.

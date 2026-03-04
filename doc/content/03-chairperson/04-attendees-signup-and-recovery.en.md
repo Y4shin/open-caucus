@@ -5,16 +5,23 @@ title-de: Teilnehmende Signup und Recovery
 
 # Attendees Signup and Recovery
 
-## Attendee management routes
+Use attendee tools to keep participation accurate without creating duplicate records.
 
-- Add attendee: `POST /committee/{slug}/meeting/{meeting_id}/attendee/create`
-- Chairperson self-signup: `POST /committee/{slug}/meeting/{meeting_id}/attendee/self-signup`
-- Remove attendee: `POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/delete`
-- Toggle chair: `POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/chair`
-- Toggle quoted: `POST /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/quoted`
+## Common Tasks
 
-## Recovery support
+- Add attendees manually when needed.
+- Remove accidental or duplicate attendees.
+- Mark chairperson attendance roles correctly.
+- Apply quotation flags as required by your rules.
 
-- Recovery page and QR: `GET /committee/{slug}/meeting/{meeting_id}/attendee/{attendee_id}/recovery`
+## Recovery Flow
 
-Use recovery link/QR when attendees lost their access code but must re-enter without duplicate signup.
+When someone loses their access code:
+
+1. Open attendee recovery for that person.
+2. Share the recovery link/QR directly.
+3. Ask them to re-enter through attendee login.
+
+## Goal
+
+Recover access quickly while preserving one attendee identity per person.

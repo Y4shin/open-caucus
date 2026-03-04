@@ -7,16 +7,14 @@ title-de: Anhänge und aktuelles Dokument
 
 ![Agenda tools attachments](../../assets/captures/app-agenda-tools-attachments.en.light.desktop.png)
 
-## Attachment routes
+Attachments support each agenda point. The current document is what attendees should read now.
 
-- Tools page: `GET /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/tools`
-- Upload attachment: `POST .../attachment/create`
-- Delete attachment: `POST .../attachment/{attachment_id}/delete`
-- Set current document: `POST .../attachment/{attachment_id}/set-current`
-- Clear current document: `POST .../clear-current`
+## Recommended Workflow
 
-## Live document delivery
+1. Upload agenda-specific files with clear labels.
+2. Set one current document for the active discussion.
+3. Change or clear current document when moving topics.
 
-- Current document stream endpoint: `GET /committee/{slug}/meeting/{meeting_id}/current-doc`
+## Communication Tip
 
-The current document is attendee-visible and should always reflect the active discussion item.
+Before opening discussion, tell attendees to refresh their live view if you just switched the current document.

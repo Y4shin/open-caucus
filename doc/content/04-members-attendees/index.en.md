@@ -5,7 +5,7 @@ title-de: Mitglieder und Teilnehmende
 
 # Members and Attendees
 
-This section documents user-facing participation flows.
+This section is for people joining and participating in meetings.
 
 ## Pages
 

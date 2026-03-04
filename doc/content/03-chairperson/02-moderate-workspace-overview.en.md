@@ -7,16 +7,17 @@ title-de: Moderationsoberfläche im Überblick
 
 ![Moderate overview](../../assets/captures/app-moderate-overview.en.light.desktop.png)
 
-## Main route
+The moderate workspace is your control center during the session.
 
-- Moderate page: `/committee/{slug}/meeting/{meeting_id}/moderate`
+## What You Control Here
 
-## Workspace regions
+- Agenda progression and current agenda point
+- Attendee list and emergency corrections
+- Speaker queue and live speaking state
+- Vote setup, opening, closing, and counting
 
-- left controls: agenda, tools, attendees, settings tabs
-- center/right panels: speakers queue, attendee quick add, vote panel
-- SSE updates: `/committee/{slug}/meeting/{meeting_id}/moderate/stream`
+## Suggested Working Pattern
 
-## Operator expectation
-
-Use moderate page for all real-time actions; it is optimized for HTMX partial updates and SSE refresh.
+1. Keep this page open throughout the meeting.
+2. Move through tabs in the order your meeting needs: agenda, attendees, speakers, votes.
+3. Confirm each action in the UI before proceeding to the next one.

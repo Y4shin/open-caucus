@@ -40,7 +40,7 @@
             owner = "hloiseau";
             repo = "mcp-gopls";
             rev = "v${version}";
-            hash = "sha256-ulv6XBD5evNzNfHiPigKW3Ghreia/QZnicaopJmzNKM="; # Update this hash
+            hash = "sha256-6lQPZMysn33yV1+UmA5ucloe0u6Vy4asIWd6u8Qcl4w=";
           };
 
           vendorHash = "sha256-W8hlCGf4QdFbKc3QFc9pa4MWBhnp5A5GvWFNzg0BEhw="; # Update this hash

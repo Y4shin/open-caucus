@@ -5,21 +5,18 @@ title-de: Hilfe-Suche und Dokumentnavigation
 
 # Help Search and Doc Navigation
 
-## Help panel behavior
+## Opening Help
 
-The help element supports:
+Use the **Help** button in the app header/footer to open documentation without leaving your current workspace.
 
-- full-text search via `/docs/search`
-- a tree-based navigation with numbered ordering
-- breadcrumb/path display derived from directory index + page title frontmatter
+## Finding What You Need
 
-## Document structure requirements
+- Use the search box for keywords like *join*, *vote*, *speaker*, or *recovery*.
+- Use the left-side documentation tree for step-by-step browsing.
+- Use breadcrumbs to move back up to broader guides.
 
-- Every directory must provide `index.{en,de}.md`.
-- Every page must include frontmatter keys `title-en` and `title-de`.
-- Missing titles are a startup error and block application boot.
+## Recommended Pattern
 
-## Authoring references
-
-- [Capture Guide](/docs/guides/01-capture)
-- [Document Authoring Standards](/docs/guides/02-document-authoring-standards)
+1. Search by task.
+2. Open the matching page.
+3. Keep help open while performing the steps in the app.

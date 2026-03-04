@@ -5,21 +5,25 @@ title-de: Login- und Sitzungsmodell
 
 # Login and Session Model
 
-## Authentication paths
+## What Users Experience
 
-- Admin credentials submit to `/admin/login`.
-- Committee member credentials submit to `/login` from `/`.
-- Guest attendees authenticate with access code at `/committee/{slug}/meeting/{meeting_id}/attendee-login`.
+- You sign in once and stay in your role-specific workspace.
+- If you are already signed in, opening the login page takes you back to your working area.
+- Signing out returns you to a login screen and clears your active session.
 
-## Session behavior
+## For Members and Chairpersons
 
-- Existing valid sessions skip redundant login pages.
-- Role-bound session context drives visible actions in templates.
-- Logout endpoints:
-  - Admin logout: `/admin/logout`
-  - User/attendee logout: `/logout`
+1. Open the main login page.
+2. Enter username and password.
+3. Continue to your home/committee pages.
 
-## Security expectations
+## For Attendees
 
-- Wrong credentials remain on the same form with an error message.
-- Protected pages without session redirect to the corresponding login flow.
+1. Open attendee login for the meeting.
+2. Enter your access code.
+3. Continue to the live page.
+
+## If Login Fails
+
+- Check for typing errors first.
+- Ask a chairperson for a fresh access code or recovery QR if you are an attendee.

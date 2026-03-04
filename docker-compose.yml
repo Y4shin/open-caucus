@@ -10,9 +10,10 @@ services:
     working_dir: /workspace
     volumes:
       - ./:/workspace
-    command:
+    entrypoint:
       - sh
       - -lc
+    command:
       - conference-tool oidc-dev populate-env && conference-tool oidc-dev generate-users --force
     restart: "no"
 

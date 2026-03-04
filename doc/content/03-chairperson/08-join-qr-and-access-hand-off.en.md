@@ -5,15 +5,21 @@ title-de: Join QR und Zugangsübergabe
 
 # Join QR and Access Hand-Off
 
-## QR-based join support
+Use join QR when onboarding participants in the room.
 
-- Join QR page: `GET /committee/{slug}/meeting/{meeting_id}/moderate/join-qr`
+## Best Use Cases
 
-Use this QR when guests should open the join page with prefilled secret. This reduces typing errors at entry desks.
+- Fast guest intake at entry desks.
+- Reducing typing errors for long meeting links.
+- Helping participants on mobile devices.
 
-## Guest access hand-off
+## Recommended Hand-Off Flow
 
-- Guest signup endpoint: `POST /committee/{slug}/meeting/{meeting_id}/guest`
-- Attendee login page: `GET /committee/{slug}/meeting/{meeting_id}/attendee-login`
+1. Show or share the join QR.
+2. Participant opens join page and signs up.
+3. Participant receives access code.
+4. Participant uses attendee login and reaches the live page.
 
-After signup, attendees receive a unique access code. Treat it as a session credential.
+## Safety Reminder
+
+Treat access codes like temporary meeting credentials.

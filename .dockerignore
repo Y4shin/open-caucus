@@ -8,3 +8,8 @@ conference-tool
 conference.db
 coverage.out
 coverage.html
+internal/routes/static/app.css
+internal/routes/routes_gen.go
+internal/routes/paths/paths_gen.go
+internal/templates/*_templ.go
+internal/repository/sqlite/client/*_generated.go

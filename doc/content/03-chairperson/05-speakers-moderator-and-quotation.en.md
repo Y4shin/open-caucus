@@ -5,18 +5,24 @@ title-de: Redeliste Moderation und Quotierung
 
 # Speakers Moderator and Quotation
 
-## Speaker routes
+Use the speakers area to keep speaking order fair, visible, and auditable.
 
-- Add speaker: `POST /committee/{slug}/meeting/{meeting_id}/speaker/add`
-- Remove: `POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/remove`
-- Start: `POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/start`
-- End: `POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/end`
-- Withdraw: `POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/withdraw`
-- Priority toggle: `POST /committee/{slug}/meeting/{meeting_id}/speaker/{speaker_id}/priority`
+## Live Speaker Management
 
-## Quotation and moderator settings
+- Add speakers to the queue.
+- Start the next speaker at the right time.
+- End or withdraw a speaker when needed.
+- Apply priority only when justified by your procedure.
 
-- Meeting quotation defaults: `POST /committee/{slug}/meeting/{meeting_id}/quotation`
-- Meeting moderator override: `POST /committee/{slug}/meeting/{meeting_id}/moderator`
-- Agenda quotation override: `POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/quotation`
-- Agenda moderator override: `POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/moderator`
+## Moderator and Quotation Controls
+
+- Set meeting-level defaults before debate starts.
+- Override settings per agenda point only when needed.
+- Keep settings stable during active speaking blocks.
+
+## Meeting Rhythm
+
+1. Confirm current speaker.
+2. Start next speaker.
+3. End speaker.
+4. Repeat.

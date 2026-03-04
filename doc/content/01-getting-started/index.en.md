@@ -5,7 +5,7 @@ title-de: Erste Schritte
 
 # Getting Started
 
-This section explains the baseline navigation and authentication model.
+Use this section to understand who does what and how people enter a meeting.
 
 ![Home committees screenshot](../../assets/captures/app-home-committees.en.light.desktop.png)
 

@@ -21,7 +21,7 @@ const (
 	defaultMobileHeight   = 844
 	defaultScreenshotName = "app-capture.png"
 	defaultGIFName        = "app-capture.gif"
-	defaultGIFFPS         = 8
+	defaultGIFFPS         = 12
 	defaultGIFScaleWidth  = 960
 	defaultGIFMaxColors   = 56
 	defaultTypingDelayMS  = 85.0

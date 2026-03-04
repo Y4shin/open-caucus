@@ -7,15 +7,17 @@ title-de: Gremiumsseite und Meeting-Lebenszyklus
 
 ![Chair committee dashboard](../../assets/captures/app-committee-dashboard-chair.en.light.desktop.png)
 
-## Lifecycle actions
+Use the committee dashboard to prepare and control the meeting lifecycle.
 
-- Create meeting: `POST /committee/{slug}/meeting/create`
-- Activate/deactivate meeting: `POST /committee/{slug}/meeting/{meeting_id}/activate`
-- Toggle signup-open: `POST /committee/{slug}/meeting/{meeting_id}/signup-open-toggle`
-- Delete meeting: `POST /committee/{slug}/meeting/{meeting_id}/delete`
+## Standard Sequence
 
-## Practical sequence
+1. Create the meeting with a clear name and short purpose.
+2. Mark exactly one meeting as active when people should join.
+3. Keep signup open only while participants are entering.
+4. Deactivate or close out after the session.
 
-1. Create meeting with a clear name and optional description.
-2. Activate exactly one meeting for member quick join.
-3. Keep signup state aligned with actual in-room policy.
+## Good Operator Habits
+
+- Keep only one active meeting to avoid people joining the wrong room.
+- Review the meeting list before opening signup.
+- Use descriptive meeting names for easier attendee support.

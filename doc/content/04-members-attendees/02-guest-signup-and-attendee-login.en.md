@@ -9,13 +9,18 @@ title-de: Gast-Signup und Attendee-Login
 
 ![Attendee login](../../assets/captures/app-attendee-login.en.light.desktop.png)
 
-## Guest route sequence
+## For First-Time Guests
 
-- Open join page: `GET /committee/{slug}/meeting/{meeting_id}/join`
-- Submit guest form: `POST /committee/{slug}/meeting/{meeting_id}/guest`
-- Enter access code: `POST /committee/{slug}/meeting/{meeting_id}/attendee-login`
+1. Open the meeting join page from the organizer link/QR.
+2. Enter your name and complete signup.
+3. Save the shown access code.
 
-## Recovery and safety
+## Returning to the Meeting
 
-- Use provided access code only for the matching meeting.
-- If the code is lost, chairperson can provide a recovery link/QR from moderate attendee tools.
+1. Open attendee login.
+2. Enter your access code.
+3. Continue to the live page.
+
+## If You Lose the Code
+
+Ask the chairperson for a recovery link/QR.

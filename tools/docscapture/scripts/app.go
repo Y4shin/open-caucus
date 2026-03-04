@@ -12,6 +12,14 @@ import (
 	"github.com/Y4shin/conference-tool/tools/docscapture"
 )
 
+const (
+	gifCursorMoveSteps    = 28
+	gifClickDelayMS       = 130.0
+	gifPauseAfterMoveMS   = 260.0
+	gifPauseAfterClickMS  = 520.0
+	gifPauseAfterActionMS = 720.0
+)
+
 type appFixture struct {
 	CommitteeSlug string
 	MeetingID     int64
@@ -51,6 +59,9 @@ func appScreenshotHomeCommitteesScript() Script {
 					if err := page.Locator("ul.list").First().WaitFor(); err != nil {
 						return fmt.Errorf("wait home committees list: %w", err)
 					}
+					if err := highlight(page, "ul.list"); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -84,6 +95,9 @@ func appScreenshotCommitteeDashboardChairScript() Script {
 					if err := page.Locator("#meeting-list-container").WaitFor(); err != nil {
 						return fmt.Errorf("wait chair committee dashboard: %w", err)
 					}
+					if err := highlight(page, "#meeting-list-container"); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -115,6 +129,9 @@ func appScreenshotCommitteeDashboardMemberActiveScript() Script {
 					}
 					if err := page.Locator("[data-testid='committee-active-meeting-card']").WaitFor(); err != nil {
 						return fmt.Errorf("wait member active meeting card: %w", err)
+					}
+					if err := highlight(page, "[data-testid='committee-join-active-meeting']"); err != nil {
+						return err
 					}
 					return nil
 				},
@@ -149,6 +166,12 @@ func appScreenshotModerateOverviewScript() Script {
 					if err := page.Locator("#moderate-sse-root").WaitFor(); err != nil {
 						return fmt.Errorf("wait moderate root: %w", err)
 					}
+					if err := highlightMany(page, "#moderate-left-controls", "#speakers-list-container"); err != nil {
+						return err
+					}
+					if err := highlightFirstAvailable(page, "#moderate-votes-panel"); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -182,6 +205,17 @@ func appScreenshotAgendaToolsAttachmentsScript() Script {
 					if err := page.Locator("#attachment-list-ap-" + fmt.Sprintf("%d", fixture.AgendaPointID)).WaitFor(); err != nil {
 						return fmt.Errorf("wait attachment list: %w", err)
 					}
+					attachmentContainer := "#attachment-list-ap-" + fmt.Sprintf("%d", fixture.AgendaPointID)
+					if err := highlight(page, attachmentContainer); err != nil {
+						return err
+					}
+					if err := highlightFirstAvailable(
+						page,
+						attachmentContainer+" button:has-text('Clear')",
+						attachmentContainer+" button:has-text('Set as Current')",
+					); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -211,6 +245,9 @@ func appScreenshotLiveViewWithSpeakersScript() Script {
 					}
 					if err := page.Locator("#attendee-speakers-list").WaitFor(); err != nil {
 						return fmt.Errorf("wait attendee speakers panel: %w", err)
+					}
+					if err := highlightMany(page, "#attendee-speakers-list", "#live-votes-panel"); err != nil {
+						return err
 					}
 					return nil
 				},
@@ -245,6 +282,9 @@ func appScreenshotJoinPageMemberScript() Script {
 					if err := page.Locator("form[action$='/join']").First().WaitFor(); err != nil {
 						return fmt.Errorf("wait member join form: %w", err)
 					}
+					if err := highlight(page, "form[action$='/join'] button[type='submit']"); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -274,6 +314,16 @@ func appScreenshotGuestSignupFormScript() Script {
 					}
 					if err := page.Locator("input[name='full_name']").WaitFor(); err != nil {
 						return fmt.Errorf("wait guest signup form: %w", err)
+					}
+					if err := highlight(page, "input[name='full_name']"); err != nil {
+						return err
+					}
+					if err := highlightFirstAvailable(
+						page,
+						"form button[type='submit']",
+						"form input[type='submit']",
+					); err != nil {
+						return err
 					}
 					return nil
 				},
@@ -305,6 +355,16 @@ func appScreenshotAttendeeLoginScript() Script {
 					if err := page.Locator("input[name='secret']").WaitFor(); err != nil {
 						return fmt.Errorf("wait attendee login form: %w", err)
 					}
+					if err := highlight(page, "input[name='secret']"); err != nil {
+						return err
+					}
+					if err := highlightFirstAvailable(
+						page,
+						"form button[type='submit']",
+						"form input[type='submit']",
+					); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -328,6 +388,9 @@ func appScreenshotReceiptsVaultScript() Script {
 					if err := page.Locator("#receipts-refresh").WaitFor(); err != nil {
 						return fmt.Errorf("wait receipts controls: %w", err)
 					}
+					if err := highlightMany(page, "#receipts-refresh", "#receipts-clear", "#receipts-list"); err != nil {
+						return err
+					}
 					return nil
 				},
 			})
@@ -346,14 +409,19 @@ func appGIFMemberJoinToLiveScript() Script {
 			}
 			common.BaseURL = env.BaseURL()
 			result, err := docscapture.RunGIFScenario(docscapture.GIFScenarioOptions{
-				Common:      common,
-				Variant:     variant,
-				InitialPath: "/",
-				OutputName:  appOutputName("app-member-join-to-live", variant, "gif"),
+				Common:       common,
+				Variant:      variant,
+				InitialPath:  "/",
+				OutputName:   appOutputName("app-member-join-to-live", variant, "gif"),
+				FinalPauseMS: 1400,
 				Scenario: func(page playwright.Page) error {
 					if err := loginUser(page, common.BaseURL, fixture.JoinMemberUsername, fixture.JoinMemberPassword); err != nil {
 						return err
 					}
+					if err := ensureGIFCursor(page); err != nil {
+						return err
+					}
+					page.WaitForTimeout(gifPauseAfterMoveMS)
 					if err := gotoPath(page, common.BaseURL, committeePath(fixture)); err != nil {
 						return err
 					}
@@ -361,22 +429,30 @@ func appGIFMemberJoinToLiveScript() Script {
 					if err := joinButton.WaitFor(); err != nil {
 						return fmt.Errorf("wait member active meeting join button: %w", err)
 					}
-					if err := joinButton.Click(); err != nil {
-						return fmt.Errorf("click member active meeting join button: %w", err)
+					if err := highlight(page, "[data-testid='committee-join-active-meeting']"); err != nil {
+						return err
+					}
+					if err := clickLocatorWithCursor(page, joinButton, "member active meeting join button"); err != nil {
+						return err
 					}
 					if err := page.WaitForURL(absoluteURL(common.BaseURL, joinPath(fixture))); err != nil {
 						return fmt.Errorf("wait join page URL: %w", err)
 					}
+					page.WaitForTimeout(gifPauseAfterActionMS)
 					submit := page.Locator("form[action$='/join'] button[type='submit']").First()
 					if err := submit.WaitFor(); err != nil {
 						return fmt.Errorf("wait join submit button: %w", err)
 					}
-					if err := submit.Click(); err != nil {
-						return fmt.Errorf("submit join form: %w", err)
+					if err := highlight(page, "form[action$='/join'] button[type='submit']"); err != nil {
+						return err
+					}
+					if err := clickLocatorWithCursor(page, submit, "join form submit button"); err != nil {
+						return err
 					}
 					if err := page.WaitForURL(absoluteURL(common.BaseURL, livePath(fixture))); err != nil {
 						return fmt.Errorf("wait live page URL after join: %w", err)
 					}
+					page.WaitForTimeout(gifPauseAfterActionMS)
 					return nil
 				},
 			})
@@ -399,14 +475,19 @@ func appGIFSpeakerLifecycleModerateToLiveScript() Script {
 			}
 			common.BaseURL = env.BaseURL()
 			result, err := docscapture.RunGIFScenario(docscapture.GIFScenarioOptions{
-				Common:      common,
-				Variant:     variant,
-				InitialPath: "/",
-				OutputName:  appOutputName("app-speaker-lifecycle-moderate-to-live", variant, "gif"),
+				Common:       common,
+				Variant:      variant,
+				InitialPath:  "/",
+				OutputName:   appOutputName("app-speaker-lifecycle-moderate-to-live", variant, "gif"),
+				FinalPauseMS: 1400,
 				Scenario: func(page playwright.Page) error {
 					if err := loginUser(page, common.BaseURL, fixture.ChairUsername, fixture.ChairPassword); err != nil {
 						return err
 					}
+					if err := ensureGIFCursor(page); err != nil {
+						return err
+					}
+					page.WaitForTimeout(gifPauseAfterMoveMS)
 					if err := gotoPath(page, common.BaseURL, moderatePath(fixture)); err != nil {
 						return err
 					}
@@ -414,16 +495,20 @@ func appGIFSpeakerLifecycleModerateToLiveScript() Script {
 					if err := startNext.WaitFor(); err != nil {
 						return fmt.Errorf("wait start-next-speaker button: %w", err)
 					}
-					if err := startNext.Click(); err != nil {
-						return fmt.Errorf("click start-next-speaker button: %w", err)
+					if err := highlight(page, "[data-testid='manage-start-next-speaker']"); err != nil {
+						return err
 					}
-					page.WaitForTimeout(700)
+					if err := clickLocatorWithCursor(page, startNext, "start-next-speaker button"); err != nil {
+						return err
+					}
+					page.WaitForTimeout(gifPauseAfterActionMS)
 					if err := gotoPath(page, common.BaseURL, livePath(fixture)); err != nil {
 						return err
 					}
 					if err := page.Locator("#attendee-speakers-list").WaitFor(); err != nil {
 						return fmt.Errorf("wait live speakers panel: %w", err)
 					}
+					page.WaitForTimeout(gifPauseAfterActionMS)
 					return nil
 				},
 			})
@@ -446,14 +531,19 @@ func appGIFVoteLifecycleOpenAndSecretScript() Script {
 			}
 			common.BaseURL = env.BaseURL()
 			result, err := docscapture.RunGIFScenario(docscapture.GIFScenarioOptions{
-				Common:      common,
-				Variant:     variant,
-				InitialPath: "/",
-				OutputName:  appOutputName("app-vote-lifecycle-open-and-secret", variant, "gif"),
+				Common:       common,
+				Variant:      variant,
+				InitialPath:  "/",
+				OutputName:   appOutputName("app-vote-lifecycle-open-and-secret", variant, "gif"),
+				FinalPauseMS: 1400,
 				Scenario: func(page playwright.Page) error {
 					if err := loginUser(page, common.BaseURL, fixture.ChairUsername, fixture.ChairPassword); err != nil {
 						return err
 					}
+					if err := ensureGIFCursor(page); err != nil {
+						return err
+					}
+					page.WaitForTimeout(gifPauseAfterMoveMS)
 					if err := gotoPath(page, common.BaseURL, moderatePath(fixture)); err != nil {
 						return err
 					}
@@ -461,9 +551,10 @@ func appGIFVoteLifecycleOpenAndSecretScript() Script {
 					if err := toolsTab.WaitFor(); err != nil {
 						return fmt.Errorf("wait moderate tools tab: %w", err)
 					}
-					if err := toolsTab.Click(); err != nil {
-						return fmt.Errorf("open moderate tools tab: %w", err)
+					if err := clickLocatorWithCursor(page, toolsTab, "moderate tools tab"); err != nil {
+						return err
 					}
+					page.WaitForTimeout(gifPauseAfterMoveMS)
 					panel := page.Locator("#moderate-votes-panel")
 					if err := panel.WaitFor(); err != nil {
 						return fmt.Errorf("wait moderate votes panel: %w", err)
@@ -473,21 +564,27 @@ func appGIFVoteLifecycleOpenAndSecretScript() Script {
 					if err := secretDetails.WaitFor(); err != nil {
 						return fmt.Errorf("wait secret vote accordion: %w", err)
 					}
-					if err := secretDetails.Locator("summary").First().Click(); err != nil {
+					if err := clickLocatorWithCursor(page, secretDetails.Locator("summary").First(), "secret vote accordion"); err != nil {
 						return fmt.Errorf("open secret vote accordion: %w", err)
 					}
 					openButton := secretDetails.Locator("button:has-text('Open Vote')").First()
 					if err := openButton.WaitFor(); err != nil {
 						return fmt.Errorf("wait open vote button: %w", err)
 					}
-					if err := openButton.Click(); err != nil {
+					if err := highlight(page, "button:has-text('Open Vote')"); err != nil {
+						return err
+					}
+					if err := clickLocatorWithCursor(page, openButton, "open vote button"); err != nil {
 						return fmt.Errorf("click open vote button: %w", err)
 					}
 					closeButton := secretDetails.Locator("button:has-text('Close Vote')").First()
 					if err := closeButton.WaitFor(); err != nil {
 						return fmt.Errorf("wait close vote button: %w", err)
 					}
-					if err := closeButton.Click(); err != nil {
+					if err := highlight(page, "button:has-text('Close Vote')"); err != nil {
+						return err
+					}
+					if err := clickLocatorWithCursor(page, closeButton, "close vote button"); err != nil {
 						return fmt.Errorf("click close vote button: %w", err)
 					}
 
@@ -495,10 +592,10 @@ func appGIFVoteLifecycleOpenAndSecretScript() Script {
 					if err := openDetails.WaitFor(); err != nil {
 						return fmt.Errorf("wait open vote accordion: %w", err)
 					}
-					if err := openDetails.Locator("summary").First().Click(); err != nil {
+					if err := clickLocatorWithCursor(page, openDetails.Locator("summary").First(), "open vote accordion"); err != nil {
 						return fmt.Errorf("open open-vote accordion: %w", err)
 					}
-					page.WaitForTimeout(700)
+					page.WaitForTimeout(gifPauseAfterActionMS)
 					return nil
 				},
 			})
@@ -717,4 +814,139 @@ func absoluteURL(baseURL, p string) string {
 		return base + p
 	}
 	return base + "/" + p
+}
+
+func highlight(page playwright.Page, selector string) error {
+	return highlightMany(page, selector)
+}
+
+func highlightFirstAvailable(page playwright.Page, selectors ...string) error {
+	var lastErr error
+	for _, selector := range selectors {
+		selector = strings.TrimSpace(selector)
+		if selector == "" {
+			continue
+		}
+		if err := highlight(page, selector); err == nil {
+			return nil
+		} else {
+			lastErr = err
+		}
+	}
+	_ = lastErr
+	return nil
+}
+
+func highlightMany(page playwright.Page, selectors ...string) error {
+	for _, selector := range selectors {
+		selector = strings.TrimSpace(selector)
+		if selector == "" {
+			continue
+		}
+		locator := page.Locator(selector).First()
+		if err := locator.WaitFor(); err != nil {
+			return fmt.Errorf("wait highlight target %q: %w", selector, err)
+		}
+		ok, err := locator.Evaluate(`(target) => {
+			const styleId = "docs-capture-highlight-style";
+			if (!document.getElementById(styleId)) {
+				const style = document.createElement("style");
+				style.id = styleId;
+				style.textContent = '[data-docs-capture-highlight="1"]{' +
+					'outline:3px solid #ef4444 !important;' +
+					'outline-offset:2px !important;' +
+					'box-shadow:0 0 0 5px rgba(239,68,68,0.22) !important;' +
+					'border-radius:0.55rem !important;' +
+				'}';
+				document.head.appendChild(style);
+			}
+			if (!target) {
+				return false;
+			}
+			target.setAttribute("data-docs-capture-highlight", "1");
+			if (typeof target.scrollIntoView === "function") {
+				target.scrollIntoView({ block: "center", inline: "nearest" });
+			}
+			return true;
+		}`, nil)
+		if err != nil {
+			return fmt.Errorf("apply highlight for %q: %w", selector, err)
+		}
+		applied, _ := ok.(bool)
+		if !applied {
+			return fmt.Errorf("highlight target not found for selector %q", selector)
+		}
+	}
+	return nil
+}
+
+func ensureGIFCursor(page playwright.Page) error {
+	_, err := page.Evaluate(`() => {
+		const styleId = "docs-capture-gif-cursor-style";
+		if (!document.getElementById(styleId)) {
+			const style = document.createElement("style");
+			style.id = styleId;
+			style.textContent =
+				"* { cursor: none !important; }" +
+				"#docs-capture-gif-cursor {" +
+				"  position: fixed;" +
+				"  left: 0;" +
+				"  top: 0;" +
+				"  width: 18px;" +
+				"  height: 18px;" +
+				"  border: 2px solid #ef4444;" +
+				"  border-radius: 999px;" +
+				"  background: rgba(239,68,68,0.18);" +
+				"  box-shadow: 0 0 0 4px rgba(239,68,68,0.16);" +
+				"  pointer-events: none;" +
+				"  z-index: 2147483647;" +
+				"  transform: translate(24px, 24px);" +
+				"  transition: transform 70ms linear;" +
+				"}";
+			document.head.appendChild(style);
+		}
+		let cursor = document.getElementById("docs-capture-gif-cursor");
+		if (!cursor) {
+			cursor = document.createElement("div");
+			cursor.id = "docs-capture-gif-cursor";
+			document.body.appendChild(cursor);
+		}
+	}`, nil)
+	if err != nil {
+		return fmt.Errorf("inject gif cursor overlay: %w", err)
+	}
+	if err := page.Mouse().Move(24, 24); err != nil {
+		return fmt.Errorf("position gif cursor: %w", err)
+	}
+	return nil
+}
+
+func clickLocatorWithCursor(page playwright.Page, locator playwright.Locator, target string) error {
+	if err := locator.WaitFor(); err != nil {
+		return fmt.Errorf("wait %s: %w", target, err)
+	}
+	if err := ensureGIFCursor(page); err != nil {
+		return err
+	}
+	if err := locator.ScrollIntoViewIfNeeded(); err != nil {
+		return fmt.Errorf("scroll %s into view: %w", target, err)
+	}
+	box, err := locator.BoundingBox()
+	if err != nil {
+		return fmt.Errorf("measure %s bounding box: %w", target, err)
+	}
+	if box == nil {
+		return fmt.Errorf("measure %s bounding box: no box", target)
+	}
+	x := box.X + (box.Width / 2)
+	y := box.Y + (box.Height / 2)
+	if err := page.Mouse().Move(x, y, playwright.MouseMoveOptions{Steps: playwright.Int(gifCursorMoveSteps)}); err != nil {
+		return fmt.Errorf("move cursor to %s: %w", target, err)
+	}
+	page.WaitForTimeout(gifPauseAfterMoveMS)
+	if err := locator.Click(playwright.LocatorClickOptions{Delay: playwright.Float(gifClickDelayMS)}); err != nil {
+		return fmt.Errorf("click %s: %w", target, err)
+	}
+	page.WaitForTimeout(gifPauseAfterClickMS)
+	return nil
 }
