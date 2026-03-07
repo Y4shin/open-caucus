@@ -703,20 +703,20 @@ func TestSpeakersList_OneNonDoneEntryPerType(t *testing.T) {
 		t.Fatalf("expected regular add button to be disabled after waiting regular entry")
 	}
 
-	ropmDisabled, err := card.Locator("button[title='Add RoPM speech']").IsDisabled()
+	ropmDisabled, err := card.Locator("button[title='Add Point of Order (PO) speech']").IsDisabled()
 	if err != nil {
 		t.Fatalf("read ropm button disabled state: %v", err)
 	}
 	if ropmDisabled {
 		t.Fatalf("expected ropm add button to still be enabled")
 	}
-	if err := card.Locator("button[title='Add RoPM speech']").Click(); err != nil {
+	if err := card.Locator("button[title='Add Point of Order (PO) speech']").Click(); err != nil {
 		t.Fatalf("add ropm speech: %v", err)
 	}
 
 	openSpeakerAddDialog(t, page)
 	card = speakerCandidateCard(page, "Alice Member")
-	ropmDisabled, err = card.Locator("button[title='Add RoPM speech']").IsDisabled()
+	ropmDisabled, err = card.Locator("button[title='Add Point of Order (PO) speech']").IsDisabled()
 	if err != nil {
 		t.Fatalf("read ropm button disabled state after add: %v", err)
 	}

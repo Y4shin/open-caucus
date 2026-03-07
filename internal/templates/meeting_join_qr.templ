@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type MeetingJoinQRInput struct {
@@ -24,9 +25,9 @@ func (i *MeetingJoinQRInput) QRCodeSrc() templ.SafeURL {
 }
 
 templ MeetingJoinQRTemplate(input MeetingJoinQRInput) {
-	@PageTemplate("Guest Join QR: "+input.MeetingName+" - "+input.CommitteeName, false, false,
+	@PageTemplate(i18n.T(ctx, "meeting_join_qr.page_title", input.MeetingName, input.CommitteeName), false, false,
 		ScaffoldInput{
-			Title:    "Guest Join QR",
+			Title:    i18n.T(ctx, "meeting_join_qr.title"),
 			Subtitle: input.MeetingName + " - " + input.CommitteeName,
 			BackLink: SafeURLPtr(input.MeetingManageGet(ctx)),
 		},
@@ -34,7 +35,7 @@ templ MeetingJoinQRTemplate(input MeetingJoinQRInput) {
 }
 
 templ MeetingJoinQRContent(input MeetingJoinQRInput) {
-	<p>Guests can scan this QR code to open the join page with the meeting secret prefilled.</p>
+	<p>{ i18n.T(ctx, "meeting_join_qr.description") }</p>
 	<p><a class={ "plain-text-link link link-hover", "plain-text-link link link-hover" } href={ templ.URL(input.JoinURL) }>{ input.JoinURL }</a></p>
-	<img id="join-qr-code" src={ input.QRCodeSrc() } alt="Guest Join QR Code"/>
+	<img id="join-qr-code" src={ input.QRCodeSrc() } alt={ i18n.T(ctx, "meeting_join_qr.alt") }/>
 }

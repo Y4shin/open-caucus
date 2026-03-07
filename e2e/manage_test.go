@@ -812,7 +812,7 @@ func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
 		t.Fatalf("expected no initial quoted attendee chip, got %d", initialQuotedChipCount)
 	}
 
-	guestQuotedToggle := guestCard.Locator("input[title='Gender quoted']")
+	guestQuotedToggle := guestCard.Locator("input[title='FLINTA*']")
 	if err := guestQuotedToggle.Click(); err != nil {
 		t.Fatalf("toggle guest gender quoted on: %v", err)
 	}
@@ -857,4 +857,3 @@ func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
 		t.Fatalf("expected gender quoted speaker chip after guest toggle: %v", err)
 	}
 }
-

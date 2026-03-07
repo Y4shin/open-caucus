@@ -98,8 +98,8 @@ func seedSpeakerOrderingScenario(t *testing.T, withActiveSpeaker bool) (*testSer
 	}
 
 	waitingNames := []string{
-		"Waiting RoPM Priority",
-		"Waiting RoPM Plain",
+		"Waiting PO Priority",
+		"Waiting PO Plain",
 		"Waiting Regular Priority",
 		"Waiting Regular Quoted",
 		"Waiting Regular First",

@@ -32,7 +32,7 @@ templ LoginPageContent(input LoginPageInput) {
 	@ErrorMessage(input.Error)
 	<div class="w-full h-full flex justify-center align-center">
 		<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4 gap-2">
-			<legend class="fieldset-legend">Login</legend>
+			<legend class="fieldset-legend">{ i18n.T(ctx, "login.legend") }</legend>
 			if input.PasswordEnabled {
 				<form method="POST" action={ input.LoginSubmitPost(ctx) } class="flex flex-col gap-2">
 					<label class="label">{ i18n.T(ctx, "login.username_label") }</label>

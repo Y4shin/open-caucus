@@ -96,7 +96,7 @@ templ LiveDocFabPartial(input LiveCurrentDocInput) {
 templ LiveCurrentDocContent(input LiveCurrentDocInput, previewContainerClass string) {
 	<div class="live-current-doc-content flex min-h-0 flex-1">
 		if input.Doc == nil {
-			<p class={ "live-empty-state text-base-content/70", "live-doc-placeholder", "m-auto text-center" }>No document currently displayed.</p>
+			<p class={ "live-empty-state text-base-content/70", "live-doc-placeholder", "m-auto text-center" }>{ i18n.T(ctx, "meeting_live.no_current_document") }</p>
 		} else if isPreviewable(input.Doc.ContentType) {
 			<div class={ "live-doc-preview-frame min-h-0 w-full overflow-hidden rounded-box border border-base-300 bg-white flex items-center justify-center", previewContainerClass }>
 				if isImagePreview(input.Doc.ContentType) {
@@ -108,7 +108,7 @@ templ LiveCurrentDocContent(input LiveCurrentDocInput, previewContainerClass str
 		} else {
 			<p>
 				@IconLabelLink(input.DocDownloadURL(ctx), IconArrowForward, input.Doc.Filename, "left")
-				<span>{ " (download to view)" }</span>
+				<span>{ " " + i18n.T(ctx, "meeting_live.download_to_view") }</span>
 			</p>
 		}
 	</div>

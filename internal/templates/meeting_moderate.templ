@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 // ModeratePageInput is the top-level input for the meeting moderate page.
@@ -56,7 +57,7 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 		class="space-y-2"
 	>
 		if len(input.AgendaPoints) == 0 {
-			<p class="text-sm text-base-content/70">No agenda points.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_agenda_points") }</p>
 		} else {
 			<ul class="list rounded-box border border-base-300 bg-base-100">
 				for _, ap := range input.AgendaPoints {
@@ -70,7 +71,7 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 						<span class="badge badge-outline">{ input.AgendaPointDisplayNumber(ap) }</span>
 						<span class={ "flex-1 truncate", templ.KV("font-semibold", ap.IsActive) }>{ ap.Title }</span>
 						if ap.IsActive {
-							<span class="badge badge-success badge-sm">Active</span>
+							<span class="badge badge-success badge-sm">{ i18n.T(ctx, "meeting_manage.active_badge") }</span>
 						} else {
 							<form
 								hx-post={ input.AgendaPointActivatePostStr(ctx, &ap) }
@@ -82,9 +83,9 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 								<button
 									type="submit"
 									class="btn btn-sm btn-square tooltip tooltip-left"
-									data-tip="Activate agenda point"
-									title="Activate agenda point"
-									aria-label="Activate agenda point"
+									data-tip={ i18n.T(ctx, "meeting_manage.activate_agenda_point") }
+									title={ i18n.T(ctx, "meeting_manage.activate_agenda_point") }
+									aria-label={ i18n.T(ctx, "meeting_manage.activate_agenda_point") }
 								>
 									@Icon(IconCheckCircle, "", "h-4 w-4")
 								</button>
@@ -100,13 +101,13 @@ templ ModerateAgendaCompactPartial(input AgendaPointListPartialInput) {
 templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 	<section class="min-h-0" data-testid="manage-agenda-card">
 		<div class="mb-3 flex items-center justify-between gap-2">
-			<h2 class="text-lg font-semibold">Agenda</h2>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.agenda_points") }</h2>
 			<div class="flex items-center gap-2">
 				<button
 					type="button"
 					class="btn btn-sm btn-square btn-ghost"
-					title="Open agenda help"
-					aria-label="Open agenda help"
+					title={ i18n.T(ctx, "meeting_moderate.open_agenda_help") }
+					aria-label={ i18n.T(ctx, "meeting_moderate.open_agenda_help") }
 					hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/03-agenda-management-and-import").DocsPageOOBGetWithQuery(ctx, "", paths.DocsPageOOBGetQueryParams{Heading: "agenda-routes"}) }
 					hx-swap="none"
 				>
@@ -115,11 +116,11 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 				<button
 					type="button"
 					class="btn btn-sm btn-square tooltip tooltip-left"
-					data-tip="Edit agenda"
+					data-tip={ i18n.T(ctx, "meeting_moderate.edit_agenda") }
 					data-manage-dialog-open
 					aria-controls="moderate-agenda-edit-dialog"
-					title="Edit agenda"
-					aria-label="Edit agenda"
+					title={ i18n.T(ctx, "meeting_moderate.edit_agenda") }
+					aria-label={ i18n.T(ctx, "meeting_moderate.edit_agenda") }
 				>
 					@Icon(IconSettings, "", "h-4 w-4")
 				</button>
@@ -129,13 +130,13 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 		<dialog id="moderate-agenda-edit-dialog" class="modal" data-manage-dialog>
 			<div class="modal-box w-11/12 max-w-5xl">
 				<div class="mb-4 flex items-center justify-between gap-2">
-					<h3 class="text-lg font-semibold">Edit Agenda</h3>
-					<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
+					<h3 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_moderate.edit_agenda_title") }</h3>
+					<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>{ i18n.T(ctx, "common.close") }</button>
 				</div>
 				@AgendaPointListPartial(input)
 			</div>
 			<form method="dialog" class="modal-backdrop">
-				<button aria-label="Close">close</button>
+				<button aria-label={ i18n.T(ctx, "common.close") }>{ i18n.T(ctx, "common.close") }</button>
 			</form>
 		</dialog>
 	</section>
@@ -144,24 +145,24 @@ templ ModerateAgendaCard(input AgendaPointListPartialInput) {
 templ ModerateToolsCard(input ModeratePageInput) {
 	<section class="flex h-full min-h-0 flex-col overflow-hidden">
 		<div class="flex items-center justify-between gap-2">
-			<h2 class="text-lg font-semibold">Tools</h2>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_moderate.tools") }</h2>
 		</div>
 		<div class="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
 			if !input.HasActiveAP {
-				<p class="text-sm text-base-content/70">No active agenda point.</p>
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda") }</p>
 			} else {
 				<div class="space-y-5">
 					<div class="space-y-2">
 						<div class="flex items-center justify-between gap-2">
-							<strong class="text-base">Attachments</strong>
+							<strong class="text-base">{ i18n.T(ctx, "attachment.heading") }</strong>
 							<button class="btn btn-sm btn-outline"
 								type="button"
 								data-manage-dialog-open
 								aria-controls={ "moderate-attachments-dialog-" + input.Attachments.AgendaPointIDStr }
-							>Manage Files</button>
+							>{ i18n.T(ctx, "meeting_moderate.manage_files") }</button>
 						</div>
 						if len(input.Attachments.Attachments) == 0 {
-							<p class="text-sm text-base-content/70">No attachments.</p>
+							<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_moderate.no_attachments") }</p>
 						} else {
 							<ul class="list rounded-box border border-base-300 bg-base-100">
 								for _, a := range input.Attachments.Attachments {
@@ -190,13 +191,13 @@ templ ModerateToolsCard(input ModeratePageInput) {
 			>
 				<div class="modal-box w-11/12 max-w-5xl">
 					<div class="mb-4 flex items-center justify-between gap-2">
-						<h3 class="text-lg font-semibold">{ input.ActiveAPTitle } - Attachments</h3>
-						<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
+						<h3 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_moderate.attachments_for", input.ActiveAPTitle) }</h3>
+						<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>{ i18n.T(ctx, "common.close") }</button>
 					</div>
 					@AttachmentListPartial(input.Attachments)
 				</div>
 				<form method="dialog" class="modal-backdrop">
-					<button aria-label="Close">close</button>
+					<button aria-label={ i18n.T(ctx, "common.close") }>{ i18n.T(ctx, "common.close") }</button>
 				</form>
 			</dialog>
 		}
@@ -206,7 +207,7 @@ templ ModerateToolsCard(input ModeratePageInput) {
 templ ModerateManageAttendeesCard(input AttendeeListPartialInput) {
 	<section class="min-h-0" data-testid="manage-attendees-card">
 		<div class="mb-3 flex items-center justify-between gap-2">
-			<h2 class="text-lg font-semibold">Attendees</h2>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.attendees") }</h2>
 			<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
 				<form
 					hx-post={ input.ToggleSignupOpenPostStr(ctx) }
@@ -214,9 +215,9 @@ templ ModerateManageAttendeesCard(input AttendeeListPartialInput) {
 					hx-swap="outerHTML"
 					hx-trigger="change"
 					class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start"
-					title={ attendeeSignupStateLabel(input.SignupOpen) }
+					title={ attendeeSignupStateLabel(ctx, input.SignupOpen) }
 				>
-					@SignupToggleField("manage_signup_open", "signup_open", attendeeSignupToggleLabel(), input.SignupOpen, "")
+					@SignupToggleField("manage_signup_open", "signup_open", attendeeSignupToggleLabel(ctx), input.SignupOpen, "")
 				</form>
 				if input.ShowSelfSignup {
 					<form
@@ -229,9 +230,9 @@ templ ModerateManageAttendeesCard(input AttendeeListPartialInput) {
 						<button
 							type="submit"
 							class="btn btn-sm btn-square tooltip tooltip-left"
-							data-tip="Sign yourself up"
-							title="Sign yourself up"
-							aria-label="Sign yourself up"
+							data-tip={ i18n.T(ctx, "meeting_moderate.sign_yourself_up") }
+							title={ i18n.T(ctx, "meeting_moderate.sign_yourself_up") }
+							aria-label={ i18n.T(ctx, "meeting_moderate.sign_yourself_up") }
 						>
 							@Icon(IconPersonRaised, "", "h-4 w-4")
 						</button>
@@ -240,9 +241,9 @@ templ ModerateManageAttendeesCard(input AttendeeListPartialInput) {
 				<a
 					href={ input.ManageJoinQRGet(ctx) }
 					class="btn btn-sm btn-square tooltip tooltip-left"
-					data-tip="Show signup QR"
-					title="Show signup QR"
-					aria-label="Show signup QR"
+					data-tip={ i18n.T(ctx, "meeting_manage.show_signup_qr") }
+					title={ i18n.T(ctx, "meeting_manage.show_signup_qr") }
+					aria-label={ i18n.T(ctx, "meeting_manage.show_signup_qr") }
 				>
 					@Icon(IconQrCode2, "", "h-4 w-4")
 				</a>
@@ -255,8 +256,8 @@ templ ModerateManageAttendeesCard(input AttendeeListPartialInput) {
 templ ModerateSettingsCard(input ModeratePageInput) {
 	<section class="min-h-0 space-y-3" data-testid="manage-settings-card">
 		<div class="flex flex-wrap items-end justify-between gap-2">
-			<h2 class="text-lg font-semibold">Settings</h2>
-			<p class="text-sm text-base-content/70">Configure meeting defaults and agenda-point overrides.</p>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_moderate.settings") }</h2>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_moderate.settings_description") }</p>
 		</div>
 		<div id="moderate-settings-shell" class="rounded-box border border-base-300 bg-base-200/30 p-3">
 			<div role="tablist" class="tabs tabs-box tabs-sm w-full bg-base-100">
@@ -264,22 +265,22 @@ templ ModerateSettingsCard(input ModeratePageInput) {
 					type="button"
 					class="tab tab-active flex-1 justify-center"
 					data-moderate-settings-tab="meeting"
-				>Meeting</button>
+				>{ i18n.T(ctx, "meeting_moderate.meeting_tab") }</button>
 				<button
 					type="button"
 					class="tab flex-1 justify-center"
 					data-moderate-settings-tab="agenda"
-				>Agenda Point</button>
+				>{ i18n.T(ctx, "meeting_moderate.agenda_point_tab") }</button>
 			</div>
 			<div class="mt-3 min-h-0">
 				<div data-moderate-settings-panel="meeting">
-					<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Meeting Defaults</div>
+					<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">{ i18n.T(ctx, "meeting_moderate.meeting_defaults") }</div>
 					<div id="meeting-settings-container">
 						@MeetingSettingsContent(input.MeetingSettings)
 					</div>
 				</div>
 				<div data-moderate-settings-panel="agenda" class="hidden">
-					<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Agenda Point Overrides</div>
+					<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">{ i18n.T(ctx, "meeting_moderate.agenda_point_overrides") }</div>
 					<div id="moderate-speaker-settings-container">
 						@ModerateSpeakerSettingsContent(input.Speakers)
 					</div>
@@ -297,10 +298,10 @@ templ ModerateLeftWorkspace(input ModeratePageInput) {
 	>
 		<div class="card-body flex h-full min-h-0 flex-col overflow-hidden p-4">
 			<div role="tablist" class="tabs tabs-border tabs-sm grid w-full grid-cols-4 [--tab-p:0.35rem] sm:[--tab-p:0.75rem]">
-				<button type="button" class="tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="agenda">Agenda</button>
-				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="tools">Tools</button>
-				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="attendees">Attendees</button>
-				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="settings">Settings</button>
+				<button type="button" class="tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="agenda">{ i18n.T(ctx, "meeting_moderate.agenda_tab") }</button>
+				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="tools">{ i18n.T(ctx, "meeting_moderate.tools_tab") }</button>
+				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="attendees">{ i18n.T(ctx, "meeting_moderate.attendees_tab") }</button>
+				<button type="button" class="tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm" data-moderate-left-tab="settings">{ i18n.T(ctx, "meeting_moderate.settings_tab") }</button>
 			</div>
 			<div class="mt-3 min-h-0 flex-1">
 				<div id="moderate-left-panel-agenda" data-moderate-left-panel="agenda" class="h-full min-h-0 overflow-y-auto pr-1">
@@ -323,7 +324,7 @@ templ ModerateLeftWorkspace(input ModeratePageInput) {
 templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 	@ErrorMessage(input.Error)
 	if input.CurrentAgendaPointID == nil {
-		<p class="text-sm text-base-content/70">No active agenda point.</p>
+		<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda") }</p>
 	} else {
 		<div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-testid="manage-speakers-quick-controls">
 			<div class="flex flex-wrap items-center gap-2">
@@ -339,11 +340,11 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 							class="btn btn-sm btn-success whitespace-nowrap"
 							data-testid="manage-end-current-speaker"
 							data-testid-group="manage-speakers-quick-button"
-							title="End current speech"
-							aria-label="End current speech"
+							title={ i18n.T(ctx, "meeting_manage.end_current_speech") }
+							aria-label={ i18n.T(ctx, "meeting_manage.end_current_speech") }
 						>
 							@Icon(IconCheckCircle, "", "ui-icon--left")
-							End Speech
+							{ i18n.T(ctx, "meeting_manage.end_speech") }
 						</button>
 					</form>
 				} else if next := input.NextWaitingSpeaker(); next != nil {
@@ -358,11 +359,11 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 							class="btn btn-sm btn-primary whitespace-nowrap"
 							data-testid="manage-start-next-speaker"
 							data-testid-group="manage-speakers-quick-button"
-							title="Start next speaker"
-							aria-label="Start next speaker"
+							title={ i18n.T(ctx, "meeting_manage.start_next_speaker") }
+							aria-label={ i18n.T(ctx, "meeting_manage.start_next_speaker") }
 						>
 							@Icon(IconArrowForward, "", "ui-icon--left")
-							Start Next Speaker
+							{ i18n.T(ctx, "meeting_manage.start_next_speaker_button") }
 						</button>
 					</form>
 				}
@@ -373,16 +374,16 @@ templ ModerateSpeakersContent(input SpeakersListPartialInput) {
 					class="btn btn-sm btn-ghost whitespace-nowrap"
 					data-manage-speakers-reset-scroll
 					data-testid="manage-speakers-reset-scroll"
-					title="Scroll to active position"
-					aria-label="Scroll to active position"
+					title={ i18n.T(ctx, "meeting_manage.scroll_to_active_position") }
+					aria-label={ i18n.T(ctx, "meeting_manage.scroll_to_active_position") }
 				>
 					@Icon(IconHistory, "", "ui-icon--left")
-					Scroll To Active Position
+					{ i18n.T(ctx, "meeting_manage.scroll_to_active_position_button") }
 				</button>
 			}
 		</div>
 		if len(input.Speakers) == 0 {
-			<p class="text-sm text-base-content/70">No speakers in the queue.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_speakers") }</p>
 		} else {
 			<ul
 				class={ "list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1", "live-speaker-list" }
@@ -402,13 +403,13 @@ templ ModerateSpeakersCard(input SpeakersListPartialInput) {
 	<section id="moderate-speakers-card" class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none" data-testid="manage-speakers-card">
 		<div class="card-body flex min-h-0 flex-col p-4">
 			<div class="mb-3 flex items-center justify-between gap-2">
-				<h2 class="text-lg font-semibold">Speakers</h2>
+				<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.speakers_list") }</h2>
 				<button
 					type="button"
 					class="btn btn-sm btn-square btn-ghost"
-					title="Open speakers help"
-					aria-label="Open speakers help"
-					hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/05-speakers-moderator-and-quotation").DocsPageOOBGetWithQuery(ctx, "", paths.DocsPageOOBGetQueryParams{Heading: "speaker-routes"}) }
+					title={ i18n.T(ctx, "meeting_moderate.open_speakers_help") }
+					aria-label={ i18n.T(ctx, "meeting_moderate.open_speakers_help") }
+					hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/05-speakers-moderator-and-quotation").DocsPageOOBGet(ctx, "") }
 					hx-swap="none"
 				>
 					@Icon(IconHelp, "", "h-4 w-4")
@@ -430,13 +431,13 @@ templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
 	<section id="moderate-attendees-card" class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none">
 		<div class="card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4">
 			<div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
-				<h2 class="text-lg font-semibold">Add Speaker</h2>
+				<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.add_speaker") }</h2>
 				<div class="join min-w-0 w-full max-w-full sm:w-auto sm:min-w-[24rem]">
 					<input class="input input-bordered input-sm join-item min-w-0 flex-1"
 						type="text"
 						id="speaker-add-search-input"
 						name="q"
-						placeholder="Search name or number"
+						placeholder={ i18n.T(ctx, "meeting_manage.search_name_or_number") }
 						hx-get={ speakers.SpeakerAddCandidatesPartialGetStr(ctx) }
 						hx-target="#speaker-add-candidates-container"
 						hx-swap="outerHTML"
@@ -446,9 +447,9 @@ templ ModerateAttendeesCard(speakers SpeakersListPartialInput) {
 					<button
 						type="button"
 						class="btn btn-sm btn-square btn-ghost join-item border-base-300"
-						title="Open add-speaker help"
-						aria-label="Open add-speaker help"
-						hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/05-speakers-moderator-and-quotation").DocsPageOOBGetWithQuery(ctx, "", paths.DocsPageOOBGetQueryParams{Heading: "speaker-routes"}) }
+						title={ i18n.T(ctx, "meeting_moderate.open_add_speaker_help") }
+						aria-label={ i18n.T(ctx, "meeting_moderate.open_add_speaker_help") }
+						hx-get={ paths.NewDocsOobDocPathRoute("03-chairperson/05-speakers-moderator-and-quotation").DocsPageOOBGet(ctx, "") }
 						hx-swap="none"
 					>
 						@Icon(IconHelp, "", "h-4 w-4")
@@ -480,7 +481,7 @@ templ ModerateDependentContent(input ModerateDependentPartialInput) {
 				class="hidden h-4 shrink-0 cursor-row-resize select-none items-center justify-center lg:flex"
 				role="separator"
 				aria-orientation="horizontal"
-				aria-label="Resize speakers and add speaker panels"
+				aria-label={ i18n.T(ctx, "meeting_moderate.resize_panels") }
 				tabindex="0"
 			>
 				<span class="h-1 w-16 rounded-full bg-base-300"></span>
@@ -508,9 +509,9 @@ templ ModerateDependentPartial(input ModerateDependentPartialInput) {
 }
 
 templ MeetingModerateTemplate(input ModeratePageInput) {
-	@PageTemplate("Moderate: "+input.MeetingName+" - "+input.CommitteeName, false, true,
+	@PageTemplate(i18n.T(ctx, "meeting_moderate.page_title", input.MeetingName, input.CommitteeName), false, true,
 		ScaffoldInput{
-			Title:    "Moderate: " + input.MeetingName,
+			Title:    i18n.T(ctx, "meeting_moderate.title", input.MeetingName),
 			BackLink: SafeURLPtr(input.committeePageGet(ctx)),
 		},
 		MeetingModerateContent(input))

@@ -112,7 +112,7 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 								hx-swap="outerHTML"
 								class={ "inline-form inline" }
 							>
-								<button class="btn btn-sm" type="submit">Clear</button>
+								<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "attachment.clear_button") }</button>
 							</form>
 						} else {
 							<form
@@ -121,7 +121,7 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 								hx-swap="outerHTML"
 								class={ "inline-form inline" }
 							>
-								<button class="btn btn-sm" type="submit">Set as Current</button>
+								<button class="btn btn-sm" type="submit">{ i18n.T(ctx, "attachment.set_current_button") }</button>
 							</form>
 						}
 					</li>
@@ -130,4 +130,3 @@ templ AttachmentListPartial(input AttachmentListPartialInput) {
 		}
 	</div>
 }
-

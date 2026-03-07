@@ -91,7 +91,7 @@ func scaffoldActionKindClass(kind string) string {
 templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 	<nav class="navbar sticky top-0 z-30 bg-base-100 shadow-sm">
 		if input.BackLink != nil {
-			<a href={ *input.BackLink } class="btn btn-ghost btn-sm btn-square" aria-label="Back">
+			<a href={ *input.BackLink } class="btn btn-ghost btn-sm btn-square" aria-label={ i18n.T(ctx, "common.back") }>
 				@Icon(IconChevronLeft, "", "")
 			</a>
 		}
@@ -124,7 +124,7 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 				}
 			</div>
 			<details class="dropdown dropdown-end md:hidden">
-				<summary class="btn btn-ghost btn-sm">Menu</summary>
+				<summary class="btn btn-ghost btn-sm">{ i18n.T(ctx, "scaffold.menu") }</summary>
 					<div class="dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow">
 						if input.Subtitle != "" {
 							<p class="mb-2 text-sm text-base-content/70">{ input.Subtitle }</p>
@@ -162,7 +162,7 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 								@ThemeSwitcherCompact("scaffold-mobile-theme")
 							</div>
 						</div>
-						<p class="mt-2 text-xs text-base-content/70">Made with love by Patric</p>
+						<p class="mt-2 text-xs text-base-content/70">{ i18n.T(ctx, "scaffold.footer_credit") }</p>
 					</div>
 				</details>
 			</div>
@@ -184,7 +184,7 @@ templ HeaderFooterScaffold(input ScaffoldInput, content templ.Component) {
 	</div>
 	<footer class="page-footer hidden border-t border-base-300 bg-base-100/70 md:block">
 			<div class="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-4 py-3 text-sm text-base-content/70 lg:px-5">
-				<span class="text-xs sm:text-sm">Made with love by Patric</span>
+				<span class="text-xs sm:text-sm">{ i18n.T(ctx, "scaffold.footer_credit") }</span>
 				<div class="flex items-center gap-2">
 					<button
 						type="button"
