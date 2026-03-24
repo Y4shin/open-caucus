@@ -13,8 +13,12 @@ import (
 
 	connect "connectrpc.com/connect"
 	docembed "github.com/Y4shin/conference-tool/doc"
+	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
+	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
+	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/docs"
@@ -24,6 +28,9 @@ import (
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
+	committeeservice "github.com/Y4shin/conference-tool/internal/services/committees"
+	meetingservice "github.com/Y4shin/conference-tool/internal/services/meetings"
+	moderationservice "github.com/Y4shin/conference-tool/internal/services/moderation"
 	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
@@ -127,12 +134,35 @@ var serveCmd = &cobra.Command{
 		appMux.Handle("/", mux)
 
 		apiMux := http.NewServeMux()
-		sessionAPI := apiconnect.NewSessionHandler(sessionservice.New(repo, sessionManager, cfg.Auth.PasswordEnabled))
+
 		sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
-			sessionAPI,
+			apiconnect.NewSessionHandler(sessionservice.New(repo, sessionManager, cfg.Auth.PasswordEnabled)),
 			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 		)
 		apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
+
+		committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
+			apiconnect.NewCommitteeHandler(committeeservice.New(repo)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))
+
+		meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
+			apiconnect.NewMeetingHandler(meetingservice.New(repo)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(meetingAPIPath, mw.Get("session")(meetingAPIHandler))
+
+		moderationAPIPath, moderationAPIHandler := moderationv1connect.NewModerationServiceHandler(
+			apiconnect.NewModerationHandler(moderationservice.New(repo, b)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(moderationAPIPath, mw.Get("session")(moderationAPIHandler))
+
+		apiMux.Handle("GET /realtime/meetings/{meetingId}/events",
+			apihttp.NewMeetingEventsHandler(b),
+		)
+
 		appMux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
 		// Locale switcher: POST /locale sets the "locale" cookie and redirects.

@@ -56,7 +56,7 @@ func (q *Queries) DeleteMeeting(ctx context.Context, id int64) error {
 }
 
 const getMeetingByID = `-- name: GetMeetingByID :one
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings WHERE id = ?
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id, version FROM meetings WHERE id = ?
 `
 
 func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error) {
@@ -75,12 +75,13 @@ func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error)
 		&i.GenderQuotationEnabled,
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
+		&i.Version,
 	)
 	return i, err
 }
 
 const listMeetingsForCommittee = `-- name: ListMeetingsForCommittee :many
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id FROM meetings
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id, version FROM meetings
 WHERE committee_id = (SELECT id FROM committees WHERE slug = ?)
 ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
@@ -113,6 +114,7 @@ func (q *Queries) ListMeetingsForCommittee(ctx context.Context, arg ListMeetings
 			&i.GenderQuotationEnabled,
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
+			&i.Version,
 		); err != nil {
 			return nil, err
 		}
@@ -195,4 +197,20 @@ type SetMeetingSignupOpenParams struct {
 func (q *Queries) SetMeetingSignupOpen(ctx context.Context, arg SetMeetingSignupOpenParams) error {
 	_, err := q.db.ExecContext(ctx, setMeetingSignupOpen, arg.SignupOpen, arg.ID)
 	return err
+}
+
+const setMeetingSignupOpenWithVersion = `-- name: SetMeetingSignupOpenWithVersion :one
+UPDATE meetings SET signup_open = ?, version = version + 1 WHERE id = ? RETURNING version
+`
+
+type SetMeetingSignupOpenWithVersionParams struct {
+	SignupOpen bool
+	ID         int64
+}
+
+func (q *Queries) SetMeetingSignupOpenWithVersion(ctx context.Context, arg SetMeetingSignupOpenWithVersionParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, setMeetingSignupOpenWithVersion, arg.SignupOpen, arg.ID)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
 }

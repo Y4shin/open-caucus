@@ -113,6 +113,9 @@ type Repository interface {
 	DeleteMeeting(ctx context.Context, id int64) error
 	SetActiveMeeting(ctx context.Context, slug string, meetingID *int64) error
 	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
+	// SetMeetingSignupOpenWithVersion atomically sets signup_open and increments the version counter,
+	// returning the new version.
+	SetMeetingSignupOpenWithVersion(ctx context.Context, id int64, open bool) (int64, error)
 	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error

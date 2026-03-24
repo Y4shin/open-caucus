@@ -91,6 +91,7 @@ type Meeting struct {
 	GenderQuotationEnabled       bool
 	FirstSpeakerQuotationEnabled bool
 	ModeratorID                  sql.NullInt64
+	Version                      int64
 }
 
 type OauthCommitteeGroupRule struct {

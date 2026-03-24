@@ -10,9 +10,9 @@ This is a deliberate architectural rewrite, not an incremental migration. The go
 
 Last updated: 2026-03-24
 
-- Current phase: `Phase 1 - Contract Foundation`
+- Current phase: `Phase 2 - SvelteKit Frontend Bootstrap`
 - Phase 0 status: `Completed`
-- Phase 1 status: `In progress`
+- Phase 1 status: `Completed`
 - Phases 2-6 status: `Not started`
 - Rewrite strategy: `Big-bang rewrite approved`
 
@@ -1049,7 +1049,14 @@ Current status:
 - A shared API error/status mapper now exists for the new transport layer.
 - A minimal Connect-backed `SessionService` transport now exists and is mounted under `/api`.
 - API-level tests now cover the initial `SessionService` bootstrap, login, and logout flow.
-- Additional screen services and frontend bootstrap are still pending.
+- `CommitteeService` (`ListMyCommittees`, `GetCommitteeOverview`) is implemented, mounted under `/api`, and covered by API integration tests.
+- `MeetingService` (`GetLiveMeeting`) is implemented, mounted under `/api`, and covered by API integration tests.
+- `ModerationService` (`GetModerationView`, `ToggleSignupOpen`) is implemented, mounted under `/api`, and covered by API integration tests including version-conflict detection.
+- Meeting `version` column added (migration 030) and wired into all read and mutation paths.
+- A combined test server helper (`newCombinedAPITestServer`) exists in `internal/api/connect/` for multi-service integration tests.
+- Meeting-scoped SSE invalidation endpoint (`GET /api/realtime/meetings/{meetingId}/events`) is implemented in `internal/api/http/` and covered by an integration test.
+- `ToggleSignupOpen` publishes JSON invalidation events to the broker; the SSE endpoint filters and streams them to subscribed clients.
+- All first-slice acceptance criteria are met. Phase 1 is complete.
 
 Deliverables:
 
@@ -1078,6 +1085,12 @@ Implementation status for this phase so far:
 - [x] Add shared transport error/status mapping
 - [x] Implement the first generated Connect service on the Go server
 - [x] Add initial API-level tests for the session bootstrap slice
+- [x] Implement `CommitteeService` with API integration tests
+- [x] Implement `MeetingService` with API integration tests
+- [x] Implement `ModerationService` (read + `ToggleSignupOpen` mutation) with API integration tests
+- [x] Add meeting `version` field (migration 030) for optimistic conflict detection
+- [x] Implement meeting-scoped SSE invalidation endpoint (`GET /api/realtime/meetings/{meetingId}/events`)
+- [x] Publish `MeetingInvalidationEvent` from `ToggleSignupOpen` via the broker
 
 Design rules:
 

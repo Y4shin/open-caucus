@@ -1221,6 +1221,19 @@ func (r *Repository) SetMeetingSignupOpen(ctx context.Context, id int64, open bo
 	return nil
 }
 
+// SetMeetingSignupOpenWithVersion atomically updates signup_open and increments version,
+// returning the new version number.
+func (r *Repository) SetMeetingSignupOpenWithVersion(ctx context.Context, id int64, open bool) (int64, error) {
+	version, err := r.Queries.SetMeetingSignupOpenWithVersion(ctx, client.SetMeetingSignupOpenWithVersionParams{
+		SignupOpen: open,
+		ID:         id,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("set meeting signup_open with version: %w", err)
+	}
+	return version, nil
+}
+
 // CreateAttendee creates a new attendee row for a meeting
 func (r *Repository) CreateAttendee(ctx context.Context, meetingID int64, userID *int64, fullName, secret string, quoted bool) (*model.Attendee, error) {
 	var uid sql.NullInt64
@@ -1367,6 +1380,7 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 		GenderQuotationEnabled:       m.GenderQuotationEnabled,
 		FirstSpeakerQuotationEnabled: m.FirstSpeakerQuotationEnabled,
 		ModeratorID:                  nullInt64ToPtr(m.ModeratorID),
+		Version:                      m.Version,
 		CreatedAt:                    createdAt,
 	}
 }

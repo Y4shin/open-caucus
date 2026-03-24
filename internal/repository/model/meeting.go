@@ -13,5 +13,6 @@ type Meeting struct {
 	GenderQuotationEnabled       bool   // default true
 	FirstSpeakerQuotationEnabled bool   // default true
 	ModeratorID                  *int64 // nil if not set
+	Version                      int64
 	CreatedAt                    time.Time
 }
