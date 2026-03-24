@@ -323,28 +323,28 @@ templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, var
 				if s.Type == "ropm" || s.GenderQuoted || s.FirstSpeaker || s.Priority {
 					<div class="flex shrink-0 flex-wrap items-center gap-1">
 						if s.Type == "ropm" {
-							<span class="tooltip tooltip-right" data-tip="Rules of procedure motion">
+							<span class="tooltip tooltip-right" data-tip={ i18n.T(ctx, "meeting_live.badge_ropm") }>
 								<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge">
 									@Icon(IconScale, "", "h-3.5 w-3.5")
 								</span>
 							</span>
 						}
 						if s.GenderQuoted {
-							<span class="tooltip tooltip-right" data-tip="Gender quoted">
+							<span class="tooltip tooltip-right" data-tip={ i18n.T(ctx, "meeting_live.badge_quoted") }>
 								<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge">
 									@Icon(IconTransgender, "", "h-3.5 w-3.5")
 								</span>
 							</span>
 						}
 						if s.FirstSpeaker {
-							<span class="tooltip tooltip-right" data-tip="First speaker">
+							<span class="tooltip tooltip-right" data-tip={ i18n.T(ctx, "meeting_live.badge_first") }>
 								<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge">
 									@Icon(IconPersonRaised, "", "h-3.5 w-3.5")
 								</span>
 							</span>
 						}
 						if s.Priority {
-							<span class="tooltip tooltip-right" data-tip="Priority speaker">
+							<span class="tooltip tooltip-right" data-tip={ i18n.T(ctx, "meeting_live.badge_priority") }>
 								<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge">
 									@Icon(IconStar, "", "h-3.5 w-3.5")
 								</span>
@@ -696,8 +696,8 @@ templ MeetingLiveContent(input MeetingLiveInput) {
 				<dialog id="live-doc-modal" class="modal" data-live-dialog>
 					<div class={ "modal-box max-w-4xl flex min-h-0 flex-col overflow-hidden", "live-speaker-history-dialog" }>
 						<div class="mb-3 flex items-center justify-between gap-3">
-							<h3 class="text-lg font-semibold">Current Document</h3>
-							<button type="button" class="btn btn-sm btn-ghost shrink-0" data-live-dialog-close>Close</button>
+							<h3 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_live.current_document_title") }</h3>
+							<button type="button" class="btn btn-sm btn-ghost shrink-0" data-live-dialog-close>{ i18n.T(ctx, "common.close") }</button>
 						</div>
 						<div class="min-h-0 flex-1">
 							@LiveCurrentDocModalContent(input.toCurrentDocInput())

@@ -12,6 +12,7 @@ import (
 	"context"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type MeetingAgendaPointToolsInput struct {
@@ -49,10 +50,10 @@ func MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) templ.C
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = PageTemplate("Agenda Tools: "+input.AgendaPointTitle, true, false,
+		templ_7745c5c3_Err = PageTemplate(i18n.T(ctx, "meeting_agenda_tools.page_title", input.AgendaPointTitle), true, false,
 			ScaffoldInput{
 				Title:    input.MeetingName,
-				Subtitle: "Agenda Point Tools: " + input.AgendaPointTitle,
+				Subtitle: i18n.T(ctx, "meeting_agenda_tools.subtitle", input.AgendaPointTitle),
 				BackLink: SafeURLPtr(input.ManagePageGet(ctx)),
 			},
 			MeetingAgendaPointToolsContent(input)).Render(ctx, templ_7745c5c3_Buffer)
@@ -124,7 +125,20 @@ func MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\"><h2>Attachments</h2>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\"><h2>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var7 string
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "meeting_agenda_tools.attachments_heading"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `meeting_agenda_point_tools.templ`, Line: 37, Col: 64}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</h2>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -132,7 +146,7 @@ func MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</section></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</section></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

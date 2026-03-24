@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type MeetingAgendaPointToolsInput struct {
@@ -21,10 +22,10 @@ func (i *MeetingAgendaPointToolsInput) ManagePageGet(ctx context.Context) templ.
 }
 
 templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
-	@PageTemplate("Agenda Tools: "+input.AgendaPointTitle, true, false,
+	@PageTemplate(i18n.T(ctx, "meeting_agenda_tools.page_title", input.AgendaPointTitle), true, false,
 		ScaffoldInput{
 			Title:    input.MeetingName,
-			Subtitle: "Agenda Point Tools: " + input.AgendaPointTitle,
+			Subtitle: i18n.T(ctx, "meeting_agenda_tools.subtitle", input.AgendaPointTitle),
 			BackLink: SafeURLPtr(input.ManagePageGet(ctx)),
 		},
 		MeetingAgendaPointToolsContent(input))
@@ -33,7 +34,7 @@ templ MeetingAgendaPointToolsTemplate(input MeetingAgendaPointToolsInput) {
 templ MeetingAgendaPointToolsContent(input MeetingAgendaPointToolsInput) {
 	<div class={ "manage-grid grid gap-4 lg:grid-cols-1" }>
 		<section class={ "panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4" }>
-			<h2>Attachments</h2>
+			<h2>{ i18n.T(ctx, "meeting_agenda_tools.attachments_heading") }</h2>
 			@AttachmentListPartial(input.Attachments)
 		</section>
 	</div>

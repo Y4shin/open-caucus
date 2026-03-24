@@ -209,7 +209,20 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" class=\"btn btn-ghost btn-sm btn-square\" aria-label=\"Back\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" class=\"btn btn-ghost btn-sm btn-square\" aria-label=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 string
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.back"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 94, Col: 110}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -217,382 +230,395 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</a>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</a>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div class=\"flex-1\"><div class=\"min-w-0 md:hidden\"><h1 class=\"truncate text-base font-semibold sm:text-lg\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.app_name"))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 100, Col: 92}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</h1></div><div class=\"min-w-0 hidden md:block\"><h1 class=\"truncate text-base font-semibold sm:text-lg\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div class=\"flex-1\"><div class=\"min-w-0 md:hidden\"><h1 class=\"truncate text-base font-semibold sm:text-lg\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.app_name"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 103, Col: 92}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 100, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, " - ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</h1></div><div class=\"min-w-0 hidden md:block\"><h1 class=\"truncate text-base font-semibold sm:text-lg\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 string
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(input.Title)
+		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.app_name"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 103, Col: 110}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 103, Col: 92}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</h1></div></div><div class=\"flex-none flex flex-row items-center gap-2\"><div class=\"scaffold-desktop-right hidden md:flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, " - ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var12 string
+		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(input.Title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 103, Col: 110}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</h1></div></div><div class=\"flex-none flex flex-row items-center gap-2\"><div class=\"scaffold-desktop-right hidden md:flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(input.Actions) > 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"flex items-center gap-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<div class=\"flex items-center gap-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, action := range input.Actions {
-				var templ_7745c5c3_Var12 = []any{"scaffold-action-btn btn btn-sm" + scaffoldActionKindClass(action.Kind)}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var12...)
+				var templ_7745c5c3_Var13 = []any{"scaffold-action-btn btn btn-sm" + scaffoldActionKindClass(action.Kind)}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "<a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "<a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var13 templ.SafeURL
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(action.URL)
+				var templ_7745c5c3_Var14 templ.SafeURL
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinURLErrs(action.URL)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 111, Col: 27}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "\" class=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var12).String())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\" class=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(action.Title)
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var13).String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 111, Col: 126}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</a>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var16 string
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(action.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 111, Col: 126}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if CurrentDisplayName(ctx) != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<p class=\"scaffold-auth-text text-xs\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<p class=\"scaffold-auth-text text-xs\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var16 string
-			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)))
+			var templ_7745c5c3_Var17 string
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 116, Col: 104}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "</p><form method=\"POST\" action=\"")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var17 templ.SafeURL
-			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.LogoutSubmitPost(ctx, ""))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 117, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "\"><button class=\"btn btn-ghost btn-sm\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "</p><form method=\"POST\" action=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var18 string
-			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
+			var templ_7745c5c3_Var18 templ.SafeURL
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.LogoutSubmitPost(ctx, ""))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 118, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 117, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\"><button class=\"btn btn-ghost btn-sm\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		} else if session.IsAdminAuthenticated(ctx) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<form method=\"POST\" action=\"")
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
 			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var19 templ.SafeURL
-			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.AdminLogoutPost(ctx, ""))
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 121, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 118, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\"><button class=\"btn btn-ghost btn-sm\" type=\"submit\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "</button></form>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var20 string
-			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
+		} else if session.IsAdminAuthenticated(ctx) {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<form method=\"POST\" action=\"")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 122, Col: 87}
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var20 templ.SafeURL
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.AdminLogoutPost(ctx, ""))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 121, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</button></form>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</div><details class=\"dropdown dropdown-end md:hidden\"><summary class=\"btn btn-ghost btn-sm\">Menu</summary><div class=\"dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if input.Subtitle != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<p class=\"mb-2 text-sm text-base-content/70\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "\"><button class=\"btn btn-ghost btn-sm\" type=\"submit\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var21 string
-			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(input.Subtitle)
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 130, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 122, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</button></form>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</div><details class=\"dropdown dropdown-end md:hidden\"><summary class=\"btn btn-ghost btn-sm\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "scaffold.menu"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 127, Col: 72}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</summary><div class=\"dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if input.Subtitle != "" {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<p class=\"mb-2 text-sm text-base-content/70\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(input.Subtitle)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 130, Col: 68}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if len(input.Actions) > 0 || CurrentDisplayName(ctx) != "" || session.IsAdminAuthenticated(ctx) {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div class=\"flex flex-col gap-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<div class=\"flex flex-col gap-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, action := range input.Actions {
-				var templ_7745c5c3_Var22 = []any{"btn btn-sm justify-start" + scaffoldActionKindClass(action.Kind)}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var22...)
+				var templ_7745c5c3_Var24 = []any{"btn btn-sm justify-start" + scaffoldActionKindClass(action.Kind)}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var23 templ.SafeURL
-				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinURLErrs(action.URL)
+				var templ_7745c5c3_Var25 templ.SafeURL
+				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinURLErrs(action.URL)
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 135, Col: 29}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\" class=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var24 string
-				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var22).String())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 1, Col: 0}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var25 string
-				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(action.Title)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 135, Col: 122}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "</a> ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\" class=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-			}
-			if CurrentDisplayName(ctx) != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "<form method=\"POST\" action=\"")
+				var templ_7745c5c3_Var26 string
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var24).String())
 				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var26 templ.SafeURL
-				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.LogoutSubmitPost(ctx, ""))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 138, Col: 74}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 1, Col: 0}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "\"><button type=\"submit\" class=\"btn btn-sm btn-error btn-block\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 string
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(action.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 139, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 135, Col: 122}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</button></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</a> ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-			} else if session.IsAdminAuthenticated(ctx) {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "<form method=\"POST\" action=\"")
+			}
+			if CurrentDisplayName(ctx) != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<form method=\"POST\" action=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var28 templ.SafeURL
-				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.AdminLogoutPost(ctx, ""))
+				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.LogoutSubmitPost(ctx, ""))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 142, Col: 73}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 138, Col: 74}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "\"><button type=\"submit\" class=\"btn btn-sm btn-error btn-block\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\"><button type=\"submit\" class=\"btn btn-sm btn-error btn-block\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 143, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 139, Col: 100}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</button></form>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</button></form>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else if session.IsAdminAuthenticated(ctx) {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<form method=\"POST\" action=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var30 templ.SafeURL
+				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs(paths.Route.AdminLogoutPost(ctx, ""))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 142, Col: 73}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\"><button type=\"submit\" class=\"btn btn-sm btn-error btn-block\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var31 string
+				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logout"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 143, Col: 100}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</button></form>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
 		if CurrentDisplayName(ctx) != "" {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "<p class=\"mt-3 text-xs text-base-content/70\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<p class=\"mt-3 text-xs text-base-content/70\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var30 string
-			templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)))
+			var templ_7745c5c3_Var32 string
+			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.logged_in_as", CurrentDisplayName(ctx)))
 			if templ_7745c5c3_Err != nil {
 				return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 149, Col: 113}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "<div class=\"mt-3 flex items-center justify-between gap-2\"><button type=\"button\" class=\"btn btn-sm btn-outline\" hx-get=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "<div class=\"mt-3 flex items-center justify-between gap-2\"><button type=\"button\" class=\"btn btn-sm btn-outline\" hx-get=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var31 string
-		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(paths.NewDocsOobDocPathRoute("index").DocsPageOOBGet(ctx, ""))
+		var templ_7745c5c3_Var33 string
+		templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(paths.NewDocsOobDocPathRoute("index").DocsPageOOBGet(ctx, ""))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 155, Col: 78}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "\" hx-swap=\"none\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "\" hx-swap=\"none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var32 string
-		templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.help"))
+		var templ_7745c5c3_Var34 string
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.help"))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 158, Col: 35}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</button><div class=\"flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "</button><div class=\"flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -604,29 +630,42 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</div></div><p class=\"mt-2 text-xs text-base-content/70\">Made with love by Patric</p></div></details></div></nav><div id=\"app-notification-target\" class=\"app-notification-target\" aria-live=\"polite\" aria-atomic=\"false\" aria-relevant=\"additions\"></div><div class=\"w-full max-w-screen-xl mx-auto flex flex-1 min-h-0 flex-col p-5\"><div class=\"relative flex flex-1 min-h-0 flex-col gap-4 md:flex-row md:items-stretch\"><section id=\"app-docs-target\" class=\"hidden\"></section>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</div></div><p class=\"mt-2 text-xs text-base-content/70\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var33 = []any{"page-main w-full min-w-0 flex-1 p-4 flex flex-col gap-4 min-h-0 overflow-hidden"}
-		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var33...)
+		var templ_7745c5c3_Var35 string
+		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "scaffold.footer_credit"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 165, Col: 90}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<main class=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</p></div></details></div></nav><div id=\"app-notification-target\" class=\"app-notification-target\" aria-live=\"polite\" aria-atomic=\"false\" aria-relevant=\"additions\"></div><div class=\"w-full max-w-screen-xl mx-auto flex flex-1 min-h-0 flex-col p-5\"><div class=\"relative flex flex-1 min-h-0 flex-col gap-4 md:flex-row md:items-stretch\"><section id=\"app-docs-target\" class=\"hidden\"></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var33).String())
+		var templ_7745c5c3_Var36 = []any{"page-main w-full min-w-0 flex-1 p-4 flex flex-col gap-4 min-h-0 overflow-hidden"}
+		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var36...)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "<main class=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var37 string
+		templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var36).String())
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 1, Col: 0}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -634,33 +673,46 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 55, "</main></div></div><footer class=\"page-footer hidden border-t border-base-300 bg-base-100/70 md:block\"><div class=\"mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-4 py-3 text-sm text-base-content/70 lg:px-5\"><span class=\"text-xs sm:text-sm\">Made with love by Patric</span><div class=\"flex items-center gap-2\"><button type=\"button\" class=\"btn btn-ghost btn-sm hidden md:inline-flex\" hx-get=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</main></div></div><footer class=\"page-footer hidden border-t border-base-300 bg-base-100/70 md:block\"><div class=\"mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-4 py-3 text-sm text-base-content/70 lg:px-5\"><span class=\"text-xs sm:text-sm\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(paths.NewDocsOobDocPathRoute("index").DocsPageOOBGet(ctx, ""))
+		var templ_7745c5c3_Var38 string
+		templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "scaffold.footer_credit"))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 187, Col: 76}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</span><div class=\"flex items-center gap-2\"><button type=\"button\" class=\"btn btn-ghost btn-sm hidden md:inline-flex\" hx-get=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var39 string
+		templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(paths.NewDocsOobDocPathRoute("index").DocsPageOOBGet(ctx, ""))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 192, Col: 76}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "\" hx-swap=\"none\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" hx-swap=\"none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var36 string
-		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.help"))
+		var templ_7745c5c3_Var40 string
+		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "common.help"))
 		if templ_7745c5c3_Err != nil {
 			return templ.Error{Err: templ_7745c5c3_Err, FileName: `scaffold.templ`, Line: 195, Col: 33}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</button>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "</button>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -672,7 +724,7 @@ func HeaderFooterScaffold(input ScaffoldInput, content templ.Component) templ.Co
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "</div></div></footer><script>\n\t\t(function() {\n\t\t\tvar hostID = \"app-notification-target\";\n\t\t\tvar defaultTimeout = 6000;\n\n\t\t\tfunction getHost() {\n\t\t\t\treturn document.getElementById(hostID);\n\t\t\t}\n\n\t\t\tfunction parseTimeout(item) {\n\t\t\t\tvar raw = item.getAttribute(\"data-notification-timeout\");\n\t\t\t\tvar parsed = Number.parseInt(raw || \"\", 10);\n\t\t\t\tif (!Number.isFinite(parsed) || parsed <= 0) {\n\t\t\t\t\treturn defaultTimeout;\n\t\t\t\t}\n\t\t\t\treturn parsed;\n\t\t\t}\n\n\t\t\tfunction notificationKey(item) {\n\t\t\t\tvar tone = item.getAttribute(\"data-notification-tone\") || \"\";\n\t\t\t\tvar message = (item.textContent || \"\").replace(/\\s+/g, \" \").trim();\n\t\t\t\treturn tone + \"|\" + message;\n\t\t\t}\n\n\t\t\tfunction collectNotifications(root) {\n\t\t\t\tvar items = [];\n\t\t\t\tif (root instanceof Element && root.matches(\"[data-notification-item]\")) {\n\t\t\t\t\titems.push(root);\n\t\t\t\t}\n\t\t\t\tif (root instanceof Element || root instanceof Document) {\n\t\t\t\t\tvar nested = root.querySelectorAll(\"[data-notification-item]\");\n\t\t\t\t\tfor (var i = 0; i < nested.length; i++) {\n\t\t\t\t\t\titems.push(nested[i]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\treturn items;\n\t\t\t}\n\n\t\t\tfunction findExistingByKey(host, key, exclude) {\n\t\t\t\tvar current = host.querySelectorAll(\"[data-notification-item]\");\n\t\t\t\tfor (var i = 0; i < current.length; i++) {\n\t\t\t\t\tvar candidate = current[i];\n\t\t\t\t\tif (candidate === exclude) {\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tvar candidateKey = candidate.getAttribute(\"data-notification-key\") || notificationKey(candidate);\n\t\t\t\t\tif (candidateKey === key) {\n\t\t\t\t\t\treturn candidate;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\treturn null;\n\t\t\t}\n\n\t\t\tfunction dismissNotification(item) {\n\t\t\t\tif (!(item instanceof HTMLElement) || item.dataset.notificationDismissed === \"1\") {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\titem.dataset.notificationDismissed = \"1\";\n\t\t\t\titem.classList.add(\"app-notification-leave\");\n\t\t\t\twindow.setTimeout(function() {\n\t\t\t\t\tif (item.parentNode) {\n\t\t\t\t\t\titem.parentNode.removeChild(item);\n\t\t\t\t\t}\n\t\t\t\t}, 220);\n\t\t\t}\n\n\t\t\tfunction initializeNotification(item) {\n\t\t\t\tif (!(item instanceof HTMLElement) || item.dataset.notificationInit === \"1\") {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\titem.dataset.notificationInit = \"1\";\n\t\t\t\tvar timeout = parseTimeout(item);\n\t\t\t\tif (timeout <= 0) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\twindow.setTimeout(function() {\n\t\t\t\t\tdismissNotification(item);\n\t\t\t\t}, timeout);\n\t\t\t}\n\n\t\t\tfunction routeNotifications(scope) {\n\t\t\t\tvar host = getHost();\n\t\t\t\tif (!host) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar root = scope;\n\t\t\t\tif (!(root instanceof Element) && !(root instanceof Document)) {\n\t\t\t\t\troot = document;\n\t\t\t\t}\n\t\t\t\tvar items = collectNotifications(root);\n\t\t\t\tfor (var i = 0; i < items.length; i++) {\n\t\t\t\t\tvar item = items[i];\n\t\t\t\t\tvar key = notificationKey(item);\n\t\t\t\t\titem.setAttribute(\"data-notification-key\", key);\n\t\t\t\t\tvar existing = findExistingByKey(host, key, item);\n\t\t\t\t\tif (existing && existing !== item) {\n\t\t\t\t\t\tif (item.parentNode) {\n\t\t\t\t\t\t\titem.parentNode.removeChild(item);\n\t\t\t\t\t\t}\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tif (!host.contains(item)) {\n\t\t\t\t\t\thost.prepend(item);\n\t\t\t\t\t}\n\t\t\t\t\tinitializeNotification(item);\n\t\t\t\t}\n\t\t\t\tvar maxItems = 3;\n\t\t\t\tvar current = host.querySelectorAll(\"[data-notification-item]\");\n\t\t\t\tfor (var j = maxItems; j < current.length; j++) {\n\t\t\t\t\tdismissNotification(current[j]);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof Element)) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar dismissButton = target.closest(\"[data-notification-dismiss]\");\n\t\t\t\tif (!dismissButton) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar item = dismissButton.closest(\"[data-notification-item]\");\n\t\t\t\tdismissNotification(item);\n\t\t\t});\n\n\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\n\t\t\t\trouteNotifications(event.target);\n\t\t\t\trouteNotifications(getHost());\n\t\t\t});\n\t\t\tdocument.addEventListener(\"htmx:oobAfterSwap\", function(event) {\n\t\t\t\trouteNotifications(event.target);\n\t\t\t\trouteNotifications(getHost());\n\t\t\t});\n\n\t\t\tif (document.readyState === \"loading\") {\n\t\t\t\tdocument.addEventListener(\"DOMContentLoaded\", function() {\n\t\t\t\t\trouteNotifications(document);\n\t\t\t\t});\n\t\t\t} else {\n\t\t\t\trouteNotifications(document);\n\t\t\t}\n\t\t})();\n\t</script><script>\n\t\t(function() {\n\t\t\tfunction isDocsOpen(target) {\n\t\t\t\treturn target instanceof HTMLElement && target.id === \"app-docs-target\" && target.dataset.docsOpen === \"1\";\n\t\t\t}\n\n\t\t\tfunction resetDocsTarget() {\n\t\t\t\tvar current = document.getElementById(\"app-docs-target\");\n\t\t\t\tif (!(current instanceof HTMLElement) || !isDocsOpen(current)) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar replacement = document.createElement(\"section\");\n\t\t\t\treplacement.id = \"app-docs-target\";\n\t\t\t\treplacement.className = \"hidden\";\n\t\t\t\tcurrent.replaceWith(replacement);\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof Element) || !target.closest(\"[data-docs-close]\")) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tevent.preventDefault();\n\t\t\t\tresetDocsTarget();\n\t\t\t});\n\n\t\t\tdocument.addEventListener(\"keydown\", function(event) {\n\t\t\t\tif (event.key === \"Escape\") {\n\t\t\t\t\tresetDocsTarget();\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script><script>\n\t\t(function() {\n\t\t\tvar storageKey = \"conference-tool.theme\";\n\t\t\tvar cookieKey = \"conference-tool-theme\";\n\t\t\tvar validValues = { light: true, dark: true, auto: true };\n\n\t\t\tfunction normalizePreference(value) {\n\t\t\t\treturn validValues[value] ? value : \"auto\";\n\t\t\t}\n\n\t\t\tfunction readPreference() {\n\t\t\t\ttry {\n\t\t\t\t\treturn normalizePreference(window.localStorage.getItem(storageKey));\n\t\t\t\t} catch (error) {\n\t\t\t\t\treturn \"auto\";\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction writePreference(value) {\n\t\t\t\ttry {\n\t\t\t\t\twindow.localStorage.setItem(storageKey, value);\n\t\t\t\t} catch (error) {\n\t\t\t\t}\n\t\t\t\tdocument.cookie = cookieKey + \"=\" + encodeURIComponent(value) + \"; Path=/; Max-Age=31536000; SameSite=Lax\";\n\t\t\t}\n\n\t\t\tfunction applyPreference(value) {\n\t\t\t\tvar pref = normalizePreference(value);\n\t\t\t\tif (pref === \"dark\") {\n\t\t\t\t\tdocument.documentElement.setAttribute(\"data-theme\", \"dark\");\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tif (pref === \"light\") {\n\t\t\t\t\tdocument.documentElement.setAttribute(\"data-theme\", \"corporate\");\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tdocument.documentElement.removeAttribute(\"data-theme\");\n\t\t\t}\n\n\t\t\tfunction syncSwitchers(value) {\n\t\t\t\tvar pref = normalizePreference(value);\n\t\t\t\tvar inputs = document.querySelectorAll(\"[data-theme-pref-input]\");\n\t\t\t\tfor (var i = 0; i < inputs.length; i++) {\n\t\t\t\t\tvar input = inputs[i];\n\t\t\t\t\tif (!(input instanceof HTMLInputElement)) {\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tvar checked = input.value === pref;\n\t\t\t\t\tinput.checked = checked;\n\t\t\t\t\tvar option = input.closest(\"[data-theme-pref-option]\");\n\t\t\t\t\tif (option) {\n\t\t\t\t\t\toption.classList.toggle(\"btn-active\", checked);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction setPreference(value) {\n\t\t\t\tvar pref = normalizePreference(value);\n\t\t\t\twritePreference(pref);\n\t\t\t\tapplyPreference(pref);\n\t\t\t\tsyncSwitchers(pref);\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"change\", function(event) {\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof HTMLInputElement) || !target.matches(\"[data-theme-pref-input]\")) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tsetPreference(target.value);\n\t\t\t});\n\n\t\t\tif (window.matchMedia) {\n\t\t\t\tvar media = window.matchMedia(\"(prefers-color-scheme: dark)\");\n\t\t\t\tvar onSystemThemeChange = function() {\n\t\t\t\t\tif (readPreference() === \"auto\") {\n\t\t\t\t\t\tapplyPreference(\"auto\");\n\t\t\t\t\t\tsyncSwitchers(\"auto\");\n\t\t\t\t\t}\n\t\t\t\t};\n\t\t\t\tif (typeof media.addEventListener === \"function\") {\n\t\t\t\t\tmedia.addEventListener(\"change\", onSystemThemeChange);\n\t\t\t\t} else if (typeof media.addListener === \"function\") {\n\t\t\t\t\tmedia.addListener(onSystemThemeChange);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tvar initialPreference = readPreference();\n\t\t\twritePreference(initialPreference);\n\t\t\tapplyPreference(initialPreference);\n\t\t\tsyncSwitchers(initialPreference);\n\t\t})();\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</div></div></footer><script>\n\t\t(function() {\n\t\t\tvar hostID = \"app-notification-target\";\n\t\t\tvar defaultTimeout = 6000;\n\n\t\t\tfunction getHost() {\n\t\t\t\treturn document.getElementById(hostID);\n\t\t\t}\n\n\t\t\tfunction parseTimeout(item) {\n\t\t\t\tvar raw = item.getAttribute(\"data-notification-timeout\");\n\t\t\t\tvar parsed = Number.parseInt(raw || \"\", 10);\n\t\t\t\tif (!Number.isFinite(parsed) || parsed <= 0) {\n\t\t\t\t\treturn defaultTimeout;\n\t\t\t\t}\n\t\t\t\treturn parsed;\n\t\t\t}\n\n\t\t\tfunction notificationKey(item) {\n\t\t\t\tvar tone = item.getAttribute(\"data-notification-tone\") || \"\";\n\t\t\t\tvar message = (item.textContent || \"\").replace(/\\s+/g, \" \").trim();\n\t\t\t\treturn tone + \"|\" + message;\n\t\t\t}\n\n\t\t\tfunction collectNotifications(root) {\n\t\t\t\tvar items = [];\n\t\t\t\tif (root instanceof Element && root.matches(\"[data-notification-item]\")) {\n\t\t\t\t\titems.push(root);\n\t\t\t\t}\n\t\t\t\tif (root instanceof Element || root instanceof Document) {\n\t\t\t\t\tvar nested = root.querySelectorAll(\"[data-notification-item]\");\n\t\t\t\t\tfor (var i = 0; i < nested.length; i++) {\n\t\t\t\t\t\titems.push(nested[i]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\treturn items;\n\t\t\t}\n\n\t\t\tfunction findExistingByKey(host, key, exclude) {\n\t\t\t\tvar current = host.querySelectorAll(\"[data-notification-item]\");\n\t\t\t\tfor (var i = 0; i < current.length; i++) {\n\t\t\t\t\tvar candidate = current[i];\n\t\t\t\t\tif (candidate === exclude) {\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tvar candidateKey = candidate.getAttribute(\"data-notification-key\") || notificationKey(candidate);\n\t\t\t\t\tif (candidateKey === key) {\n\t\t\t\t\t\treturn candidate;\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\treturn null;\n\t\t\t}\n\n\t\t\tfunction dismissNotification(item) {\n\t\t\t\tif (!(item instanceof HTMLElement) || item.dataset.notificationDismissed === \"1\") {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\titem.dataset.notificationDismissed = \"1\";\n\t\t\t\titem.classList.add(\"app-notification-leave\");\n\t\t\t\twindow.setTimeout(function() {\n\t\t\t\t\tif (item.parentNode) {\n\t\t\t\t\t\titem.parentNode.removeChild(item);\n\t\t\t\t\t}\n\t\t\t\t}, 220);\n\t\t\t}\n\n\t\t\tfunction initializeNotification(item) {\n\t\t\t\tif (!(item instanceof HTMLElement) || item.dataset.notificationInit === \"1\") {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\titem.dataset.notificationInit = \"1\";\n\t\t\t\tvar timeout = parseTimeout(item);\n\t\t\t\tif (timeout <= 0) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\twindow.setTimeout(function() {\n\t\t\t\t\tdismissNotification(item);\n\t\t\t\t}, timeout);\n\t\t\t}\n\n\t\t\tfunction routeNotifications(scope) {\n\t\t\t\tvar host = getHost();\n\t\t\t\tif (!host) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar root = scope;\n\t\t\t\tif (!(root instanceof Element) && !(root instanceof Document)) {\n\t\t\t\t\troot = document;\n\t\t\t\t}\n\t\t\t\tvar items = collectNotifications(root);\n\t\t\t\tfor (var i = 0; i < items.length; i++) {\n\t\t\t\t\tvar item = items[i];\n\t\t\t\t\tvar key = notificationKey(item);\n\t\t\t\t\titem.setAttribute(\"data-notification-key\", key);\n\t\t\t\t\tvar existing = findExistingByKey(host, key, item);\n\t\t\t\t\tif (existing && existing !== item) {\n\t\t\t\t\t\tif (item.parentNode) {\n\t\t\t\t\t\t\titem.parentNode.removeChild(item);\n\t\t\t\t\t\t}\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tif (!host.contains(item)) {\n\t\t\t\t\t\thost.prepend(item);\n\t\t\t\t\t}\n\t\t\t\t\tinitializeNotification(item);\n\t\t\t\t}\n\t\t\t\tvar maxItems = 3;\n\t\t\t\tvar current = host.querySelectorAll(\"[data-notification-item]\");\n\t\t\t\tfor (var j = maxItems; j < current.length; j++) {\n\t\t\t\t\tdismissNotification(current[j]);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof Element)) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar dismissButton = target.closest(\"[data-notification-dismiss]\");\n\t\t\t\tif (!dismissButton) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar item = dismissButton.closest(\"[data-notification-item]\");\n\t\t\t\tdismissNotification(item);\n\t\t\t});\n\n\t\t\tdocument.addEventListener(\"htmx:afterSwap\", function(event) {\n\t\t\t\trouteNotifications(event.target);\n\t\t\t\trouteNotifications(getHost());\n\t\t\t});\n\t\t\tdocument.addEventListener(\"htmx:oobAfterSwap\", function(event) {\n\t\t\t\trouteNotifications(event.target);\n\t\t\t\trouteNotifications(getHost());\n\t\t\t});\n\n\t\t\tif (document.readyState === \"loading\") {\n\t\t\t\tdocument.addEventListener(\"DOMContentLoaded\", function() {\n\t\t\t\t\trouteNotifications(document);\n\t\t\t\t});\n\t\t\t} else {\n\t\t\t\trouteNotifications(document);\n\t\t\t}\n\t\t})();\n\t</script><script>\n\t\t(function() {\n\t\t\tfunction isDocsOpen(target) {\n\t\t\t\treturn target instanceof HTMLElement && target.id === \"app-docs-target\" && target.dataset.docsOpen === \"1\";\n\t\t\t}\n\n\t\t\tfunction resetDocsTarget() {\n\t\t\t\tvar current = document.getElementById(\"app-docs-target\");\n\t\t\t\tif (!(current instanceof HTMLElement) || !isDocsOpen(current)) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tvar replacement = document.createElement(\"section\");\n\t\t\t\treplacement.id = \"app-docs-target\";\n\t\t\t\treplacement.className = \"hidden\";\n\t\t\t\tcurrent.replaceWith(replacement);\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"click\", function(event) {\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof Element) || !target.closest(\"[data-docs-close]\")) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tevent.preventDefault();\n\t\t\t\tresetDocsTarget();\n\t\t\t});\n\n\t\t\tdocument.addEventListener(\"keydown\", function(event) {\n\t\t\t\tif (event.key === \"Escape\") {\n\t\t\t\t\tresetDocsTarget();\n\t\t\t\t}\n\t\t\t});\n\t\t})();\n\t</script><script>\n\t\t(function() {\n\t\t\tvar storageKey = \"conference-tool.theme\";\n\t\t\tvar cookieKey = \"conference-tool-theme\";\n\t\t\tvar validValues = { light: true, dark: true, auto: true };\n\n\t\t\tfunction normalizePreference(value) {\n\t\t\t\treturn validValues[value] ? value : \"auto\";\n\t\t\t}\n\n\t\t\tfunction readPreference() {\n\t\t\t\ttry {\n\t\t\t\t\treturn normalizePreference(window.localStorage.getItem(storageKey));\n\t\t\t\t} catch (error) {\n\t\t\t\t\treturn \"auto\";\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction writePreference(value) {\n\t\t\t\ttry {\n\t\t\t\t\twindow.localStorage.setItem(storageKey, value);\n\t\t\t\t} catch (error) {\n\t\t\t\t}\n\t\t\t\tdocument.cookie = cookieKey + \"=\" + encodeURIComponent(value) + \"; Path=/; Max-Age=31536000; SameSite=Lax\";\n\t\t\t}\n\n\t\t\tfunction applyPreference(value) {\n\t\t\t\tvar pref = normalizePreference(value);\n\t\t\t\tif (pref === \"dark\") {\n\t\t\t\t\tdocument.documentElement.setAttribute(\"data-theme\", \"dark\");\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tif (pref === \"light\") {\n\t\t\t\t\tdocument.documentElement.setAttribute(\"data-theme\", \"corporate\");\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tdocument.documentElement.removeAttribute(\"data-theme\");\n\t\t\t}\n\n\t\t\tfunction syncSwitchers(value) {\n\t\t\t\tvar pref = normalizePreference(value);\n\t\t\t\tvar inputs = document.querySelectorAll(\"[data-theme-pref-input]\");\n\t\t\t\tfor (var i = 0; i < inputs.length; i++) {\n\t\t\t\t\tvar input = inputs[i];\n\t\t\t\t\tif (!(input instanceof HTMLInputElement)) {\n\t\t\t\t\t\tcontinue;\n\t\t\t\t\t}\n\t\t\t\t\tvar checked = input.value === pref;\n\t\t\t\t\tinput.checked = checked;\n\t\t\t\t\tvar option = input.closest(\"[data-theme-pref-option]\");\n\t\t\t\t\tif (option) {\n\t\t\t\t\t\toption.classList.toggle(\"btn-active\", checked);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tfunction setPreference(value) {\n\t\t\t\tvar pref = normalizePreference(value);\n\t\t\t\twritePreference(pref);\n\t\t\t\tapplyPreference(pref);\n\t\t\t\tsyncSwitchers(pref);\n\t\t\t}\n\n\t\t\tdocument.addEventListener(\"change\", function(event) {\n\t\t\t\tvar target = event.target;\n\t\t\t\tif (!(target instanceof HTMLInputElement) || !target.matches(\"[data-theme-pref-input]\")) {\n\t\t\t\t\treturn;\n\t\t\t\t}\n\t\t\t\tsetPreference(target.value);\n\t\t\t});\n\n\t\t\tif (window.matchMedia) {\n\t\t\t\tvar media = window.matchMedia(\"(prefers-color-scheme: dark)\");\n\t\t\t\tvar onSystemThemeChange = function() {\n\t\t\t\t\tif (readPreference() === \"auto\") {\n\t\t\t\t\t\tapplyPreference(\"auto\");\n\t\t\t\t\t\tsyncSwitchers(\"auto\");\n\t\t\t\t\t}\n\t\t\t\t};\n\t\t\t\tif (typeof media.addEventListener === \"function\") {\n\t\t\t\t\tmedia.addEventListener(\"change\", onSystemThemeChange);\n\t\t\t\t} else if (typeof media.addListener === \"function\") {\n\t\t\t\t\tmedia.addListener(onSystemThemeChange);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tvar initialPreference = readPreference();\n\t\t\twritePreference(initialPreference);\n\t\t\tapplyPreference(initialPreference);\n\t\t\tsyncSwitchers(initialPreference);\n\t\t})();\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

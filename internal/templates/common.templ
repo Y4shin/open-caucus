@@ -3,6 +3,8 @@ package templates
 import (
 	"strconv"
 	"strings"
+
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 func notificationTimeoutStr(timeoutMs []int) string {
@@ -55,7 +57,7 @@ templ NotificationMessage(tone string, message string, timeoutMs ...int) {
 				type="button"
 				class="btn btn-ghost btn-xs btn-square shrink-0"
 				data-notification-dismiss
-				aria-label="Dismiss"
+				aria-label={ i18n.T(ctx, "common.dismiss") }
 			>&#x00D7;</button>
 		</div>
 	}

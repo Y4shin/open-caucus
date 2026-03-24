@@ -136,7 +136,7 @@ func TestAttendee_QuotedBadgeVisible(t *testing.T) {
 }
 
 // TestAttendeeLive_SelfAddButtons verifies attendees can add themselves to the
-// speakers queue via the live-page quick actions for regular and ropm.
+// speakers queue via the live-page quick actions for regular and PO entries.
 func TestAttendeeLive_SelfAddButtons(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -165,13 +165,12 @@ func TestAttendeeLive_SelfAddButtons(t *testing.T) {
 	}
 
 	if err := page.Locator("[data-testid='live-add-self-ropm']").Click(); err != nil {
-		t.Fatalf("click add self ropm: %v", err)
+		t.Fatalf("click add self PO entry: %v", err)
 	}
 	waitUntil(t, 3*time.Second, func() (bool, error) {
 		count, err := page.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']:has-text('Alice Speaker')").Count()
 		return count >= 2, err
-	}, "second speaker row for Alice after ropm self-add")
+	}, "second speaker row for Alice after PO self-add")
 }
-
 
 

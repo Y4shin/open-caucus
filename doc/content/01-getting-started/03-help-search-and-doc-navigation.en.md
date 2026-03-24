@@ -5,18 +5,42 @@ title-de: Hilfe-Suche und Dokumentnavigation
 
 # Help Search and Doc Navigation
 
-## Opening Help
+Use this page to quickly find the right guide while you stay on your current app page.
 
-Use the **Help** button in the app header/footer to open documentation without leaving your current workspace.
+## Who this is for
 
-## Finding What You Need
+Any user who needs instructions during a live task in the app.
 
-- Use the search box for keywords like *join*, *vote*, *speaker*, or *recovery*.
-- Use the left-side documentation tree for step-by-step browsing.
-- Use breadcrumbs to move back up to broader guides.
+## Before you start
 
-## Recommended Pattern
+1. Keep your current app page open in the browser.
+2. Know the task keyword you need (for example: join, vote, speaker, recovery).
+3. Open help from inside the app so you can switch between guide and task quickly.
 
-1. Search by task.
-2. Open the matching page.
-3. Keep help open while performing the steps in the app.
+## Step-by-step
+
+1. Click the **Help** button in the app header or footer.
+2. In documentation search, type a task-focused keyword (for example: join, vote, speaker, recovery).
+3. Open the result that best matches your current task.
+4. If search results are broad, use the left navigation tree to narrow down by section.
+5. Use the left navigation tree to move back to broader topics when needed.
+6. Keep the guide open while you perform each step in the app.
+
+## What you should see
+
+- Help opens without forcing you to leave your current app page.
+- Search results point to task pages, not only feature descriptions.
+- Navigation tree helps you move between detailed and broad guides.
+
+## If something goes wrong
+
+- Search returns too many results:
+  Add a more specific keyword (for example: attendee login instead of login).
+- You opened the wrong page:
+  Use the left navigation tree to return to the section and pick a different guide.
+- You cannot find a topic:
+  Navigate through the section tree (`Getting Started`, `Chairperson`, `Members/Attendees`, `Operations`) and open the closest guide.
+
+## What happens next
+
+Continue with the role guides from [Getting Started index](/docs/01-getting-started/) or jump to your task area directly.

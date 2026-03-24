@@ -1,11 +1,14 @@
 package templates
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type VoteOptionDisplay struct {
@@ -82,57 +85,81 @@ func voteVisibilityBadgeClass(visibility string) string {
 	return "badge badge-primary badge-outline badge-sm"
 }
 
-func voteBoundsLabel(minSelections, maxSelections int64) string {
+func voteBoundsLabel(ctx context.Context, minSelections, maxSelections int64) string {
 	if minSelections == maxSelections {
-		return fmt.Sprintf("select exactly %d", minSelections)
+		return i18n.T(ctx, "votes.select_exactly", strconv.FormatInt(minSelections, 10))
 	}
-	return fmt.Sprintf("select %d to %d", minSelections, maxSelections)
+	return i18n.T(ctx, "votes.select_between", strconv.FormatInt(minSelections, 10), strconv.FormatInt(maxSelections, 10))
 }
 
 func voteSourceSelected(source, value string) bool {
 	return strings.TrimSpace(source) == value
 }
 
-func voteDefaultOptionLabels() []string {
-	return []string{"Yes", "No", "Abstain", ""}
+func voteDefaultOptionLabels(ctx context.Context) []string {
+	return []string{i18n.T(ctx, "common.yes"), i18n.T(ctx, "common.no"), i18n.T(ctx, "votes.abstain"), ""}
 }
 
-func voteLabelsForEdit(vote VoteModeratorItem) []string {
+func voteLabelsForEdit(ctx context.Context, vote VoteModeratorItem) []string {
 	labels := make([]string, 0, len(vote.Options)+1)
 	for _, option := range vote.Options {
 		labels = append(labels, option.Label)
 	}
 	if len(labels) < 2 {
-		labels = append(labels, "Yes", "No")
+		labels = append(labels, i18n.T(ctx, "common.yes"), i18n.T(ctx, "common.no"))
 	}
 	labels = append(labels, "")
 	return labels
 }
 
+func voteStateLabel(ctx context.Context, state string) string {
+	switch state {
+	case "draft":
+		return i18n.T(ctx, "votes.state_draft")
+	case "open":
+		return i18n.T(ctx, "votes.state_open")
+	case "counting":
+		return i18n.T(ctx, "votes.state_counting")
+	case "closed":
+		return i18n.T(ctx, "votes.state_closed")
+	case "archived":
+		return i18n.T(ctx, "votes.state_archived")
+	default:
+		return state
+	}
+}
+
+func voteVisibilityLabel(ctx context.Context, visibility string) string {
+	if visibility == "secret" {
+		return i18n.T(ctx, "votes.visibility_secret")
+	}
+	return i18n.T(ctx, "votes.visibility_open")
+}
+
 templ VoteModeratorProgressCard(vote VoteModeratorItem) {
 	<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
-		<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Live Submission Tally</div>
+		<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.live_submission_tally") }</div>
 		<div class="grid gap-1 text-sm sm:grid-cols-2">
 			<div class="flex items-center justify-between gap-2">
-				<span>Eligible</span>
+				<span>{ i18n.T(ctx, "votes.eligible") }</span>
 				<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.EligibleCount, 10) }</span>
 			</div>
 			<div class="flex items-center justify-between gap-2">
-				<span>Casts</span>
+				<span>{ i18n.T(ctx, "votes.casts") }</span>
 				<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.CastCount, 10) }</span>
 			</div>
 			<div class="flex items-center justify-between gap-2">
-				<span>Counted Ballots</span>
+				<span>{ i18n.T(ctx, "votes.counted_ballots") }</span>
 				<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.BallotCount, 10) }</span>
 			</div>
 			if vote.Visibility == "secret" {
 				<div class="flex items-center justify-between gap-2">
-					<span>Outstanding</span>
+					<span>{ i18n.T(ctx, "votes.outstanding") }</span>
 					<span class={ "badge badge-sm", templ.KV("badge-warning", vote.OutstandingCount > 0), templ.KV("badge-success", vote.OutstandingCount <= 0) }>{ strconv.FormatInt(vote.OutstandingCount, 10) }</span>
 				</div>
 			} else {
 				<div class="flex items-center justify-between gap-2">
-					<span>Open Ballots</span>
+					<span>{ i18n.T(ctx, "votes.open_ballots") }</span>
 					<span class="badge badge-outline badge-sm">{ strconv.FormatInt(vote.OpenBallotCount, 10) }</span>
 				</div>
 			}
@@ -142,7 +169,7 @@ templ VoteModeratorProgressCard(vote VoteModeratorItem) {
 
 templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeItem) {
 	<div class="rounded-box border border-base-300 bg-base-200/20 p-2 space-y-2">
-		<div class="text-xs font-semibold uppercase text-base-content/70">Manual Submission</div>
+		<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.manual_submission") }</div>
 		if vote.Visibility == "open" {
 			if vote.State == "open" {
 				<form class="space-y-2"
@@ -150,7 +177,7 @@ templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeIte
 					hx-target="#moderate-votes-panel"
 					hx-swap="outerHTML"
 				>
-					<div class="text-xs font-semibold uppercase text-base-content/70">Open Ballot Entry</div>
+					<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.open_ballot_entry") }</div>
 					<div class={ "grid gap-1 text-sm", templ.KV("grid-cols-1", vote.MaxSelections == 1), templ.KV("grid-cols-2", vote.MaxSelections > 1) }>
 						for _, opt := range vote.Options {
 							<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
@@ -164,31 +191,31 @@ templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeIte
 						}
 					</div>
 					if len(attendees) == 0 {
-						<p class="text-xs text-warning">No attendees available for manual entry.</p>
+						<p class="text-xs text-warning">{ i18n.T(ctx, "votes.no_attendees_manual_entry") }</p>
 					} else {
 						<div class="join w-full">
 							<input
 								class="input input-bordered input-sm join-item w-full"
 								name="attendee_query"
 								list={ "vote-manual-open-attendee-list-" + vote.IDString }
-								placeholder="Search attendee by number or name"
+								placeholder={ i18n.T(ctx, "votes.search_attendee") }
 								required
 							/>
-							<button type="submit" class="btn btn-sm btn-primary join-item">Submit Ballot</button>
+							<button type="submit" class="btn btn-sm btn-primary join-item">{ i18n.T(ctx, "votes.submit_ballot") }</button>
 						</div>
 						<datalist id={ "vote-manual-open-attendee-list-" + vote.IDString }>
 							for _, a := range attendees {
 								<option value={ fmt.Sprintf("%d %s", a.AttendeeNumber, a.FullName) }></option>
 							}
 						</datalist>
-						<p class="text-xs text-base-content/70">Press Enter after typing just an attendee number for quick casting.</p>
+						<p class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.quick_cast_hint") }</p>
 					}
 				</form>
 			} else {
-				<p class="text-xs text-base-content/70">Manual open-ballot entry is available while the vote is in state <span class="font-semibold">open</span>.</p>
+				<p class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.manual_open_available") }</p>
 			}
 		} else {
-			<p class="text-xs text-base-content/70">Secret flow: register incoming slips in open state, then count ballots during open or counting state.</p>
+			<p class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.secret_flow_hint") }</p>
 			if vote.State == "open" || vote.State == "counting" {
 				<div class={ "grid gap-2", templ.KV("md:grid-cols-2", vote.State == "open"), templ.KV("md:grid-cols-1", vote.State != "open") }>
 					if vote.State == "open" {
@@ -197,27 +224,27 @@ templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeIte
 							hx-target="#moderate-votes-panel"
 							hx-swap="outerHTML"
 						>
-							<div class="text-xs font-semibold uppercase text-base-content/70">1. Register Cast</div>
+							<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.register_cast") }</div>
 							<input type="hidden" name="source" value="manual_submission"/>
 							if len(attendees) == 0 {
-								<p class="text-xs text-warning">No attendees available for cast registration.</p>
+								<p class="text-xs text-warning">{ i18n.T(ctx, "votes.no_attendees_cast_registration") }</p>
 							} else {
 								<div class="join w-full">
 									<input
 										class="input input-bordered input-sm join-item w-full"
 										name="attendee_query"
 										list={ "vote-manual-secret-attendee-list-" + vote.IDString }
-										placeholder="Search attendee by number or name"
+										placeholder={ i18n.T(ctx, "votes.search_attendee") }
 										required
 									/>
-									<button type="submit" class="btn btn-sm join-item">Register Cast</button>
+									<button type="submit" class="btn btn-sm join-item">{ i18n.T(ctx, "votes.register_cast_button") }</button>
 								</div>
 								<datalist id={ "vote-manual-secret-attendee-list-" + vote.IDString }>
 									for _, a := range attendees {
 										<option value={ fmt.Sprintf("%d %s", a.AttendeeNumber, a.FullName) }></option>
 									}
 								</datalist>
-								<p class="text-xs text-base-content/70">Press Enter after typing just an attendee number for quick registration.</p>
+								<p class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.quick_registration_hint") }</p>
 							}
 						</form>
 					}
@@ -226,11 +253,11 @@ templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeIte
 						hx-target="#moderate-votes-panel"
 						hx-swap="outerHTML"
 					>
-						<div class="text-xs font-semibold uppercase text-base-content/70">2. Count Secret Ballot</div>
-						<input class="input input-bordered input-sm w-full" name="receipt_token" placeholder="Receipt token (optional)"/>
+						<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.count_secret_ballot") }</div>
+						<input class="input input-bordered input-sm w-full" name="receipt_token" placeholder={ i18n.T(ctx, "votes.receipt_token_optional") }/>
 						<input type="hidden" name="commitment_cipher" value="xchacha20poly1305"/>
 						<input type="hidden" name="commitment_version" value="1"/>
-						<input class="input input-bordered input-sm w-full" name="encrypted_commitment_b64" placeholder="Encrypted commitment (optional base64)"/>
+						<input class="input input-bordered input-sm w-full" name="encrypted_commitment_b64" placeholder={ i18n.T(ctx, "votes.encrypted_commitment_optional") }/>
 						<div class="grid grid-cols-2 gap-1 text-sm">
 							for _, opt := range vote.Options {
 								<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
@@ -239,11 +266,11 @@ templ VoteModeratorManualSection(vote VoteModeratorItem, attendees []AttendeeIte
 								</label>
 							}
 						</div>
-						<button type="submit" class="btn btn-sm btn-primary">Count Ballot</button>
+						<button type="submit" class="btn btn-sm btn-primary">{ i18n.T(ctx, "votes.count_ballot") }</button>
 					</form>
 				</div>
 			} else {
-				<p class="text-xs text-base-content/70">Manual secret actions are available while vote is in state <span class="font-semibold">open</span> or <span class="font-semibold">counting</span>.</p>
+				<p class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.manual_secret_available") }</p>
 			}
 		}
 	</div>
@@ -254,9 +281,9 @@ templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeIte
 		<summary class="collapse-title py-3 pr-10">
 			<div class="flex flex-wrap items-center gap-2">
 				<h4 class="font-semibold">{ vote.Name }</h4>
-				<span class={ voteStateBadgeClass(vote.State) }>{ vote.State }</span>
-				<span class={ voteVisibilityBadgeClass(vote.Visibility) }>{ vote.Visibility }</span>
-				<span class="text-xs text-base-content/70">{ voteBoundsLabel(vote.MinSelections, vote.MaxSelections) }</span>
+				<span class={ voteStateBadgeClass(vote.State) }>{ voteStateLabel(ctx, vote.State) }</span>
+				<span class={ voteVisibilityBadgeClass(vote.Visibility) }>{ voteVisibilityLabel(ctx, vote.Visibility) }</span>
+				<span class="text-xs text-base-content/70">{ voteBoundsLabel(ctx, vote.MinSelections, vote.MaxSelections) }</span>
 			</div>
 		</summary>
 		<div class="collapse-content space-y-3">
@@ -274,10 +301,10 @@ templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeIte
 
 			if vote.State == "draft" {
 				<div class="flex flex-wrap gap-2">
-					<button type="button" class="btn btn-sm btn-success" hx-post={ vote.OpenURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Open Vote</button>
+					<button type="button" class="btn btn-sm btn-success" hx-post={ vote.OpenURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "votes.open_vote") }</button>
 				</div>
 				<details class="collapse collapse-arrow border border-base-300 bg-base-200/30">
-					<summary class="collapse-title text-sm">Edit Draft</summary>
+					<summary class="collapse-title text-sm">{ i18n.T(ctx, "votes.edit_draft") }</summary>
 					<div class="collapse-content">
 						<form class="grid gap-2 md:grid-cols-2"
 							hx-post={ vote.CreateOrUpdateURL }
@@ -286,31 +313,31 @@ templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeIte
 						>
 							<input class="input input-bordered input-sm md:col-span-2" name="name" value={ vote.Name } required/>
 							<select class="select select-bordered select-sm" name="visibility">
-								<option value="open" selected?={ vote.Visibility == "open" }>Open</option>
-								<option value="secret" selected?={ vote.Visibility == "secret" }>Secret</option>
+								<option value="open" selected?={ vote.Visibility == "open" }>{ i18n.T(ctx, "votes.visibility_open") }</option>
+								<option value="secret" selected?={ vote.Visibility == "secret" }>{ i18n.T(ctx, "votes.visibility_secret") }</option>
 							</select>
 							<div class="join">
 								<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value={ strconv.FormatInt(vote.MinSelections, 10) } required/>
 								<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value={ strconv.FormatInt(vote.MaxSelections, 10) } required/>
 							</div>
 							<div class="md:col-span-2 space-y-1" data-vote-option-list>
-								<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
-								for _, label := range voteLabelsForEdit(vote) {
+								<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.choices") }</div>
+								for _, label := range voteLabelsForEdit(ctx, vote) {
 									<div data-vote-option-row>
 										<input
 											class="input input-bordered input-sm w-full"
 											name="option_label"
 											value={ label }
 											data-vote-option-input
-											placeholder="Choice"
+											placeholder={ i18n.T(ctx, "votes.choice_placeholder") }
 											autocomplete="off"
 										/>
 									</div>
 								}
-								<div class="text-xs text-base-content/70" data-vote-option-hint>Leave fields empty to remove choices.</div>
+								<div class="text-xs text-base-content/70" data-vote-option-hint>{ i18n.T(ctx, "votes.leave_empty_hint") }</div>
 							</div>
 							<div class="md:col-span-2 flex flex-wrap gap-2">
-								<button type="submit" class="btn btn-sm btn-primary">Save Draft</button>
+								<button type="submit" class="btn btn-sm btn-primary">{ i18n.T(ctx, "votes.save_draft") }</button>
 							</div>
 						</form>
 					</div>
@@ -319,7 +346,7 @@ templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeIte
 
 			if vote.State == "open" || vote.State == "counting" {
 				<div class="flex flex-wrap gap-2">
-					<button type="button" class="btn btn-sm btn-warning" hx-post={ vote.CloseURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Close Vote</button>
+					<button type="button" class="btn btn-sm btn-warning" hx-post={ vote.CloseURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "votes.close_vote") }</button>
 				</div>
 			}
 
@@ -327,15 +354,15 @@ templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeIte
 
 			if vote.State == "closed" {
 				<div class="flex flex-wrap gap-2">
-					<button type="button" class="btn btn-sm btn-outline" hx-post={ vote.ArchiveURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Archive Vote</button>
+					<button type="button" class="btn btn-sm btn-outline" hx-post={ vote.ArchiveURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "votes.archive_vote") }</button>
 				</div>
 			}
 
 			if vote.ResultsBlockedCounting {
-				<p class="text-sm text-warning">Results are blocked while vote is in counting state.</p>
+				<p class="text-sm text-warning">{ i18n.T(ctx, "votes.results_blocked_counting") }</p>
 			} else if vote.HasResults {
 				<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
-					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Final Tallies</div>
+					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.final_tallies") }</div>
 					<ul class="space-y-1 text-sm">
 						for _, row := range vote.Tallies {
 							<li class="flex items-center justify-between gap-2">
@@ -344,7 +371,7 @@ templ VoteModeratorAccordionItem(vote VoteModeratorItem, attendees []AttendeeIte
 							</li>
 						}
 					</ul>
-					<div class="mt-2 text-xs text-base-content/70">eligible={ strconv.FormatInt(vote.EligibleCount, 10) } casts={ strconv.FormatInt(vote.CastCount, 10) } ballots={ strconv.FormatInt(vote.BallotCount, 10) }</div>
+					<div class="mt-2 text-xs text-base-content/70">{ i18n.T(ctx, "votes.summary_counts", strconv.FormatInt(vote.EligibleCount, 10), strconv.FormatInt(vote.CastCount, 10), strconv.FormatInt(vote.BallotCount, 10)) }</div>
 				</div>
 			}
 		</div>
@@ -376,58 +403,59 @@ templ VoteModeratorPanelPartial(input VoteModeratorPanelInput) {
 			hx-trigger="reload"
 			hx-swap="outerHTML"
 			hx-swap-oob="outerHTML"
+			data-choice-label={ i18n.T(ctx, "votes.choice") }
 		>
 			@ErrorMessage(input.Error)
 			@NotificationMessage("success", input.Notice)
 			<div class="flex items-center justify-between gap-2">
-				<h3 class="text-base font-semibold">Votes</h3>
-				<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Refresh</button>
+				<h3 class="text-base font-semibold">{ i18n.T(ctx, "votes.votes") }</h3>
+				<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "common.refresh") }</button>
 			</div>
 			if !input.HasActiveAgenda {
-				<p class="text-sm text-base-content/70">No active agenda point.</p>
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda") }</p>
 			} else {
 				<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-					<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
+					<summary class="collapse-title text-sm font-semibold">{ i18n.T(ctx, "votes.create_vote") }</summary>
 					<div class="collapse-content">
 						<form class="grid gap-2 md:grid-cols-2"
 							hx-post={ input.CreateURL }
 							hx-target="#moderate-votes-panel"
 							hx-swap="outerHTML"
 						>
-							<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required/>
+							<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder={ i18n.T(ctx, "votes.vote_name") } required/>
 							<select class="select select-bordered select-sm" name="visibility">
-								<option value="open">Open</option>
-								<option value="secret">Secret</option>
+								<option value="open">{ i18n.T(ctx, "votes.visibility_open") }</option>
+								<option value="secret">{ i18n.T(ctx, "votes.visibility_secret") }</option>
 							</select>
 							<div class="join">
 								<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required/>
 								<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required/>
 							</div>
 							<div class="md:col-span-2 space-y-1" data-vote-option-list>
-								<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
-								for _, label := range voteDefaultOptionLabels() {
+								<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.choices") }</div>
+								for _, label := range voteDefaultOptionLabels(ctx) {
 									<div data-vote-option-row>
 										<input
 											class="input input-bordered input-sm w-full"
 											name="option_label"
 											value={ label }
 											data-vote-option-input
-											placeholder="Choice"
+											placeholder={ i18n.T(ctx, "votes.choice_placeholder") }
 											autocomplete="off"
 										/>
 									</div>
 								}
-								<div class="text-xs text-base-content/70" data-vote-option-hint>Add one choice per field. A new field appears once the last one is filled.</div>
+								<div class="text-xs text-base-content/70" data-vote-option-hint>{ i18n.T(ctx, "votes.add_choice_hint") }</div>
 							</div>
 							<div class="md:col-span-2">
-								<button type="submit" class="btn btn-sm btn-primary">Create Draft Vote</button>
+								<button type="submit" class="btn btn-sm btn-primary">{ i18n.T(ctx, "votes.create_draft_vote") }</button>
 							</div>
 						</form>
 					</div>
 				</details>
 
 				if len(input.Votes) == 0 {
-					<p class="text-sm text-base-content/70">No votes for { input.ActiveAPTitle }.</p>
+					<p class="text-sm text-base-content/70">{ i18n.T(ctx, "votes.no_votes_for_agenda_point", input.ActiveAPTitle) }</p>
 				} else {
 					<div class="space-y-3">
 						for _, vote := range input.Votes {
@@ -444,58 +472,59 @@ templ VoteModeratorPanelPartial(input VoteModeratorPanelInput) {
 			hx-get={ input.RefreshURL }
 			hx-trigger="reload"
 			hx-swap="outerHTML"
+			data-choice-label={ i18n.T(ctx, "votes.choice") }
 		>
 		@ErrorMessage(input.Error)
 		@NotificationMessage("success", input.Notice)
 		<div class="flex items-center justify-between gap-2">
-			<h3 class="text-base font-semibold">Votes</h3>
-			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">Refresh</button>
+			<h3 class="text-base font-semibold">{ i18n.T(ctx, "votes.votes") }</h3>
+			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#moderate-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "common.refresh") }</button>
 		</div>
 		if !input.HasActiveAgenda {
-			<p class="text-sm text-base-content/70">No active agenda point.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda") }</p>
 		} else {
 			<details class="collapse collapse-arrow border border-base-300 bg-base-100">
-				<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
+				<summary class="collapse-title text-sm font-semibold">{ i18n.T(ctx, "votes.create_vote") }</summary>
 				<div class="collapse-content">
 					<form class="grid gap-2 md:grid-cols-2"
 						hx-post={ input.CreateURL }
 						hx-target="#moderate-votes-panel"
 						hx-swap="outerHTML"
 					>
-						<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required/>
+						<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder={ i18n.T(ctx, "votes.vote_name") } required/>
 						<select class="select select-bordered select-sm" name="visibility">
-							<option value="open">Open</option>
-							<option value="secret">Secret</option>
+							<option value="open">{ i18n.T(ctx, "votes.visibility_open") }</option>
+							<option value="secret">{ i18n.T(ctx, "votes.visibility_secret") }</option>
 						</select>
 						<div class="join">
 							<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required/>
 							<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required/>
 						</div>
 						<div class="md:col-span-2 space-y-1" data-vote-option-list>
-							<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
-							for _, label := range voteDefaultOptionLabels() {
+							<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.choices") }</div>
+							for _, label := range voteDefaultOptionLabels(ctx) {
 								<div data-vote-option-row>
 									<input
 										class="input input-bordered input-sm w-full"
 										name="option_label"
 										value={ label }
 										data-vote-option-input
-										placeholder="Choice"
+										placeholder={ i18n.T(ctx, "votes.choice_placeholder") }
 										autocomplete="off"
 									/>
 								</div>
 							}
-							<div class="text-xs text-base-content/70" data-vote-option-hint>Add one choice per field. A new field appears once the last one is filled.</div>
+							<div class="text-xs text-base-content/70" data-vote-option-hint>{ i18n.T(ctx, "votes.add_choice_hint") }</div>
 						</div>
 						<div class="md:col-span-2">
-							<button type="submit" class="btn btn-sm btn-primary">Create Draft Vote</button>
+							<button type="submit" class="btn btn-sm btn-primary">{ i18n.T(ctx, "votes.create_draft_vote") }</button>
 						</div>
 					</form>
 				</div>
 			</details>
 
 			if len(input.Votes) == 0 {
-				<p class="text-sm text-base-content/70">No votes for { input.ActiveAPTitle }.</p>
+				<p class="text-sm text-base-content/70">{ i18n.T(ctx, "votes.no_votes_for_agenda_point", input.ActiveAPTitle) }</p>
 			} else {
 				<div class="space-y-3">
 					for _, vote := range input.Votes {
@@ -508,6 +537,9 @@ templ VoteModeratorPanelPartial(input VoteModeratorPanelInput) {
 	}
 	<script>
 		(function() {
+			var panelRoot = document.getElementById("moderate-votes-panel");
+			var textChoice = (panelRoot && panelRoot.getAttribute("data-choice-label")) || "Choice";
+
 			function optionRows(list) {
 				return Array.prototype.slice.call(list.querySelectorAll("[data-vote-option-row]"));
 			}
@@ -536,7 +568,7 @@ templ VoteModeratorPanelPartial(input VoteModeratorPanelInput) {
 				input.type = "text";
 				input.name = "option_label";
 				input.autocomplete = "off";
-				input.placeholder = "Choice";
+				input.placeholder = textChoice;
 				input.className = "input input-bordered input-sm w-full";
 				input.setAttribute("data-vote-option-input", "");
 				row.appendChild(input);
@@ -548,7 +580,7 @@ templ VoteModeratorPanelPartial(input VoteModeratorPanelInput) {
 				for (var i = 0; i < rows.length; i++) {
 					var input = optionInputFromRow(rows[i]);
 					if (!input) { continue; }
-					input.placeholder = "Choice " + String(i + 1);
+					input.placeholder = textChoice + " " + String(i + 1);
 				}
 			}
 
@@ -680,16 +712,16 @@ templ LiveVoteItemCard(vote VoteLiveItem, input VoteLivePanelInput) {
 	>
 		<div class="flex flex-wrap items-center gap-2">
 			<h3 class="font-semibold">{ vote.Name }</h3>
-			<span class={ voteVisibilityBadgeClass(vote.Visibility) }>{ vote.Visibility }</span>
-			<span class={ voteStateBadgeClass(vote.State) }>{ vote.State }</span>
-			<span class="text-xs text-base-content/70">{ voteBoundsLabel(vote.MinSelections, vote.MaxSelections) }</span>
+			<span class={ voteVisibilityBadgeClass(vote.Visibility) }>{ voteVisibilityLabel(ctx, vote.Visibility) }</span>
+			<span class={ voteStateBadgeClass(vote.State) }>{ voteStateLabel(ctx, vote.State) }</span>
+			<span class="text-xs text-base-content/70">{ voteBoundsLabel(ctx, vote.MinSelections, vote.MaxSelections) }</span>
 			if !vote.IsEligible && vote.State == "open" {
-				<span class="badge badge-error badge-outline badge-sm">not eligible</span>
+				<span class="badge badge-error badge-outline badge-sm">{ i18n.T(ctx, "votes.not_eligible") }</span>
 			}
 		</div>
 		if vote.HasTimedResults {
 			<div class="rounded-box border border-base-300 bg-base-200/40 p-2 space-y-2">
-				<div class="text-xs font-semibold uppercase text-base-content/70">Final Results (visible for 30s)</div>
+				<div class="text-xs font-semibold uppercase text-base-content/70">{ i18n.T(ctx, "votes.final_results_visible_30s") }</div>
 				<ul class="space-y-1 text-sm">
 					for _, row := range vote.TimedResults {
 						<li class="flex items-center justify-between gap-2">
@@ -698,16 +730,16 @@ templ LiveVoteItemCard(vote VoteLiveItem, input VoteLivePanelInput) {
 						</li>
 					}
 				</ul>
-				<div class="text-xs text-base-content/70">eligible={ strconv.FormatInt(vote.EligibleCount, 10) } casts={ strconv.FormatInt(vote.CastCount, 10) } ballots={ strconv.FormatInt(vote.BallotCount, 10) }</div>
-				<div class="text-xs text-base-content/70">Hiding in <span data-vote-results-countdown>{ strconv.FormatInt(vote.ResultsRemaining, 10) }</span>s</div>
+				<div class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.summary_counts", strconv.FormatInt(vote.EligibleCount, 10), strconv.FormatInt(vote.CastCount, 10), strconv.FormatInt(vote.BallotCount, 10)) }</div>
+				<div class="text-xs text-base-content/70">{ i18n.T(ctx, "votes.hiding_in") } <span data-vote-results-countdown>{ strconv.FormatInt(vote.ResultsRemaining, 10) }</span>{ i18n.T(ctx, "votes.seconds_suffix") }</div>
 			</div>
 		} else if vote.State == "counting" {
 			<div class="alert alert-warning text-sm">
-				<span>Vote is in counting phase. Results are not finalized yet.</span>
+				<span>{ i18n.T(ctx, "votes.counting_phase_message") }</span>
 			</div>
 		} else if vote.State == "open" {
 			<div class="alert alert-success text-sm hidden" data-vote-submitted-screen>
-				<span>Your vote was submitted. You can wait for close to see results.</span>
+				<span>{ i18n.T(ctx, "votes.vote_submitted_message") }</span>
 			</div>
 			<div data-vote-inputs>
 				if vote.Visibility == "open" {
@@ -725,7 +757,7 @@ templ LiveVoteItemCard(vote VoteLiveItem, input VoteLivePanelInput) {
 								</label>
 							}
 						</div>
-						<button type="submit" class="btn btn-sm btn-primary" disabled?={ !vote.IsEligible }>Submit Open Ballot</button>
+						<button type="submit" class="btn btn-sm btn-primary" disabled?={ !vote.IsEligible }>{ i18n.T(ctx, "votes.submit_open_ballot") }</button>
 					</form>
 				} else {
 					<form class="space-y-2" hx-post={ vote.SubmitSecretURL } hx-target="#live-votes-panel" hx-swap="outerHTML" data-vote-secret-form data-vote-id={ vote.IDString } data-attendee-id={ strconv.FormatInt(input.AttendeeID, 10) }>
@@ -746,7 +778,7 @@ templ LiveVoteItemCard(vote VoteLiveItem, input VoteLivePanelInput) {
 								</label>
 							}
 						</div>
-						<button type="submit" class="btn btn-sm btn-primary" disabled?={ !vote.IsEligible }>Submit Secret Ballot</button>
+						<button type="submit" class="btn btn-sm btn-primary" disabled?={ !vote.IsEligible }>{ i18n.T(ctx, "votes.submit_secret_ballot") }</button>
 					</form>
 				}
 			</div>
@@ -765,13 +797,13 @@ templ LiveVotesPanelPartial(input VoteLivePanelInput) {
 		@ErrorMessage(input.Error)
 		@NotificationMessage("success", input.Notice, 10000)
 		<div class="flex items-center justify-between gap-2">
-			<h2 class="text-lg font-semibold">Votes</h2>
-			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#live-votes-panel" hx-swap="outerHTML">Refresh</button>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "votes.votes") }</h2>
+			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#live-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "common.refresh") }</button>
 		</div>
 		if !input.HasActiveAgenda {
-			<p class="text-sm text-base-content/70">No active agenda point.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda") }</p>
 		} else if len(input.Votes) == 0 {
-			<p class="text-sm text-base-content/70">No open or recently closed votes right now.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "votes.no_live_votes") }</p>
 		} else {
 			<div class="space-y-3">
 				for _, vote := range input.Votes {
@@ -786,13 +818,13 @@ templ LiveVotesPanelPartial(input VoteLivePanelInput) {
 		@ErrorMessage(input.Error)
 		@NotificationMessage("success", input.Notice, 10000)
 		<div class="flex items-center justify-between gap-2">
-			<h2 class="text-lg font-semibold">Votes</h2>
-			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#live-votes-panel" hx-swap="outerHTML">Refresh</button>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "votes.votes") }</h2>
+			<button type="button" class="btn btn-xs btn-outline" hx-get={ input.RefreshURL } hx-target="#live-votes-panel" hx-swap="outerHTML">{ i18n.T(ctx, "common.refresh") }</button>
 		</div>
 		if !input.HasActiveAgenda {
-			<p class="text-sm text-base-content/70">No active agenda point.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda") }</p>
 		} else if len(input.Votes) == 0 {
-			<p class="text-sm text-base-content/70">No open or recently closed votes right now.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "votes.no_live_votes") }</p>
 		} else {
 			<div class="space-y-3">
 				for _, vote := range input.Votes {
@@ -1037,13 +1069,31 @@ templ LiveVotesPanelPartial(input VoteLivePanelInput) {
 type ReceiptsVaultInput struct{}
 
 templ ReceiptsVaultContent() {
-	<div class="mx-auto w-full max-w-5xl space-y-4">
-		<h1 class="text-2xl font-semibold">Receipt Vault</h1>
-		<p class="text-sm text-base-content/70">Receipts are stored locally in your browser. This page verifies them against public vote verification endpoints.</p>
+	<div
+		id="receipts-vault-content"
+		class="mx-auto w-full max-w-5xl space-y-4"
+		data-text-no-stored={ i18n.T(ctx, "votes.no_stored_receipts") }
+		data-text-unknown={ i18n.T(ctx, "votes.unknown") }
+		data-text-vote={ i18n.T(ctx, "votes.vote") }
+		data-text-vote-prefix={ i18n.T(ctx, "votes.vote_number_prefix") }
+		data-text-verify={ i18n.T(ctx, "votes.verify") }
+		data-text-verifying={ i18n.T(ctx, "votes.verifying") }
+		data-text-ok-prefix={ i18n.T(ctx, "votes.ok_prefix") }
+		data-text-no-choices={ i18n.T(ctx, "votes.no_choices") }
+		data-text-commitment-returned={ i18n.T(ctx, "votes.commitment_returned") }
+		data-text-error-prefix={ i18n.T(ctx, "votes.error_prefix") }
+		data-text-loading-receipts={ i18n.T(ctx, "votes.loading_receipts") }
+		data-text-loaded-receipts={ i18n.T(ctx, "votes.loaded_receipts") }
+		data-text-failed-load-receipts={ i18n.T(ctx, "votes.failed_load_receipts") }
+		data-text-failed-clear-receipts={ i18n.T(ctx, "votes.failed_clear_receipts") }
+		data-text-verify-failed-status={ i18n.T(ctx, "votes.verify_failed_status") }
+	>
+		<h1 class="text-2xl font-semibold">{ i18n.T(ctx, "votes.receipt_vault_title") }</h1>
+		<p class="text-sm text-base-content/70">{ i18n.T(ctx, "votes.receipt_vault_description") }</p>
 		<div class="rounded-box border border-base-300 bg-base-100 p-3 space-y-3">
 			<div class="flex flex-wrap items-center gap-2">
-				<button id="receipts-refresh" type="button" class="btn btn-sm btn-outline">Refresh</button>
-				<button id="receipts-clear" type="button" class="btn btn-sm btn-error btn-outline">Clear All</button>
+				<button id="receipts-refresh" type="button" class="btn btn-sm btn-outline">{ i18n.T(ctx, "common.refresh") }</button>
+				<button id="receipts-clear" type="button" class="btn btn-sm btn-error btn-outline">{ i18n.T(ctx, "votes.clear_all") }</button>
 			</div>
 			<div id="receipts-status" class="text-sm text-base-content/70"></div>
 			<div id="receipts-list" class="space-y-2"></div>
@@ -1051,6 +1101,23 @@ templ ReceiptsVaultContent() {
 	</div>
 	<script>
 		(function() {
+			var root = document.getElementById("receipts-vault-content");
+			var textNoStoredReceipts = (root && root.getAttribute("data-text-no-stored")) || "No stored receipts.";
+			var textUnknown = (root && root.getAttribute("data-text-unknown")) || "Unknown";
+			var textVote = (root && root.getAttribute("data-text-vote")) || "Vote";
+			var textVotePrefix = (root && root.getAttribute("data-text-vote-prefix")) || "Vote #";
+			var textVerify = (root && root.getAttribute("data-text-verify")) || "Verify";
+			var textVerifying = (root && root.getAttribute("data-text-verifying")) || "Verifying...";
+			var textOkPrefix = (root && root.getAttribute("data-text-ok-prefix")) || "OK: ";
+			var textNoChoices = (root && root.getAttribute("data-text-no-choices")) || "(no choices)";
+			var textCommitmentReturned = (root && root.getAttribute("data-text-commitment-returned")) || "Commitment returned";
+			var textErrorPrefix = (root && root.getAttribute("data-text-error-prefix")) || "Error: ";
+			var textLoadingReceipts = (root && root.getAttribute("data-text-loading-receipts")) || "Loading receipts...";
+			var textLoadedReceipts = (root && root.getAttribute("data-text-loaded-receipts")) || "Loaded receipts: ";
+			var textFailedLoadReceipts = (root && root.getAttribute("data-text-failed-load-receipts")) || "Failed to load receipts: ";
+			var textFailedClearReceipts = (root && root.getAttribute("data-text-failed-clear-receipts")) || "Failed to clear receipts: ";
+			var textVerifyFailedStatus = (root && root.getAttribute("data-text-verify-failed-status")) || "verify failed (status ";
+
 			function openDB() {
 				return new Promise(function(resolve, reject) {
 					var req = indexedDB.open("conference_tool_receipts", 1);
@@ -1112,7 +1179,7 @@ templ ReceiptsVaultContent() {
 				}).then(function(res) {
 					return res.json().catch(function() { return {}; }).then(function(body) {
 						if (!res.ok) {
-							throw new Error(body.error || ("verify failed with status " + res.status));
+							throw new Error(body.error || (textVerifyFailedStatus + res.status));
 						}
 						return body;
 					});
@@ -1124,7 +1191,7 @@ templ ReceiptsVaultContent() {
 				if (!list) { return; }
 				list.innerHTML = "";
 				if (!receipts.length) {
-					list.innerHTML = "<p class='text-sm text-base-content/70'>No stored receipts.</p>";
+					list.innerHTML = "<p class='text-sm text-base-content/70'>" + textNoStoredReceipts + "</p>";
 					return;
 				}
 
@@ -1142,30 +1209,30 @@ templ ReceiptsVaultContent() {
 					card.className = "rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2";
 					card.innerHTML = ""
 						+ "<div class='flex flex-wrap items-center gap-2'>"
-						+ "<span class='badge badge-outline badge-sm'>" + (receipt.kind || "unknown") + "</span>"
-						+ "<span class='font-semibold'>" + (receipt.vote_name || "Vote") + "</span>"
-						+ "<span class='text-xs text-base-content/70'>vote #" + (receipt.vote_id || "?") + "</span>"
+						+ "<span class='badge badge-outline badge-sm'>" + (receipt.kind || textUnknown) + "</span>"
+						+ "<span class='font-semibold'>" + (receipt.vote_name || textVote) + "</span>"
+						+ "<span class='text-xs text-base-content/70'>" + textVotePrefix + (receipt.vote_id || "?") + "</span>"
 						+ "</div>"
 						+ "<div class='text-xs text-base-content/70 break-all'>" + (receipt.receipt || "") + "</div>"
 						+ "<div class='flex flex-wrap items-center gap-2'>"
-						+ "<button type='button' class='btn btn-xs btn-primary'>Verify</button>"
+						+ "<button type='button' class='btn btn-xs btn-primary'>" + textVerify + "</button>"
 						+ "<span class='text-xs text-base-content/70' data-result></span>"
 						+ "</div>";
 					var button = card.querySelector("button");
 					var result = card.querySelector("[data-result]");
 					button.addEventListener("click", function() {
 						button.disabled = true;
-						result.textContent = "verifying...";
+						result.textContent = textVerifying;
 						verifyReceipt(receipt).then(function(body) {
 							if (receipt.kind === "open") {
 								var choices = (body.choice_labels || []).join(", ");
-								result.textContent = "OK: " + (choices || "no choices");
+								result.textContent = textOkPrefix + (choices || textNoChoices);
 							} else {
-								result.textContent = "OK: commitment returned";
+								result.textContent = textOkPrefix + textCommitmentReturned;
 							}
 							result.className = "text-xs text-success";
 						}).catch(function(err) {
-							result.textContent = "Error: " + err.message;
+							result.textContent = textErrorPrefix + err.message;
 							result.className = "text-xs text-error";
 						}).finally(function() {
 							button.disabled = false;
@@ -1176,19 +1243,19 @@ templ ReceiptsVaultContent() {
 			}
 
 			function refresh() {
-				setStatus("Loading receipts...", false);
+				setStatus(textLoadingReceipts, false);
 				listAll().then(function(receipts) {
 					render(receipts);
-					setStatus("Loaded " + receipts.length + " receipt(s).", false);
+					setStatus(textLoadedReceipts + receipts.length + ".", false);
 				}).catch(function(err) {
-					setStatus("Failed to load receipts: " + err.message, true);
+					setStatus(textFailedLoadReceipts + err.message, true);
 				});
 			}
 
 			document.getElementById("receipts-refresh")?.addEventListener("click", refresh);
 			document.getElementById("receipts-clear")?.addEventListener("click", function() {
 				clearAll().then(refresh).catch(function(err) {
-					setStatus("Failed to clear receipts: " + err.message, true);
+					setStatus(textFailedClearReceipts + err.message, true);
 				});
 			});
 			refresh();
@@ -1197,5 +1264,5 @@ templ ReceiptsVaultContent() {
 }
 
 templ ReceiptsVaultTemplate(input ReceiptsVaultInput) {
-	@PageTemplate("Receipt Vault", false, false, ScaffoldInput{Title: "Receipt Vault"}, ReceiptsVaultContent())
+	@PageTemplate(i18n.T(ctx, "votes.receipt_vault_title"), false, false, ScaffoldInput{Title: i18n.T(ctx, "votes.receipt_vault_title")}, ReceiptsVaultContent())
 }

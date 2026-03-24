@@ -5,9 +5,30 @@ title-de: Betrieb
 
 # Operations
 
-This section describes permission behavior and practical incident handling.
+Use this section for practical support and incident handling during live use.
 
-## Pages
+## Who this is for
 
-- [Permission Model and Common 403 Cases](/docs/06-operations/01-permission-model-and-common-403-cases)
-- [Troubleshooting and Recovery](/docs/06-operations/02-troubleshooting-and-recovery)
+Admins and chairpersons responsible for stable operation.
+
+## Before you start
+
+1. Identify whether the issue is:
+   - permission/access
+   - workflow/state recovery
+2. Confirm user role and meeting context before changing settings.
+
+## Step-by-step
+
+1. Use [Permission Model and Common 403 Cases](/docs/06-operations/01-permission-model-and-common-403-cases) for access-denied diagnostics.
+2. Use [Troubleshooting and Recovery](/docs/06-operations/02-troubleshooting-and-recovery) for live incident recovery.
+
+## What you should see
+
+- Faster root-cause checks for access problems.
+- Repeatable recovery actions for common incidents.
+
+## If something goes wrong
+
+- You are unsure where to start:
+  Begin with access checks first, then move to recovery actions.

@@ -14,9 +14,9 @@
 
 - Total English docs tracked: 30
 - Reworked: 0
-- In review: 0
-- Not started: 30
+- In review: 30
+- Not started: 0
 
 ## Next Action
 
-- Start with the first file chosen in collaboration and rewrite it fully (step-by-step format).
+- Review rewritten English files for approval, then mirror accepted changes in German files.

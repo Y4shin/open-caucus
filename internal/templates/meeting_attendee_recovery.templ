@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Y4shin/conference-tool/internal/routes/paths"
+	"github.com/invopop/ctxi18n/i18n"
 )
 
 type MeetingAttendeeRecoveryInput struct {
@@ -25,9 +26,9 @@ func (i *MeetingAttendeeRecoveryInput) QRCodeSrc() templ.SafeURL {
 }
 
 templ MeetingAttendeeRecoveryTemplate(input MeetingAttendeeRecoveryInput) {
-	@PageTemplate("Guest Recovery Link: "+input.AttendeeName, false, false,
+	@PageTemplate(i18n.T(ctx, "meeting_attendee_recovery.page_title", input.AttendeeName), false, false,
 		ScaffoldInput{
-			Title:    "Guest Recovery Link",
+			Title:    i18n.T(ctx, "meeting_attendee_recovery.title"),
 			Subtitle: input.AttendeeName + " - " + input.MeetingName,
 			BackLink: SafeURLPtr(input.MeetingManageGet(ctx)),
 		},
@@ -35,7 +36,7 @@ templ MeetingAttendeeRecoveryTemplate(input MeetingAttendeeRecoveryInput) {
 }
 
 templ MeetingAttendeeRecoveryContent(input MeetingAttendeeRecoveryInput) {
-	<p>Share this link with the guest to let them log back in directly.</p>
+	<p>{ i18n.T(ctx, "meeting_attendee_recovery.description") }</p>
 	<p><a id="attendee-recovery-link" href={ templ.URL(input.LoginURL) }>{ input.LoginURL }</a></p>
-	<img id="attendee-recovery-qr" src={ input.QRCodeSrc() } alt="Guest Recovery QR Code"/>
+	<img id="attendee-recovery-qr" src={ input.QRCodeSrc() } alt={ i18n.T(ctx, "meeting_attendee_recovery.alt") }/>
 }

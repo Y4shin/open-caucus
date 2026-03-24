@@ -1782,7 +1782,7 @@ func (r *Repository) ClearCurrentDocument(ctx context.Context, agendaPointID int
 
 // AddSpeaker adds an attendee to the speakers list for an agenda point.
 func (r *Repository) AddSpeaker(ctx context.Context, agendaPointID, attendeeID int64, speakerType string, genderQuoted, firstSpeaker bool) (*model.SpeakerEntry, error) {
-	// RoPM entries never receive the first-speaker flag.
+	// Point-of-order entries never receive the first-speaker flag.
 	if speakerType == "ropm" {
 		firstSpeaker = false
 	}

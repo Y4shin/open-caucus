@@ -47,23 +47,23 @@ func (i *AttendeeListPartialInput) ManageJoinQRGet(ctx context.Context) templ.Sa
 	return templ.URL(paths.NewCommitteeSlugMeetingMeetingIdModerateJoinQrRoute(i.CommitteeSlug, i.IDString).CommitteeMeetingManageJoinQRGet(ctx, ""))
 }
 
-func attendeeSignupStateLabel(open bool) string {
+func attendeeSignupStateLabel(ctx context.Context, open bool) string {
 	if open {
-		return "Guest signup is open"
+		return i18n.T(ctx, "meeting_manage.guest_signup_open")
 	}
-	return "Guest signup is closed"
+	return i18n.T(ctx, "meeting_manage.guest_signup_closed")
 }
 
-func attendeeSignupToggleLabel() string {
-	return "Guest signup"
+func attendeeSignupToggleLabel(ctx context.Context) string {
+	return i18n.T(ctx, "meeting_manage.guest_signup")
 }
 
-func attendeeChairToggleLabel(isChair bool) string {
-	return "Chairperson"
+func attendeeChairToggleLabel(ctx context.Context, isChair bool) string {
+	return i18n.T(ctx, "meeting_manage.chairperson")
 }
 
-func attendeeGenderQuotedToggleLabel(quoted bool) string {
-	return "Gender quoted"
+func attendeeGenderQuotedToggleLabel(ctx context.Context, quoted bool) string {
+	return i18n.T(ctx, "meeting_manage.flinta")
 }
 
 func (i *AttendeeListPartialInput) AttendeeDeletePostStr(ctx context.Context, a *AttendeeItem) string {
@@ -474,7 +474,7 @@ func (i *SpeakersListPartialInput) ActionsForSpeaker(ctx context.Context, s Spea
 				PostURL: i.SpeakerEndPostStr(ctx, &s),
 				Target:  "#speakers-list-container",
 				Swap:    "outerHTML",
-				Title:   "End",
+				Title:   i18n.T(ctx, "meeting_manage.end"),
 				Icon:    IconCheckCircle,
 			},
 		}
@@ -482,10 +482,10 @@ func (i *SpeakersListPartialInput) ActionsForSpeaker(ctx context.Context, s Spea
 
 	if s.IsWaiting {
 		priorityIcon := IconStarOutline
-		priorityTitle := "Give Priority"
+		priorityTitle := i18n.T(ctx, "meeting_manage.give_priority")
 		if s.Priority {
 			priorityIcon = IconStar
-			priorityTitle = "Remove Priority"
+			priorityTitle = i18n.T(ctx, "meeting_manage.remove_priority")
 		}
 		return []LiveSpeakerAction{
 			{
@@ -499,16 +499,16 @@ func (i *SpeakersListPartialInput) ActionsForSpeaker(ctx context.Context, s Spea
 				PostURL: i.SpeakerStartPostStr(ctx, &s),
 				Target:  "#speakers-list-container",
 				Swap:    "outerHTML",
-				Title:   "Start",
+				Title:   i18n.T(ctx, "meeting_manage.start"),
 				Icon:    IconArrowForward,
 			},
 			{
 				PostURL: i.SpeakerRemovePostStr(ctx, &s),
 				Target:  "#speakers-list-container",
 				Swap:    "outerHTML",
-				Title:   "Remove",
+				Title:   i18n.T(ctx, "meeting_manage.remove"),
 				Icon:    IconDelete,
-				Confirm: "Remove this speaker?",
+				Confirm: i18n.T(ctx, "meeting_manage.remove_speaker_confirm"),
 				Danger:  true,
 			},
 		}
@@ -851,18 +851,18 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 				data-testid="manage-add-guest-form"
 			>
 				<div class="w-full min-w-0 flex-1">
-					<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
-					<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder="Display name" required/>
+					<label class="label p-0 text-sm font-medium" for="full_name">{ i18n.T(ctx, "meeting_manage.add_guest") }</label>
+					<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder={ i18n.T(ctx, "meeting_manage.display_name") } required/>
 				</div>
 				<label class="label cursor-pointer justify-start gap-2 p-0 sm:mb-1 whitespace-nowrap" for="manage_guest_gender_quoted">
-					<span class="text-sm font-medium">Gender quoted</span>
+					<span class="text-sm font-medium">{ i18n.T(ctx, "meeting_manage.flinta") }</span>
 					<input class="checkbox checkbox-sm" type="checkbox" id="manage_guest_gender_quoted" name="gender_quoted" value="true"/>
 				</label>
-				<button class="btn btn-sm sm:mb-1" type="submit">Add</button>
+				<button class="btn btn-sm sm:mb-1" type="submit">{ i18n.T(ctx, "common.add") }</button>
 			</form>
 		</div>
 		if len(input.Attendees) == 0 {
-			<p class="text-sm text-base-content/70">No attendees yet.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_attendees") }</p>
 		} else {
 			<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="manage-attendee-grid">
 				for _, a := range input.Attendees {
@@ -875,17 +875,17 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 									if a.IsGuest || a.IsChair || a.Quoted {
 										<div class="mt-1 hidden flex-wrap items-center gap-1 sm:flex">
 											if a.IsGuest {
-												<span class="badge badge-neutral badge-sm">Guest</span>
+												<span class="badge badge-neutral badge-sm">{ i18n.T(ctx, "meeting_manage.guest_badge") }</span>
 											}
 											if a.IsChair {
-												<span class="tooltip tooltip-right" data-tip="Chair">
+												<span class="tooltip tooltip-right" data-tip={ i18n.T(ctx, "meeting_manage.chair_badge") }>
 													<span class="badge badge-success badge-sm">
 														@Icon(IconCrown, "", "h-3.5 w-3.5")
 													</span>
 												</span>
 											}
 											if a.Quoted {
-												<span class="tooltip tooltip-right" data-tip="Gender quoted">
+												<span class="tooltip tooltip-right" data-tip={ i18n.T(ctx, "meeting_manage.flinta") }>
 													<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge">
 														@Icon(IconTransgender, "", "h-3.5 w-3.5")
 													</span>
@@ -900,9 +900,9 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 											<a
 												href={ input.AttendeeRecoveryGet(ctx, &a) }
 												class="join-item btn btn-sm btn-square tooltip tooltip-left"
-												data-tip="Recovery link"
-												title="Recovery link"
-												aria-label="Recovery link"
+												data-tip={ i18n.T(ctx, "meeting_manage.recovery_link") }
+												title={ i18n.T(ctx, "meeting_manage.recovery_link") }
+												aria-label={ i18n.T(ctx, "meeting_manage.recovery_link") }
 											>
 												@Icon(IconHistory, "", "h-4 w-4")
 											</a>
@@ -912,15 +912,15 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 											hx-target="#attendee-list-container"
 											hx-swap="outerHTML"
 											hx-vals="js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"
-											hx-confirm="Remove this attendee?"
+											hx-confirm={ i18n.T(ctx, "meeting_manage.remove_attendee_confirm") }
 											class="inline-flex"
 										>
 											<button
 												type="submit"
 												class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left"
-												data-tip="Remove attendee"
-												title="Remove attendee"
-												aria-label="Remove attendee"
+												data-tip={ i18n.T(ctx, "meeting_manage.remove_attendee") }
+												title={ i18n.T(ctx, "meeting_manage.remove_attendee") }
+												aria-label={ i18n.T(ctx, "meeting_manage.remove_attendee") }
 											>
 												@Icon(IconDelete, "", "h-4 w-4")
 											</button>
@@ -942,10 +942,10 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 											class={ "toggle toggle-sm", templ.KV("toggle-primary", a.IsChair) }
 											type="checkbox"
 											checked?={ a.IsChair }
-											title={ attendeeChairToggleLabel(a.IsChair) }
-											aria-label={ attendeeChairToggleLabel(a.IsChair) }
+											title={ attendeeChairToggleLabel(ctx, a.IsChair) }
+											aria-label={ attendeeChairToggleLabel(ctx, a.IsChair) }
 										/>
-										<span class="text-xs leading-none">{ attendeeChairToggleLabel(a.IsChair) }</span>
+										<span class="text-xs leading-none">{ attendeeChairToggleLabel(ctx, a.IsChair) }</span>
 									</label>
 								</form>
 								if a.IsGuest {
@@ -962,14 +962,14 @@ templ AttendeeListPartial(input AttendeeListPartialInput) {
 												class={ "toggle toggle-sm", templ.KV("toggle-info", a.Quoted) }
 												type="checkbox"
 												checked?={ a.Quoted }
-												title={ attendeeGenderQuotedToggleLabel(a.Quoted) }
-												aria-label={ attendeeGenderQuotedToggleLabel(a.Quoted) }
+												title={ attendeeGenderQuotedToggleLabel(ctx, a.Quoted) }
+												aria-label={ attendeeGenderQuotedToggleLabel(ctx, a.Quoted) }
 											/>
-											<span class="text-xs leading-none">{ attendeeGenderQuotedToggleLabel(a.Quoted) }</span>
+											<span class="text-xs leading-none">{ attendeeGenderQuotedToggleLabel(ctx, a.Quoted) }</span>
 										</label>
 									</form>
 								} else {
-									<div class="inline-flex items-center text-xs leading-none text-base-content/50">Gender quoted unavailable</div>
+									<div class="inline-flex items-center text-xs leading-none text-base-content/50">{ i18n.T(ctx, "meeting_manage.flinta_unavailable") }</div>
 								}
 							</div>
 						</div>
@@ -1004,7 +1004,7 @@ templ MeetingSettingsSSEPartial(input MeetingSettingsPartialInput) {
 templ MeetingSettingsContent(input MeetingSettingsPartialInput) {
 	<div class="space-y-3">
 		<div class="rounded-box border border-base-300 bg-base-100 p-3">
-			<h3 class="mb-2 text-sm font-semibold">Quotation Settings</h3>
+			<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.quotation_settings") }</h3>
 			<form
 				hx-post={ input.SetMeetingQuotationPostStr(ctx) }
 				hx-target="#meeting-settings-container"
@@ -1013,24 +1013,24 @@ templ MeetingSettingsContent(input MeetingSettingsPartialInput) {
 				class="grid gap-3 md:grid-cols-2"
 			>
 				<div class="space-y-1">
-					<label for="gender_quotation_enabled">Gender quotation</label>
+					<label for="gender_quotation_enabled">{ i18n.T(ctx, "meeting_manage.flinta_quotation") }</label>
 					<select class="select select-bordered select-sm" id="gender_quotation_enabled" name="gender_quotation_enabled">
-						<option value="true" selected?={ input.GenderQuotationEnabled }>Enabled</option>
-						<option value="false" selected?={ !input.GenderQuotationEnabled }>Disabled</option>
+						<option value="true" selected?={ input.GenderQuotationEnabled }>{ i18n.T(ctx, "common.enabled") }</option>
+						<option value="false" selected?={ !input.GenderQuotationEnabled }>{ i18n.T(ctx, "common.disabled") }</option>
 					</select>
 				</div>
 				<div class="space-y-1">
-					<label for="first_speaker_quotation_enabled">First-speaker bonus</label>
+					<label for="first_speaker_quotation_enabled">{ i18n.T(ctx, "meeting_manage.first_speaker_bonus") }</label>
 					<select class="select select-bordered select-sm" id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled">
-						<option value="true" selected?={ input.FirstSpeakerQuotationEnabled }>Enabled</option>
-						<option value="false" selected?={ !input.FirstSpeakerQuotationEnabled }>Disabled</option>
+						<option value="true" selected?={ input.FirstSpeakerQuotationEnabled }>{ i18n.T(ctx, "common.enabled") }</option>
+						<option value="false" selected?={ !input.FirstSpeakerQuotationEnabled }>{ i18n.T(ctx, "common.disabled") }</option>
 					</select>
 				</div>
 			</form>
 		</div>
 
 		<div class="rounded-box border border-base-300 bg-base-100 p-3">
-			<h3 class="mb-2 text-sm font-semibold">Moderator</h3>
+			<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.moderator") }</h3>
 			<form
 				hx-post={ input.SetMeetingModeratorPostStr(ctx) }
 				hx-target="#meeting-settings-container"
@@ -1039,7 +1039,7 @@ templ MeetingSettingsContent(input MeetingSettingsPartialInput) {
 				class="flex flex-wrap items-end gap-3"
 			>
 				<select class="select select-bordered select-sm" id="meeting_moderator_attendee_id" name="attendee_id">
-					<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
+					<option value="" selected?={ input.ModeratorID == nil }>{ i18n.T(ctx, "meeting_manage.none_option") }</option>
 					for _, a := range input.Attendees {
 						<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
 					}
@@ -1058,11 +1058,11 @@ templ ModerateSpeakerSettingsPartial(input SpeakersListPartialInput) {
 templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
 	@ErrorMessage(input.Error)
 	if input.CurrentAgendaPointID == nil {
-		<p class="text-sm text-base-content/70">No active agenda point. Activate one above to configure agenda-point settings.</p>
+		<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda_for_settings") }</p>
 	} else {
 		<div class="space-y-3">
 			<div class="rounded-box border border-base-300 bg-base-100 p-3">
-				<h3 class="mb-2 text-sm font-semibold">Agenda Point Quotation Settings</h3>
+				<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.agenda_point_quotation_settings") }</h3>
 				<form
 					hx-post={ input.AgendaPointQuotationPostStr(ctx) }
 					hx-target="#moderate-speaker-settings-container"
@@ -1071,44 +1071,44 @@ templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
 					class="grid gap-3 md:grid-cols-2"
 				>
 					<div class="space-y-1">
-						<label class="label p-0 text-sm font-medium" for="ap_gender_quotation">Gender quotation</label>
+						<label class="label p-0 text-sm font-medium" for="ap_gender_quotation">{ i18n.T(ctx, "meeting_manage.flinta_quotation") }</label>
 						<select class="select select-bordered select-sm" id="ap_gender_quotation" name="gender_quotation_enabled">
-							<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
-							<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
-							<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
+							<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>{ i18n.T(ctx, "meeting_manage.inherit_from_meeting") }</option>
+							<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>{ i18n.T(ctx, "common.enabled") }</option>
+							<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>{ i18n.T(ctx, "common.disabled") }</option>
 						</select>
 					</div>
 					<div class="space-y-1">
-						<label class="label p-0 text-sm font-medium" for="ap_first_speaker">First-speaker bonus</label>
+						<label class="label p-0 text-sm font-medium" for="ap_first_speaker">{ i18n.T(ctx, "meeting_manage.first_speaker_bonus") }</label>
 						<select class="select select-bordered select-sm" id="ap_first_speaker" name="first_speaker_quotation_enabled">
-							<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
-							<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
-							<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
+							<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>{ i18n.T(ctx, "meeting_manage.inherit_from_meeting") }</option>
+							<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>{ i18n.T(ctx, "common.enabled") }</option>
+							<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>{ i18n.T(ctx, "common.disabled") }</option>
 						</select>
 					</div>
 				</form>
 				<div class="mt-2 flex flex-wrap gap-2">
 					<span class={ "badge badge-outline", templ.KV("badge-success", input.EffectiveGenderQuotation), templ.KV("badge-ghost", !input.EffectiveGenderQuotation) }>
-						Gender:
+						{ i18n.T(ctx, "meeting_manage.flinta_quotation_status") }:
 						if input.EffectiveGenderQuotation {
-							on
+							{ i18n.T(ctx, "common.on") }
 						} else {
-							off
+							{ i18n.T(ctx, "common.off") }
 						}
 					</span>
 					<span class={ "badge badge-outline", templ.KV("badge-success", input.EffectiveFirstSpeakerQuotation), templ.KV("badge-ghost", !input.EffectiveFirstSpeakerQuotation) }>
-						First speaker:
+						{ i18n.T(ctx, "meeting_manage.first_speaker_status") }:
 						if input.EffectiveFirstSpeakerQuotation {
-							on
+							{ i18n.T(ctx, "common.on") }
 						} else {
-							off
+							{ i18n.T(ctx, "common.off") }
 						}
 					</span>
 				</div>
 			</div>
 
 			<div class="rounded-box border border-base-300 bg-base-100 p-3">
-				<h3 class="mb-2 text-sm font-semibold">Agenda Point Moderator</h3>
+				<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.agenda_point_moderator") }</h3>
 				<form
 					hx-post={ input.AgendaPointModeratorPostStr(ctx) }
 					hx-target="#moderate-speaker-settings-container"
@@ -1117,7 +1117,7 @@ templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
 					class="flex flex-wrap items-end gap-3"
 				>
 					<select class="select select-bordered select-sm" name="attendee_id">
-						<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
+						<option value="" selected?={ input.ModeratorID == nil }>{ i18n.T(ctx, "meeting_manage.none_option") }</option>
 						for _, a := range input.Attendees {
 							<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
 						}
@@ -1129,7 +1129,7 @@ templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
 }
 
 templ AgendaPointListPartial(input AgendaPointListPartialInput) {
-	<div id="agenda-point-list-container" class="space-y-3" data-import-open={ fmt.Sprintf("%t", input.ImportModalOpen()) }>
+	<div id="agenda-point-list-container" class="space-y-3" data-import-open={ fmt.Sprintf("%t", input.ImportModalOpen()) } data-import-top-prefix={ i18n.T(ctx, "agenda_import.top_prefix") }>
 		@ErrorMessage(input.Error)
 		<div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
 			<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-1">
@@ -1142,19 +1142,19 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 					data-testid="manage-agenda-add-form"
 				>
 					<fieldset class="fieldset rounded-box border border-base-300 p-3">
-						<legend class="fieldset-legend px-1 text-sm font-semibold">Add Agenda Point</legend>
-						<label class="label p-0 text-sm font-medium" for="ap_title">Title</label>
-						<input class="input input-bordered input-sm w-full" type="text" id="ap_title" name="title" required placeholder="Agenda point title"/>
-						<label class="label mt-2 p-0 text-sm font-medium" for="ap_parent_id">Parent (optional)</label>
+						<legend class="fieldset-legend px-1 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.add_agenda_point") }</legend>
+						<label class="label p-0 text-sm font-medium" for="ap_title">{ i18n.T(ctx, "meeting_manage.title_label") }</label>
+						<input class="input input-bordered input-sm w-full" type="text" id="ap_title" name="title" required placeholder={ i18n.T(ctx, "meeting_manage.agenda_point_title_placeholder") }/>
+						<label class="label mt-2 p-0 text-sm font-medium" for="ap_parent_id">{ i18n.T(ctx, "meeting_manage.parent_optional") }</label>
 						<select class="select select-bordered select-sm w-full" id="ap_parent_id" name="parent_id">
-							<option value="">-- top-level --</option>
+							<option value="">{ i18n.T(ctx, "meeting_manage.top_level") }</option>
 							for _, p := range input.ParentOptions {
 								<option value={ p.IDString }>{ p.Title }</option>
 							}
 						</select>
 						<button type="submit" class="btn btn-sm mt-3 w-full">
 							@Icon(IconArrowForward, "", "h-4 w-4")
-							Add
+							{ i18n.T(ctx, "common.add") }
 						</button>
 						<button
 							type="button"
@@ -1169,7 +1169,7 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 			</div>
 			<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-2">
 				if len(input.AgendaPoints) == 0 {
-					<p class="text-sm text-base-content/70">No agenda points yet.</p>
+					<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_agenda_points") }</p>
 				} else {
 					<div class="grid gap-3">
 						for _, ap := range input.AgendaPoints {
@@ -1187,11 +1187,11 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 										<div class="truncate font-semibold">{ ap.Title }</div>
 										<div class="mt-1 flex flex-wrap gap-1">
 											if ap.ParentID != nil {
-												<span class="badge badge-outline">Child</span>
+												<span class="badge badge-outline">{ i18n.T(ctx, "meeting_manage.child_badge") }</span>
 											}
 											if ap.IsActive {
 												<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">
-													Active
+													{ i18n.T(ctx, "meeting_manage.active_badge") }
 												</span>
 											}
 										</div>
@@ -1207,9 +1207,9 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 										<button
 											type="submit"
 											class="btn btn-sm btn-square tooltip tooltip-left"
-											data-tip="Move up"
-											title="Move up"
-											aria-label="Move up"
+											data-tip={ i18n.T(ctx, "meeting_manage.move_up") }
+											title={ i18n.T(ctx, "meeting_manage.move_up") }
+											aria-label={ i18n.T(ctx, "meeting_manage.move_up") }
 											disabled?={ !input.AgendaPointCanMoveUp(ap) }
 										>
 											@Icon(IconChevronLeft, "", "h-4 w-4 rotate-90")
@@ -1224,9 +1224,9 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 										<button
 											type="submit"
 											class="btn btn-sm btn-square tooltip tooltip-left"
-											data-tip="Move down"
-											title="Move down"
-											aria-label="Move down"
+											data-tip={ i18n.T(ctx, "meeting_manage.move_down") }
+											title={ i18n.T(ctx, "meeting_manage.move_down") }
+											aria-label={ i18n.T(ctx, "meeting_manage.move_down") }
 											disabled?={ !input.AgendaPointCanMoveDown(ap) }
 										>
 											@Icon(IconChevronRight, "", "h-4 w-4 rotate-90")
@@ -1242,9 +1242,9 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 											<button
 												type="submit"
 												class="btn btn-sm btn-square tooltip tooltip-left"
-												data-tip="Activate agenda point"
-												title="Activate agenda point"
-												aria-label="Activate agenda point"
+												data-tip={ i18n.T(ctx, "meeting_manage.activate_agenda_point") }
+												title={ i18n.T(ctx, "meeting_manage.activate_agenda_point") }
+												aria-label={ i18n.T(ctx, "meeting_manage.activate_agenda_point") }
 											>
 												@Icon(IconCheckCircle, "", "h-4 w-4")
 											</button>
@@ -1253,9 +1253,9 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 									<a
 										href={ input.AgendaPointToolsGet(ctx, &ap) }
 										class="btn btn-sm btn-square tooltip tooltip-left"
-										data-tip="Open tools"
-										title="Open tools"
-										aria-label="Open tools"
+										data-tip={ i18n.T(ctx, "meeting_manage.open_tools") }
+										title={ i18n.T(ctx, "meeting_manage.open_tools") }
+										aria-label={ i18n.T(ctx, "meeting_manage.open_tools") }
 									>
 										@Icon(IconSettings, "", "h-4 w-4")
 									</a>
@@ -1263,15 +1263,15 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 										hx-post={ input.AgendaPointDeletePostStr(ctx, &ap) }
 										hx-target="#agenda-point-list-container"
 										hx-swap="outerHTML"
-										hx-confirm="Delete this agenda point?"
+										hx-confirm={ i18n.T(ctx, "meeting_manage.delete_agenda_point_confirm") }
 										class="inline-flex"
 									>
 										<button
 											type="submit"
 											class="btn btn-sm btn-square btn-error tooltip tooltip-left"
-											data-tip="Delete agenda point"
-											title="Delete agenda point"
-											aria-label="Delete agenda point"
+											data-tip={ i18n.T(ctx, "meeting_manage.delete_agenda_point") }
+											title={ i18n.T(ctx, "meeting_manage.delete_agenda_point") }
+											aria-label={ i18n.T(ctx, "meeting_manage.delete_agenda_point") }
 										>
 											@Icon(IconDelete, "", "h-4 w-4")
 										</button>
@@ -1472,11 +1472,13 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 				</div>
 			</div>
 			<form method="dialog" class="modal-backdrop">
-				<button aria-label="Close">close</button>
+				<button aria-label={ i18n.T(ctx, "common.close") }>{ i18n.T(ctx, "common.close") }</button>
 			</form>
 		</dialog>
 		<script>
 			(function() {
+				var agendaImportTopPrefix = (document.getElementById("agenda-point-list-container")?.getAttribute("data-import-top-prefix")) || "TOP";
+
 				function nextImportLineState(state) {
 					switch (state) {
 						case "ignore":
@@ -1551,10 +1553,10 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 							if (state === "heading") {
 								topIndex++;
 								subIndex = 0;
-								label = "TOP " + topIndex;
+								label = agendaImportTopPrefix + " " + topIndex;
 							} else if (state === "subheading" && topIndex > 0) {
 								subIndex++;
-								label = "TOP " + topIndex + "." + subIndex;
+								label = agendaImportTopPrefix + " " + topIndex + "." + subIndex;
 							}
 							if (prefix) {
 								prefix.textContent = label;
@@ -1731,11 +1733,11 @@ templ SpeakersListSSEPartial(input SpeakersListPartialInput) {
 templ SpeakersListContent(input SpeakersListPartialInput) {
 	@ErrorMessage(input.Error)
 	if input.CurrentAgendaPointID == nil {
-		<p class="text-sm text-base-content/70">No active agenda point. Activate one above to manage the speakers list.</p>
+		<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_active_agenda_for_speakers") }</p>
 	} else {
 		<div class="space-y-3">
 			<div class="rounded-box border border-base-300 bg-base-100 p-3">
-				<h3 class="mb-2 text-sm font-semibold">Quotation Settings</h3>
+				<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.quotation_settings") }</h3>
 				<form
 					hx-post={ input.AgendaPointQuotationPostStr(ctx) }
 					hx-target="#speakers-list-container"
@@ -1744,44 +1746,44 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 					class="grid gap-3 md:grid-cols-2"
 				>
 					<div class="space-y-1">
-						<label class="label p-0 text-sm font-medium" for="ap_gender_quotation">Gender quotation</label>
+						<label class="label p-0 text-sm font-medium" for="ap_gender_quotation">{ i18n.T(ctx, "meeting_manage.flinta_quotation") }</label>
 						<select class="select select-bordered select-sm" id="ap_gender_quotation" name="gender_quotation_enabled">
-							<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>Inherit from meeting</option>
-							<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>Enabled</option>
-							<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>Disabled</option>
+							<option value="" selected?={ input.AgendaPointGenderQuotation == nil }>{ i18n.T(ctx, "meeting_manage.inherit_from_meeting") }</option>
+							<option value="true" selected?={ input.AgendaPointGenderQuotation != nil && *input.AgendaPointGenderQuotation }>{ i18n.T(ctx, "common.enabled") }</option>
+							<option value="false" selected?={ input.AgendaPointGenderQuotation != nil && !*input.AgendaPointGenderQuotation }>{ i18n.T(ctx, "common.disabled") }</option>
 						</select>
 					</div>
 					<div class="space-y-1">
-						<label class="label p-0 text-sm font-medium" for="ap_first_speaker">First-speaker bonus</label>
+						<label class="label p-0 text-sm font-medium" for="ap_first_speaker">{ i18n.T(ctx, "meeting_manage.first_speaker_bonus") }</label>
 						<select class="select select-bordered select-sm" id="ap_first_speaker" name="first_speaker_quotation_enabled">
-							<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>Inherit from meeting</option>
-							<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>Enabled</option>
-							<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>Disabled</option>
+							<option value="" selected?={ input.AgendaPointFirstSpeakerQuotation == nil }>{ i18n.T(ctx, "meeting_manage.inherit_from_meeting") }</option>
+							<option value="true" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && *input.AgendaPointFirstSpeakerQuotation }>{ i18n.T(ctx, "common.enabled") }</option>
+							<option value="false" selected?={ input.AgendaPointFirstSpeakerQuotation != nil && !*input.AgendaPointFirstSpeakerQuotation }>{ i18n.T(ctx, "common.disabled") }</option>
 						</select>
 					</div>
 				</form>
 				<div class="mt-2 flex flex-wrap gap-2">
 					<span class={ "badge badge-outline", templ.KV("badge-success", input.EffectiveGenderQuotation), templ.KV("badge-ghost", !input.EffectiveGenderQuotation) }>
-						Gender:
+						{ i18n.T(ctx, "meeting_manage.flinta_quotation_status") }:
 						if input.EffectiveGenderQuotation {
-							on
+							{ i18n.T(ctx, "common.on") }
 						} else {
-							off
+							{ i18n.T(ctx, "common.off") }
 						}
 					</span>
 					<span class={ "badge badge-outline", templ.KV("badge-success", input.EffectiveFirstSpeakerQuotation), templ.KV("badge-ghost", !input.EffectiveFirstSpeakerQuotation) }>
-						First speaker:
+						{ i18n.T(ctx, "meeting_manage.first_speaker_status") }:
 						if input.EffectiveFirstSpeakerQuotation {
-							on
+							{ i18n.T(ctx, "common.on") }
 						} else {
-							off
+							{ i18n.T(ctx, "common.off") }
 						}
 					</span>
 				</div>
 			</div>
 
 			<div class="rounded-box border border-base-300 bg-base-100 p-3">
-				<h3 class="mb-2 text-sm font-semibold">Agenda Point Moderator</h3>
+				<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.agenda_point_moderator") }</h3>
 				<form
 					hx-post={ input.AgendaPointModeratorPostStr(ctx) }
 					hx-target="#speakers-list-container"
@@ -1790,7 +1792,7 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 					class="flex flex-wrap items-end gap-3"
 				>
 					<select class="select select-bordered select-sm" name="attendee_id">
-						<option value="" selected?={ input.ModeratorID == nil }>-- none --</option>
+						<option value="" selected?={ input.ModeratorID == nil }>{ i18n.T(ctx, "meeting_manage.none_option") }</option>
 						for _, a := range input.Attendees {
 							<option value={ a.IDString } selected?={ input.ModeratorID != nil && *input.ModeratorID == a.ID }>{ a.FullName }</option>
 						}
@@ -1799,7 +1801,7 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 			</div>
 
 			<div class="rounded-box border border-base-300 bg-base-100 p-3">
-				<h3 class="mb-2 text-sm font-semibold">Add Speaker</h3>
+				<h3 class="mb-2 text-sm font-semibold">{ i18n.T(ctx, "meeting_manage.add_speaker") }</h3>
 				<button
 					type="button"
 					class="btn btn-sm"
@@ -1808,7 +1810,7 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 					data-testid="manage-open-speaker-add-dialog"
 				>
 					@Icon(IconPersonRaised, "", "h-4 w-4")
-					Add Speaker
+					{ i18n.T(ctx, "meeting_manage.add_speaker") }
 				</button>
 			</div>
 		</div>
@@ -1825,11 +1827,11 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 						class="btn btn-sm w-full"
 						data-testid="manage-end-current-speaker"
 						data-testid-group="manage-speakers-quick-button"
-						title="End current speech"
-						aria-label="End current speech"
+						title={ i18n.T(ctx, "meeting_manage.end_current_speech") }
+						aria-label={ i18n.T(ctx, "meeting_manage.end_current_speech") }
 					>
 						@Icon(IconCheckCircle, "", "mr-1 h-4 w-4")
-						End Speech
+						{ i18n.T(ctx, "meeting_manage.end_speech") }
 					</button>
 				</form>
 			} else if next := input.NextWaitingSpeaker(); next != nil {
@@ -1844,11 +1846,11 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 						class="btn btn-sm btn-primary w-full"
 						data-testid="manage-start-next-speaker"
 						data-testid-group="manage-speakers-quick-button"
-						title="Start next speaker"
-						aria-label="Start next speaker"
+						title={ i18n.T(ctx, "meeting_manage.start_next_speaker") }
+						aria-label={ i18n.T(ctx, "meeting_manage.start_next_speaker") }
 					>
 						@Icon(IconArrowForward, "", "mr-1 h-4 w-4")
-						Start Next Speaker
+						{ i18n.T(ctx, "meeting_manage.start_next_speaker_button") }
 					</button>
 				</form>
 			}
@@ -1860,16 +1862,16 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 					class="btn btn-sm"
 					data-manage-speakers-reset-scroll
 					data-testid="manage-speakers-reset-scroll"
-					title="Scroll to active position"
-					aria-label="Scroll to active position"
+					title={ i18n.T(ctx, "meeting_manage.scroll_to_active_position") }
+					aria-label={ i18n.T(ctx, "meeting_manage.scroll_to_active_position") }
 				>
 					@Icon(IconHistory, "", "mr-1 h-4 w-4")
-					Scroll To Active Position
+					{ i18n.T(ctx, "meeting_manage.scroll_to_active_position_button") }
 				</button>
 			</div>
 		}
 		if len(input.Speakers) == 0 {
-			<p class="mt-2 text-sm text-base-content/70">No speakers in the queue.</p>
+			<p class="mt-2 text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_speakers") }</p>
 		} else {
 			<ul
 				class="list rounded-box border border-base-300 bg-base-100 mt-2 max-h-[min(58vh,30rem)] overflow-y-auto pr-px"
@@ -1885,17 +1887,17 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 
 			<dialog id="manage-speaker-add-dialog" class="modal-box w-11/12 max-w-4xl max-h-[80vh]" data-manage-dialog>
 				<div class="mb-3 flex items-center justify-between gap-2">
-					<h3>Add Speaker</h3>
-					<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>Close</button>
+					<h3>{ i18n.T(ctx, "meeting_manage.add_speaker") }</h3>
+					<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close>{ i18n.T(ctx, "common.close") }</button>
 				</div>
 				<div class="mb-3 space-y-1">
-					<label class="label p-0 text-sm font-medium" for="speaker-add-search-input">Search name or number</label>
+					<label class="label p-0 text-sm font-medium" for="speaker-add-search-input">{ i18n.T(ctx, "meeting_manage.search_name_or_number") }</label>
 					<input class="input input-bordered input-sm"
 						type="text"
 						id="speaker-add-search-input"
 						name="q"
 						value={ input.SearchQuery }
-						placeholder="Type name or number"
+						placeholder={ i18n.T(ctx, "meeting_manage.type_name_or_number") }
 						hx-get={ input.SpeakerAddCandidatesPartialGetStr(ctx) }
 						hx-target="#speaker-add-candidates-container"
 						hx-swap="outerHTML"
@@ -1911,7 +1913,7 @@ templ SpeakersListContent(input SpeakersListPartialInput) {
 templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
 	<div id="speaker-add-candidates-container" class="grid min-w-0 gap-2 md:grid-cols-1 lg:grid-cols-2">
 		if len(input.FilteredSpeakerCandidates()) == 0 {
-			<p class="text-sm text-base-content/70">No matching attendees.</p>
+			<p class="text-sm text-base-content/70">{ i18n.T(ctx, "meeting_manage.no_matching_attendees") }</p>
 		} else {
 			for _, a := range input.FilteredSpeakerCandidates() {
 			<div class="card min-w-0 rounded-box border border-base-300 bg-base-100 px-3 py-2 shadow-sm" data-testid="manage-speaker-candidate-card">
@@ -1931,9 +1933,9 @@ templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
 							type="submit"
 							name="type"
 							value="regular"
-							title="Add regular speech"
-							aria-label="Add regular speech"
-							data-tip="Add regular speech"
+							title={ i18n.T(ctx, "meeting_manage.add_regular_speech") }
+							aria-label={ i18n.T(ctx, "meeting_manage.add_regular_speech") }
+							data-tip={ i18n.T(ctx, "meeting_manage.add_regular_speech") }
 							data-speaker-add-regular="true"
 							disabled?={ input.hasAttendeeWaitingType(a.ID, "regular") }
 							class="btn btn-square btn-sm btn-outline join-item leading-none tooltip tooltip-left"
@@ -1944,9 +1946,9 @@ templ SpeakerAddCandidatesPartial(input SpeakersListPartialInput) {
 							type="submit"
 							name="type"
 							value="ropm"
-							title="Add RoPM speech"
-							aria-label="Add RoPM speech"
-							data-tip="Add RoPM speech"
+							title={ i18n.T(ctx, "meeting_manage.add_ropm_speech") }
+							aria-label={ i18n.T(ctx, "meeting_manage.add_ropm_speech") }
+							data-tip={ i18n.T(ctx, "meeting_manage.add_ropm_speech") }
 							disabled?={ input.hasAttendeeWaitingType(a.ID, "ropm") }
 							class="btn btn-square btn-sm btn-warning join-item leading-none tooltip tooltip-left"
 						>
@@ -1974,14 +1976,14 @@ templ ManageAttendeeDependentPartial(input ManageAttendeeDependentPartialInput) 
 
 templ ManageMeetingSettingsCard(input MeetingSettingsPartialInput) {
 	<section class="card mb-4 rounded-box border border-base-300 bg-base-100 p-4 shadow-sm" data-testid="manage-settings-card">
-		<h2 class="text-lg font-semibold">Meeting Settings</h2>
+		<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.meeting_settings") }</h2>
 		@MeetingSettingsSSEPartial(input)
 	</section>
 }
 
 templ ManageSpeakersListCard(input SpeakersListPartialInput) {
 	<section class="card mb-4 rounded-box border border-base-300 bg-base-100 p-4 shadow-sm" data-testid="manage-speakers-card">
-		<h2 class="text-lg font-semibold">Speakers List</h2>
+		<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.speakers_list") }</h2>
 		@SpeakersListSSEPartial(input)
 	</section>
 }
@@ -1989,13 +1991,13 @@ templ ManageSpeakersListCard(input SpeakersListPartialInput) {
 templ ManageAttendeesCard(input AttendeeListPartialInput) {
 	<section class="card mb-4 rounded-box border border-base-300 bg-base-100 p-4 shadow-sm" data-testid="manage-attendees-card">
 		<div class="flex items-center justify-between gap-2">
-			<h2 class="text-lg font-semibold">Attendees</h2>
+			<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.attendees") }</h2>
 			<a
 				href={ input.ManageJoinQRGet(ctx) }
 				class="btn btn-sm btn-square tooltip tooltip-left"
-				data-tip="Show signup QR"
-				title="Show signup QR"
-				aria-label="Show signup QR"
+				data-tip={ i18n.T(ctx, "meeting_manage.show_signup_qr") }
+				title={ i18n.T(ctx, "meeting_manage.show_signup_qr") }
+				aria-label={ i18n.T(ctx, "meeting_manage.show_signup_qr") }
 			>
 				@Icon(IconQrCode2, "", "h-4 w-4")
 			</a>
@@ -2006,15 +2008,15 @@ templ ManageAttendeesCard(input AttendeeListPartialInput) {
 
 templ ManageAgendaPointsCard(input AgendaPointListPartialInput) {
 	<section class="card mb-4 rounded-box border border-base-300 bg-base-100 p-4 shadow-sm" data-testid="manage-agenda-card">
-		<h2 class="text-lg font-semibold">Agenda Points</h2>
+		<h2 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_manage.agenda_points") }</h2>
 		@AgendaPointListPartial(input)
 	</section>
 }
 
 templ MeetingManageTemplate(input MeetingManageInput) {
-	@PageTemplate("Manage: "+input.MeetingName+" - "+input.CommitteeName, false, true,
+	@PageTemplate(i18n.T(ctx, "meeting_manage.page_title", input.MeetingName, input.CommitteeName), false, true,
 		ScaffoldInput{
-			Title:    "Manage: " + input.MeetingName,
+			Title:    i18n.T(ctx, "meeting_manage.title", input.MeetingName),
 			BackLink: SafeURLPtr(input.CommitteeDashboardGet(ctx)),
 		},
 		MeetingManageContent(input))
