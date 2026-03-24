@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package conference.common.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/common/v1;commonv1";
+
+message Capability {
+  string key = 1;
+  bool allowed = 2;
+}
+
+message ActorSummary {
+  string actor_kind = 1;
+  string account_id = 2;
+  string attendee_id = 3;
+  string display_name = 4;
+  string username = 5;
+}
+
+message CommitteeReference {
+  string committee_id = 1;
+  string slug = 2;
+  string name = 3;
+  bool is_admin = 4;
+  bool is_chairperson = 5;
+  bool is_member = 6;
+}
+
+message MeetingReference {
+  string meeting_id = 1;
+  string committee_slug = 2;
+  string name = 3;
+  bool signup_open = 4;
+}
+
+message AgendaPointSummary {
+  string agenda_point_id = 1;
+  string display_number = 2;
+  string title = 3;
+  bool is_active = 4;
+}
+
+message AttendeeSummary {
+  string attendee_id = 1;
+  string full_name = 2;
+  int64 attendee_number = 3;
+  bool is_chair = 4;
+  bool is_guest = 5;
+  bool quoted = 6;
+}
+
+message SpeakerSummary {
+  string speaker_id = 1;
+  string attendee_id = 2;
+  string full_name = 3;
+  string speaker_type = 4;
+  string state = 5;
+  bool priority = 6;
+  bool quoted = 7;
+  bool first_speaker = 8;
+  bool mine = 9;
+}
+
+message CurrentDocumentSummary {
+  string blob_id = 1;
+  string filename = 2;
+  string label = 3;
+  string content_type = 4;
+  string download_url = 5;
+}

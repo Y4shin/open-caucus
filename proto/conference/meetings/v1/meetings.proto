@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package conference.meetings.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1;meetingsv1";
+
+import "conference/common/v1/common.proto";
+
+service MeetingService {
+  rpc GetLiveMeeting(GetLiveMeetingRequest) returns (GetLiveMeetingResponse);
+}
+
+message LiveMeetingCapabilities {
+  bool can_self_signup = 1;
+  bool can_add_regular_speech = 2;
+  bool can_add_point_of_order_speech = 3;
+  bool can_vote = 4;
+  bool can_view_current_document = 5;
+}
+
+message LiveMeetingView {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string meeting_name = 3;
+  string committee_name = 4;
+  uint64 version = 5;
+  conference.common.v1.AgendaPointSummary active_agenda_point = 6;
+  repeated conference.common.v1.SpeakerSummary speakers = 7;
+  conference.common.v1.CurrentDocumentSummary current_document = 8;
+  LiveMeetingCapabilities capabilities = 9;
+  string events_url = 10;
+}
+
+message GetLiveMeetingRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message GetLiveMeetingResponse {
+  LiveMeetingView meeting = 1;
+}

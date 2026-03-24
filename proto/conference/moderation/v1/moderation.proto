@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package conference.moderation.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1;moderationv1";
+
+import "conference/common/v1/common.proto";
+
+service ModerationService {
+  rpc GetModerationView(GetModerationViewRequest) returns (GetModerationViewResponse);
+  rpc ToggleSignupOpen(ToggleSignupOpenRequest) returns (ToggleSignupOpenResponse);
+}
+
+message ModerationMeetingSummary {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string meeting_name = 3;
+  string committee_name = 4;
+}
+
+message ModerationAttendeeSummaryBlock {
+  bool signup_open = 1;
+  int32 total_count = 2;
+  int32 guest_count = 3;
+  int32 chair_count = 4;
+  bool show_self_signup = 5;
+}
+
+message ModerationSpeakerSummaryBlock {
+  int32 total_count = 1;
+  bool has_active_speaker = 2;
+  int32 waiting_count = 3;
+}
+
+message ModerationView {
+  ModerationMeetingSummary meeting = 1;
+  uint64 version = 2;
+  ModerationAttendeeSummaryBlock attendees = 3;
+  conference.common.v1.AgendaPointSummary active_agenda_point = 4;
+  ModerationSpeakerSummaryBlock speakers = 5;
+  repeated conference.common.v1.Capability capabilities = 6;
+  string events_url = 7;
+}
+
+message GetModerationViewRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message GetModerationViewResponse {
+  ModerationView view = 1;
+}
+
+message ToggleSignupOpenRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  bool desired_open = 3;
+  uint64 expected_version = 4;
+}
+
+message ToggleSignupOpenResponse {
+  string meeting_id = 1;
+  bool signup_open = 2;
+  uint64 version = 3;
+  repeated string invalidated_views = 4;
+}

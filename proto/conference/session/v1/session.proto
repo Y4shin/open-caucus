@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package conference.session.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/session/v1;sessionv1";
+
+import "conference/common/v1/common.proto";
+
+service SessionService {
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+}
+
+message SessionBootstrap {
+  bool authenticated = 1;
+  conference.common.v1.ActorSummary actor = 2;
+  bool is_admin = 3;
+  repeated conference.common.v1.CommitteeReference available_committees = 4;
+  string locale = 5;
+  repeated conference.common.v1.Capability capabilities = 6;
+  string redirect_to = 7;
+}
+
+message GetSessionRequest {}
+
+message GetSessionResponse {
+  SessionBootstrap session = 1;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  SessionBootstrap session = 1;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {
+  bool cleared = 1;
+  string redirect_to = 2;
+}

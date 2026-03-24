@@ -11,7 +11,10 @@ import (
 	"syscall"
 	"time"
 
+	connect "connectrpc.com/connect"
 	docembed "github.com/Y4shin/conference-tool/doc"
+	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
+	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/docs"
@@ -21,6 +24,7 @@ import (
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
+	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
 	"github.com/joho/godotenv"
@@ -28,8 +32,8 @@ import (
 )
 
 var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Start the HTTP server",
+	Use:          "serve",
+	Short:        "Start the HTTP server",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if _, err := os.Stat(".env"); err == nil {
@@ -121,6 +125,15 @@ var serveCmd = &cobra.Command{
 		// Compose app routes and locale switcher in a top-level mux.
 		appMux := http.NewServeMux()
 		appMux.Handle("/", mux)
+
+		apiMux := http.NewServeMux()
+		sessionAPI := apiconnect.NewSessionHandler(sessionservice.New(repo, sessionManager, cfg.Auth.PasswordEnabled))
+		sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
+			sessionAPI,
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
+		appMux.Handle("/api/", http.StripPrefix("/api", apiMux))
 
 		// Locale switcher: POST /locale sets the "locale" cookie and redirects.
 		appMux.HandleFunc("POST /locale", func(w http.ResponseWriter, r *http.Request) {

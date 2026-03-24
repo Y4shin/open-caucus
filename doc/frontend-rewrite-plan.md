@@ -18,7 +18,7 @@ Last updated: 2026-03-24
 
 ## Current Implementation Baseline
 
-The repository is still on the original architecture at the time of this update.
+The repository is still primarily on the original architecture at the time of this update, but the first rewrite scaffolding now exists alongside it.
 
 ### Frontend and Delivery
 
@@ -33,6 +33,7 @@ The repository is still on the original architecture at the time of this update.
 - A custom route generator in `tools/routing/` produces typed router code and URL builders.
 - Handlers currently return template input models and server-rendered HTML responses.
 - The backend already owns authentication, authorization, domain logic, persistence, and file serving.
+- A minimal `Connect + Protobuf` transport slice now exists under `/api` for session bootstrap, login, and logout.
 
 ### Realtime
 
@@ -50,7 +51,13 @@ The repository is still on the original architecture at the time of this update.
 
 - Playwright E2E tests already exist and cover a broad set of user-facing workflows.
 - The project already uses Task for common development commands.
-- There is not yet any frontend SPA workspace, protobuf contract, Buf configuration, or generated TypeScript client code.
+- The flake dev shell now includes `buf` for protobuf linting and generation.
+- Initial API-level tests now exist for the new session transport slice.
+- There is not yet any full SvelteKit frontend workspace.
+- Initial `Connect + Protobuf` contract source now exists under `proto/` for the first Phase 1 slice.
+- `buf.yaml` and `buf.gen.yaml` now exist.
+- Initial generated Go stubs now exist under `gen/go/`.
+- Initial generated TypeScript clients now exist under `web/src/lib/gen/`, even though the frontend app itself does not exist yet.
 
 ## Target Architecture
 
@@ -936,6 +943,8 @@ E2E compatibility rule:
 - the goal is for the existing E2E suite to pass unchanged
 - acceptable changes are limited to harness/startup adjustments caused by the new server wiring or app boot process
 - avoid rewriting assertions unless the current test is tightly coupled to SSR/HTMX internals rather than user-visible behavior
+- preserve existing stable semantic hooks such as route structure and `data-testid` markers wherever practical in the rewrite
+- when a current E2E assertion depends on mutable localized copy or tooltip text, document the underlying workflow intent in the E2E-to-API mapping and prefer stable hooks for any newly added coverage
 
 E2E-to-API integration mapping:
 
@@ -1002,6 +1011,7 @@ Test philosophy:
 - prefer API integration tests derived from E2E workflows over large numbers of isolated endpoint tests
 - prefer service tests for domain branching instead of pushing all logic into E2E
 - prefer route/screen assertions over fragile HTML-fragment assertions
+- prefer stable semantic selectors over localized labels for newly added browser assertions where the UI already exposes a suitable hook
 - keep one or two strong realtime E2E scenarios instead of many redundant variants
 
 Definition of acceptable test coverage for a completed feature area:
@@ -1032,7 +1042,14 @@ Current status:
 
 - Phase 1 has started.
 - An initial contract surface draft exists for the first vertical slice.
-- The draft is still prose-level and should be turned into actual `.proto` files next.
+- The first real contract scaffold now exists in `proto/` together with `buf.yaml` and `buf.gen.yaml`.
+- Generated Go and TypeScript outputs now exist for the first-slice packages.
+- The current contract scaffold has been validated with `buf lint` and `buf generate` via `nix develop . --command ...`.
+- The first E2E-to-API mapping matrix now exists in `doc/e2e-api-mapping-matrix.md`.
+- A shared API error/status mapper now exists for the new transport layer.
+- A minimal Connect-backed `SessionService` transport now exists and is mounted under `/api`.
+- API-level tests now cover the initial `SessionService` bootstrap, login, and logout flow.
+- Additional screen services and frontend bootstrap are still pending.
 
 Deliverables:
 
@@ -1050,6 +1067,17 @@ Deliverables:
 - generated Go code
 - generated TypeScript clients
 - shared error model and status mapping
+
+Implementation status for this phase so far:
+
+- [x] Create `buf.yaml`
+- [x] Create `buf.gen.yaml`
+- [x] Materialize the first-slice contract draft as actual `.proto` files
+- [x] Generate Go contract code
+- [x] Generate TypeScript client code
+- [x] Add shared transport error/status mapping
+- [x] Implement the first generated Connect service on the Go server
+- [x] Add initial API-level tests for the session bootstrap slice
 
 Design rules:
 
@@ -1466,11 +1494,6 @@ The rewrite is complete when:
 
 ## Immediate Next Steps
 
-1. Turn the initial first-slice contract draft into actual `.proto` files.
-2. Define the first vertical slice and its acceptance criteria.
-3. Turn the E2E-to-API mapping approach into a concrete matrix artifact in the repo, using the drafted contract and the intact legacy app as reference.
-4. Build a minimal proof of concept:
-   - one generated service
-   - one Go transport implementation
-   - one Svelte route calling generated client code
-   - one SSE stream consumed by the frontend
+1. Stand up the minimal `web/` SvelteKit workspace and use the generated `SessionService` client for frontend bootstrap.
+2. Implement the next typed read-model transport, preferably `ModerationService.GetModerationView`.
+3. Expand API integration coverage from the session slice to the mapped committee and moderation workflows.

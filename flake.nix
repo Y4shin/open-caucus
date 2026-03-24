@@ -88,6 +88,7 @@
               gopls
               gotools
               golangci-lint
+              buf
 
               # Task runner
               go-task
@@ -114,7 +115,6 @@
             export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
             export PLAYWRIGHT_DRIVER_PATH="${pkgs.playwright-driver}"
             export PLAYWRIGHT_NODEJS_PATH="${pkgs.nodejs}/bin/node"
-            export 
             echo "🚀 conference-tool development environment"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo ""

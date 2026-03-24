@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package conference.committees.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1;committeesv1";
+
+import "conference/common/v1/common.proto";
+
+service CommitteeService {
+  rpc ListMyCommittees(ListMyCommitteesRequest) returns (ListMyCommitteesResponse);
+  rpc GetCommitteeOverview(GetCommitteeOverviewRequest) returns (GetCommitteeOverviewResponse);
+}
+
+message CommitteeListItem {
+  conference.common.v1.CommitteeReference committee = 1;
+  int32 meeting_count = 2;
+  bool has_active_meeting = 3;
+}
+
+message CommitteeOverviewMeeting {
+  conference.common.v1.MeetingReference meeting = 1;
+  bool can_moderate = 2;
+  bool can_join = 3;
+  bool can_view_live = 4;
+}
+
+message CommitteeOverview {
+  conference.common.v1.CommitteeReference committee = 1;
+  repeated CommitteeOverviewMeeting meetings = 2;
+  repeated conference.common.v1.Capability capabilities = 3;
+}
+
+message ListMyCommitteesRequest {}
+
+message ListMyCommitteesResponse {
+  repeated CommitteeListItem committees = 1;
+}
+
+message GetCommitteeOverviewRequest {
+  string committee_slug = 1;
+}
+
+message GetCommitteeOverviewResponse {
+  CommitteeOverview overview = 1;
+}
