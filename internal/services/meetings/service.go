@@ -21,6 +21,36 @@ func New(repo repository.Repository) *Service {
 	return &Service{repo: repo}
 }
 
+func (s *Service) GetJoinMeeting(ctx context.Context, committeeSlug, meetingIDStr string) (*meetingsv1.GetJoinMeetingResponse, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	committee, err := s.repo.GetCommitteeBySlug(ctx, committeeSlug)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "committee not found")
+	}
+
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
+	}
+
+	currentAttendee, isAttendee := s.resolveCurrentAttendee(ctx, committeeSlug, meetingID)
+	view := &meetingsv1.JoinMeetingView{
+		CommitteeSlug:   committeeSlug,
+		MeetingId:       strconv.FormatInt(meetingID, 10),
+		MeetingName:     meeting.Name,
+		CommitteeName:   committee.Name,
+		SignupOpen:      meeting.SignupOpen,
+		CurrentAttendee: currentAttendee,
+		Capabilities:    s.buildJoinMeetingCapabilities(ctx, committeeSlug, meeting.SignupOpen, isAttendee),
+	}
+
+	return &meetingsv1.GetJoinMeetingResponse{Meeting: view}, nil
+}
+
 func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDStr string) (*meetingsv1.GetLiveMeetingResponse, error) {
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
@@ -38,7 +68,7 @@ func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDSt
 	}
 
 	// Resolve actor context for capability decisions
-	attendeeID, isAttendee := s.resolveAttendeeID(ctx, meetingID)
+	attendeeID, isAttendee := s.resolveAttendeeID(ctx, committeeSlug, meetingID)
 
 	// Active agenda point + speakers
 	var activeAP *commonv1.AgendaPointSummary
@@ -71,43 +101,60 @@ func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDSt
 	eventsURL := fmt.Sprintf("/api/realtime/meetings/%d/events", meetingID)
 
 	view := &meetingsv1.LiveMeetingView{
-		CommitteeSlug:      committeeSlug,
-		MeetingId:          strconv.FormatInt(meetingID, 10),
-		MeetingName:        meeting.Name,
-		CommitteeName:      committee.Name,
-		Version:            uint64(meeting.Version),
-		ActiveAgendaPoint:  activeAP,
-		Speakers:           speakers,
-		CurrentDocument:    currentDoc,
-		Capabilities:       caps,
-		EventsUrl:          eventsURL,
+		CommitteeSlug:     committeeSlug,
+		MeetingId:         strconv.FormatInt(meetingID, 10),
+		MeetingName:       meeting.Name,
+		CommitteeName:     committee.Name,
+		Version:           uint64(meeting.Version),
+		ActiveAgendaPoint: activeAP,
+		Speakers:          speakers,
+		CurrentDocument:   currentDoc,
+		Capabilities:      caps,
+		EventsUrl:         eventsURL,
 	}
 
 	return &meetingsv1.GetLiveMeetingResponse{Meeting: view}, nil
 }
 
-func (s *Service) resolveAttendeeID(ctx context.Context, meetingID int64) (int64, bool) {
+func (s *Service) resolveCurrentAttendee(ctx context.Context, committeeSlug string, meetingID int64) (*commonv1.AttendeeSummary, bool) {
 	sd, ok := session.GetSession(ctx)
 	if !ok || sd == nil || sd.IsExpired() {
-		return 0, false
+		return nil, false
 	}
 
 	if sd.IsGuestSession() && sd.AttendeeID != nil {
 		attendee, err := s.repo.GetAttendeeByID(ctx, *sd.AttendeeID)
 		if err == nil && attendee.MeetingID == meetingID {
-			return attendee.ID, true
+			return toAttendeeSummary(attendee), true
 		}
-		return 0, false
+		return nil, false
 	}
 
 	if sd.IsAccountSession() && sd.AccountID != nil {
-		attendee, err := s.repo.GetAttendeeByUserIDAndMeetingID(ctx, *sd.AccountID, meetingID)
+		membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
+		if err != nil {
+			return nil, false
+		}
+
+		attendee, err := s.repo.GetAttendeeByUserIDAndMeetingID(ctx, membership.ID, meetingID)
 		if err == nil {
-			return attendee.ID, true
+			return toAttendeeSummary(attendee), true
 		}
 	}
 
-	return 0, false
+	return nil, false
+}
+
+func (s *Service) resolveAttendeeID(ctx context.Context, committeeSlug string, meetingID int64) (int64, bool) {
+	attendee, ok := s.resolveCurrentAttendee(ctx, committeeSlug, meetingID)
+	if !ok || attendee == nil {
+		return 0, false
+	}
+	id, err := strconv.ParseInt(attendee.AttendeeId, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return id, true
 }
 
 func (s *Service) buildLiveMeetingCapabilities(ctx context.Context, meeting *model.Meeting, committee *model.Committee, isAttendee bool) *meetingsv1.LiveMeetingCapabilities {
@@ -117,11 +164,31 @@ func (s *Service) buildLiveMeetingCapabilities(ctx context.Context, meeting *mod
 	isAccountSession := sd != nil && !sd.IsExpired() && sd.IsAccountSession()
 
 	return &meetingsv1.LiveMeetingCapabilities{
-		CanSelfSignup:               meeting.SignupOpen && !isAttendee && isAccountSession,
-		CanAddRegularSpeech:         isAttendee && isActiveMeeting && meeting.CurrentAgendaPointID != nil,
-		CanAddPointOfOrderSpeech:    isAttendee && isActiveMeeting && meeting.CurrentAgendaPointID != nil,
-		CanVote:                     false, // determined per-vote-definition, not at meeting level
-		CanViewCurrentDocument:      isActiveMeeting && meeting.CurrentAgendaPointID != nil,
+		CanSelfSignup:            meeting.SignupOpen && !isAttendee && isAccountSession,
+		CanAddRegularSpeech:      isAttendee && isActiveMeeting && meeting.CurrentAgendaPointID != nil,
+		CanAddPointOfOrderSpeech: isAttendee && isActiveMeeting && meeting.CurrentAgendaPointID != nil,
+		CanVote:                  false, // determined per-vote-definition, not at meeting level
+		CanViewCurrentDocument:   isActiveMeeting && meeting.CurrentAgendaPointID != nil,
+	}
+}
+
+func (s *Service) buildJoinMeetingCapabilities(ctx context.Context, committeeSlug string, signupOpen bool, isAttendee bool) *meetingsv1.JoinMeetingCapabilities {
+	sd, _ := session.GetSession(ctx)
+	isAuthenticated := sd != nil && !sd.IsExpired()
+	isAccountSession := isAuthenticated && sd.IsAccountSession() && sd.AccountID != nil
+
+	canSelfSignup := false
+	if isAccountSession && !isAttendee && signupOpen {
+		if _, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug); err == nil {
+			canSelfSignup = true
+		}
+	}
+
+	return &meetingsv1.JoinMeetingCapabilities{
+		CanSelfSignup:       canSelfSignup,
+		CanGuestJoin:        signupOpen && !isAuthenticated,
+		AlreadyJoined:       isAttendee,
+		CanUseAttendeeLogin: !isAccountSession && !isAttendee,
 	}
 }
 
@@ -166,4 +233,15 @@ func buildSpeakerSummaries(entries []*model.SpeakerEntry, currentAttendeeID int6
 		})
 	}
 	return summaries
+}
+
+func toAttendeeSummary(attendee *model.Attendee) *commonv1.AttendeeSummary {
+	return &commonv1.AttendeeSummary{
+		AttendeeId:     strconv.FormatInt(attendee.ID, 10),
+		FullName:       attendee.FullName,
+		AttendeeNumber: attendee.AttendeeNumber,
+		IsChair:        attendee.IsChair,
+		IsGuest:        attendee.UserID == nil,
+		Quoted:         attendee.Quoted,
+	}
 }

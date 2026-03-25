@@ -33,6 +33,9 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// MeetingServiceGetJoinMeetingProcedure is the fully-qualified name of the MeetingService's
+	// GetJoinMeeting RPC.
+	MeetingServiceGetJoinMeetingProcedure = "/conference.meetings.v1.MeetingService/GetJoinMeeting"
 	// MeetingServiceGetLiveMeetingProcedure is the fully-qualified name of the MeetingService's
 	// GetLiveMeeting RPC.
 	MeetingServiceGetLiveMeetingProcedure = "/conference.meetings.v1.MeetingService/GetLiveMeeting"
@@ -40,6 +43,7 @@ const (
 
 // MeetingServiceClient is a client for the conference.meetings.v1.MeetingService service.
 type MeetingServiceClient interface {
+	GetJoinMeeting(context.Context, *connect.Request[v1.GetJoinMeetingRequest]) (*connect.Response[v1.GetJoinMeetingResponse], error)
 	GetLiveMeeting(context.Context, *connect.Request[v1.GetLiveMeetingRequest]) (*connect.Response[v1.GetLiveMeetingResponse], error)
 }
 
@@ -54,6 +58,12 @@ func NewMeetingServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	meetingServiceMethods := v1.File_conference_meetings_v1_meetings_proto.Services().ByName("MeetingService").Methods()
 	return &meetingServiceClient{
+		getJoinMeeting: connect.NewClient[v1.GetJoinMeetingRequest, v1.GetJoinMeetingResponse](
+			httpClient,
+			baseURL+MeetingServiceGetJoinMeetingProcedure,
+			connect.WithSchema(meetingServiceMethods.ByName("GetJoinMeeting")),
+			connect.WithClientOptions(opts...),
+		),
 		getLiveMeeting: connect.NewClient[v1.GetLiveMeetingRequest, v1.GetLiveMeetingResponse](
 			httpClient,
 			baseURL+MeetingServiceGetLiveMeetingProcedure,
@@ -65,7 +75,13 @@ func NewMeetingServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // meetingServiceClient implements MeetingServiceClient.
 type meetingServiceClient struct {
+	getJoinMeeting *connect.Client[v1.GetJoinMeetingRequest, v1.GetJoinMeetingResponse]
 	getLiveMeeting *connect.Client[v1.GetLiveMeetingRequest, v1.GetLiveMeetingResponse]
+}
+
+// GetJoinMeeting calls conference.meetings.v1.MeetingService.GetJoinMeeting.
+func (c *meetingServiceClient) GetJoinMeeting(ctx context.Context, req *connect.Request[v1.GetJoinMeetingRequest]) (*connect.Response[v1.GetJoinMeetingResponse], error) {
+	return c.getJoinMeeting.CallUnary(ctx, req)
 }
 
 // GetLiveMeeting calls conference.meetings.v1.MeetingService.GetLiveMeeting.
@@ -75,6 +91,7 @@ func (c *meetingServiceClient) GetLiveMeeting(ctx context.Context, req *connect.
 
 // MeetingServiceHandler is an implementation of the conference.meetings.v1.MeetingService service.
 type MeetingServiceHandler interface {
+	GetJoinMeeting(context.Context, *connect.Request[v1.GetJoinMeetingRequest]) (*connect.Response[v1.GetJoinMeetingResponse], error)
 	GetLiveMeeting(context.Context, *connect.Request[v1.GetLiveMeetingRequest]) (*connect.Response[v1.GetLiveMeetingResponse], error)
 }
 
@@ -85,6 +102,12 @@ type MeetingServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewMeetingServiceHandler(svc MeetingServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	meetingServiceMethods := v1.File_conference_meetings_v1_meetings_proto.Services().ByName("MeetingService").Methods()
+	meetingServiceGetJoinMeetingHandler := connect.NewUnaryHandler(
+		MeetingServiceGetJoinMeetingProcedure,
+		svc.GetJoinMeeting,
+		connect.WithSchema(meetingServiceMethods.ByName("GetJoinMeeting")),
+		connect.WithHandlerOptions(opts...),
+	)
 	meetingServiceGetLiveMeetingHandler := connect.NewUnaryHandler(
 		MeetingServiceGetLiveMeetingProcedure,
 		svc.GetLiveMeeting,
@@ -93,6 +116,8 @@ func NewMeetingServiceHandler(svc MeetingServiceHandler, opts ...connect.Handler
 	)
 	return "/conference.meetings.v1.MeetingService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case MeetingServiceGetJoinMeetingProcedure:
+			meetingServiceGetJoinMeetingHandler.ServeHTTP(w, r)
 		case MeetingServiceGetLiveMeetingProcedure:
 			meetingServiceGetLiveMeetingHandler.ServeHTTP(w, r)
 		default:
@@ -103,6 +128,10 @@ func NewMeetingServiceHandler(svc MeetingServiceHandler, opts ...connect.Handler
 
 // UnimplementedMeetingServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedMeetingServiceHandler struct{}
+
+func (UnimplementedMeetingServiceHandler) GetJoinMeeting(context.Context, *connect.Request[v1.GetJoinMeetingRequest]) (*connect.Response[v1.GetJoinMeetingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.meetings.v1.MeetingService.GetJoinMeeting is not implemented"))
+}
 
 func (UnimplementedMeetingServiceHandler) GetLiveMeeting(context.Context, *connect.Request[v1.GetLiveMeetingRequest]) (*connect.Response[v1.GetLiveMeetingResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.meetings.v1.MeetingService.GetLiveMeeting is not implemented"))

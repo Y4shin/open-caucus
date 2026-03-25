@@ -20,7 +20,7 @@
 	$effect(() => {
 		if (!session.loaded) return;
 		if (!session.authenticated) {
-			goto('/login');
+			goto(`/committee/${slug}/meeting/${meetingId}/join`);
 			return;
 		}
 		refreshTick;

@@ -7,9 +7,79 @@ import (
 
 	connect "connectrpc.com/connect"
 
+	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
 	meetingsv1 "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1"
 	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
 )
+
+func TestMeetingServiceGetJoinMeeting_AnonymousGuestSeesGuestJoin(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	meetingID := ts.seedMeeting(t, "test-committee", "Open Meeting", true)
+
+	client := newCombinedTestClient(t, ts)
+
+	resp, err := client.meetings.GetJoinMeeting(context.Background(), connect.NewRequest(&meetingsv1.GetJoinMeetingRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+	}))
+	if err != nil {
+		t.Fatalf("get join meeting: %v", err)
+	}
+
+	view := resp.Msg.GetMeeting()
+	if !view.GetSignupOpen() {
+		t.Fatal("expected signup_open=true")
+	}
+	if !view.GetCapabilities().GetCanGuestJoin() {
+		t.Fatal("expected anonymous guest join to be available")
+	}
+	if view.GetCapabilities().GetAlreadyJoined() {
+		t.Fatal("anonymous visitor should not already be joined")
+	}
+}
+
+func TestMeetingServiceGetJoinMeeting_MemberAlreadyJoined(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "member1", "pass123", "Member One", "member")
+	meetingID := ts.seedMeeting(t, "test-committee", "Open Meeting", true)
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "member1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	if _, err := client.attendees.SelfSignup(context.Background(), connect.NewRequest(&attendeesv1.SelfSignupRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+	})); err != nil {
+		t.Fatalf("self signup: %v", err)
+	}
+
+	resp, err := client.meetings.GetJoinMeeting(context.Background(), connect.NewRequest(&meetingsv1.GetJoinMeetingRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+	}))
+	if err != nil {
+		t.Fatalf("get join meeting: %v", err)
+	}
+
+	view := resp.Msg.GetMeeting()
+	if !view.GetCapabilities().GetAlreadyJoined() {
+		t.Fatal("expected already_joined=true for signed-up member")
+	}
+	if view.GetCurrentAttendee().GetFullName() != "Member One" {
+		t.Fatalf("unexpected attendee name: %q", view.GetCurrentAttendee().GetFullName())
+	}
+	if view.GetCapabilities().GetCanSelfSignup() {
+		t.Fatal("already joined member should not see self-signup capability")
+	}
+}
 
 func TestMeetingServiceGetLiveMeeting_AnonymousUser(t *testing.T) {
 	ts := newCombinedAPITestServer(t)

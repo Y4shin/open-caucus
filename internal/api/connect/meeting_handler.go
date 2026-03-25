@@ -19,6 +19,14 @@ func NewMeetingHandler(service *meetingservice.Service) *MeetingHandler {
 	return &MeetingHandler{service: service}
 }
 
+func (h *MeetingHandler) GetJoinMeeting(ctx context.Context, req *connect.Request[meetingsv1.GetJoinMeetingRequest]) (*connect.Response[meetingsv1.GetJoinMeetingResponse], error) {
+	resp, err := h.service.GetJoinMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (h *MeetingHandler) GetLiveMeeting(ctx context.Context, req *connect.Request[meetingsv1.GetLiveMeetingRequest]) (*connect.Response[meetingsv1.GetLiveMeetingResponse], error) {
 	resp, err := h.service.GetLiveMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
 	if err != nil {

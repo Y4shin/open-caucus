@@ -4,7 +4,7 @@
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
-import type { AgendaPointSummary, CurrentDocumentSummary, SpeakerSummary } from "../../common/v1/common_pb";
+import type { AgendaPointSummary, AttendeeSummary, CurrentDocumentSummary, SpeakerSummary } from "../../common/v1/common_pb";
 import { file_conference_common_v1_common } from "../../common/v1/common_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -12,7 +12,125 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/meetings/v1/meetings.proto.
  */
 export const file_conference_meetings_v1_meetings: GenFile = /*@__PURE__*/
-  fileDesc("CiVjb25mZXJlbmNlL21lZXRpbmdzL3YxL21lZXRpbmdzLnByb3RvEhZjb25mZXJlbmNlLm1lZXRpbmdzLnYxIq4BChdMaXZlTWVldGluZ0NhcGFiaWxpdGllcxIXCg9jYW5fc2VsZl9zaWdudXAYASABKAgSHgoWY2FuX2FkZF9yZWd1bGFyX3NwZWVjaBgCIAEoCBIlCh1jYW5fYWRkX3BvaW50X29mX29yZGVyX3NwZWVjaBgDIAEoCBIQCghjYW5fdm90ZRgEIAEoCBIhChljYW5fdmlld19jdXJyZW50X2RvY3VtZW50GAUgASgIIp4DCg9MaXZlTWVldGluZ1ZpZXcSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIUCgxtZWV0aW5nX25hbWUYAyABKAkSFgoOY29tbWl0dGVlX25hbWUYBCABKAkSDwoHdmVyc2lvbhgFIAEoBBJFChNhY3RpdmVfYWdlbmRhX3BvaW50GAYgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQWdlbmRhUG9pbnRTdW1tYXJ5EjYKCHNwZWFrZXJzGAcgAygLMiQuY29uZmVyZW5jZS5jb21tb24udjEuU3BlYWtlclN1bW1hcnkSRgoQY3VycmVudF9kb2N1bWVudBgIIAEoCzIsLmNvbmZlcmVuY2UuY29tbW9uLnYxLkN1cnJlbnREb2N1bWVudFN1bW1hcnkSRQoMY2FwYWJpbGl0aWVzGAkgASgLMi8uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5MaXZlTWVldGluZ0NhcGFiaWxpdGllcxISCgpldmVudHNfdXJsGAogASgJIkMKFUdldExpdmVNZWV0aW5nUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIlIKFkdldExpdmVNZWV0aW5nUmVzcG9uc2USOAoHbWVldGluZxgBIAEoCzInLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTGl2ZU1lZXRpbmdWaWV3MoEBCg5NZWV0aW5nU2VydmljZRJvCg5HZXRMaXZlTWVldGluZxItLmNvbmZlcmVuY2UubWVldGluZ3MudjEuR2V0TGl2ZU1lZXRpbmdSZXF1ZXN0Gi4uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5HZXRMaXZlTWVldGluZ1Jlc3BvbnNlQkxaSmdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9tZWV0aW5ncy92MTttZWV0aW5nc3YxYgZwcm90bzM", [file_conference_common_v1_common]);
+  fileDesc("CiVjb25mZXJlbmNlL21lZXRpbmdzL3YxL21lZXRpbmdzLnByb3RvEhZjb25mZXJlbmNlLm1lZXRpbmdzLnYxIoIBChdKb2luTWVldGluZ0NhcGFiaWxpdGllcxIXCg9jYW5fc2VsZl9zaWdudXAYASABKAgSFgoOY2FuX2d1ZXN0X2pvaW4YAiABKAgSFgoOYWxyZWFkeV9qb2luZWQYAyABKAgSHgoWY2FuX3VzZV9hdHRlbmRlZV9sb2dpbhgEIAEoCCKIAgoPSm9pbk1lZXRpbmdWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEhMKC3NpZ251cF9vcGVuGAUgASgIEj8KEGN1cnJlbnRfYXR0ZW5kZWUYBiABKAsyJS5jb25mZXJlbmNlLmNvbW1vbi52MS5BdHRlbmRlZVN1bW1hcnkSRQoMY2FwYWJpbGl0aWVzGAcgASgLMi8uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5Kb2luTWVldGluZ0NhcGFiaWxpdGllcyJDChVHZXRKb2luTWVldGluZ1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCSJSChZHZXRKb2luTWVldGluZ1Jlc3BvbnNlEjgKB21lZXRpbmcYASABKAsyJy5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkpvaW5NZWV0aW5nVmlldyKuAQoXTGl2ZU1lZXRpbmdDYXBhYmlsaXRpZXMSFwoPY2FuX3NlbGZfc2lnbnVwGAEgASgIEh4KFmNhbl9hZGRfcmVndWxhcl9zcGVlY2gYAiABKAgSJQodY2FuX2FkZF9wb2ludF9vZl9vcmRlcl9zcGVlY2gYAyABKAgSEAoIY2FuX3ZvdGUYBCABKAgSIQoZY2FuX3ZpZXdfY3VycmVudF9kb2N1bWVudBgFIAEoCCKeAwoPTGl2ZU1lZXRpbmdWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEg8KB3ZlcnNpb24YBSABKAQSRQoTYWN0aXZlX2FnZW5kYV9wb2ludBgGIAEoCzIoLmNvbmZlcmVuY2UuY29tbW9uLnYxLkFnZW5kYVBvaW50U3VtbWFyeRI2CghzcGVha2VycxgHIAMoCzIkLmNvbmZlcmVuY2UuY29tbW9uLnYxLlNwZWFrZXJTdW1tYXJ5EkYKEGN1cnJlbnRfZG9jdW1lbnQYCCABKAsyLC5jb25mZXJlbmNlLmNvbW1vbi52MS5DdXJyZW50RG9jdW1lbnRTdW1tYXJ5EkUKDGNhcGFiaWxpdGllcxgJIAEoCzIvLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTGl2ZU1lZXRpbmdDYXBhYmlsaXRpZXMSEgoKZXZlbnRzX3VybBgKIAEoCSJDChVHZXRMaXZlTWVldGluZ1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCSJSChZHZXRMaXZlTWVldGluZ1Jlc3BvbnNlEjgKB21lZXRpbmcYASABKAsyJy5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkxpdmVNZWV0aW5nVmlldzLyAQoOTWVldGluZ1NlcnZpY2USbwoOR2V0Sm9pbk1lZXRpbmcSLS5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkdldEpvaW5NZWV0aW5nUmVxdWVzdBouLmNvbmZlcmVuY2UubWVldGluZ3MudjEuR2V0Sm9pbk1lZXRpbmdSZXNwb25zZRJvCg5HZXRMaXZlTWVldGluZxItLmNvbmZlcmVuY2UubWVldGluZ3MudjEuR2V0TGl2ZU1lZXRpbmdSZXF1ZXN0Gi4uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5HZXRMaXZlTWVldGluZ1Jlc3BvbnNlQkxaSmdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9tZWV0aW5ncy92MTttZWV0aW5nc3YxYgZwcm90bzM", [file_conference_common_v1_common]);
+
+/**
+ * @generated from message conference.meetings.v1.JoinMeetingCapabilities
+ */
+export type JoinMeetingCapabilities = Message<"conference.meetings.v1.JoinMeetingCapabilities"> & {
+  /**
+   * @generated from field: bool can_self_signup = 1;
+   */
+  canSelfSignup: boolean;
+
+  /**
+   * @generated from field: bool can_guest_join = 2;
+   */
+  canGuestJoin: boolean;
+
+  /**
+   * @generated from field: bool already_joined = 3;
+   */
+  alreadyJoined: boolean;
+
+  /**
+   * @generated from field: bool can_use_attendee_login = 4;
+   */
+  canUseAttendeeLogin: boolean;
+};
+
+/**
+ * Describes the message conference.meetings.v1.JoinMeetingCapabilities.
+ * Use `create(JoinMeetingCapabilitiesSchema)` to create a new message.
+ */
+export const JoinMeetingCapabilitiesSchema: GenMessage<JoinMeetingCapabilities> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 0);
+
+/**
+ * @generated from message conference.meetings.v1.JoinMeetingView
+ */
+export type JoinMeetingView = Message<"conference.meetings.v1.JoinMeetingView"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string meeting_name = 3;
+   */
+  meetingName: string;
+
+  /**
+   * @generated from field: string committee_name = 4;
+   */
+  committeeName: string;
+
+  /**
+   * @generated from field: bool signup_open = 5;
+   */
+  signupOpen: boolean;
+
+  /**
+   * @generated from field: conference.common.v1.AttendeeSummary current_attendee = 6;
+   */
+  currentAttendee?: AttendeeSummary;
+
+  /**
+   * @generated from field: conference.meetings.v1.JoinMeetingCapabilities capabilities = 7;
+   */
+  capabilities?: JoinMeetingCapabilities;
+};
+
+/**
+ * Describes the message conference.meetings.v1.JoinMeetingView.
+ * Use `create(JoinMeetingViewSchema)` to create a new message.
+ */
+export const JoinMeetingViewSchema: GenMessage<JoinMeetingView> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 1);
+
+/**
+ * @generated from message conference.meetings.v1.GetJoinMeetingRequest
+ */
+export type GetJoinMeetingRequest = Message<"conference.meetings.v1.GetJoinMeetingRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+};
+
+/**
+ * Describes the message conference.meetings.v1.GetJoinMeetingRequest.
+ * Use `create(GetJoinMeetingRequestSchema)` to create a new message.
+ */
+export const GetJoinMeetingRequestSchema: GenMessage<GetJoinMeetingRequest> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 2);
+
+/**
+ * @generated from message conference.meetings.v1.GetJoinMeetingResponse
+ */
+export type GetJoinMeetingResponse = Message<"conference.meetings.v1.GetJoinMeetingResponse"> & {
+  /**
+   * @generated from field: conference.meetings.v1.JoinMeetingView meeting = 1;
+   */
+  meeting?: JoinMeetingView;
+};
+
+/**
+ * Describes the message conference.meetings.v1.GetJoinMeetingResponse.
+ * Use `create(GetJoinMeetingResponseSchema)` to create a new message.
+ */
+export const GetJoinMeetingResponseSchema: GenMessage<GetJoinMeetingResponse> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 3);
 
 /**
  * @generated from message conference.meetings.v1.LiveMeetingCapabilities
@@ -49,7 +167,7 @@ export type LiveMeetingCapabilities = Message<"conference.meetings.v1.LiveMeetin
  * Use `create(LiveMeetingCapabilitiesSchema)` to create a new message.
  */
 export const LiveMeetingCapabilitiesSchema: GenMessage<LiveMeetingCapabilities> = /*@__PURE__*/
-  messageDesc(file_conference_meetings_v1_meetings, 0);
+  messageDesc(file_conference_meetings_v1_meetings, 4);
 
 /**
  * @generated from message conference.meetings.v1.LiveMeetingView
@@ -111,7 +229,7 @@ export type LiveMeetingView = Message<"conference.meetings.v1.LiveMeetingView"> 
  * Use `create(LiveMeetingViewSchema)` to create a new message.
  */
 export const LiveMeetingViewSchema: GenMessage<LiveMeetingView> = /*@__PURE__*/
-  messageDesc(file_conference_meetings_v1_meetings, 1);
+  messageDesc(file_conference_meetings_v1_meetings, 5);
 
 /**
  * @generated from message conference.meetings.v1.GetLiveMeetingRequest
@@ -133,7 +251,7 @@ export type GetLiveMeetingRequest = Message<"conference.meetings.v1.GetLiveMeeti
  * Use `create(GetLiveMeetingRequestSchema)` to create a new message.
  */
 export const GetLiveMeetingRequestSchema: GenMessage<GetLiveMeetingRequest> = /*@__PURE__*/
-  messageDesc(file_conference_meetings_v1_meetings, 2);
+  messageDesc(file_conference_meetings_v1_meetings, 6);
 
 /**
  * @generated from message conference.meetings.v1.GetLiveMeetingResponse
@@ -150,12 +268,20 @@ export type GetLiveMeetingResponse = Message<"conference.meetings.v1.GetLiveMeet
  * Use `create(GetLiveMeetingResponseSchema)` to create a new message.
  */
 export const GetLiveMeetingResponseSchema: GenMessage<GetLiveMeetingResponse> = /*@__PURE__*/
-  messageDesc(file_conference_meetings_v1_meetings, 3);
+  messageDesc(file_conference_meetings_v1_meetings, 7);
 
 /**
  * @generated from service conference.meetings.v1.MeetingService
  */
 export const MeetingService: GenService<{
+  /**
+   * @generated from rpc conference.meetings.v1.MeetingService.GetJoinMeeting
+   */
+  getJoinMeeting: {
+    methodKind: "unary";
+    input: typeof GetJoinMeetingRequestSchema;
+    output: typeof GetJoinMeetingResponseSchema;
+  },
   /**
    * @generated from rpc conference.meetings.v1.MeetingService.GetLiveMeeting
    */

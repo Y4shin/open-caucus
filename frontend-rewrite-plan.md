@@ -10,12 +10,14 @@ This is a deliberate architectural rewrite, not an incremental migration. The go
 
 Last updated: 2026-03-25
 
-- Current phase: `Phase 3 - Frontend Foundation`
+- Current phase: `Phase 5 - Full Feature Port`
 - Phase 0 status: `Completed`
 - Phase 1 status: `Completed`
 - Phase 2 status: `Completed`
 - Phase 3 status: `Completed`
-- Phases 4-6 status: `Not started`
+- Phase 4 status: `Completed`
+- Phase 5 status: `In progress`
+- Phase 6 status: `Not started`
 - Rewrite strategy: `Big-bang rewrite approved`
 
 ## Current Implementation Baseline
@@ -1211,15 +1213,21 @@ Request identity for first slice:
 
 ```proto
 service MeetingService {
+  rpc GetJoinMeeting(GetJoinMeetingRequest) returns (GetJoinMeetingResponse);
   rpc GetLiveMeeting(GetLiveMeetingRequest) returns (GetLiveMeetingResponse);
 }
 ```
 
 Intent:
 
-- powers `/committee/[slug]/meeting/[meetingId]`
-- returns the live meeting read model needed by attendees/members
-- includes:
+- `GetJoinMeeting`
+  - powers `/committee/[slug]/meeting/[meetingId]/join`
+  - powers `/committee/[slug]/meeting/[meetingId]/attendee-login`
+  - returns the join/login screen state for account signup, guest signup, and attendee re-entry
+- `GetLiveMeeting`
+  - powers `/committee/[slug]/meeting/[meetingId]`
+  - returns the live meeting read model needed by attendees/members
+  - includes:
   - meeting summary
   - active agenda point summary
   - speaker list snapshot

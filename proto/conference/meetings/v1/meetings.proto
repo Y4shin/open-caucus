@@ -7,7 +7,34 @@ option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/meeting
 import "conference/common/v1/common.proto";
 
 service MeetingService {
+  rpc GetJoinMeeting(GetJoinMeetingRequest) returns (GetJoinMeetingResponse);
   rpc GetLiveMeeting(GetLiveMeetingRequest) returns (GetLiveMeetingResponse);
+}
+
+message JoinMeetingCapabilities {
+  bool can_self_signup = 1;
+  bool can_guest_join = 2;
+  bool already_joined = 3;
+  bool can_use_attendee_login = 4;
+}
+
+message JoinMeetingView {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string meeting_name = 3;
+  string committee_name = 4;
+  bool signup_open = 5;
+  conference.common.v1.AttendeeSummary current_attendee = 6;
+  JoinMeetingCapabilities capabilities = 7;
+}
+
+message GetJoinMeetingRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message GetJoinMeetingResponse {
+  JoinMeetingView meeting = 1;
 }
 
 message LiveMeetingCapabilities {

@@ -22,6 +22,262 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type JoinMeetingCapabilities struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	CanSelfSignup       bool                   `protobuf:"varint,1,opt,name=can_self_signup,json=canSelfSignup,proto3" json:"can_self_signup,omitempty"`
+	CanGuestJoin        bool                   `protobuf:"varint,2,opt,name=can_guest_join,json=canGuestJoin,proto3" json:"can_guest_join,omitempty"`
+	AlreadyJoined       bool                   `protobuf:"varint,3,opt,name=already_joined,json=alreadyJoined,proto3" json:"already_joined,omitempty"`
+	CanUseAttendeeLogin bool                   `protobuf:"varint,4,opt,name=can_use_attendee_login,json=canUseAttendeeLogin,proto3" json:"can_use_attendee_login,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *JoinMeetingCapabilities) Reset() {
+	*x = JoinMeetingCapabilities{}
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinMeetingCapabilities) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinMeetingCapabilities) ProtoMessage() {}
+
+func (x *JoinMeetingCapabilities) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinMeetingCapabilities.ProtoReflect.Descriptor instead.
+func (*JoinMeetingCapabilities) Descriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *JoinMeetingCapabilities) GetCanSelfSignup() bool {
+	if x != nil {
+		return x.CanSelfSignup
+	}
+	return false
+}
+
+func (x *JoinMeetingCapabilities) GetCanGuestJoin() bool {
+	if x != nil {
+		return x.CanGuestJoin
+	}
+	return false
+}
+
+func (x *JoinMeetingCapabilities) GetAlreadyJoined() bool {
+	if x != nil {
+		return x.AlreadyJoined
+	}
+	return false
+}
+
+func (x *JoinMeetingCapabilities) GetCanUseAttendeeLogin() bool {
+	if x != nil {
+		return x.CanUseAttendeeLogin
+	}
+	return false
+}
+
+type JoinMeetingView struct {
+	state           protoimpl.MessageState   `protogen:"open.v1"`
+	CommitteeSlug   string                   `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId       string                   `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	MeetingName     string                   `protobuf:"bytes,3,opt,name=meeting_name,json=meetingName,proto3" json:"meeting_name,omitempty"`
+	CommitteeName   string                   `protobuf:"bytes,4,opt,name=committee_name,json=committeeName,proto3" json:"committee_name,omitempty"`
+	SignupOpen      bool                     `protobuf:"varint,5,opt,name=signup_open,json=signupOpen,proto3" json:"signup_open,omitempty"`
+	CurrentAttendee *v1.AttendeeSummary      `protobuf:"bytes,6,opt,name=current_attendee,json=currentAttendee,proto3" json:"current_attendee,omitempty"`
+	Capabilities    *JoinMeetingCapabilities `protobuf:"bytes,7,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *JoinMeetingView) Reset() {
+	*x = JoinMeetingView{}
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinMeetingView) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinMeetingView) ProtoMessage() {}
+
+func (x *JoinMeetingView) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinMeetingView.ProtoReflect.Descriptor instead.
+func (*JoinMeetingView) Descriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *JoinMeetingView) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *JoinMeetingView) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *JoinMeetingView) GetMeetingName() string {
+	if x != nil {
+		return x.MeetingName
+	}
+	return ""
+}
+
+func (x *JoinMeetingView) GetCommitteeName() string {
+	if x != nil {
+		return x.CommitteeName
+	}
+	return ""
+}
+
+func (x *JoinMeetingView) GetSignupOpen() bool {
+	if x != nil {
+		return x.SignupOpen
+	}
+	return false
+}
+
+func (x *JoinMeetingView) GetCurrentAttendee() *v1.AttendeeSummary {
+	if x != nil {
+		return x.CurrentAttendee
+	}
+	return nil
+}
+
+func (x *JoinMeetingView) GetCapabilities() *JoinMeetingCapabilities {
+	if x != nil {
+		return x.Capabilities
+	}
+	return nil
+}
+
+type GetJoinMeetingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJoinMeetingRequest) Reset() {
+	*x = GetJoinMeetingRequest{}
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJoinMeetingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJoinMeetingRequest) ProtoMessage() {}
+
+func (x *GetJoinMeetingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJoinMeetingRequest.ProtoReflect.Descriptor instead.
+func (*GetJoinMeetingRequest) Descriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetJoinMeetingRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *GetJoinMeetingRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+type GetJoinMeetingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Meeting       *JoinMeetingView       `protobuf:"bytes,1,opt,name=meeting,proto3" json:"meeting,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJoinMeetingResponse) Reset() {
+	*x = GetJoinMeetingResponse{}
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJoinMeetingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJoinMeetingResponse) ProtoMessage() {}
+
+func (x *GetJoinMeetingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJoinMeetingResponse.ProtoReflect.Descriptor instead.
+func (*GetJoinMeetingResponse) Descriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetJoinMeetingResponse) GetMeeting() *JoinMeetingView {
+	if x != nil {
+		return x.Meeting
+	}
+	return nil
+}
+
 type LiveMeetingCapabilities struct {
 	state                    protoimpl.MessageState `protogen:"open.v1"`
 	CanSelfSignup            bool                   `protobuf:"varint,1,opt,name=can_self_signup,json=canSelfSignup,proto3" json:"can_self_signup,omitempty"`
@@ -35,7 +291,7 @@ type LiveMeetingCapabilities struct {
 
 func (x *LiveMeetingCapabilities) Reset() {
 	*x = LiveMeetingCapabilities{}
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[0]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -47,7 +303,7 @@ func (x *LiveMeetingCapabilities) String() string {
 func (*LiveMeetingCapabilities) ProtoMessage() {}
 
 func (x *LiveMeetingCapabilities) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[0]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,7 +316,7 @@ func (x *LiveMeetingCapabilities) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LiveMeetingCapabilities.ProtoReflect.Descriptor instead.
 func (*LiveMeetingCapabilities) Descriptor() ([]byte, []int) {
-	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{0}
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *LiveMeetingCapabilities) GetCanSelfSignup() bool {
@@ -116,7 +372,7 @@ type LiveMeetingView struct {
 
 func (x *LiveMeetingView) Reset() {
 	*x = LiveMeetingView{}
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[1]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -128,7 +384,7 @@ func (x *LiveMeetingView) String() string {
 func (*LiveMeetingView) ProtoMessage() {}
 
 func (x *LiveMeetingView) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[1]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -141,7 +397,7 @@ func (x *LiveMeetingView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LiveMeetingView.ProtoReflect.Descriptor instead.
 func (*LiveMeetingView) Descriptor() ([]byte, []int) {
-	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{1}
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *LiveMeetingView) GetCommitteeSlug() string {
@@ -224,7 +480,7 @@ type GetLiveMeetingRequest struct {
 
 func (x *GetLiveMeetingRequest) Reset() {
 	*x = GetLiveMeetingRequest{}
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[2]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -236,7 +492,7 @@ func (x *GetLiveMeetingRequest) String() string {
 func (*GetLiveMeetingRequest) ProtoMessage() {}
 
 func (x *GetLiveMeetingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[2]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -249,7 +505,7 @@ func (x *GetLiveMeetingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLiveMeetingRequest.ProtoReflect.Descriptor instead.
 func (*GetLiveMeetingRequest) Descriptor() ([]byte, []int) {
-	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{2}
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetLiveMeetingRequest) GetCommitteeSlug() string {
@@ -275,7 +531,7 @@ type GetLiveMeetingResponse struct {
 
 func (x *GetLiveMeetingResponse) Reset() {
 	*x = GetLiveMeetingResponse{}
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[3]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -287,7 +543,7 @@ func (x *GetLiveMeetingResponse) String() string {
 func (*GetLiveMeetingResponse) ProtoMessage() {}
 
 func (x *GetLiveMeetingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[3]
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -300,7 +556,7 @@ func (x *GetLiveMeetingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLiveMeetingResponse.ProtoReflect.Descriptor instead.
 func (*GetLiveMeetingResponse) Descriptor() ([]byte, []int) {
-	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{3}
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetLiveMeetingResponse) GetMeeting() *LiveMeetingView {
@@ -314,7 +570,28 @@ var File_conference_meetings_v1_meetings_proto protoreflect.FileDescriptor
 
 const file_conference_meetings_v1_meetings_proto_rawDesc = "" +
 	"\n" +
-	"%conference/meetings/v1/meetings.proto\x12\x16conference.meetings.v1\x1a!conference/common/v1/common.proto\"\x8d\x02\n" +
+	"%conference/meetings/v1/meetings.proto\x12\x16conference.meetings.v1\x1a!conference/common/v1/common.proto\"\xc3\x01\n" +
+	"\x17JoinMeetingCapabilities\x12&\n" +
+	"\x0fcan_self_signup\x18\x01 \x01(\bR\rcanSelfSignup\x12$\n" +
+	"\x0ecan_guest_join\x18\x02 \x01(\bR\fcanGuestJoin\x12%\n" +
+	"\x0ealready_joined\x18\x03 \x01(\bR\ralreadyJoined\x123\n" +
+	"\x16can_use_attendee_login\x18\x04 \x01(\bR\x13canUseAttendeeLogin\"\xe9\x02\n" +
+	"\x0fJoinMeetingView\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12!\n" +
+	"\fmeeting_name\x18\x03 \x01(\tR\vmeetingName\x12%\n" +
+	"\x0ecommittee_name\x18\x04 \x01(\tR\rcommitteeName\x12\x1f\n" +
+	"\vsignup_open\x18\x05 \x01(\bR\n" +
+	"signupOpen\x12P\n" +
+	"\x10current_attendee\x18\x06 \x01(\v2%.conference.common.v1.AttendeeSummaryR\x0fcurrentAttendee\x12S\n" +
+	"\fcapabilities\x18\a \x01(\v2/.conference.meetings.v1.JoinMeetingCapabilitiesR\fcapabilities\"]\n" +
+	"\x15GetJoinMeetingRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"[\n" +
+	"\x16GetJoinMeetingResponse\x12A\n" +
+	"\ameeting\x18\x01 \x01(\v2'.conference.meetings.v1.JoinMeetingViewR\ameeting\"\x8d\x02\n" +
 	"\x17LiveMeetingCapabilities\x12&\n" +
 	"\x0fcan_self_signup\x18\x01 \x01(\bR\rcanSelfSignup\x123\n" +
 	"\x16can_add_regular_speech\x18\x02 \x01(\bR\x13canAddRegularSpeech\x12?\n" +
@@ -340,8 +617,9 @@ const file_conference_meetings_v1_meetings_proto_rawDesc = "" +
 	"\n" +
 	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"[\n" +
 	"\x16GetLiveMeetingResponse\x12A\n" +
-	"\ameeting\x18\x01 \x01(\v2'.conference.meetings.v1.LiveMeetingViewR\ameeting2\x81\x01\n" +
+	"\ameeting\x18\x01 \x01(\v2'.conference.meetings.v1.LiveMeetingViewR\ameeting2\xf2\x01\n" +
 	"\x0eMeetingService\x12o\n" +
+	"\x0eGetJoinMeeting\x12-.conference.meetings.v1.GetJoinMeetingRequest\x1a..conference.meetings.v1.GetJoinMeetingResponse\x12o\n" +
 	"\x0eGetLiveMeeting\x12-.conference.meetings.v1.GetLiveMeetingRequest\x1a..conference.meetings.v1.GetLiveMeetingResponseBLZJgithub.com/Y4shin/conference-tool/gen/go/conference/meetings/v1;meetingsv1b\x06proto3"
 
 var (
@@ -356,29 +634,39 @@ func file_conference_meetings_v1_meetings_proto_rawDescGZIP() []byte {
 	return file_conference_meetings_v1_meetings_proto_rawDescData
 }
 
-var file_conference_meetings_v1_meetings_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_conference_meetings_v1_meetings_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_conference_meetings_v1_meetings_proto_goTypes = []any{
-	(*LiveMeetingCapabilities)(nil),   // 0: conference.meetings.v1.LiveMeetingCapabilities
-	(*LiveMeetingView)(nil),           // 1: conference.meetings.v1.LiveMeetingView
-	(*GetLiveMeetingRequest)(nil),     // 2: conference.meetings.v1.GetLiveMeetingRequest
-	(*GetLiveMeetingResponse)(nil),    // 3: conference.meetings.v1.GetLiveMeetingResponse
-	(*v1.AgendaPointSummary)(nil),     // 4: conference.common.v1.AgendaPointSummary
-	(*v1.SpeakerSummary)(nil),         // 5: conference.common.v1.SpeakerSummary
-	(*v1.CurrentDocumentSummary)(nil), // 6: conference.common.v1.CurrentDocumentSummary
+	(*JoinMeetingCapabilities)(nil),   // 0: conference.meetings.v1.JoinMeetingCapabilities
+	(*JoinMeetingView)(nil),           // 1: conference.meetings.v1.JoinMeetingView
+	(*GetJoinMeetingRequest)(nil),     // 2: conference.meetings.v1.GetJoinMeetingRequest
+	(*GetJoinMeetingResponse)(nil),    // 3: conference.meetings.v1.GetJoinMeetingResponse
+	(*LiveMeetingCapabilities)(nil),   // 4: conference.meetings.v1.LiveMeetingCapabilities
+	(*LiveMeetingView)(nil),           // 5: conference.meetings.v1.LiveMeetingView
+	(*GetLiveMeetingRequest)(nil),     // 6: conference.meetings.v1.GetLiveMeetingRequest
+	(*GetLiveMeetingResponse)(nil),    // 7: conference.meetings.v1.GetLiveMeetingResponse
+	(*v1.AttendeeSummary)(nil),        // 8: conference.common.v1.AttendeeSummary
+	(*v1.AgendaPointSummary)(nil),     // 9: conference.common.v1.AgendaPointSummary
+	(*v1.SpeakerSummary)(nil),         // 10: conference.common.v1.SpeakerSummary
+	(*v1.CurrentDocumentSummary)(nil), // 11: conference.common.v1.CurrentDocumentSummary
 }
 var file_conference_meetings_v1_meetings_proto_depIdxs = []int32{
-	4, // 0: conference.meetings.v1.LiveMeetingView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
-	5, // 1: conference.meetings.v1.LiveMeetingView.speakers:type_name -> conference.common.v1.SpeakerSummary
-	6, // 2: conference.meetings.v1.LiveMeetingView.current_document:type_name -> conference.common.v1.CurrentDocumentSummary
-	0, // 3: conference.meetings.v1.LiveMeetingView.capabilities:type_name -> conference.meetings.v1.LiveMeetingCapabilities
-	1, // 4: conference.meetings.v1.GetLiveMeetingResponse.meeting:type_name -> conference.meetings.v1.LiveMeetingView
-	2, // 5: conference.meetings.v1.MeetingService.GetLiveMeeting:input_type -> conference.meetings.v1.GetLiveMeetingRequest
-	3, // 6: conference.meetings.v1.MeetingService.GetLiveMeeting:output_type -> conference.meetings.v1.GetLiveMeetingResponse
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	8,  // 0: conference.meetings.v1.JoinMeetingView.current_attendee:type_name -> conference.common.v1.AttendeeSummary
+	0,  // 1: conference.meetings.v1.JoinMeetingView.capabilities:type_name -> conference.meetings.v1.JoinMeetingCapabilities
+	1,  // 2: conference.meetings.v1.GetJoinMeetingResponse.meeting:type_name -> conference.meetings.v1.JoinMeetingView
+	9,  // 3: conference.meetings.v1.LiveMeetingView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
+	10, // 4: conference.meetings.v1.LiveMeetingView.speakers:type_name -> conference.common.v1.SpeakerSummary
+	11, // 5: conference.meetings.v1.LiveMeetingView.current_document:type_name -> conference.common.v1.CurrentDocumentSummary
+	4,  // 6: conference.meetings.v1.LiveMeetingView.capabilities:type_name -> conference.meetings.v1.LiveMeetingCapabilities
+	5,  // 7: conference.meetings.v1.GetLiveMeetingResponse.meeting:type_name -> conference.meetings.v1.LiveMeetingView
+	2,  // 8: conference.meetings.v1.MeetingService.GetJoinMeeting:input_type -> conference.meetings.v1.GetJoinMeetingRequest
+	6,  // 9: conference.meetings.v1.MeetingService.GetLiveMeeting:input_type -> conference.meetings.v1.GetLiveMeetingRequest
+	3,  // 10: conference.meetings.v1.MeetingService.GetJoinMeeting:output_type -> conference.meetings.v1.GetJoinMeetingResponse
+	7,  // 11: conference.meetings.v1.MeetingService.GetLiveMeeting:output_type -> conference.meetings.v1.GetLiveMeetingResponse
+	10, // [10:12] is the sub-list for method output_type
+	8,  // [8:10] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_conference_meetings_v1_meetings_proto_init() }
@@ -392,7 +680,7 @@ func file_conference_meetings_v1_meetings_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_meetings_v1_meetings_proto_rawDesc), len(file_conference_meetings_v1_meetings_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
