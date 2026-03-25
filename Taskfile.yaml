@@ -329,3 +329,50 @@ tasks:
       - task: deps
       - task: generate
       - echo "Setup complete! Run 'task dev' to start development."
+
+  # Frontend (SvelteKit) tasks
+  dev:web:
+    desc: Run the SvelteKit dev server with hot reload (proxies /api to Go backend on :8080)
+    dir: web
+    cmds:
+      - npm run dev
+
+  build:web:
+    desc: Build the SvelteKit SPA (outputs to internal/web/build for Go embedding)
+    dir: web
+    cmds:
+      - npm run build
+
+  test:web:
+    desc: Run SvelteKit unit and component tests
+    dir: web
+    cmds:
+      - npm run test
+
+  check:web:
+    desc: Run svelte-check and TypeScript type checks for the frontend
+    dir: web
+    cmds:
+      - npm run check
+
+  lint:web:
+    desc: Lint and format-check the frontend code
+    dir: web
+    cmds:
+      - npm run lint
+
+  format:web:
+    desc: Format the frontend code with Prettier
+    dir: web
+    cmds:
+      - npm run format
+
+  generate:clients:
+    desc: Regenerate TypeScript and Go clients from proto definitions (requires buf)
+    cmds:
+      - buf generate
+
+  dev:full:
+    desc: Run Go backend and SvelteKit dev server in parallel (full dev environment)
+    cmds:
+      - task --parallel dev dev:web

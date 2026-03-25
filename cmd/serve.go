@@ -13,6 +13,7 @@ import (
 
 	connect "connectrpc.com/connect"
 	docembed "github.com/Y4shin/conference-tool/doc"
+	webassets "github.com/Y4shin/conference-tool/internal/web"
 	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
 	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
 	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
@@ -204,6 +205,12 @@ var serveCmd = &cobra.Command{
 		)
 
 		appMux.Handle("/api/", http.StripPrefix("/api", apiMux))
+
+		// Serve the SvelteKit SPA at /app/ in non-development environments.
+		// In development, the Vite dev server (port 5173) handles the frontend.
+		if cfg.Application.Environment != "development" {
+			appMux.Handle("/app/", http.StripPrefix("/app", webassets.NewSPAHandler()))
+		}
 
 		// Locale switcher: POST /locale sets the "locale" cookie and redirects.
 		appMux.HandleFunc("POST /locale", func(w http.ResponseWriter, r *http.Request) {
