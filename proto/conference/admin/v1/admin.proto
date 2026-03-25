@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+package conference.admin.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1;adminv1";
+
+service AdminService {
+  // GetAdminDashboard returns summary stats for the admin dashboard.
+  rpc GetAdminDashboard(GetAdminDashboardRequest) returns (GetAdminDashboardResponse);
+
+  // ListAccounts returns a paginated list of all accounts.
+  rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
+
+  // SetAccountAdmin grants or revokes admin privileges for an account.
+  rpc SetAccountAdmin(SetAccountAdminRequest) returns (SetAccountAdminResponse);
+
+  // ListCommittees returns a paginated list of all committees.
+  rpc ListCommittees(ListCommitteesRequest) returns (ListCommitteesResponse);
+
+  // CreateCommittee creates a new committee.
+  rpc CreateCommittee(CreateCommitteeRequest) returns (CreateCommitteeResponse);
+
+  // DeleteCommittee deletes a committee by slug.
+  rpc DeleteCommittee(DeleteCommitteeRequest) returns (DeleteCommitteeResponse);
+
+  // GetCommitteeAdmin returns committee membership and OAuth rules for admin management.
+  rpc GetCommitteeAdmin(GetCommitteeAdminRequest) returns (GetCommitteeAdminResponse);
+
+  // ListCommitteeUsers returns the members of a committee.
+  rpc ListCommitteeUsers(ListCommitteeUsersRequest) returns (ListCommitteeUsersResponse);
+
+  // CreateCommitteeUser creates a new committee-local user account.
+  rpc CreateCommitteeUser(CreateCommitteeUserRequest) returns (CreateCommitteeUserResponse);
+
+  // DeleteCommitteeUser removes a user from a committee.
+  rpc DeleteCommitteeUser(DeleteCommitteeUserRequest) returns (DeleteCommitteeUserResponse);
+
+  // AssignAccountToCommittee assigns an existing global account to a committee.
+  rpc AssignAccountToCommittee(AssignAccountToCommitteeRequest) returns (AssignAccountToCommitteeResponse);
+
+  // UpdateCommitteeUser updates role and quotation flag for a committee member.
+  rpc UpdateCommitteeUser(UpdateCommitteeUserRequest) returns (UpdateCommitteeUserResponse);
+
+  // ListOAuthRules returns the OAuth group-to-role rules for a committee.
+  rpc ListOAuthRules(ListOAuthRulesRequest) returns (ListOAuthRulesResponse);
+
+  // CreateOAuthRule creates a new OAuth group-to-role rule for a committee.
+  rpc CreateOAuthRule(CreateOAuthRuleRequest) returns (CreateOAuthRuleResponse);
+
+  // DeleteOAuthRule removes an OAuth group-to-role rule.
+  rpc DeleteOAuthRule(DeleteOAuthRuleRequest) returns (DeleteOAuthRuleResponse);
+}
+
+message AccountRecord {
+  string account_id = 1;
+  string username = 2;
+  string full_name = 3;
+  bool is_admin = 4;
+}
+
+message CommitteeRecord {
+  string committee_id = 1;
+  string slug = 2;
+  string name = 3;
+  int64 member_count = 4;
+}
+
+message CommitteeUserRecord {
+  string user_id = 1;
+  string username = 2;
+  string full_name = 3;
+  string role = 4;
+  bool quoted = 5;
+  bool is_oauth_managed = 6;
+}
+
+message OAuthRuleRecord {
+  string rule_id = 1;
+  string group_name = 2;
+  string role = 3;
+}
+
+message GetAdminDashboardRequest {}
+
+message GetAdminDashboardResponse {
+  int64 total_accounts = 1;
+  int64 total_committees = 2;
+}
+
+message ListAccountsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListAccountsResponse {
+  repeated AccountRecord accounts = 1;
+  int64 total_count = 2;
+}
+
+message SetAccountAdminRequest {
+  string account_id = 1;
+  bool is_admin = 2;
+}
+
+message SetAccountAdminResponse {
+  AccountRecord account = 1;
+}
+
+message ListCommitteesRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+}
+
+message ListCommitteesResponse {
+  repeated CommitteeRecord committees = 1;
+  int64 total_count = 2;
+}
+
+message CreateCommitteeRequest {
+  string name = 1;
+  string slug = 2;
+}
+
+message CreateCommitteeResponse {
+  CommitteeRecord committee = 1;
+}
+
+message DeleteCommitteeRequest {
+  string slug = 1;
+}
+
+message DeleteCommitteeResponse {}
+
+message GetCommitteeAdminRequest {
+  string slug = 1;
+}
+
+message GetCommitteeAdminResponse {
+  CommitteeRecord committee = 1;
+  repeated CommitteeUserRecord users = 2;
+  repeated OAuthRuleRecord oauth_rules = 3;
+}
+
+message ListCommitteeUsersRequest {
+  string slug = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListCommitteeUsersResponse {
+  repeated CommitteeUserRecord users = 1;
+  int64 total_count = 2;
+}
+
+message CreateCommitteeUserRequest {
+  string slug = 1;
+  string username = 2;
+  string full_name = 3;
+  string password = 4;
+  string role = 5;
+  bool quoted = 6;
+}
+
+message CreateCommitteeUserResponse {
+  CommitteeUserRecord user = 1;
+}
+
+message DeleteCommitteeUserRequest {
+  string slug = 1;
+  string user_id = 2;
+}
+
+message DeleteCommitteeUserResponse {}
+
+message AssignAccountToCommitteeRequest {
+  string slug = 1;
+  string account_id = 2;
+  string role = 3;
+  bool quoted = 4;
+}
+
+message AssignAccountToCommitteeResponse {
+  CommitteeUserRecord user = 1;
+}
+
+message UpdateCommitteeUserRequest {
+  string slug = 1;
+  string user_id = 2;
+  string role = 3;
+  bool quoted = 4;
+}
+
+message UpdateCommitteeUserResponse {
+  CommitteeUserRecord user = 1;
+}
+
+message ListOAuthRulesRequest {
+  string slug = 1;
+}
+
+message ListOAuthRulesResponse {
+  repeated OAuthRuleRecord rules = 1;
+}
+
+message CreateOAuthRuleRequest {
+  string slug = 1;
+  string group_name = 2;
+  string role = 3;
+}
+
+message CreateOAuthRuleResponse {
+  OAuthRuleRecord rule = 1;
+}
+
+message DeleteOAuthRuleRequest {
+  string slug = 1;
+  string rule_id = 2;
+}
+
+message DeleteOAuthRuleResponse {}

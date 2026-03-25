@@ -13,10 +13,15 @@ import (
 
 	connect "connectrpc.com/connect"
 	docembed "github.com/Y4shin/conference-tool/doc"
+	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
+	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
+	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
 	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
 	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
 	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
+	speakersv1connect "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1/speakersv1connect"
+	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
 	"github.com/Y4shin/conference-tool/internal/broker"
@@ -28,10 +33,15 @@ import (
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
 	"github.com/Y4shin/conference-tool/internal/routes"
+	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
+	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
+	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
 	committeeservice "github.com/Y4shin/conference-tool/internal/services/committees"
 	meetingservice "github.com/Y4shin/conference-tool/internal/services/meetings"
 	moderationservice "github.com/Y4shin/conference-tool/internal/services/moderation"
 	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
+	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
+	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
 	"github.com/joho/godotenv"
@@ -158,6 +168,36 @@ var serveCmd = &cobra.Command{
 			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 		)
 		apiMux.Handle(moderationAPIPath, mw.Get("session")(moderationAPIHandler))
+
+		attendeeAPIPath, attendeeAPIHandler := attendeesv1connect.NewAttendeeServiceHandler(
+			apiconnect.NewAttendeeHandler(attendeeservice.New(repo, sessionManager, b)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(attendeeAPIPath, mw.Get("session")(attendeeAPIHandler))
+
+		agendaAPIPath, agendaAPIHandler := agendav1connect.NewAgendaServiceHandler(
+			apiconnect.NewAgendaHandler(agendaservice.New(repo, b)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(agendaAPIPath, mw.Get("session")(agendaAPIHandler))
+
+		speakerAPIPath, speakerAPIHandler := speakersv1connect.NewSpeakerServiceHandler(
+			apiconnect.NewSpeakerHandler(speakerservice.New(repo, b)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(speakerAPIPath, mw.Get("session")(speakerAPIHandler))
+
+		voteAPIPath, voteAPIHandler := votesv1connect.NewVoteServiceHandler(
+			apiconnect.NewVoteHandler(voteservice.New(repo, b)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(voteAPIPath, mw.Get("session")(voteAPIHandler))
+
+		adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
+			apiconnect.NewAdminHandler(adminservice.New(repo)),
+			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+		)
+		apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
 
 		apiMux.Handle("GET /realtime/meetings/{meetingId}/events",
 			apihttp.NewMeetingEventsHandler(b),

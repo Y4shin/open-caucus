@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package conference.speakers.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1;speakersv1";
+
+import "conference/common/v1/common.proto";
+
+service SpeakerService {
+  // ListSpeakers returns the current speaker queue for the active agenda point.
+  rpc ListSpeakers(ListSpeakersRequest) returns (ListSpeakersResponse);
+
+  // AddSpeaker adds an attendee to the speaker queue for the active agenda point.
+  rpc AddSpeaker(AddSpeakerRequest) returns (AddSpeakerResponse);
+
+  // RemoveSpeaker removes an entry from the speaker queue.
+  rpc RemoveSpeaker(RemoveSpeakerRequest) returns (RemoveSpeakerResponse);
+
+  // SetSpeakerSpeaking marks the given speaker entry as currently speaking.
+  rpc SetSpeakerSpeaking(SetSpeakerSpeakingRequest) returns (SetSpeakerSpeakingResponse);
+
+  // SetSpeakerDone marks the currently speaking entry as done.
+  rpc SetSpeakerDone(SetSpeakerDoneRequest) returns (SetSpeakerDoneResponse);
+
+  // SetSpeakerPriority sets or clears the priority flag for a speaker entry.
+  rpc SetSpeakerPriority(SetSpeakerPriorityRequest) returns (SetSpeakerPriorityResponse);
+}
+
+// SpeakerQueueView is the full speaker queue read model including metadata
+// about the current agenda point.
+message SpeakerQueueView {
+  string meeting_id = 1;
+  string committee_slug = 2;
+  string active_agenda_point_id = 3;
+  string active_agenda_point_title = 4;
+  repeated conference.common.v1.SpeakerSummary speakers = 5;
+  bool can_add_self = 6;
+  bool gender_quotation = 7;
+  bool first_speaker_quotation = 8;
+}
+
+message ListSpeakersRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message ListSpeakersResponse {
+  SpeakerQueueView view = 1;
+}
+
+message AddSpeakerRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  // attendee_id may be omitted when adding oneself (uses session attendee).
+  string attendee_id = 3;
+  // speaker_type must be one of: "regular", "reply", "factual".
+  string speaker_type = 4;
+}
+
+message AddSpeakerResponse {
+  SpeakerQueueView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message RemoveSpeakerRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string speaker_id = 3;
+}
+
+message RemoveSpeakerResponse {
+  SpeakerQueueView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message SetSpeakerSpeakingRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string speaker_id = 3;
+}
+
+message SetSpeakerSpeakingResponse {
+  SpeakerQueueView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message SetSpeakerDoneRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string speaker_id = 3;
+}
+
+message SetSpeakerDoneResponse {
+  SpeakerQueueView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message SetSpeakerPriorityRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string speaker_id = 3;
+  bool priority = 4;
+}
+
+message SetSpeakerPriorityResponse {
+  SpeakerQueueView view = 1;
+  repeated string invalidated_views = 2;
+}

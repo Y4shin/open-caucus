@@ -1,0 +1,194 @@
+syntax = "proto3";
+
+package conference.votes.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1;votesv1";
+
+service VoteService {
+  // GetVotesPanel returns the moderator-facing votes panel for the active agenda point.
+  rpc GetVotesPanel(GetVotesPanelRequest) returns (GetVotesPanelResponse);
+
+  // GetLiveVotePanel returns the attendee-facing vote panel for the active agenda point.
+  rpc GetLiveVotePanel(GetLiveVotePanelRequest) returns (GetLiveVotePanelResponse);
+
+  // CreateVote creates a new vote definition in draft state.
+  rpc CreateVote(CreateVoteRequest) returns (CreateVoteResponse);
+
+  // UpdateVoteDraft updates a vote definition that is still in draft state.
+  rpc UpdateVoteDraft(UpdateVoteDraftRequest) returns (UpdateVoteDraftResponse);
+
+  // OpenVote transitions a draft vote to open, capturing eligible voters.
+  rpc OpenVote(OpenVoteRequest) returns (OpenVoteResponse);
+
+  // CloseVote transitions an open vote to counting or closed state.
+  rpc CloseVote(CloseVoteRequest) returns (CloseVoteResponse);
+
+  // ArchiveVote moves a closed vote to archived state.
+  rpc ArchiveVote(ArchiveVoteRequest) returns (ArchiveVoteResponse);
+
+  // SubmitBallot records a ballot from an attendee for an open vote.
+  rpc SubmitBallot(SubmitBallotRequest) returns (SubmitBallotResponse);
+}
+
+// VoteOptionRecord is one selectable choice in a vote.
+message VoteOptionRecord {
+  string option_id = 1;
+  string label = 2;
+  int64 position = 3;
+}
+
+// VoteDefinitionRecord is the read model for one vote definition.
+message VoteDefinitionRecord {
+  string vote_id = 1;
+  string agenda_point_id = 2;
+  string name = 3;
+  // visibility is "open" or "secret".
+  string visibility = 4;
+  // state is "draft", "open", "counting", "closed", or "archived".
+  string state = 5;
+  int64 min_selections = 6;
+  int64 max_selections = 7;
+  repeated VoteOptionRecord options = 8;
+}
+
+// VoteStats contains submission progress for an open or closed vote.
+message VoteStats {
+  int64 eligible_count = 1;
+  int64 cast_count = 2;
+  int64 ballot_count = 3;
+}
+
+// VoteTallyEntry is one row in a vote result tally.
+message VoteTallyEntry {
+  string option_id = 1;
+  string label = 2;
+  int64 count = 3;
+}
+
+// VotesPanelView is the moderator-facing votes panel read model.
+message VotesPanelView {
+  string meeting_id = 1;
+  string committee_slug = 2;
+  bool has_active_agenda_point = 3;
+  string active_agenda_point_id = 4;
+  string active_agenda_point_title = 5;
+  repeated VoteDefinitionRecord votes = 6;
+  // active_vote is the currently open vote, if any.
+  VoteDefinitionRecord active_vote = 7;
+  VoteStats active_vote_stats = 8;
+  repeated VoteTallyEntry active_vote_tally = 9;
+}
+
+// LiveVotePanelView is the attendee-facing vote panel read model.
+message LiveVotePanelView {
+  string meeting_id = 1;
+  string committee_slug = 2;
+  bool has_active_vote = 3;
+  VoteDefinitionRecord active_vote = 4;
+  // already_voted is true when the calling attendee already cast a ballot.
+  bool already_voted = 5;
+  // is_eligible is true when the calling attendee is eligible to vote.
+  bool is_eligible = 6;
+}
+
+message GetVotesPanelRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message GetVotesPanelResponse {
+  VotesPanelView view = 1;
+}
+
+message GetLiveVotePanelRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message GetLiveVotePanelResponse {
+  LiveVotePanelView view = 1;
+}
+
+message CreateVoteRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string name = 3;
+  // visibility must be "open" or "secret".
+  string visibility = 4;
+  int64 min_selections = 5;
+  int64 max_selections = 6;
+  repeated string option_labels = 7;
+}
+
+message CreateVoteResponse {
+  VoteDefinitionRecord vote = 1;
+  repeated string invalidated_views = 2;
+}
+
+message UpdateVoteDraftRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+  string name = 4;
+  string visibility = 5;
+  int64 min_selections = 6;
+  int64 max_selections = 7;
+  repeated string option_labels = 8;
+}
+
+message UpdateVoteDraftResponse {
+  VoteDefinitionRecord vote = 1;
+  repeated string invalidated_views = 2;
+}
+
+message OpenVoteRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+}
+
+message OpenVoteResponse {
+  VoteDefinitionRecord vote = 1;
+  VoteStats stats = 2;
+  repeated string invalidated_views = 3;
+}
+
+message CloseVoteRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+}
+
+message CloseVoteResponse {
+  VoteDefinitionRecord vote = 1;
+  // outcome is "entered_counting", "closed", or "still_counting".
+  string outcome = 2;
+  repeated VoteTallyEntry tally = 3;
+  repeated string invalidated_views = 4;
+}
+
+message ArchiveVoteRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+}
+
+message ArchiveVoteResponse {
+  VoteDefinitionRecord vote = 1;
+  repeated string invalidated_views = 2;
+}
+
+message SubmitBallotRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+  repeated string selected_option_ids = 4;
+  // attendee_id may be set by a moderator submitting on behalf of an attendee.
+  string attendee_id = 5;
+}
+
+message SubmitBallotResponse {
+  // receipt_token is the verifiable receipt for this ballot.
+  string receipt_token = 1;
+  repeated string invalidated_views = 2;
+}

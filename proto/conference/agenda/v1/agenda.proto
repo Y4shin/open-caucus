@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package conference.agenda.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1;agendav1";
+
+import "conference/common/v1/common.proto";
+
+service AgendaService {
+  // ListAgendaPoints returns the full agenda tree for a meeting.
+  rpc ListAgendaPoints(ListAgendaPointsRequest) returns (ListAgendaPointsResponse);
+
+  // CreateAgendaPoint creates a new top-level or sub-agenda point.
+  rpc CreateAgendaPoint(CreateAgendaPointRequest) returns (CreateAgendaPointResponse);
+
+  // DeleteAgendaPoint removes an agenda point and all its children.
+  rpc DeleteAgendaPoint(DeleteAgendaPointRequest) returns (DeleteAgendaPointResponse);
+
+  // MoveAgendaPoint changes the ordering of a top-level agenda point.
+  rpc MoveAgendaPoint(MoveAgendaPointRequest) returns (MoveAgendaPointResponse);
+
+  // ActivateAgendaPoint sets the active agenda point for a meeting.
+  // Pass empty agenda_point_id to deactivate.
+  rpc ActivateAgendaPoint(ActivateAgendaPointRequest) returns (ActivateAgendaPointResponse);
+}
+
+// AgendaPointRecord is the read model for one agenda point, including its
+// position, activation state, and quotation settings.
+message AgendaPointRecord {
+  string agenda_point_id = 1;
+  string display_number = 2;
+  string title = 3;
+  bool is_active = 4;
+  int64 position = 5;
+  string parent_id = 6;
+  bool gender_quotation = 7;
+  bool first_speaker_quotation = 8;
+  repeated AgendaPointRecord sub_points = 9;
+}
+
+message ListAgendaPointsRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message ListAgendaPointsResponse {
+  repeated AgendaPointRecord agenda_points = 1;
+  string active_agenda_point_id = 2;
+}
+
+message CreateAgendaPointRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string title = 3;
+  // parent_agenda_point_id, when set, creates a sub-point under the given parent.
+  string parent_agenda_point_id = 4;
+}
+
+message CreateAgendaPointResponse {
+  AgendaPointRecord agenda_point = 1;
+  repeated string invalidated_views = 2;
+}
+
+message DeleteAgendaPointRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+}
+
+message DeleteAgendaPointResponse {
+  repeated string invalidated_views = 1;
+}
+
+message MoveAgendaPointRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+  // direction must be "up" or "down".
+  string direction = 4;
+}
+
+message MoveAgendaPointResponse {
+  repeated AgendaPointRecord agenda_points = 1;
+  repeated string invalidated_views = 2;
+}
+
+message ActivateAgendaPointRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  // Empty string deactivates the current agenda point.
+  string agenda_point_id = 3;
+}
+
+message ActivateAgendaPointResponse {
+  string active_agenda_point_id = 1;
+  conference.common.v1.AgendaPointSummary active_agenda_point = 2;
+  repeated string invalidated_views = 3;
+}

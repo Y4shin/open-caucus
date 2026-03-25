@@ -10,20 +10,30 @@ import (
 	connect "connectrpc.com/connect"
 	"golang.org/x/crypto/bcrypt"
 
+	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
+	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
+	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
 	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
 	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
 	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
+	speakersv1connect "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1/speakersv1connect"
+	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
+	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
+	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
+	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
 	committeeservice "github.com/Y4shin/conference-tool/internal/services/committees"
 	meetingservice "github.com/Y4shin/conference-tool/internal/services/meetings"
 	moderationservice "github.com/Y4shin/conference-tool/internal/services/moderation"
 	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
+	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
+	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
@@ -38,6 +48,11 @@ type combinedTestClient struct {
 	committees committeesv1connect.CommitteeServiceClient
 	meetings   meetingsv1connect.MeetingServiceClient
 	moderation moderationv1connect.ModerationServiceClient
+	attendees  attendeesv1connect.AttendeeServiceClient
+	agenda     agendav1connect.AgendaServiceClient
+	speakers   speakersv1connect.SpeakerServiceClient
+	votes      votesv1connect.VoteServiceClient
+	admin      adminv1connect.AdminServiceClient
 }
 
 func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
@@ -89,6 +104,41 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 	)
 	mux.Handle("/api"+moderationPath, mw.Get("session")(http.StripPrefix("/api", moderationHandler)))
 
+	// Attendee service
+	attendeePath, attendeeHandler := attendeesv1connect.NewAttendeeServiceHandler(
+		NewAttendeeHandler(attendeeservice.New(repo, sessionManager, b)),
+		connect.WithInterceptors(ErrorInterceptor()),
+	)
+	mux.Handle("/api"+attendeePath, mw.Get("session")(http.StripPrefix("/api", attendeeHandler)))
+
+	// Agenda service
+	agendaPath, agendaHandler := agendav1connect.NewAgendaServiceHandler(
+		NewAgendaHandler(agendaservice.New(repo, b)),
+		connect.WithInterceptors(ErrorInterceptor()),
+	)
+	mux.Handle("/api"+agendaPath, mw.Get("session")(http.StripPrefix("/api", agendaHandler)))
+
+	// Speaker service
+	speakerPath, speakerHandler := speakersv1connect.NewSpeakerServiceHandler(
+		NewSpeakerHandler(speakerservice.New(repo, b)),
+		connect.WithInterceptors(ErrorInterceptor()),
+	)
+	mux.Handle("/api"+speakerPath, mw.Get("session")(http.StripPrefix("/api", speakerHandler)))
+
+	// Vote service
+	votePath, voteHandler := votesv1connect.NewVoteServiceHandler(
+		NewVoteHandler(voteservice.New(repo, b)),
+		connect.WithInterceptors(ErrorInterceptor()),
+	)
+	mux.Handle("/api"+votePath, mw.Get("session")(http.StripPrefix("/api", voteHandler)))
+
+	// Admin service
+	adminPath, adminHandler := adminv1connect.NewAdminServiceHandler(
+		NewAdminHandler(adminservice.New(repo)),
+		connect.WithInterceptors(ErrorInterceptor()),
+	)
+	mux.Handle("/api"+adminPath, mw.Get("session")(http.StripPrefix("/api", adminHandler)))
+
 	// Realtime SSE endpoint
 	mux.Handle("GET /api/realtime/meetings/{meetingId}/events",
 		apihttp.NewMeetingEventsHandler(b),
@@ -121,6 +171,11 @@ func newCombinedTestClient(t *testing.T, ts *combinedTestServer) *combinedTestCl
 		committees: committeesv1connect.NewCommitteeServiceClient(httpClient, base),
 		meetings:   meetingsv1connect.NewMeetingServiceClient(httpClient, base),
 		moderation: moderationv1connect.NewModerationServiceClient(httpClient, base),
+		attendees:  attendeesv1connect.NewAttendeeServiceClient(httpClient, base),
+		agenda:     agendav1connect.NewAgendaServiceClient(httpClient, base),
+		speakers:   speakersv1connect.NewSpeakerServiceClient(httpClient, base),
+		votes:      votesv1connect.NewVoteServiceClient(httpClient, base),
+		admin:      adminv1connect.NewAdminServiceClient(httpClient, base),
 	}
 }
 

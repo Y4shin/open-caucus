@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package conference.attendees.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1;attendeesv1";
+
+import "conference/common/v1/common.proto";
+
+service AttendeeService {
+  // SelfSignup registers the currently authenticated account-session user as an
+  // attendee for the given meeting. Idempotent: succeeds if already signed up.
+  rpc SelfSignup(SelfSignupRequest) returns (SelfSignupResponse);
+
+  // GuestJoin creates a new guest attendee record and returns the attendee
+  // access secret needed to log in. The caller must provide the meeting secret.
+  rpc GuestJoin(GuestJoinRequest) returns (GuestJoinResponse);
+
+  // AttendeeLogin exchanges the attendee access secret for a session cookie.
+  // The response cookie must be stored by the client; subsequent API calls
+  // will carry this cookie to authenticate as the attendee.
+  rpc AttendeeLogin(AttendeeLoginRequest) returns (AttendeeLoginResponse);
+}
+
+// AttendeeRecord is the canonical attendee read model for both moderator and
+// attendee-facing views.
+message AttendeeRecord {
+  string attendee_id = 1;
+  string full_name = 2;
+  int64 attendee_number = 3;
+  bool is_chair = 4;
+  bool is_guest = 5;
+  bool quoted = 6;
+  // mine is true when the record belongs to the calling actor.
+  bool mine = 7;
+}
+
+message SelfSignupRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message SelfSignupResponse {
+  AttendeeRecord attendee = 1;
+  // already_existed is true when the attendee row already existed (idempotent).
+  bool already_existed = 2;
+}
+
+message GuestJoinRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string full_name = 3;
+  string meeting_secret = 4;
+  bool gender_quoted = 5;
+}
+
+message GuestJoinResponse {
+  AttendeeRecord attendee = 1;
+  // attendee_secret is the per-attendee access code needed to log back in later.
+  string attendee_secret = 2;
+}
+
+message AttendeeLoginRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  // attendee_secret is the per-attendee access code shown after GuestJoin.
+  string attendee_secret = 3;
+}
+
+message AttendeeLoginResponse {
+  AttendeeRecord attendee = 1;
+  conference.common.v1.ActorSummary actor = 2;
+}
