@@ -12,10 +12,10 @@ plugins:
       - paths=source_relative
 
   # Uses the locally installed @bufbuild/protoc-gen-es npm package (web/node_modules).
-  # Run via: cd web && npx buf generate --config ../buf.gen.yaml
-  # npx adds node_modules/.bin to PATH so protoc-gen-es is found automatically.
-  # Service clients are created via serviceDesc() from @bufbuild/protobuf/codegenv2
-  # (see web/src/lib/api/services.ts) — no separate connect plugin needed for v2.
+  # Run via: PATH="$PATH:$PWD/web/node_modules/.bin" buf generate --template buf.gen.yaml
+  # from the repo root, or use `task generate:clients` inside the Nix devshell.
+  # Service clients come from the generated *_pb.ts service descriptors,
+  # so no separate connect plugin is needed for Connect v2.
   - local: protoc-gen-es
     out: web/src/lib/gen
     opt:

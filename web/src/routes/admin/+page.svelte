@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { adminClient } from '$lib/api/index.js';
+	import { getDisplayError } from '$lib/utils/errors.js';
+	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 
-	let dashboardData = $state<{
+	let dashboardState = $state(createRemoteState<{
 		totalCommittees: number;
 		totalAccounts: number;
-	} | null>(null);
-	let loading = $state(true);
-	let errorMsg = $state('');
+	}>());
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -20,16 +22,18 @@
 	});
 
 	async function loadDashboard() {
+		dashboardState.loading = true;
+		dashboardState.error = '';
 		try {
 			const res = await adminClient.getAdminDashboard({});
-			dashboardData = {
-				totalCommittees: res.totalCommittees,
-				totalAccounts: res.totalAccounts
+			dashboardState.data = {
+				totalCommittees: Number(res.totalCommittees),
+				totalAccounts: Number(res.totalAccounts)
 			};
-		} catch {
-			errorMsg = 'Failed to load admin dashboard.';
+		} catch (err) {
+			dashboardState.error = getDisplayError(err, 'Failed to load admin dashboard.');
 		} finally {
-			loading = false;
+			dashboardState.loading = false;
 		}
 	}
 </script>
@@ -37,23 +41,19 @@
 <div class="space-y-6">
 	<h1 class="text-3xl font-bold">Admin Dashboard</h1>
 
-	{#if loading}
-		<div class="flex justify-center py-12">
-			<span class="loading loading-spinner loading-lg"></span>
-		</div>
-	{:else if errorMsg}
-		<div role="alert" class="alert alert-error">
-			<span>{errorMsg}</span>
-		</div>
-	{:else if dashboardData}
+	{#if dashboardState.loading}
+		<AppSpinner label="Loading admin dashboard" />
+	{:else if dashboardState.error}
+		<AppAlert message={dashboardState.error} />
+	{:else if dashboardState.data}
 		<div class="stats shadow">
 			<div class="stat">
 				<div class="stat-title">Committees</div>
-				<div class="stat-value">{dashboardData.totalCommittees}</div>
+				<div class="stat-value">{dashboardState.data.totalCommittees}</div>
 			</div>
 			<div class="stat">
 				<div class="stat-title">Accounts</div>
-				<div class="stat-value">{dashboardData.totalAccounts}</div>
+				<div class="stat-value">{dashboardState.data.totalAccounts}</div>
 			</div>
 		</div>
 

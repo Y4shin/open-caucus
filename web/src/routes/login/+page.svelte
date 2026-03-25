@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { sessionClient } from '$lib/api/index.js';
+	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
-	import { ConnectError } from '@connectrpc/connect';
+	import { getDisplayError } from '$lib/utils/errors.js';
 
 	let username = $state('');
 	let password = $state('');
@@ -21,11 +23,7 @@
 				goto(redirect);
 			}
 		} catch (err) {
-			if (err instanceof ConnectError) {
-				errorMsg = err.rawMessage || 'Login failed.';
-			} else {
-				errorMsg = 'An unexpected error occurred.';
-			}
+			errorMsg = getDisplayError(err, 'Login failed.');
 		} finally {
 			loading = false;
 		}
@@ -33,14 +31,10 @@
 </script>
 
 <div class="flex min-h-[60vh] items-center justify-center">
-	<div class="card w-full max-w-sm bg-base-200 shadow-xl">
-		<div class="card-body">
-			<h2 class="card-title text-2xl">Sign In</h2>
-
+	<div class="w-full max-w-sm">
+		<AppCard title="Sign In">
 			{#if errorMsg}
-				<div role="alert" class="alert alert-error">
-					<span>{errorMsg}</span>
-				</div>
+				<AppAlert message={errorMsg} />
 			{/if}
 
 			<form onsubmit={handleLogin} class="flex flex-col gap-4">
@@ -73,6 +67,6 @@
 					Sign In
 				</button>
 			</form>
-		</div>
+		</AppCard>
 	</div>
 </div>

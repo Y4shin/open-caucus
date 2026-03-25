@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { committeeClient } from '$lib/api/index.js';
-	import type { Committee } from '$lib/gen/conference/committees/v1/committees_pb.js';
+	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
+	import { getDisplayError } from '$lib/utils/errors.js';
+	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 
 	const slug = $derived(page.params.committee);
 
-	let committee = $state<Committee | undefined>(undefined);
-	let loading = $state(true);
-	let errorMsg = $state('');
+	let committeeState = $state(createRemoteState<CommitteeOverview>());
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -21,15 +23,18 @@
 	});
 
 	async function loadCommittee() {
-		loading = true;
-		errorMsg = '';
+		committeeState.loading = true;
+		committeeState.error = '';
 		try {
-			const res = await committeeClient.getCommittee({ slug });
-			committee = res.committee;
-		} catch {
-			errorMsg = `Committee "${slug}" not found or access denied.`;
+			const res = await committeeClient.getCommitteeOverview({ committeeSlug: slug });
+			committeeState.data = res.overview ?? null;
+		} catch (err) {
+			committeeState.error = getDisplayError(
+				err,
+				`Committee "${slug}" not found or access denied.`
+			);
 		} finally {
-			loading = false;
+			committeeState.loading = false;
 		}
 	}
 
@@ -42,17 +47,13 @@
 </script>
 
 <div class="space-y-6">
-	{#if loading}
-		<div class="flex justify-center py-12">
-			<span class="loading loading-spinner loading-lg"></span>
-		</div>
-	{:else if errorMsg}
-		<div role="alert" class="alert alert-error">
-			<span>{errorMsg}</span>
-		</div>
-	{:else if committee}
+	{#if committeeState.loading}
+		<AppSpinner label="Loading committee overview" />
+	{:else if committeeState.error}
+		<AppAlert message={committeeState.error} />
+	{:else if committeeState.data}
 		<div class="flex items-center justify-between">
-			<h1 class="text-3xl font-bold">{committee.name}</h1>
+			<h1 class="text-3xl font-bold">{committeeState.data.committee?.name ?? slug}</h1>
 		</div>
 
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -8,12 +8,14 @@ This is a deliberate architectural rewrite, not an incremental migration. The go
 
 ## Status Snapshot
 
-Last updated: 2026-03-24
+Last updated: 2026-03-25
 
-- Current phase: `Phase 2 - SvelteKit Frontend Bootstrap`
+- Current phase: `Phase 3 - Frontend Foundation`
 - Phase 0 status: `Completed`
 - Phase 1 status: `Completed`
-- Phases 2-6 status: `Not started`
+- Phase 2 status: `Completed`
+- Phase 3 status: `Completed`
+- Phases 4-6 status: `Not started`
 - Rewrite strategy: `Big-bang rewrite approved`
 
 ## Current Implementation Baseline
@@ -53,11 +55,11 @@ The repository is still primarily on the original architecture at the time of th
 - The project already uses Task for common development commands.
 - The flake dev shell now includes `buf` for protobuf linting and generation.
 - Initial API-level tests now exist for the new session transport slice.
-- There is not yet any full SvelteKit frontend workspace.
+- A SvelteKit frontend workspace now exists under `web/`.
 - Initial `Connect + Protobuf` contract source now exists under `proto/` for the first Phase 1 slice.
 - `buf.yaml` and `buf.gen.yaml` now exist.
 - Initial generated Go stubs now exist under `gen/go/`.
-- Initial generated TypeScript clients now exist under `web/src/lib/gen/`, even though the frontend app itself does not exist yet.
+- Generated TypeScript clients now exist under `web/src/lib/gen/` and are consumed directly by the SPA.
 
 ## Target Architecture
 
@@ -1045,7 +1047,7 @@ Current status:
 - The first real contract scaffold now exists in `proto/` together with `buf.yaml` and `buf.gen.yaml`.
 - Generated Go and TypeScript outputs now exist for the first-slice packages.
 - The current contract scaffold has been validated with `buf lint` and `buf generate` via `nix develop . --command ...`.
-- The first E2E-to-API mapping matrix now exists in `doc/e2e-api-mapping-matrix.md`.
+- The first E2E-to-API mapping matrix now exists in `e2e-api-mapping-matrix.md`.
 - A shared API error/status mapper now exists for the new transport layer.
 - A minimal Connect-backed `SessionService` transport now exists and is mounted under `/api`.
 - API-level tests now cover the initial `SessionService` bootstrap, login, and logout flow.
