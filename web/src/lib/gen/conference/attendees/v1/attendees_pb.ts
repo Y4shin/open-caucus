@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/attendees/v1/attendees.proto.
  */
 export const file_conference_attendees_v1_attendees: GenFile = /*@__PURE__*/
-  fileDesc("Cidjb25mZXJlbmNlL2F0dGVuZGVlcy92MS9hdHRlbmRlZXMucHJvdG8SF2NvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxIpMBCg5BdHRlbmRlZVJlY29yZBITCgthdHRlbmRlZV9pZBgBIAEoCRIRCglmdWxsX25hbWUYAiABKAkSFwoPYXR0ZW5kZWVfbnVtYmVyGAMgASgDEhAKCGlzX2NoYWlyGAQgASgIEhAKCGlzX2d1ZXN0GAUgASgIEg4KBnF1b3RlZBgGIAEoCBIMCgRtaW5lGAcgASgIIj8KEVNlbGZTaWdudXBSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiaAoSU2VsZlNpZ251cFJlc3BvbnNlEjkKCGF0dGVuZGVlGAEgASgLMicuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVSZWNvcmQSFwoPYWxyZWFkeV9leGlzdGVkGAIgASgIIoABChBHdWVzdEpvaW5SZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhYKDm1lZXRpbmdfc2VjcmV0GAQgASgJEhUKDWdlbmRlcl9xdW90ZWQYBSABKAgiZwoRR3Vlc3RKb2luUmVzcG9uc2USOQoIYXR0ZW5kZWUYASABKAsyJy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZVJlY29yZBIXCg9hdHRlbmRlZV9zZWNyZXQYAiABKAkiWwoUQXR0ZW5kZWVMb2dpblJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hdHRlbmRlZV9zZWNyZXQYAyABKAkihQEKFUF0dGVuZGVlTG9naW5SZXNwb25zZRI5CghhdHRlbmRlZRgBIAEoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkEjEKBWFjdG9yGAIgASgLMiIuY29uZmVyZW5jZS5jb21tb24udjEuQWN0b3JTdW1tYXJ5MswCCg9BdHRlbmRlZVNlcnZpY2USZQoKU2VsZlNpZ251cBIqLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLlNlbGZTaWdudXBSZXF1ZXN0GisuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuU2VsZlNpZ251cFJlc3BvbnNlEmIKCUd1ZXN0Sm9pbhIpLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkd1ZXN0Sm9pblJlcXVlc3QaKi5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5HdWVzdEpvaW5SZXNwb25zZRJuCg1BdHRlbmRlZUxvZ2luEi0uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVMb2dpblJlcXVlc3QaLi5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZUxvZ2luUmVzcG9uc2VCTlpMZ2l0aHViLmNvbS9ZNHNoaW4vY29uZmVyZW5jZS10b29sL2dlbi9nby9jb25mZXJlbmNlL2F0dGVuZGVlcy92MTthdHRlbmRlZXN2MWIGcHJvdG8z", [file_conference_common_v1_common]);
+  fileDesc("Cidjb25mZXJlbmNlL2F0dGVuZGVlcy92MS9hdHRlbmRlZXMucHJvdG8SF2NvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxIpMBCg5BdHRlbmRlZVJlY29yZBITCgthdHRlbmRlZV9pZBgBIAEoCRIRCglmdWxsX25hbWUYAiABKAkSFwoPYXR0ZW5kZWVfbnVtYmVyGAMgASgDEhAKCGlzX2NoYWlyGAQgASgIEhAKCGlzX2d1ZXN0GAUgASgIEg4KBnF1b3RlZBgGIAEoCBIMCgRtaW5lGAcgASgIIkIKFExpc3RBdHRlbmRlZXNSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUwoVTGlzdEF0dGVuZGVlc1Jlc3BvbnNlEjoKCWF0dGVuZGVlcxgBIAMoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkIj8KEVNlbGZTaWdudXBSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiaAoSU2VsZlNpZ251cFJlc3BvbnNlEjkKCGF0dGVuZGVlGAEgASgLMicuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVSZWNvcmQSFwoPYWxyZWFkeV9leGlzdGVkGAIgASgIIoABChBHdWVzdEpvaW5SZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhYKDm1lZXRpbmdfc2VjcmV0GAQgASgJEhUKDWdlbmRlcl9xdW90ZWQYBSABKAgiZwoRR3Vlc3RKb2luUmVzcG9uc2USOQoIYXR0ZW5kZWUYASABKAsyJy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZVJlY29yZBIXCg9hdHRlbmRlZV9zZWNyZXQYAiABKAkiWwoUQXR0ZW5kZWVMb2dpblJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hdHRlbmRlZV9zZWNyZXQYAyABKAkihQEKFUF0dGVuZGVlTG9naW5SZXNwb25zZRI5CghhdHRlbmRlZRgBIAEoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkEjEKBWFjdG9yGAIgASgLMiIuY29uZmVyZW5jZS5jb21tb24udjEuQWN0b3JTdW1tYXJ5MrwDCg9BdHRlbmRlZVNlcnZpY2USbgoNTGlzdEF0dGVuZGVlcxItLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkxpc3RBdHRlbmRlZXNSZXF1ZXN0Gi4uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuTGlzdEF0dGVuZGVlc1Jlc3BvbnNlEmUKClNlbGZTaWdudXASKi5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5TZWxmU2lnbnVwUmVxdWVzdBorLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLlNlbGZTaWdudXBSZXNwb25zZRJiCglHdWVzdEpvaW4SKS5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5HdWVzdEpvaW5SZXF1ZXN0GiouY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuR3Vlc3RKb2luUmVzcG9uc2USbgoNQXR0ZW5kZWVMb2dpbhItLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlTG9naW5SZXF1ZXN0Gi4uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVMb2dpblJlc3BvbnNlQk5aTGdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9hdHRlbmRlZXMvdjE7YXR0ZW5kZWVzdjFiBnByb3RvMw", [file_conference_common_v1_common]);
 
 /**
  * AttendeeRecord is the canonical attendee read model for both moderator and
@@ -67,6 +67,45 @@ export const AttendeeRecordSchema: GenMessage<AttendeeRecord> = /*@__PURE__*/
   messageDesc(file_conference_attendees_v1_attendees, 0);
 
 /**
+ * @generated from message conference.attendees.v1.ListAttendeesRequest
+ */
+export type ListAttendeesRequest = Message<"conference.attendees.v1.ListAttendeesRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+};
+
+/**
+ * Describes the message conference.attendees.v1.ListAttendeesRequest.
+ * Use `create(ListAttendeesRequestSchema)` to create a new message.
+ */
+export const ListAttendeesRequestSchema: GenMessage<ListAttendeesRequest> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 1);
+
+/**
+ * @generated from message conference.attendees.v1.ListAttendeesResponse
+ */
+export type ListAttendeesResponse = Message<"conference.attendees.v1.ListAttendeesResponse"> & {
+  /**
+   * @generated from field: repeated conference.attendees.v1.AttendeeRecord attendees = 1;
+   */
+  attendees: AttendeeRecord[];
+};
+
+/**
+ * Describes the message conference.attendees.v1.ListAttendeesResponse.
+ * Use `create(ListAttendeesResponseSchema)` to create a new message.
+ */
+export const ListAttendeesResponseSchema: GenMessage<ListAttendeesResponse> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 2);
+
+/**
  * @generated from message conference.attendees.v1.SelfSignupRequest
  */
 export type SelfSignupRequest = Message<"conference.attendees.v1.SelfSignupRequest"> & {
@@ -86,7 +125,7 @@ export type SelfSignupRequest = Message<"conference.attendees.v1.SelfSignupReque
  * Use `create(SelfSignupRequestSchema)` to create a new message.
  */
 export const SelfSignupRequestSchema: GenMessage<SelfSignupRequest> = /*@__PURE__*/
-  messageDesc(file_conference_attendees_v1_attendees, 1);
+  messageDesc(file_conference_attendees_v1_attendees, 3);
 
 /**
  * @generated from message conference.attendees.v1.SelfSignupResponse
@@ -110,7 +149,7 @@ export type SelfSignupResponse = Message<"conference.attendees.v1.SelfSignupResp
  * Use `create(SelfSignupResponseSchema)` to create a new message.
  */
 export const SelfSignupResponseSchema: GenMessage<SelfSignupResponse> = /*@__PURE__*/
-  messageDesc(file_conference_attendees_v1_attendees, 2);
+  messageDesc(file_conference_attendees_v1_attendees, 4);
 
 /**
  * @generated from message conference.attendees.v1.GuestJoinRequest
@@ -147,7 +186,7 @@ export type GuestJoinRequest = Message<"conference.attendees.v1.GuestJoinRequest
  * Use `create(GuestJoinRequestSchema)` to create a new message.
  */
 export const GuestJoinRequestSchema: GenMessage<GuestJoinRequest> = /*@__PURE__*/
-  messageDesc(file_conference_attendees_v1_attendees, 3);
+  messageDesc(file_conference_attendees_v1_attendees, 5);
 
 /**
  * @generated from message conference.attendees.v1.GuestJoinResponse
@@ -171,7 +210,7 @@ export type GuestJoinResponse = Message<"conference.attendees.v1.GuestJoinRespon
  * Use `create(GuestJoinResponseSchema)` to create a new message.
  */
 export const GuestJoinResponseSchema: GenMessage<GuestJoinResponse> = /*@__PURE__*/
-  messageDesc(file_conference_attendees_v1_attendees, 4);
+  messageDesc(file_conference_attendees_v1_attendees, 6);
 
 /**
  * @generated from message conference.attendees.v1.AttendeeLoginRequest
@@ -200,7 +239,7 @@ export type AttendeeLoginRequest = Message<"conference.attendees.v1.AttendeeLogi
  * Use `create(AttendeeLoginRequestSchema)` to create a new message.
  */
 export const AttendeeLoginRequestSchema: GenMessage<AttendeeLoginRequest> = /*@__PURE__*/
-  messageDesc(file_conference_attendees_v1_attendees, 5);
+  messageDesc(file_conference_attendees_v1_attendees, 7);
 
 /**
  * @generated from message conference.attendees.v1.AttendeeLoginResponse
@@ -222,12 +261,22 @@ export type AttendeeLoginResponse = Message<"conference.attendees.v1.AttendeeLog
  * Use `create(AttendeeLoginResponseSchema)` to create a new message.
  */
 export const AttendeeLoginResponseSchema: GenMessage<AttendeeLoginResponse> = /*@__PURE__*/
-  messageDesc(file_conference_attendees_v1_attendees, 6);
+  messageDesc(file_conference_attendees_v1_attendees, 8);
 
 /**
  * @generated from service conference.attendees.v1.AttendeeService
  */
 export const AttendeeService: GenService<{
+  /**
+   * ListAttendees returns the attendee roster for a meeting.
+   *
+   * @generated from rpc conference.attendees.v1.AttendeeService.ListAttendees
+   */
+  listAttendees: {
+    methodKind: "unary";
+    input: typeof ListAttendeesRequestSchema;
+    output: typeof ListAttendeesResponseSchema;
+  },
   /**
    * SelfSignup registers the currently authenticated account-session user as an
    * attendee for the given meeting. Idempotent: succeeds if already signed up.

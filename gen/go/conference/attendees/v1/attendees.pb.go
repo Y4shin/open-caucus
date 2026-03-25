@@ -117,6 +117,102 @@ func (x *AttendeeRecord) GetMine() bool {
 	return false
 }
 
+type ListAttendeesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAttendeesRequest) Reset() {
+	*x = ListAttendeesRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAttendeesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAttendeesRequest) ProtoMessage() {}
+
+func (x *ListAttendeesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAttendeesRequest.ProtoReflect.Descriptor instead.
+func (*ListAttendeesRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ListAttendeesRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *ListAttendeesRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+type ListAttendeesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attendees     []*AttendeeRecord      `protobuf:"bytes,1,rep,name=attendees,proto3" json:"attendees,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAttendeesResponse) Reset() {
+	*x = ListAttendeesResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAttendeesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAttendeesResponse) ProtoMessage() {}
+
+func (x *ListAttendeesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAttendeesResponse.ProtoReflect.Descriptor instead.
+func (*ListAttendeesResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListAttendeesResponse) GetAttendees() []*AttendeeRecord {
+	if x != nil {
+		return x.Attendees
+	}
+	return nil
+}
+
 type SelfSignupRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
@@ -127,7 +223,7 @@ type SelfSignupRequest struct {
 
 func (x *SelfSignupRequest) Reset() {
 	*x = SelfSignupRequest{}
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[1]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -139,7 +235,7 @@ func (x *SelfSignupRequest) String() string {
 func (*SelfSignupRequest) ProtoMessage() {}
 
 func (x *SelfSignupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[1]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -152,7 +248,7 @@ func (x *SelfSignupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SelfSignupRequest.ProtoReflect.Descriptor instead.
 func (*SelfSignupRequest) Descriptor() ([]byte, []int) {
-	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{1}
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *SelfSignupRequest) GetCommitteeSlug() string {
@@ -180,7 +276,7 @@ type SelfSignupResponse struct {
 
 func (x *SelfSignupResponse) Reset() {
 	*x = SelfSignupResponse{}
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[2]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -192,7 +288,7 @@ func (x *SelfSignupResponse) String() string {
 func (*SelfSignupResponse) ProtoMessage() {}
 
 func (x *SelfSignupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[2]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -205,7 +301,7 @@ func (x *SelfSignupResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SelfSignupResponse.ProtoReflect.Descriptor instead.
 func (*SelfSignupResponse) Descriptor() ([]byte, []int) {
-	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{2}
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *SelfSignupResponse) GetAttendee() *AttendeeRecord {
@@ -235,7 +331,7 @@ type GuestJoinRequest struct {
 
 func (x *GuestJoinRequest) Reset() {
 	*x = GuestJoinRequest{}
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[3]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -247,7 +343,7 @@ func (x *GuestJoinRequest) String() string {
 func (*GuestJoinRequest) ProtoMessage() {}
 
 func (x *GuestJoinRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[3]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -260,7 +356,7 @@ func (x *GuestJoinRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GuestJoinRequest.ProtoReflect.Descriptor instead.
 func (*GuestJoinRequest) Descriptor() ([]byte, []int) {
-	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{3}
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GuestJoinRequest) GetCommitteeSlug() string {
@@ -309,7 +405,7 @@ type GuestJoinResponse struct {
 
 func (x *GuestJoinResponse) Reset() {
 	*x = GuestJoinResponse{}
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[4]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -321,7 +417,7 @@ func (x *GuestJoinResponse) String() string {
 func (*GuestJoinResponse) ProtoMessage() {}
 
 func (x *GuestJoinResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[4]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -334,7 +430,7 @@ func (x *GuestJoinResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GuestJoinResponse.ProtoReflect.Descriptor instead.
 func (*GuestJoinResponse) Descriptor() ([]byte, []int) {
-	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{4}
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GuestJoinResponse) GetAttendee() *AttendeeRecord {
@@ -363,7 +459,7 @@ type AttendeeLoginRequest struct {
 
 func (x *AttendeeLoginRequest) Reset() {
 	*x = AttendeeLoginRequest{}
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[5]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -375,7 +471,7 @@ func (x *AttendeeLoginRequest) String() string {
 func (*AttendeeLoginRequest) ProtoMessage() {}
 
 func (x *AttendeeLoginRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[5]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -388,7 +484,7 @@ func (x *AttendeeLoginRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttendeeLoginRequest.ProtoReflect.Descriptor instead.
 func (*AttendeeLoginRequest) Descriptor() ([]byte, []int) {
-	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{5}
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AttendeeLoginRequest) GetCommitteeSlug() string {
@@ -422,7 +518,7 @@ type AttendeeLoginResponse struct {
 
 func (x *AttendeeLoginResponse) Reset() {
 	*x = AttendeeLoginResponse{}
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[6]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -434,7 +530,7 @@ func (x *AttendeeLoginResponse) String() string {
 func (*AttendeeLoginResponse) ProtoMessage() {}
 
 func (x *AttendeeLoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[6]
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -447,7 +543,7 @@ func (x *AttendeeLoginResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttendeeLoginResponse.ProtoReflect.Descriptor instead.
 func (*AttendeeLoginResponse) Descriptor() ([]byte, []int) {
-	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{6}
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AttendeeLoginResponse) GetAttendee() *AttendeeRecord {
@@ -477,7 +573,13 @@ const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
 	"\bis_chair\x18\x04 \x01(\bR\aisChair\x12\x19\n" +
 	"\bis_guest\x18\x05 \x01(\bR\aisGuest\x12\x16\n" +
 	"\x06quoted\x18\x06 \x01(\bR\x06quoted\x12\x12\n" +
-	"\x04mine\x18\a \x01(\bR\x04mine\"Y\n" +
+	"\x04mine\x18\a \x01(\bR\x04mine\"\\\n" +
+	"\x14ListAttendeesRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"^\n" +
+	"\x15ListAttendeesResponse\x12E\n" +
+	"\tattendees\x18\x01 \x03(\v2'.conference.attendees.v1.AttendeeRecordR\tattendees\"Y\n" +
 	"\x11SelfSignupRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
@@ -502,8 +604,9 @@ const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
 	"\x0fattendee_secret\x18\x03 \x01(\tR\x0eattendeeSecret\"\x96\x01\n" +
 	"\x15AttendeeLoginResponse\x12C\n" +
 	"\battendee\x18\x01 \x01(\v2'.conference.attendees.v1.AttendeeRecordR\battendee\x128\n" +
-	"\x05actor\x18\x02 \x01(\v2\".conference.common.v1.ActorSummaryR\x05actor2\xcc\x02\n" +
-	"\x0fAttendeeService\x12e\n" +
+	"\x05actor\x18\x02 \x01(\v2\".conference.common.v1.ActorSummaryR\x05actor2\xbc\x03\n" +
+	"\x0fAttendeeService\x12n\n" +
+	"\rListAttendees\x12-.conference.attendees.v1.ListAttendeesRequest\x1a..conference.attendees.v1.ListAttendeesResponse\x12e\n" +
 	"\n" +
 	"SelfSignup\x12*.conference.attendees.v1.SelfSignupRequest\x1a+.conference.attendees.v1.SelfSignupResponse\x12b\n" +
 	"\tGuestJoin\x12).conference.attendees.v1.GuestJoinRequest\x1a*.conference.attendees.v1.GuestJoinResponse\x12n\n" +
@@ -521,33 +624,38 @@ func file_conference_attendees_v1_attendees_proto_rawDescGZIP() []byte {
 	return file_conference_attendees_v1_attendees_proto_rawDescData
 }
 
-var file_conference_attendees_v1_attendees_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_conference_attendees_v1_attendees_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_conference_attendees_v1_attendees_proto_goTypes = []any{
 	(*AttendeeRecord)(nil),        // 0: conference.attendees.v1.AttendeeRecord
-	(*SelfSignupRequest)(nil),     // 1: conference.attendees.v1.SelfSignupRequest
-	(*SelfSignupResponse)(nil),    // 2: conference.attendees.v1.SelfSignupResponse
-	(*GuestJoinRequest)(nil),      // 3: conference.attendees.v1.GuestJoinRequest
-	(*GuestJoinResponse)(nil),     // 4: conference.attendees.v1.GuestJoinResponse
-	(*AttendeeLoginRequest)(nil),  // 5: conference.attendees.v1.AttendeeLoginRequest
-	(*AttendeeLoginResponse)(nil), // 6: conference.attendees.v1.AttendeeLoginResponse
-	(*v1.ActorSummary)(nil),       // 7: conference.common.v1.ActorSummary
+	(*ListAttendeesRequest)(nil),  // 1: conference.attendees.v1.ListAttendeesRequest
+	(*ListAttendeesResponse)(nil), // 2: conference.attendees.v1.ListAttendeesResponse
+	(*SelfSignupRequest)(nil),     // 3: conference.attendees.v1.SelfSignupRequest
+	(*SelfSignupResponse)(nil),    // 4: conference.attendees.v1.SelfSignupResponse
+	(*GuestJoinRequest)(nil),      // 5: conference.attendees.v1.GuestJoinRequest
+	(*GuestJoinResponse)(nil),     // 6: conference.attendees.v1.GuestJoinResponse
+	(*AttendeeLoginRequest)(nil),  // 7: conference.attendees.v1.AttendeeLoginRequest
+	(*AttendeeLoginResponse)(nil), // 8: conference.attendees.v1.AttendeeLoginResponse
+	(*v1.ActorSummary)(nil),       // 9: conference.common.v1.ActorSummary
 }
 var file_conference_attendees_v1_attendees_proto_depIdxs = []int32{
-	0, // 0: conference.attendees.v1.SelfSignupResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	0, // 1: conference.attendees.v1.GuestJoinResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	0, // 2: conference.attendees.v1.AttendeeLoginResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	7, // 3: conference.attendees.v1.AttendeeLoginResponse.actor:type_name -> conference.common.v1.ActorSummary
-	1, // 4: conference.attendees.v1.AttendeeService.SelfSignup:input_type -> conference.attendees.v1.SelfSignupRequest
-	3, // 5: conference.attendees.v1.AttendeeService.GuestJoin:input_type -> conference.attendees.v1.GuestJoinRequest
-	5, // 6: conference.attendees.v1.AttendeeService.AttendeeLogin:input_type -> conference.attendees.v1.AttendeeLoginRequest
-	2, // 7: conference.attendees.v1.AttendeeService.SelfSignup:output_type -> conference.attendees.v1.SelfSignupResponse
-	4, // 8: conference.attendees.v1.AttendeeService.GuestJoin:output_type -> conference.attendees.v1.GuestJoinResponse
-	6, // 9: conference.attendees.v1.AttendeeService.AttendeeLogin:output_type -> conference.attendees.v1.AttendeeLoginResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0, // 0: conference.attendees.v1.ListAttendeesResponse.attendees:type_name -> conference.attendees.v1.AttendeeRecord
+	0, // 1: conference.attendees.v1.SelfSignupResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	0, // 2: conference.attendees.v1.GuestJoinResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	0, // 3: conference.attendees.v1.AttendeeLoginResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	9, // 4: conference.attendees.v1.AttendeeLoginResponse.actor:type_name -> conference.common.v1.ActorSummary
+	1, // 5: conference.attendees.v1.AttendeeService.ListAttendees:input_type -> conference.attendees.v1.ListAttendeesRequest
+	3, // 6: conference.attendees.v1.AttendeeService.SelfSignup:input_type -> conference.attendees.v1.SelfSignupRequest
+	5, // 7: conference.attendees.v1.AttendeeService.GuestJoin:input_type -> conference.attendees.v1.GuestJoinRequest
+	7, // 8: conference.attendees.v1.AttendeeService.AttendeeLogin:input_type -> conference.attendees.v1.AttendeeLoginRequest
+	2, // 9: conference.attendees.v1.AttendeeService.ListAttendees:output_type -> conference.attendees.v1.ListAttendeesResponse
+	4, // 10: conference.attendees.v1.AttendeeService.SelfSignup:output_type -> conference.attendees.v1.SelfSignupResponse
+	6, // 11: conference.attendees.v1.AttendeeService.GuestJoin:output_type -> conference.attendees.v1.GuestJoinResponse
+	8, // 12: conference.attendees.v1.AttendeeService.AttendeeLogin:output_type -> conference.attendees.v1.AttendeeLoginResponse
+	9, // [9:13] is the sub-list for method output_type
+	5, // [5:9] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_conference_attendees_v1_attendees_proto_init() }
@@ -561,7 +669,7 @@ func file_conference_attendees_v1_attendees_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_attendees_v1_attendees_proto_rawDesc), len(file_conference_attendees_v1_attendees_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

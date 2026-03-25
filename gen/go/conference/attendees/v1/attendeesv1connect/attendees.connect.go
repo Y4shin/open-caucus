@@ -33,6 +33,9 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// AttendeeServiceListAttendeesProcedure is the fully-qualified name of the AttendeeService's
+	// ListAttendees RPC.
+	AttendeeServiceListAttendeesProcedure = "/conference.attendees.v1.AttendeeService/ListAttendees"
 	// AttendeeServiceSelfSignupProcedure is the fully-qualified name of the AttendeeService's
 	// SelfSignup RPC.
 	AttendeeServiceSelfSignupProcedure = "/conference.attendees.v1.AttendeeService/SelfSignup"
@@ -46,6 +49,8 @@ const (
 
 // AttendeeServiceClient is a client for the conference.attendees.v1.AttendeeService service.
 type AttendeeServiceClient interface {
+	// ListAttendees returns the attendee roster for a meeting.
+	ListAttendees(context.Context, *connect.Request[v1.ListAttendeesRequest]) (*connect.Response[v1.ListAttendeesResponse], error)
 	// SelfSignup registers the currently authenticated account-session user as an
 	// attendee for the given meeting. Idempotent: succeeds if already signed up.
 	SelfSignup(context.Context, *connect.Request[v1.SelfSignupRequest]) (*connect.Response[v1.SelfSignupResponse], error)
@@ -69,6 +74,12 @@ func NewAttendeeServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 	baseURL = strings.TrimRight(baseURL, "/")
 	attendeeServiceMethods := v1.File_conference_attendees_v1_attendees_proto.Services().ByName("AttendeeService").Methods()
 	return &attendeeServiceClient{
+		listAttendees: connect.NewClient[v1.ListAttendeesRequest, v1.ListAttendeesResponse](
+			httpClient,
+			baseURL+AttendeeServiceListAttendeesProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("ListAttendees")),
+			connect.WithClientOptions(opts...),
+		),
 		selfSignup: connect.NewClient[v1.SelfSignupRequest, v1.SelfSignupResponse](
 			httpClient,
 			baseURL+AttendeeServiceSelfSignupProcedure,
@@ -92,9 +103,15 @@ func NewAttendeeServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 
 // attendeeServiceClient implements AttendeeServiceClient.
 type attendeeServiceClient struct {
+	listAttendees *connect.Client[v1.ListAttendeesRequest, v1.ListAttendeesResponse]
 	selfSignup    *connect.Client[v1.SelfSignupRequest, v1.SelfSignupResponse]
 	guestJoin     *connect.Client[v1.GuestJoinRequest, v1.GuestJoinResponse]
 	attendeeLogin *connect.Client[v1.AttendeeLoginRequest, v1.AttendeeLoginResponse]
+}
+
+// ListAttendees calls conference.attendees.v1.AttendeeService.ListAttendees.
+func (c *attendeeServiceClient) ListAttendees(ctx context.Context, req *connect.Request[v1.ListAttendeesRequest]) (*connect.Response[v1.ListAttendeesResponse], error) {
+	return c.listAttendees.CallUnary(ctx, req)
 }
 
 // SelfSignup calls conference.attendees.v1.AttendeeService.SelfSignup.
@@ -115,6 +132,8 @@ func (c *attendeeServiceClient) AttendeeLogin(ctx context.Context, req *connect.
 // AttendeeServiceHandler is an implementation of the conference.attendees.v1.AttendeeService
 // service.
 type AttendeeServiceHandler interface {
+	// ListAttendees returns the attendee roster for a meeting.
+	ListAttendees(context.Context, *connect.Request[v1.ListAttendeesRequest]) (*connect.Response[v1.ListAttendeesResponse], error)
 	// SelfSignup registers the currently authenticated account-session user as an
 	// attendee for the given meeting. Idempotent: succeeds if already signed up.
 	SelfSignup(context.Context, *connect.Request[v1.SelfSignupRequest]) (*connect.Response[v1.SelfSignupResponse], error)
@@ -134,6 +153,12 @@ type AttendeeServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	attendeeServiceMethods := v1.File_conference_attendees_v1_attendees_proto.Services().ByName("AttendeeService").Methods()
+	attendeeServiceListAttendeesHandler := connect.NewUnaryHandler(
+		AttendeeServiceListAttendeesProcedure,
+		svc.ListAttendees,
+		connect.WithSchema(attendeeServiceMethods.ByName("ListAttendees")),
+		connect.WithHandlerOptions(opts...),
+	)
 	attendeeServiceSelfSignupHandler := connect.NewUnaryHandler(
 		AttendeeServiceSelfSignupProcedure,
 		svc.SelfSignup,
@@ -154,6 +179,8 @@ func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.Handl
 	)
 	return "/conference.attendees.v1.AttendeeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case AttendeeServiceListAttendeesProcedure:
+			attendeeServiceListAttendeesHandler.ServeHTTP(w, r)
 		case AttendeeServiceSelfSignupProcedure:
 			attendeeServiceSelfSignupHandler.ServeHTTP(w, r)
 		case AttendeeServiceGuestJoinProcedure:
@@ -168,6 +195,10 @@ func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.Handl
 
 // UnimplementedAttendeeServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedAttendeeServiceHandler struct{}
+
+func (UnimplementedAttendeeServiceHandler) ListAttendees(context.Context, *connect.Request[v1.ListAttendeesRequest]) (*connect.Response[v1.ListAttendeesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.ListAttendees is not implemented"))
+}
 
 func (UnimplementedAttendeeServiceHandler) SelfSignup(context.Context, *connect.Request[v1.SelfSignupRequest]) (*connect.Response[v1.SelfSignupResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.SelfSignup is not implemented"))

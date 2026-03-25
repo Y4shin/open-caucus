@@ -4,8 +4,9 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
-	import { moderationClient, speakerClient } from '$lib/api/index.js';
+	import { attendeeClient, moderationClient, speakerClient } from '$lib/api/index.js';
 	import { session } from '$lib/stores/session.svelte.js';
+	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import type { ModerationView } from '$lib/gen/conference/moderation/v1/moderation_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
@@ -17,9 +18,12 @@
 
 	let moderationState = $state(createRemoteState<ModerationView>());
 	let speakerState = $state(createRemoteState<SpeakerQueueView>());
+	let attendeeState = $state(createRemoteState<AttendeeRecord[]>());
 	let actionError = $state('');
 	let togglingSignup = $state(false);
 	let speakerActionPending = $state('');
+	let speakerSearch = $state('');
+	let searchInput = $state<HTMLInputElement | null>(null);
 	let refreshTick = $state(0);
 
 	$effect(() => {
@@ -43,21 +47,27 @@
 	async function loadModerationView() {
 		moderationState.loading = true;
 		speakerState.loading = true;
+		attendeeState.loading = true;
 		moderationState.error = '';
 		speakerState.error = '';
+		attendeeState.error = '';
 		try {
-			const [moderationRes, speakerRes] = await Promise.all([
+			const [moderationRes, speakerRes, attendeeRes] = await Promise.all([
 				moderationClient.getModerationView({ committeeSlug: slug, meetingId }),
-				speakerClient.listSpeakers({ committeeSlug: slug, meetingId })
+				speakerClient.listSpeakers({ committeeSlug: slug, meetingId }),
+				attendeeClient.listAttendees({ committeeSlug: slug, meetingId })
 			]);
 			moderationState.data = moderationRes.view ?? null;
 			speakerState.data = speakerRes.view ?? null;
+			attendeeState.data = attendeeRes.attendees;
 		} catch (err) {
 			moderationState.error = getDisplayError(err, 'Failed to load the moderation view.');
 			speakerState.error = moderationState.error;
+			attendeeState.error = moderationState.error;
 		} finally {
 			moderationState.loading = false;
 			speakerState.loading = false;
+			attendeeState.loading = false;
 		}
 	}
 
@@ -104,12 +114,86 @@
 			const res = await action();
 			speakerState.data = res.view ?? speakerState.data;
 			refreshTick += 1;
+			return true;
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update the speakers queue.');
 			refreshTick += 1;
+			return false;
 		} finally {
 			speakerActionPending = '';
 		}
+	}
+
+	function normalized(value: string) {
+		return value.trim().toLowerCase();
+	}
+
+	function hasOpenSpeaker(attendeeId: string, speakerType: string) {
+		return (speakerState.data?.speakers ?? []).some(
+			(speaker) => speaker.attendeeId === attendeeId && speaker.speakerType === speakerType
+		);
+	}
+
+	function candidateRank(attendee: AttendeeRecord, query: string) {
+		const trimmed = normalized(query);
+		if (!trimmed) return 1000 + Number(attendee.attendeeNumber);
+
+		const name = normalized(attendee.fullName);
+		const number = attendee.attendeeNumber.toString();
+		const words = name.split(/\s+/);
+
+		if (number === trimmed) return 0;
+		if (name === trimmed) return 10;
+		if (words.some((word) => word === trimmed)) return 20;
+		if (name.startsWith(trimmed)) return 30;
+		if (words.some((word) => word.startsWith(trimmed))) return 40;
+		if (name.includes(trimmed)) return 50;
+		if (number.includes(trimmed)) return 60;
+		return Number.POSITIVE_INFINITY;
+	}
+
+	function sortedCandidates() {
+		return [...(attendeeState.data ?? [])]
+			.filter((attendee) => candidateRank(attendee, speakerSearch) < Number.POSITIVE_INFINITY)
+			.sort((left, right) => {
+				const rankDiff = candidateRank(left, speakerSearch) - candidateRank(right, speakerSearch);
+				if (rankDiff !== 0) return rankDiff;
+
+				const lengthDiff = left.fullName.length - right.fullName.length;
+				if (lengthDiff !== 0) return lengthDiff;
+
+				const nameDiff = left.fullName.localeCompare(right.fullName);
+				if (nameDiff !== 0) return nameDiff;
+
+				return Number(left.attendeeNumber - right.attendeeNumber);
+			});
+	}
+
+	async function addCandidate(attendeeId: string, speakerType: string) {
+		const didAdd = await runSpeakerAction(`add-${attendeeId}-${speakerType}`, async () => {
+			return await speakerClient.addSpeaker({
+				committeeSlug: slug,
+				meetingId,
+				attendeeId,
+				speakerType
+			});
+		});
+		if (didAdd) {
+			speakerSearch = '';
+			searchInput?.focus();
+		}
+	}
+
+	async function handleSpeakerSearchEnter(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+
+		const topCandidate = sortedCandidates()[0];
+		if (!topCandidate || hasOpenSpeaker(topCandidate.attendeeId, 'regular')) {
+			return;
+		}
+
+		await addCandidate(topCandidate.attendeeId, 'regular');
 	}
 </script>
 
@@ -212,6 +296,71 @@
 					End Current
 				</button>
 			</div>
+
+			{#if moderationState.data.activeAgendaPoint}
+				<div class="mb-4 rounded-box border border-base-300 bg-base-200/40 p-4">
+					<div class="mb-3">
+						<label class="label" for="speaker-add-search-input">
+							<span class="label-text font-medium">Add Speaker</span>
+						</label>
+						<input
+							id="speaker-add-search-input"
+							class="input input-bordered w-full"
+							bind:value={speakerSearch}
+							bind:this={searchInput}
+							onkeydown={handleSpeakerSearchEnter}
+							placeholder="Search by attendee name or number"
+						/>
+					</div>
+
+					<div id="speaker-add-candidates-container" class="space-y-2">
+						{#each sortedCandidates().slice(0, 8) as attendee}
+							<div
+								class="flex flex-wrap items-center justify-between gap-3 rounded-box border border-base-300 bg-base-100 px-3 py-3"
+								data-testid="manage-speaker-candidate-card"
+							>
+								<div>
+									<div class="font-medium">{attendee.fullName}</div>
+									<div class="text-sm text-base-content/70">
+										#{attendee.attendeeNumber.toString()}
+										{#if attendee.isGuest}
+											• Guest
+										{/if}
+										{#if attendee.quoted}
+											• Quoted
+										{/if}
+									</div>
+								</div>
+								<div class="flex flex-wrap gap-2">
+									<button
+										class="btn btn-primary btn-xs"
+										title="Add regular speech"
+										onclick={() => addCandidate(attendee.attendeeId, 'regular')}
+										disabled={
+											speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'regular')
+										}
+									>
+										Regular
+									</button>
+									<button
+										class="btn btn-outline btn-xs"
+										title="Add Point of Order (PO) speech"
+										onclick={() => addCandidate(attendee.attendeeId, 'ropm')}
+										disabled={
+											speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'ropm')
+										}
+									>
+										PO
+									</button>
+								</div>
+							</div>
+						{/each}
+						{#if sortedCandidates().length === 0}
+							<p class="text-sm text-base-content/70">No matching attendees found.</p>
+						{/if}
+					</div>
+				</div>
+			{/if}
 
 			<div id="speakers-list-container">
 				{#if speakerState.data?.speakers?.length}

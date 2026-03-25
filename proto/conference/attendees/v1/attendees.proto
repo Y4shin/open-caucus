@@ -7,6 +7,9 @@ option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/attende
 import "conference/common/v1/common.proto";
 
 service AttendeeService {
+  // ListAttendees returns the attendee roster for a meeting.
+  rpc ListAttendees(ListAttendeesRequest) returns (ListAttendeesResponse);
+
   // SelfSignup registers the currently authenticated account-session user as an
   // attendee for the given meeting. Idempotent: succeeds if already signed up.
   rpc SelfSignup(SelfSignupRequest) returns (SelfSignupResponse);
@@ -32,6 +35,15 @@ message AttendeeRecord {
   bool quoted = 6;
   // mine is true when the record belongs to the calling actor.
   bool mine = 7;
+}
+
+message ListAttendeesRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message ListAttendeesResponse {
+  repeated AttendeeRecord attendees = 1;
 }
 
 message SelfSignupRequest {

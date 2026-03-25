@@ -31,6 +31,29 @@ func New(repo repository.Repository, sessionManager *session.Manager, b broker.B
 	return &Service{repo: repo, sessionManager: sessionManager, broker: b}
 }
 
+func (s *Service) ListAttendees(ctx context.Context, committeeSlug, meetingIDStr string) (*attendeesv1.ListAttendeesResponse, error) {
+	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+		return nil, err
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	attendees, err := s.repo.ListAttendeesForMeeting(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to list attendees", err)
+	}
+
+	records := make([]*attendeesv1.AttendeeRecord, 0, len(attendees))
+	for _, attendee := range attendees {
+		records = append(records, toAttendeeRecord(attendee, 0))
+	}
+
+	return &attendeesv1.ListAttendeesResponse{Attendees: records}, nil
+}
+
 // SelfSignup registers the calling account-session user as an attendee.
 // Idempotent: returns success if the attendee row already exists.
 func (s *Service) SelfSignup(ctx context.Context, committeeSlug, meetingIDStr string) (*attendeesv1.SelfSignupResponse, error) {
@@ -203,4 +226,25 @@ func generateSecret() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
+	sd, ok := session.GetSession(ctx)
+	if !ok || sd == nil || sd.IsExpired() || !sd.IsAccountSession() || sd.AccountID == nil {
+		return apierrors.New(apierrors.KindUnauthenticated, "account session required")
+	}
+
+	account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
+	if err != nil {
+		return apierrors.New(apierrors.KindUnauthenticated, "account not found")
+	}
+	if account.IsAdmin {
+		return nil
+	}
+
+	membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
+	if err != nil || membership.Role != "chairperson" {
+		return apierrors.New(apierrors.KindPermissionDenied, "chairperson role required")
+	}
+	return nil
 }

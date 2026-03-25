@@ -53,6 +53,43 @@ func TestAttendeeService_SelfSignup(t *testing.T) {
 	}
 }
 
+func TestAttendeeService_ListAttendees(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	meetingID := ts.seedMeeting(t, "test-committee", "Spring Meeting", true)
+
+	if _, err := ts.repo.CreateAttendee(context.Background(), meetingID, nil, "Alice Guest", "secret-a", false); err != nil {
+		t.Fatalf("create attendee alice: %v", err)
+	}
+	if _, err := ts.repo.CreateAttendee(context.Background(), meetingID, nil, "Bob Guest", "secret-b", true); err != nil {
+		t.Fatalf("create attendee bob: %v", err)
+	}
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "chair1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	resp, err := client.attendees.ListAttendees(context.Background(), connect.NewRequest(&attendeesv1.ListAttendeesRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+	}))
+	if err != nil {
+		t.Fatalf("list attendees: %v", err)
+	}
+	if len(resp.Msg.GetAttendees()) != 2 {
+		t.Fatalf("expected 2 attendees, got %d", len(resp.Msg.GetAttendees()))
+	}
+	if resp.Msg.GetAttendees()[0].GetFullName() != "Alice Guest" {
+		t.Fatalf("unexpected first attendee: %q", resp.Msg.GetAttendees()[0].GetFullName())
+	}
+}
+
 func TestAttendeeService_SelfSignup_SignupClosed(t *testing.T) {
 	ts := newCombinedAPITestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")

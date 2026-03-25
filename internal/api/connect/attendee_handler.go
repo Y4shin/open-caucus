@@ -19,6 +19,14 @@ func NewAttendeeHandler(service *attendeeservice.Service) *AttendeeHandler {
 	return &AttendeeHandler{service: service}
 }
 
+func (h *AttendeeHandler) ListAttendees(ctx context.Context, req *connect.Request[attendeesv1.ListAttendeesRequest]) (*connect.Response[attendeesv1.ListAttendeesResponse], error) {
+	resp, err := h.service.ListAttendees(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (h *AttendeeHandler) SelfSignup(ctx context.Context, req *connect.Request[attendeesv1.SelfSignupRequest]) (*connect.Response[attendeesv1.SelfSignupResponse], error) {
 	resp, err := h.service.SelfSignup(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
 	if err != nil {
