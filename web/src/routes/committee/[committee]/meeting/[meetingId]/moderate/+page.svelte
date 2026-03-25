@@ -4,8 +4,9 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
-	import { attendeeClient, moderationClient, speakerClient } from '$lib/api/index.js';
+	import { agendaClient, attendeeClient, moderationClient, speakerClient } from '$lib/api/index.js';
 	import { session } from '$lib/stores/session.svelte.js';
+	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import type { ModerationView } from '$lib/gen/conference/moderation/v1/moderation_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
@@ -19,11 +20,16 @@
 	let moderationState = $state(createRemoteState<ModerationView>());
 	let speakerState = $state(createRemoteState<SpeakerQueueView>());
 	let attendeeState = $state(createRemoteState<AttendeeRecord[]>());
+	let agendaState = $state(createRemoteState<AgendaPointRecord[]>());
 	let actionError = $state('');
 	let togglingSignup = $state(false);
 	let speakerActionPending = $state('');
+	let agendaActionPending = $state('');
+	let creatingAgenda = $state(false);
+	let agendaTitle = $state('');
 	let speakerSearch = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
+	let agendaTitleInput = $state<HTMLInputElement | null>(null);
 	let refreshTick = $state(0);
 
 	$effect(() => {
@@ -48,26 +54,32 @@
 		moderationState.loading = true;
 		speakerState.loading = true;
 		attendeeState.loading = true;
+		agendaState.loading = true;
 		moderationState.error = '';
 		speakerState.error = '';
 		attendeeState.error = '';
+		agendaState.error = '';
 		try {
-			const [moderationRes, speakerRes, attendeeRes] = await Promise.all([
+			const [moderationRes, speakerRes, attendeeRes, agendaRes] = await Promise.all([
 				moderationClient.getModerationView({ committeeSlug: slug, meetingId }),
 				speakerClient.listSpeakers({ committeeSlug: slug, meetingId }),
-				attendeeClient.listAttendees({ committeeSlug: slug, meetingId })
+				attendeeClient.listAttendees({ committeeSlug: slug, meetingId }),
+				agendaClient.listAgendaPoints({ committeeSlug: slug, meetingId })
 			]);
 			moderationState.data = moderationRes.view ?? null;
 			speakerState.data = speakerRes.view ?? null;
 			attendeeState.data = attendeeRes.attendees;
+			agendaState.data = agendaRes.agendaPoints;
 		} catch (err) {
 			moderationState.error = getDisplayError(err, 'Failed to load the moderation view.');
 			speakerState.error = moderationState.error;
 			attendeeState.error = moderationState.error;
+			agendaState.error = moderationState.error;
 		} finally {
 			moderationState.loading = false;
 			speakerState.loading = false;
 			attendeeState.loading = false;
+			agendaState.loading = false;
 		}
 	}
 
@@ -121,6 +133,22 @@
 			return false;
 		} finally {
 			speakerActionPending = '';
+		}
+	}
+
+	async function runAgendaAction(key: string, action: () => Promise<void>) {
+		actionError = '';
+		agendaActionPending = key;
+		try {
+			await action();
+			refreshTick += 1;
+			return true;
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update the agenda.');
+			refreshTick += 1;
+			return false;
+		} finally {
+			agendaActionPending = '';
 		}
 	}
 
@@ -194,6 +222,74 @@
 		}
 
 		await addCandidate(topCandidate.attendeeId, 'regular');
+	}
+
+	function isAgendaBusy(key: string) {
+		return agendaActionPending !== '' && agendaActionPending !== key;
+	}
+
+	async function createAgendaPoint() {
+		const title = agendaTitle.trim();
+		if (!title || creatingAgenda) return;
+
+		actionError = '';
+		creatingAgenda = true;
+		try {
+			await agendaClient.createAgendaPoint({
+				committeeSlug: slug,
+				meetingId,
+				title
+			});
+			agendaTitle = '';
+			refreshTick += 1;
+			agendaTitleInput?.focus();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to create the agenda point.');
+		} finally {
+			creatingAgenda = false;
+		}
+	}
+
+	async function handleAgendaTitleKeydown(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		event.preventDefault();
+		await createAgendaPoint();
+	}
+
+	async function activateAgendaPoint(agendaPointId: string, active: boolean) {
+		await runAgendaAction(`activate-${agendaPointId}`, async () => {
+			const res = await agendaClient.activateAgendaPoint({
+				committeeSlug: slug,
+				meetingId,
+				agendaPointId: active ? '' : agendaPointId
+			});
+
+			if (moderationState.data) {
+				moderationState.data.activeAgendaPoint = res.activeAgendaPoint;
+			}
+		});
+	}
+
+	async function moveAgendaPoint(agendaPointId: string, direction: 'up' | 'down') {
+		await runAgendaAction(`move-${agendaPointId}-${direction}`, async () => {
+			const res = await agendaClient.moveAgendaPoint({
+				committeeSlug: slug,
+				meetingId,
+				agendaPointId,
+				direction
+			});
+			agendaState.data = res.agendaPoints;
+		});
+	}
+
+	async function deleteAgendaPoint(agendaPointId: string) {
+		await runAgendaAction(`delete-${agendaPointId}`, async () => {
+			await agendaClient.deleteAgendaPoint({
+				committeeSlug: slug,
+				meetingId,
+				agendaPointId
+			});
+		});
 	}
 </script>
 
@@ -451,6 +547,120 @@
 			{:else}
 				<p class="text-base-content/70">No agenda point is currently active.</p>
 			{/if}
+		</AppCard>
+
+		<AppCard title="Agenda Management">
+			<div class="space-y-4">
+				<div class="flex flex-col gap-3 md:flex-row">
+					<input
+						class="input input-bordered flex-1"
+						placeholder="Add a top-level agenda point"
+						bind:value={agendaTitle}
+						bind:this={agendaTitleInput}
+						onkeydown={handleAgendaTitleKeydown}
+					/>
+					<button
+						class="btn btn-primary"
+						onclick={createAgendaPoint}
+						disabled={creatingAgenda || agendaTitle.trim().length === 0}
+					>
+						{#if creatingAgenda}
+							<span class="loading loading-spinner loading-xs"></span>
+						{/if}
+						Add Agenda Point
+					</button>
+				</div>
+
+				{#if agendaState.loading}
+					<AppSpinner label="Loading agenda" />
+				{:else if agendaState.error}
+					<AppAlert message={agendaState.error} />
+				{:else if agendaState.data?.length}
+					<div class="space-y-2" id="manage-agenda-list">
+						{#snippet agendaRows(points: AgendaPointRecord[], depth: number)}
+							{#each points as point, index}
+								<div
+									class="rounded-box border border-base-300 bg-base-100 px-3 py-3"
+									data-testid="manage-agenda-item"
+									data-agenda-active={point.isActive ? 'true' : 'false'}
+								>
+									<div class="flex flex-wrap items-start justify-between gap-3">
+										<div class="min-w-0" style={`padding-left: ${depth * 1.25}rem`}>
+											<div class="flex flex-wrap items-center gap-2">
+												<span class="font-medium">{point.displayNumber}</span>
+												{#if point.title}
+													<span>{point.title}</span>
+												{:else}
+													<span class="text-base-content/60">Untitled</span>
+												{/if}
+												{#if point.isActive}
+													<span class="badge badge-primary badge-sm">Active</span>
+												{/if}
+											</div>
+											<div class="mt-1 text-sm text-base-content/70">
+												Position {point.position.toString()}
+												{#if point.genderQuotation}
+													• Gender quotation
+												{/if}
+												{#if point.firstSpeakerQuotation}
+													• First speaker quotation
+												{/if}
+											</div>
+										</div>
+
+										<div class="flex flex-wrap gap-2">
+											<button
+												class="btn btn-ghost btn-xs"
+												title={point.isActive ? 'Deactivate' : 'Activate'}
+												onclick={() => activateAgendaPoint(point.agendaPointId, point.isActive)}
+												disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}
+											>
+												{point.isActive ? 'Deactivate' : 'Activate'}
+											</button>
+											{#if !point.parentId}
+												<button
+													class="btn btn-ghost btn-xs"
+													title="Move up"
+													onclick={() => moveAgendaPoint(point.agendaPointId, 'up')}
+													disabled={index === 0 || isAgendaBusy(`move-${point.agendaPointId}-up`)}
+												>
+													Up
+												</button>
+												<button
+													class="btn btn-ghost btn-xs"
+													title="Move down"
+													onclick={() => moveAgendaPoint(point.agendaPointId, 'down')}
+													disabled={
+														index === points.length - 1 || isAgendaBusy(`move-${point.agendaPointId}-down`)
+													}
+												>
+													Down
+												</button>
+											{/if}
+											<button
+												class="btn btn-ghost btn-xs text-error"
+												title="Delete"
+												onclick={() => deleteAgendaPoint(point.agendaPointId)}
+												disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}
+											>
+												Delete
+											</button>
+										</div>
+									</div>
+								</div>
+
+								{#if point.subPoints.length}
+									{@render agendaRows(point.subPoints, depth + 1)}
+								{/if}
+							{/each}
+						{/snippet}
+
+						{@render agendaRows(agendaState.data, 0)}
+					</div>
+				{:else}
+					<p class="text-base-content/70">No agenda points have been created yet.</p>
+				{/if}
+			</div>
 		</AppCard>
 	{/if}
 </div>

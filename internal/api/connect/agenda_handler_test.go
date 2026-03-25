@@ -166,3 +166,104 @@ func TestAgendaService_ActivateAgendaPoint(t *testing.T) {
 		t.Fatalf("expected active id %q, got %q", apID, activateResp.Msg.GetActiveAgendaPointId())
 	}
 }
+
+func TestAgendaService_MoveAgendaPoint_ReordersTopLevelAgenda(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair One", "chairperson")
+	meetingID := ts.seedMeeting(t, "test-committee", "Spring Meeting", false)
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "chair1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	firstResp, err := client.agenda.CreateAgendaPoint(context.Background(), connect.NewRequest(&agendav1.CreateAgendaPointRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		Title:         "Opening",
+	}))
+	if err != nil {
+		t.Fatalf("create first agenda point: %v", err)
+	}
+
+	secondResp, err := client.agenda.CreateAgendaPoint(context.Background(), connect.NewRequest(&agendav1.CreateAgendaPointRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		Title:         "Voting",
+	}))
+	if err != nil {
+		t.Fatalf("create second agenda point: %v", err)
+	}
+
+	moveResp, err := client.agenda.MoveAgendaPoint(context.Background(), connect.NewRequest(&agendav1.MoveAgendaPointRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		AgendaPointId: secondResp.Msg.GetAgendaPoint().GetAgendaPointId(),
+		Direction:     "up",
+	}))
+	if err != nil {
+		t.Fatalf("move agenda point: %v", err)
+	}
+
+	if len(moveResp.Msg.GetAgendaPoints()) != 2 {
+		t.Fatalf("expected 2 agenda points after move, got %d", len(moveResp.Msg.GetAgendaPoints()))
+	}
+	if moveResp.Msg.GetAgendaPoints()[0].GetAgendaPointId() != secondResp.Msg.GetAgendaPoint().GetAgendaPointId() {
+		t.Fatalf("expected moved agenda point first, got %q", moveResp.Msg.GetAgendaPoints()[0].GetAgendaPointId())
+	}
+	if moveResp.Msg.GetAgendaPoints()[1].GetAgendaPointId() != firstResp.Msg.GetAgendaPoint().GetAgendaPointId() {
+		t.Fatalf("expected original first agenda point second, got %q", moveResp.Msg.GetAgendaPoints()[1].GetAgendaPointId())
+	}
+}
+
+func TestAgendaService_ActivateAgendaPoint_MemberForbidden(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair One", "chairperson")
+	ts.seedUser(t, "test-committee", "member1", "pass123", "Alice Member", "member")
+	meetingID := ts.seedMeeting(t, "test-committee", "Spring Meeting", false)
+
+	chairClient := newCombinedTestClient(t, ts)
+
+	if _, err := chairClient.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "chair1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("chair login: %v", err)
+	}
+
+	createResp, err := chairClient.agenda.CreateAgendaPoint(context.Background(), connect.NewRequest(&agendav1.CreateAgendaPointRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		Title:         "Item 1",
+	}))
+	if err != nil {
+		t.Fatalf("create agenda point: %v", err)
+	}
+
+	memberClient := newCombinedTestClient(t, ts)
+
+	if _, err := memberClient.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "member1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("member login: %v", err)
+	}
+
+	_, err = memberClient.agenda.ActivateAgendaPoint(context.Background(), connect.NewRequest(&agendav1.ActivateAgendaPointRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		AgendaPointId: createResp.Msg.GetAgendaPoint().GetAgendaPointId(),
+	}))
+	if err == nil {
+		t.Fatal("expected permission error for member activating agenda point")
+	}
+	if connect.CodeOf(err) != connect.CodePermissionDenied {
+		t.Fatalf("expected permission denied, got %v", connect.CodeOf(err))
+	}
+}

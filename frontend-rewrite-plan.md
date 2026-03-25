@@ -62,6 +62,7 @@ The repository is still primarily on the original architecture at the time of th
 - `buf.yaml` and `buf.gen.yaml` now exist.
 - Initial generated Go stubs now exist under `gen/go/`.
 - Generated TypeScript clients now exist under `web/src/lib/gen/` and are consumed directly by the SPA.
+- The SPA now covers session bootstrap, committee home/overview, meeting join and attendee login, live meeting state, moderation speaker controls, and the first typed agenda-management workflows.
 
 ## Target Architecture
 
@@ -1517,6 +1518,6 @@ The rewrite is complete when:
 
 ## Immediate Next Steps
 
-1. Stand up the minimal `web/` SvelteKit workspace and use the generated `SessionService` client for frontend bootstrap.
-2. Implement the next typed read-model transport, preferably `ModerationService.GetModerationView`.
-3. Expand API integration coverage from the session slice to the mapped committee and moderation workflows.
+1. Port the voting workflow surface into the SPA with typed commands, read models, and invalidation-driven refresh.
+2. Continue Phase 5 parity work for admin/account management, public docs/verification pages, and attachment/file-serving flows.
+3. Expand API integration coverage and mapping rows for the remaining unported Phase 5 feature areas before legacy removal begins.
