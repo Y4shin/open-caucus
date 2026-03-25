@@ -13,9 +13,7 @@
 			goto('/admin');
 			return;
 		}
-		if (session.availableCommittees.length > 0) {
-			goto(`/${session.availableCommittees[0].slug}`);
-		}
+		goto('/home');
 	});
 </script>
 

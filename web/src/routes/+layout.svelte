@@ -25,12 +25,13 @@
 	<div class="min-h-screen bg-base-100">
 		<nav class="navbar bg-base-200 shadow-sm">
 			<div class="navbar-start">
-				<a href="/" class="btn btn-ghost text-xl font-bold">Conference Tool</a>
+				<a href="/home" class="btn btn-ghost text-xl font-bold">Conference Tool</a>
 			</div>
 			<div class="navbar-center hidden gap-1 lg:flex">
 				{#if session.authenticated}
+					<a href="/home" class="btn btn-ghost btn-sm">Home</a>
 					{#each session.availableCommittees as committee}
-						<a href="/{committee.slug}" class="btn btn-ghost btn-sm">{committee.name}</a>
+						<a href="/committee/{committee.slug}" class="btn btn-ghost btn-sm">{committee.name}</a>
 					{/each}
 					{#if session.isAdmin}
 						<a href="/admin" class="btn btn-ghost btn-sm">Admin</a>

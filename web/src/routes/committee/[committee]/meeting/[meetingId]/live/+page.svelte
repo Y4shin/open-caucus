@@ -3,10 +3,11 @@
 	import { goto } from '$app/navigation';
 
 	const slug = $derived(page.params.committee);
+	const meetingId = $derived(page.params.meetingId);
 
 	$effect(() => {
-		if (!slug) return;
-		goto(`/committee/${slug}`);
+		if (!slug || !meetingId) return;
+		goto(`/committee/${slug}/meeting/${meetingId}`);
 	});
 </script>
 
