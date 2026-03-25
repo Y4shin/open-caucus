@@ -368,9 +368,10 @@ tasks:
       - npm run format
 
   generate:clients:
-    desc: Regenerate TypeScript and Go clients from proto definitions (requires buf)
+    desc: Regenerate TypeScript and Go clients from proto definitions
+    dir: web
     cmds:
-      - buf generate
+      - npx buf generate --config ../buf.gen.yaml
 
   dev:full:
     desc: Run Go backend and SvelteKit dev server in parallel (full dev environment)

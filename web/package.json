@@ -16,6 +16,8 @@
 		"test": "npm run test:unit -- --run"
 	},
 	"devDependencies": {
+		"@bufbuild/buf": "^1.66.1",
+		"@bufbuild/protoc-gen-es": "^2.11.0",
 		"@eslint/compat": "^2.0.3",
 		"@eslint/js": "^10.0.1",
 		"@inlang/paraglide-js": "^2.10.0",
