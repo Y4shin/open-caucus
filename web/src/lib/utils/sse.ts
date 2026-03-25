@@ -11,6 +11,10 @@ export function connectEventStream(url: string, onInvalidate: () => void): () =>
 	stream.addEventListener('connected', handleEvent);
 	stream.addEventListener('moderate-updated', handleEvent);
 	stream.addEventListener('live-updated', handleEvent);
+	stream.addEventListener('attendees.updated', handleEvent);
+	stream.addEventListener('speakers.updated', handleEvent);
+	stream.addEventListener('agenda.updated', handleEvent);
+	stream.addEventListener('votes.updated', handleEvent);
 
 	return () => {
 		stream.close();
