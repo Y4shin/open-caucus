@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	connect "connectrpc.com/connect"
@@ -212,6 +213,54 @@ func (ts *combinedTestServer) seedMeeting(t *testing.T, slug, name string, signu
 		t.Fatalf("get seeded meeting: %v", err)
 	}
 	return meetings[0].ID
+}
+
+func (ts *combinedTestServer) seedAgendaPoint(t *testing.T, slug, meetingName, title string) string {
+	t.Helper()
+	meetings, err := ts.repo.ListMeetingsForCommittee(context.Background(), slug, 100, 0)
+	if err != nil {
+		t.Fatalf("list meetings for %q: %v", slug, err)
+	}
+	var meetingID int64
+	for _, meeting := range meetings {
+		if meeting.Name == meetingName {
+			meetingID = meeting.ID
+			break
+		}
+	}
+	if meetingID == 0 {
+		t.Fatalf("meeting %q not found for agenda seed", meetingName)
+	}
+	agendaPoint, err := ts.repo.CreateAgendaPoint(context.Background(), meetingID, title)
+	if err != nil {
+		t.Fatalf("seed agenda point %q: %v", title, err)
+	}
+	return strconv.FormatInt(agendaPoint.ID, 10)
+}
+
+func (ts *combinedTestServer) activateAgendaPoint(t *testing.T, slug, meetingName, agendaPointIDStr string) {
+	t.Helper()
+	meetings, err := ts.repo.ListMeetingsForCommittee(context.Background(), slug, 100, 0)
+	if err != nil {
+		t.Fatalf("list meetings for %q: %v", slug, err)
+	}
+	var meetingID int64
+	for _, meeting := range meetings {
+		if meeting.Name == meetingName {
+			meetingID = meeting.ID
+			break
+		}
+	}
+	if meetingID == 0 {
+		t.Fatalf("meeting %q not found for agenda activation", meetingName)
+	}
+	agendaPointID, err := strconv.ParseInt(agendaPointIDStr, 10, 64)
+	if err != nil {
+		t.Fatalf("parse agenda point id %q: %v", agendaPointIDStr, err)
+	}
+	if err := ts.repo.SetCurrentAgendaPoint(context.Background(), meetingID, &agendaPointID); err != nil {
+		t.Fatalf("activate agenda point %q: %v", agendaPointIDStr, err)
+	}
 }
 
 func hashPassword(t *testing.T, password string) string {

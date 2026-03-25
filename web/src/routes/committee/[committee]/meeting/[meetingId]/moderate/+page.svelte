@@ -4,12 +4,17 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
-	import { agendaClient, attendeeClient, moderationClient, speakerClient } from '$lib/api/index.js';
+	import { agendaClient, attendeeClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import type { ModerationView } from '$lib/gen/conference/moderation/v1/moderation_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
+	import type {
+		VoteDefinitionRecord,
+		VoteTallyEntry,
+		VotesPanelView
+	} from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { connectEventStream } from '$lib/utils/sse.js';
@@ -21,15 +26,29 @@
 	let speakerState = $state(createRemoteState<SpeakerQueueView>());
 	let attendeeState = $state(createRemoteState<AttendeeRecord[]>());
 	let agendaState = $state(createRemoteState<AgendaPointRecord[]>());
+	let votesState = $state(createRemoteState<VotesPanelView>());
 	let actionError = $state('');
 	let togglingSignup = $state(false);
 	let speakerActionPending = $state('');
 	let agendaActionPending = $state('');
+	let voteActionPending = $state('');
 	let creatingAgenda = $state(false);
+	let creatingVote = $state(false);
 	let agendaTitle = $state('');
+	let voteName = $state('');
+	let voteVisibility = $state<'open' | 'secret'>('open');
+	let voteMinSelections = $state('1');
+	let voteMaxSelections = $state('1');
+	let voteOptionsText = $state('Yes\nNo');
+	let lastClosedVote = $state<{
+		vote: VoteDefinitionRecord;
+		tally: VoteTallyEntry[];
+		outcome: string;
+	} | null>(null);
 	let speakerSearch = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let agendaTitleInput = $state<HTMLInputElement | null>(null);
+	let voteNameInput = $state<HTMLInputElement | null>(null);
 	let refreshTick = $state(0);
 
 	$effect(() => {
@@ -55,31 +74,37 @@
 		speakerState.loading = true;
 		attendeeState.loading = true;
 		agendaState.loading = true;
+		votesState.loading = true;
 		moderationState.error = '';
 		speakerState.error = '';
 		attendeeState.error = '';
 		agendaState.error = '';
+		votesState.error = '';
 		try {
-			const [moderationRes, speakerRes, attendeeRes, agendaRes] = await Promise.all([
+			const [moderationRes, speakerRes, attendeeRes, agendaRes, votesRes] = await Promise.all([
 				moderationClient.getModerationView({ committeeSlug: slug, meetingId }),
 				speakerClient.listSpeakers({ committeeSlug: slug, meetingId }),
 				attendeeClient.listAttendees({ committeeSlug: slug, meetingId }),
-				agendaClient.listAgendaPoints({ committeeSlug: slug, meetingId })
+				agendaClient.listAgendaPoints({ committeeSlug: slug, meetingId }),
+				voteClient.getVotesPanel({ committeeSlug: slug, meetingId })
 			]);
 			moderationState.data = moderationRes.view ?? null;
 			speakerState.data = speakerRes.view ?? null;
 			attendeeState.data = attendeeRes.attendees;
 			agendaState.data = agendaRes.agendaPoints;
+			votesState.data = votesRes.view ?? null;
 		} catch (err) {
 			moderationState.error = getDisplayError(err, 'Failed to load the moderation view.');
 			speakerState.error = moderationState.error;
 			attendeeState.error = moderationState.error;
 			agendaState.error = moderationState.error;
+			votesState.error = moderationState.error;
 		} finally {
 			moderationState.loading = false;
 			speakerState.loading = false;
 			attendeeState.loading = false;
 			agendaState.loading = false;
+			votesState.loading = false;
 		}
 	}
 
@@ -149,6 +174,21 @@
 			return false;
 		} finally {
 			agendaActionPending = '';
+		}
+	}
+
+	async function runVoteAction(key: string, action: () => Promise<void>) {
+		actionError = '';
+		voteActionPending = key;
+		try {
+			await action();
+			return true;
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update the votes panel.');
+			refreshTick += 1;
+			return false;
+		} finally {
+			voteActionPending = '';
 		}
 	}
 
@@ -289,6 +329,109 @@
 				meetingId,
 				agendaPointId
 			});
+		});
+	}
+
+	function parsedVoteOptions() {
+		return voteOptionsText
+			.split('\n')
+			.map((line) => line.trim())
+			.filter(Boolean);
+	}
+
+	function bigintFromInput(value: string) {
+		const parsed = Number.parseInt(value, 10);
+		return Number.isFinite(parsed) ? BigInt(parsed) : 0n;
+	}
+
+	function canCreateVote() {
+		return voteName.trim().length > 0 && parsedVoteOptions().length >= 2;
+	}
+
+	async function createVote() {
+		if (creatingVote || !canCreateVote()) return;
+
+		actionError = '';
+		creatingVote = true;
+		try {
+			const res = await voteClient.createVote({
+				committeeSlug: slug,
+				meetingId,
+				name: voteName.trim(),
+				visibility: voteVisibility,
+				minSelections: bigintFromInput(voteMinSelections),
+				maxSelections: bigintFromInput(voteMaxSelections),
+				optionLabels: parsedVoteOptions()
+			});
+
+			lastClosedVote = null;
+			if (votesState.data && res.vote) {
+				votesState.data.votes = [...votesState.data.votes, res.vote];
+			}
+			voteName = '';
+			voteVisibility = 'open';
+			voteMinSelections = '1';
+			voteMaxSelections = '1';
+			voteOptionsText = 'Yes\nNo';
+			refreshTick += 1;
+			voteNameInput?.focus();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to create the vote.');
+		} finally {
+			creatingVote = false;
+		}
+	}
+
+	async function openVote(voteId: string) {
+		await runVoteAction(`open-${voteId}`, async () => {
+			const res = await voteClient.openVote({
+				committeeSlug: slug,
+				meetingId,
+				voteId
+			});
+			lastClosedVote = null;
+			if (votesState.data) {
+				votesState.data.activeVote = res.vote;
+				votesState.data.activeVoteStats = res.stats;
+			}
+			refreshTick += 1;
+		});
+	}
+
+	async function closeVote(voteId: string) {
+		await runVoteAction(`close-${voteId}`, async () => {
+			const res = await voteClient.closeVote({
+				committeeSlug: slug,
+				meetingId,
+				voteId
+			});
+			lastClosedVote = res.vote
+				? {
+						vote: res.vote,
+						tally: res.tally,
+						outcome: res.outcome
+					}
+				: null;
+			if (votesState.data) {
+				votesState.data.activeVote = undefined;
+				votesState.data.activeVoteStats = undefined;
+				votesState.data.activeVoteTally = [];
+			}
+			refreshTick += 1;
+		});
+	}
+
+	async function archiveVote(voteId: string) {
+		await runVoteAction(`archive-${voteId}`, async () => {
+			await voteClient.archiveVote({
+				committeeSlug: slug,
+				meetingId,
+				voteId
+			});
+			if (lastClosedVote?.vote.voteId === voteId) {
+				lastClosedVote = null;
+			}
+			refreshTick += 1;
 		});
 	}
 </script>
@@ -661,6 +804,193 @@
 					<p class="text-base-content/70">No agenda points have been created yet.</p>
 				{/if}
 			</div>
+		</AppCard>
+
+		<AppCard title="Votes">
+			{#if votesState.loading}
+				<AppSpinner label="Loading votes" />
+			{:else if votesState.error}
+				<AppAlert message={votesState.error} />
+			{:else if votesState.data}
+				<div class="space-y-4" id="moderate-votes-panel">
+					{#if !votesState.data.hasActiveAgendaPoint}
+						<p class="text-base-content/70">No active agenda point.</p>
+					{:else}
+						<p class="text-sm text-base-content/70">
+							Active agenda point: {votesState.data.activeAgendaPointTitle || 'Current item'}
+						</p>
+
+						<div class="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+							<div class="rounded-box border border-base-300 bg-base-100 p-4">
+								<div class="mb-3">
+									<h3 class="font-semibold">Create Draft Vote</h3>
+									<p class="text-sm text-base-content/70">
+										Create a draft, then open it when the chair is ready.
+									</p>
+								</div>
+
+								<div class="space-y-3">
+									<input
+										class="input input-bordered w-full"
+										placeholder="Vote name"
+										bind:value={voteName}
+										bind:this={voteNameInput}
+									/>
+
+									<div class="grid gap-3 sm:grid-cols-3">
+										<select class="select select-bordered" bind:value={voteVisibility}>
+											<option value="open">Open</option>
+											<option value="secret">Secret</option>
+										</select>
+										<input
+											class="input input-bordered"
+											type="number"
+											min="1"
+											bind:value={voteMinSelections}
+											placeholder="Min"
+										/>
+										<input
+											class="input input-bordered"
+											type="number"
+											min="1"
+											bind:value={voteMaxSelections}
+											placeholder="Max"
+										/>
+									</div>
+
+									<textarea
+										class="textarea textarea-bordered min-h-32 w-full"
+										bind:value={voteOptionsText}
+										placeholder="One option per line"
+									></textarea>
+
+									<button
+										class="btn btn-primary"
+										onclick={createVote}
+										disabled={creatingVote || !canCreateVote()}
+									>
+										{#if creatingVote}
+											<span class="loading loading-spinner loading-xs"></span>
+										{/if}
+										Create Draft Vote
+									</button>
+								</div>
+							</div>
+
+							<div class="rounded-box border border-base-300 bg-base-100 p-4">
+								<h3 class="mb-3 font-semibold">Vote Status</h3>
+								{#if votesState.data.activeVote}
+									<div class="space-y-2">
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="font-medium">{votesState.data.activeVote.name}</span>
+											<span class="badge badge-primary">{votesState.data.activeVote.state}</span>
+										</div>
+										{#if votesState.data.activeVoteStats}
+											<p class="text-sm text-base-content/70">
+												{votesState.data.activeVoteStats.castCount.toString()} of
+												{votesState.data.activeVoteStats.eligibleCount.toString()} eligible voters
+												have cast ballots.
+											</p>
+										{/if}
+										<button
+											class="btn btn-secondary btn-sm"
+											onclick={() => closeVote(votesState.data?.activeVote?.voteId ?? '')}
+											disabled={
+												!votesState.data.activeVote ||
+												voteActionPending !== '' ||
+												votesState.data.activeVote.voteId.length === 0
+											}
+										>
+											Close Vote
+										</button>
+									</div>
+								{:else if lastClosedVote}
+									<div class="space-y-3">
+										<div class="flex flex-wrap items-center gap-2">
+											<span class="font-medium">{lastClosedVote.vote.name}</span>
+											<span class="badge badge-outline">{lastClosedVote.outcome}</span>
+										</div>
+										{#if lastClosedVote.tally.length}
+											<div class="space-y-2">
+												<p class="text-sm font-medium">Final Tallies</p>
+												{#each lastClosedVote.tally as entry}
+													<div class="flex items-center justify-between text-sm">
+														<span>{entry.label}</span>
+														<span>{entry.count.toString()}</span>
+													</div>
+												{/each}
+											</div>
+										{/if}
+										<button
+											class="btn btn-outline btn-sm"
+											onclick={() => lastClosedVote && archiveVote(lastClosedVote.vote.voteId)}
+											disabled={voteActionPending !== ''}
+										>
+											Archive Vote
+										</button>
+									</div>
+								{:else}
+									<p class="text-sm text-base-content/70">
+										No vote is currently open for the active agenda point.
+									</p>
+								{/if}
+							</div>
+						</div>
+
+						<div class="space-y-3">
+							<h3 class="font-semibold">Vote Definitions</h3>
+							{#if votesState.data.votes.length}
+								<div class="space-y-3">
+									{#each votesState.data.votes as vote}
+										<div class="rounded-box border border-base-300 bg-base-100 p-4">
+											<div class="flex flex-wrap items-start justify-between gap-3">
+												<div class="space-y-1">
+													<div class="flex flex-wrap items-center gap-2">
+														<span class="font-medium">{vote.name}</span>
+														<span class="badge badge-outline">{vote.state}</span>
+														<span class="badge badge-ghost">{vote.visibility}</span>
+													</div>
+													<p class="text-sm text-base-content/70">
+														{vote.minSelections.toString()} to {vote.maxSelections.toString()} selections
+													</p>
+													<p class="text-sm text-base-content/70">
+														{vote.options.map((option) => option.label).join(' • ')}
+													</p>
+												</div>
+
+												<div class="flex flex-wrap gap-2">
+													{#if vote.state === 'draft'}
+														<button
+															class="btn btn-primary btn-xs"
+															onclick={() => openVote(vote.voteId)}
+															disabled={voteActionPending !== ''}
+														>
+															Open Vote
+														</button>
+													{/if}
+													{#if vote.state === 'closed'}
+														<button
+															class="btn btn-outline btn-xs"
+															onclick={() => archiveVote(vote.voteId)}
+															disabled={voteActionPending !== ''}
+														>
+															Archive Vote
+														</button>
+													{/if}
+												</div>
+											</div>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<p class="text-sm text-base-content/70">
+									No votes have been defined for the active agenda point yet.
+								</p>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			{/if}
 		</AppCard>
 	{/if}
 </div>
