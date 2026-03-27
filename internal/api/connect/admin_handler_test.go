@@ -170,3 +170,158 @@ func TestAdminService_SetAccountAdmin(t *testing.T) {
 		t.Fatal("expected is_admin=true after setting admin")
 	}
 }
+
+func TestAdminService_CreateAccount(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedAdmin(t, "admin", "adminpass")
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	resp, err := client.admin.CreateAccount(context.Background(), connect.NewRequest(&adminv1.CreateAccountRequest{
+		Username: "newaccount",
+		FullName: "New Account",
+		Password: "password123",
+	}))
+	if err != nil {
+		t.Fatalf("create account: %v", err)
+	}
+	if got := resp.Msg.GetAccount().GetUsername(); got != "newaccount" {
+		t.Fatalf("unexpected created username: got %q want %q", got, "newaccount")
+	}
+}
+
+func TestAdminService_AssignAccountToCommittee_AndUpdateMembership(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedAdmin(t, "admin", "adminpass")
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "member1", "pass123", "Alice Member", "member")
+
+	account, err := ts.repo.GetAccountByUsername(context.Background(), "member1")
+	if err != nil {
+		t.Fatalf("get account: %v", err)
+	}
+
+	user, err := ts.repo.GetUserByCommitteeAndUsername(context.Background(), "test-committee", "member1")
+	if err != nil {
+		t.Fatalf("get seeded membership: %v", err)
+	}
+	if err := ts.repo.DeleteUserByID(context.Background(), user.ID); err != nil {
+		t.Fatalf("delete seeded membership: %v", err)
+	}
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	assignResp, err := client.admin.AssignAccountToCommittee(context.Background(), connect.NewRequest(&adminv1.AssignAccountToCommitteeRequest{
+		Slug:      "test-committee",
+		AccountId: fmt.Sprintf("%d", account.ID),
+		Role:      "chairperson",
+		Quoted:    true,
+	}))
+	if err != nil {
+		t.Fatalf("assign account to committee: %v", err)
+	}
+	if assignResp.Msg.GetUser().GetUsername() != "member1" {
+		t.Fatalf("unexpected assigned username: %q", assignResp.Msg.GetUser().GetUsername())
+	}
+	if assignResp.Msg.GetUser().GetRole() != "chairperson" {
+		t.Fatalf("unexpected assigned role: %q", assignResp.Msg.GetUser().GetRole())
+	}
+	if !assignResp.Msg.GetUser().GetQuoted() {
+		t.Fatal("expected assigned membership to be quoted")
+	}
+
+	adminResp, err := client.admin.GetCommitteeAdmin(context.Background(), connect.NewRequest(&adminv1.GetCommitteeAdminRequest{
+		Slug: "test-committee",
+	}))
+	if err != nil {
+		t.Fatalf("get committee admin: %v", err)
+	}
+	if len(adminResp.Msg.GetUsers()) != 1 {
+		t.Fatalf("expected 1 committee user after assignment, got %d", len(adminResp.Msg.GetUsers()))
+	}
+
+	userID := adminResp.Msg.GetUsers()[0].GetUserId()
+	updateResp, err := client.admin.UpdateCommitteeUser(context.Background(), connect.NewRequest(&adminv1.UpdateCommitteeUserRequest{
+		Slug:   "test-committee",
+		UserId: userID,
+		Role:   "member",
+		Quoted: false,
+	}))
+	if err != nil {
+		t.Fatalf("update committee user: %v", err)
+	}
+	if updateResp.Msg.GetUser().GetRole() != "member" {
+		t.Fatalf("unexpected updated role: %q", updateResp.Msg.GetUser().GetRole())
+	}
+	if updateResp.Msg.GetUser().GetQuoted() {
+		t.Fatal("expected quoted=false after update")
+	}
+}
+
+func TestAdminService_CreateListAndDeleteOAuthRule(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedAdmin(t, "admin", "adminpass")
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	createResp, err := client.admin.CreateOAuthRule(context.Background(), connect.NewRequest(&adminv1.CreateOAuthRuleRequest{
+		Slug:      "test-committee",
+		GroupName: "committee-test-chairs",
+		Role:      "chairperson",
+	}))
+	if err != nil {
+		t.Fatalf("create oauth rule: %v", err)
+	}
+	if createResp.Msg.GetRule().GetGroupName() != "committee-test-chairs" {
+		t.Fatalf("unexpected group name: %q", createResp.Msg.GetRule().GetGroupName())
+	}
+
+	listResp, err := client.admin.ListOAuthRules(context.Background(), connect.NewRequest(&adminv1.ListOAuthRulesRequest{
+		Slug: "test-committee",
+	}))
+	if err != nil {
+		t.Fatalf("list oauth rules: %v", err)
+	}
+	if len(listResp.Msg.GetRules()) != 1 {
+		t.Fatalf("expected 1 oauth rule, got %d", len(listResp.Msg.GetRules()))
+	}
+
+	if _, err := client.admin.DeleteOAuthRule(context.Background(), connect.NewRequest(&adminv1.DeleteOAuthRuleRequest{
+		Slug:   "test-committee",
+		RuleId: createResp.Msg.GetRule().GetRuleId(),
+	})); err != nil {
+		t.Fatalf("delete oauth rule: %v", err)
+	}
+
+	listResp, err = client.admin.ListOAuthRules(context.Background(), connect.NewRequest(&adminv1.ListOAuthRulesRequest{
+		Slug: "test-committee",
+	}))
+	if err != nil {
+		t.Fatalf("list oauth rules after delete: %v", err)
+	}
+	if len(listResp.Msg.GetRules()) != 0 {
+		t.Fatalf("expected 0 oauth rules after delete, got %d", len(listResp.Msg.GetRules()))
+	}
+}

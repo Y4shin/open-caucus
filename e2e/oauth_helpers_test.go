@@ -7,12 +7,25 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
+	connect "connectrpc.com/connect"
 	playwright "github.com/playwright-community/playwright-go"
 
 	docembed "github.com/Y4shin/conference-tool/doc"
+	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
+	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
+	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
+	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
+	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
+	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
+	speakersv1connect "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1/speakersv1connect"
+	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
+	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
+	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/docs"
@@ -21,9 +34,18 @@ import (
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
-	"github.com/Y4shin/conference-tool/internal/routes"
+	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
+	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
+	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
+	committeeservice "github.com/Y4shin/conference-tool/internal/services/committees"
+	meetingservice "github.com/Y4shin/conference-tool/internal/services/meetings"
+	moderationservice "github.com/Y4shin/conference-tool/internal/services/moderation"
+	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
+	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
+	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
+	webassets "github.com/Y4shin/conference-tool/internal/web"
 	oidctest "github.com/Y4shin/conference-tool/internal/testsupport/oidc"
 )
 
@@ -135,10 +157,104 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 		DocsService:    docsService,
 	}
 
-	mux := routes.NewRouter(h, mw).RegisterRoutes()
-	appMux := http.NewServeMux()
-	appMux.Handle("/", mux)
-	handler := locale.NewMiddleware(appMux, locale.Config{
+	apiMux := http.NewServeMux()
+
+	sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
+		apiconnect.NewSessionHandler(sessionservice.New(repo, sessionMgr, authCfg.PasswordEnabled, authCfg.OAuthEnabled)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
+
+	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
+		apiconnect.NewCommitteeHandler(committeeservice.New(repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))
+
+	meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
+		apiconnect.NewMeetingHandler(meetingservice.New(repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(meetingAPIPath, mw.Get("session")(meetingAPIHandler))
+
+	moderationAPIPath, moderationAPIHandler := moderationv1connect.NewModerationServiceHandler(
+		apiconnect.NewModerationHandler(moderationservice.New(repo, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(moderationAPIPath, mw.Get("session")(moderationAPIHandler))
+
+	attendeeAPIPath, attendeeAPIHandler := attendeesv1connect.NewAttendeeServiceHandler(
+		apiconnect.NewAttendeeHandler(attendeeservice.New(repo, sessionMgr, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(attendeeAPIPath, mw.Get("session")(attendeeAPIHandler))
+
+	agendaAPIPath, agendaAPIHandler := agendav1connect.NewAgendaServiceHandler(
+		apiconnect.NewAgendaHandler(agendaservice.New(repo, b, store)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(agendaAPIPath, mw.Get("session")(agendaAPIHandler))
+
+	speakerAPIPath, speakerAPIHandler := speakersv1connect.NewSpeakerServiceHandler(
+		apiconnect.NewSpeakerHandler(speakerservice.New(repo, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(speakerAPIPath, mw.Get("session")(speakerAPIHandler))
+
+	voteAPIPath, voteAPIHandler := votesv1connect.NewVoteServiceHandler(
+		apiconnect.NewVoteHandler(voteservice.New(repo, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(voteAPIPath, mw.Get("session")(voteAPIHandler))
+
+	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
+		apiconnect.NewAdminHandler(adminservice.New(repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
+
+	apiMux.Handle("GET /realtime/meetings/{meetingId}/events", apihttp.NewMeetingEventsHandler(b))
+	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
+		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
+	)
+	apiMux.Handle("GET /blobs/{blobId}/download", apihttp.NewBlobDownloadHandler(repo, store))
+	apiMux.Handle("POST /votes/verify/open", apihttp.NewVerifyOpenVoteReceiptHandler(repo))
+	apiMux.Handle("POST /votes/verify/secret", apihttp.NewVerifySecretVoteReceiptHandler(repo))
+	apiMux.Handle("GET /docs/page/{docPath...}", apihttp.NewDocsPageHandler(docsService))
+	apiMux.Handle("GET /docs/search", apihttp.NewDocsSearchHandler(docsService))
+	apiMux.Handle("GET /docs/assets/{assetPath...}", apihttp.NewDocsAssetHandler(docsService))
+
+	spaHandler := webassets.NewSPAHandler()
+
+	appHandler := mw.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/api/"):
+			http.StripPrefix("/api", apiMux).ServeHTTP(w, r)
+		case r.Method == http.MethodGet && (r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/")) && r.URL.Path != "/admin/login":
+			sd, ok := session.GetSession(r.Context())
+			if !ok || sd == nil || sd.AccountID == nil || !sd.IsAdmin || sd.IsExpired() {
+				http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+				return
+			}
+			spaHandler.ServeHTTP(w, r)
+		case r.URL.Path == "/oauth/start" && r.Method == http.MethodGet:
+			if err := h.OAuthStart(w, r); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		case r.URL.Path == "/oauth/callback" && r.Method == http.MethodGet:
+			if err := h.OAuthCallback(w, r); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		case r.URL.Path == "/docs/assets" || strings.HasPrefix(r.URL.Path, "/docs/assets/"):
+			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
+		case r.Method == http.MethodGet || r.Method == http.MethodHead:
+			spaHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+
+	handler := locale.NewMiddleware(appHandler, locale.Config{
 		Default:   "en",
 		Supported: []string{"en"},
 	})
@@ -171,6 +287,8 @@ func oauthLogin(t *testing.T, page playwright.Page, baseURL, target, username, p
 	if target == "admin" {
 		loginPage = baseURL + "/admin/login"
 		successURL = baseURL + "/admin"
+	} else {
+		loginPage = baseURL + "/login"
 	}
 
 	if _, err := page.Goto(loginPage); err != nil {

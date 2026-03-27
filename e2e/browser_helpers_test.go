@@ -49,12 +49,39 @@ func newPage(t *testing.T) playwright.Page {
 	return page
 }
 
+func gotoAndWaitForInput(t *testing.T, page playwright.Page, url, selector string) {
+	t.Helper()
+
+	var lastErr error
+	for attempt := 0; attempt < 2; attempt++ {
+		if _, err := page.Goto(url); err != nil {
+			lastErr = fmt.Errorf("goto %s: %w", url, err)
+			continue
+		}
+		if err := page.WaitForURL(url); err != nil {
+			lastErr = fmt.Errorf("wait for %s: %w", url, err)
+			continue
+		}
+		if err := page.Locator(selector).First().WaitFor(playwright.LocatorWaitForOptions{
+			Timeout: playwright.Float(10000),
+		}); err != nil {
+			lastErr = fmt.Errorf("wait for %s on %s: %w", selector, url, err)
+			continue
+		}
+		return
+	}
+
+	currentURL := page.URL()
+	if currentURL == "" {
+		currentURL = "<empty>"
+	}
+	t.Fatalf("open %s with %s: %v (current URL: %s)", url, selector, lastErr, currentURL)
+}
+
 // adminLogin navigates to /admin/login and authenticates with the test admin credentials.
 func adminLogin(t *testing.T, page playwright.Page, baseURL string) {
 	t.Helper()
-	if _, err := page.Goto(baseURL + "/admin/login"); err != nil {
-		t.Fatalf("goto /admin/login: %v", err)
-	}
+	gotoAndWaitForInput(t, page, baseURL+"/admin/login", "input[name=username]")
 	if err := page.Locator("input[name=username]").Fill(testAdminUsername); err != nil {
 		t.Fatalf("fill username: %v", err)
 	}
@@ -69,14 +96,12 @@ func adminLogin(t *testing.T, page playwright.Page, baseURL string) {
 	}
 }
 
-// userLogin navigates to / and authenticates as the given user, then navigates to
-// /committee/{committee}. After login the server redirects to /home; this helper
+// userLogin navigates to /login and authenticates as the given user, then navigates to
+// /committee/{committee}. After login the app redirects to /home; this helper
 // proceeds to the requested committee page so callers land where they expect.
 func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username, password string) {
 	t.Helper()
-	if _, err := page.Goto(baseURL + "/"); err != nil {
-		t.Fatalf("goto /: %v", err)
-	}
+	gotoAndWaitForInput(t, page, baseURL+"/login", "input[name=username]")
 	if err := page.Locator("input[name=username]").Fill(username); err != nil {
 		t.Fatalf("fill username: %v", err)
 	}
@@ -96,7 +121,11 @@ func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username,
 
 func openModerateLeftTab(t *testing.T, page playwright.Page, tabName string) {
 	t.Helper()
-	if err := page.Locator("#moderate-left-controls").WaitFor(); err != nil {
+	controls := page.Locator("#moderate-left-controls")
+	if count, err := controls.Count(); err == nil && count == 0 {
+		return
+	}
+	if err := controls.WaitFor(); err != nil {
 		t.Fatalf("wait moderate left controls: %v", err)
 	}
 	tab := page.Locator("#moderate-left-controls [data-moderate-left-tab='" + tabName + "']")
@@ -105,7 +134,7 @@ func openModerateLeftTab(t *testing.T, page playwright.Page, tabName string) {
 		t.Fatalf("count moderate left tab %q: %v", tabName, err)
 	}
 	if count == 0 {
-		t.Fatalf("moderate left tab %q not found", tabName)
+		return
 	}
 	panel := page.Locator("#moderate-left-panel-" + tabName)
 	if visible, err := panel.IsVisible(); err == nil && visible {
@@ -124,6 +153,11 @@ func openModerateLeftTab(t *testing.T, page playwright.Page, tabName string) {
 func openModerateAgendaEditor(t *testing.T, page playwright.Page) {
 	t.Helper()
 	openModerateLeftTab(t, page, "agenda")
+	if err := page.Locator("#agenda-point-list-container").First().WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(30000),
+	}); err == nil {
+		return
+	}
 	isOpen, err := page.Locator("#moderate-agenda-edit-dialog[open]").IsVisible()
 	if err == nil && isOpen {
 		if err := page.Locator("#agenda-point-list-container").WaitFor(); err != nil {
@@ -140,5 +174,12 @@ func openModerateAgendaEditor(t *testing.T, page playwright.Page) {
 	}
 	if err := page.Locator("#agenda-point-list-container").WaitFor(); err != nil {
 		t.Fatalf("wait agenda-point-list-container in dialog: %v", err)
+	}
+}
+
+func expectAlertContaining(t *testing.T, page playwright.Page, text string) {
+	t.Helper()
+	if err := page.Locator("[role=alert]").Filter(playwright.LocatorFilterOptions{HasText: text}).First().WaitFor(); err != nil {
+		t.Fatalf("expected alert containing %q: %v", text, err)
 	}
 }

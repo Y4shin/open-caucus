@@ -13,6 +13,9 @@
 
 	async function handleLogin(e: SubmitEvent) {
 		e.preventDefault();
+		if (!session.passwordEnabled) {
+			return;
+		}
 		errorMsg = '';
 		loading = true;
 		try {
@@ -37,36 +40,48 @@
 				<AppAlert message={errorMsg} />
 			{/if}
 
-			<form onsubmit={handleLogin} class="flex flex-col gap-4">
-				<label class="form-control">
-					<div class="label"><span class="label-text">Username</span></div>
-					<input
-						type="text"
-						class="input input-bordered"
-						bind:value={username}
-						autocomplete="username"
-						required
-					/>
-				</label>
+			{#if session.passwordEnabled}
+				<form onsubmit={handleLogin} class="flex flex-col gap-4">
+					<label class="form-control">
+						<div class="label"><span class="label-text">Username</span></div>
+						<input
+							type="text"
+							name="username"
+							class="input input-bordered"
+							bind:value={username}
+							autocomplete="username"
+							required
+						/>
+					</label>
 
-				<label class="form-control">
-					<div class="label"><span class="label-text">Password</span></div>
-					<input
-						type="password"
-						class="input input-bordered"
-						bind:value={password}
-						autocomplete="current-password"
-						required
-					/>
-				</label>
+					<label class="form-control">
+						<div class="label"><span class="label-text">Password</span></div>
+						<input
+							type="password"
+							name="password"
+							class="input input-bordered"
+							bind:value={password}
+							autocomplete="current-password"
+							required
+						/>
+					</label>
 
-				<button type="submit" class="btn btn-primary" disabled={loading}>
-					{#if loading}
-						<span class="loading loading-spinner loading-sm"></span>
-					{/if}
-					Sign In
-				</button>
-			</form>
+					<button type="submit" class="btn btn-primary" disabled={loading}>
+						{#if loading}
+							<span class="loading loading-spinner loading-sm"></span>
+						{/if}
+						Sign In
+					</button>
+				</form>
+			{/if}
+
+			{#if session.oauthEnabled}
+				<a class="btn btn-outline" href="/oauth/start?target=user">Sign in with OAuth</a>
+			{/if}
+
+			{#if !session.passwordEnabled && !session.oauthEnabled}
+				<AppAlert message="No login method is currently enabled." />
+			{/if}
 		</AppCard>
 	</div>
 </div>

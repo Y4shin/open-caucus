@@ -110,7 +110,7 @@ func TestPasswordDisabled_LoginUIAndSubmitPaths(t *testing.T) {
 	})
 	page := newPage(t)
 
-	if _, err := page.Goto(ts.URL + "/"); err != nil {
+	if _, err := page.Goto(ts.URL + "/login"); err != nil {
 		t.Fatalf("goto user login: %v", err)
 	}
 	if count, err := page.Locator("input[name=password]").Count(); err != nil {
@@ -238,8 +238,8 @@ func TestOAuthCommitteeSync_PicksHighestRoleAcrossMatchingGroups(t *testing.T) {
 
 func oauthLoginExpectFailureToRoot(t *testing.T, page playwright.Page, baseURL, username, password string) {
 	t.Helper()
-	if _, err := page.Goto(baseURL + "/"); err != nil {
-		t.Fatalf("goto /: %v", err)
+	if _, err := page.Goto(baseURL + "/login"); err != nil {
+		t.Fatalf("goto /login: %v", err)
 	}
 	link := page.Locator("a[href*='/oauth/start'][href*='target=user']").First()
 	if err := link.Click(); err != nil {
@@ -257,7 +257,7 @@ func oauthLoginExpectFailureToRoot(t *testing.T, page playwright.Page, baseURL, 
 	if err := page.Locator("#password").Press("Enter"); err != nil {
 		t.Fatalf("submit provider login: %v", err)
 	}
-	if err := page.WaitForURL(baseURL + "/"); err != nil {
-		t.Fatalf("wait redirect back to / for failed preprovisioned login: %v", err)
+	if err := page.WaitForURL(baseURL + "/login"); err != nil {
+		t.Fatalf("wait redirect back to /login for failed preprovisioned login: %v", err)
 	}
 }

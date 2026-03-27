@@ -128,7 +128,7 @@ func (h *Handler) AttendeeSpeakersStream(ctx context.Context, r *http.Request, p
 				}
 
 				switch evt.Event {
-				case "speakers-updated":
+				case "speakers-updated", "speakers.updated", "agenda.updated":
 					partial, err := h.loadAttendeeSpeakersPartial(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 					if err != nil {
 						continue
@@ -143,7 +143,7 @@ func (h *Handler) AttendeeSpeakersStream(ctx context.Context, r *http.Request, p
 					default:
 						// drop if consumer is slow
 					}
-				case meetingVotesChangedEvent:
+				case meetingVotesChangedEvent, "votes.updated":
 					votes, err := h.loadLiveVotesPanel(ctx, params.Slug, params.MeetingId, meetingID, attendeeID)
 					if err != nil {
 						continue

@@ -66,6 +66,9 @@ func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDSt
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
 	}
+	if err := s.requireLiveMeetingAccess(ctx, committeeSlug, committee, meeting); err != nil {
+		return nil, err
+	}
 
 	// Resolve actor context for capability decisions
 	attendeeID, isAttendee := s.resolveAttendeeID(ctx, committeeSlug, meetingID)
@@ -170,6 +173,37 @@ func (s *Service) buildLiveMeetingCapabilities(ctx context.Context, meeting *mod
 		CanVote:                  false, // determined per-vote-definition, not at meeting level
 		CanViewCurrentDocument:   isActiveMeeting && meeting.CurrentAgendaPointID != nil,
 	}
+}
+
+func (s *Service) requireLiveMeetingAccess(ctx context.Context, committeeSlug string, committee *model.Committee, meeting *model.Meeting) error {
+	sd, ok := session.GetSession(ctx)
+	if !ok || sd == nil || sd.IsExpired() {
+		return nil
+	}
+
+	if sd.IsAccountSession() && sd.AccountID != nil {
+		account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
+		if err == nil && account.IsAdmin {
+			return nil
+		}
+
+		membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
+		if err != nil {
+			return apierrors.New(apierrors.KindPermissionDenied, "not a member of this committee")
+		}
+		if membership.Role == "member" && (committee.CurrentMeetingID == nil || *committee.CurrentMeetingID != meeting.ID) {
+			return apierrors.New(apierrors.KindPermissionDenied, "meeting is not currently active")
+		}
+	}
+
+	if sd.IsGuestSession() && sd.AttendeeID != nil {
+		attendee, err := s.repo.GetAttendeeByID(ctx, *sd.AttendeeID)
+		if err != nil || attendee.MeetingID != meeting.ID {
+			return apierrors.New(apierrors.KindPermissionDenied, "attendee is not signed in to this meeting")
+		}
+	}
+
+	return nil
 }
 
 func (s *Service) buildJoinMeetingCapabilities(ctx context.Context, committeeSlug string, signupOpen bool, isAttendee bool) *meetingsv1.JoinMeetingCapabilities {

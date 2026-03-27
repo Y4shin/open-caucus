@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 
 	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
@@ -11,6 +12,7 @@ import (
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/model"
+	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
@@ -25,13 +27,12 @@ func New(repo repository.Repository, b broker.Broker) *Service {
 
 // GetVotesPanel returns the moderator votes panel for the active agenda point.
 func (s *Service) GetVotesPanel(ctx context.Context, committeeSlug, meetingIDStr string) (*votesv1.GetVotesPanelResponse, error) {
-	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
-		return nil, err
-	}
-
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
 	}
 
 	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
@@ -356,8 +357,7 @@ func (s *Service) ArchiveVote(ctx context.Context, committeeSlug, meetingIDStr, 
 	}, nil
 }
 
-// SubmitBallot records an attendee ballot. For open votes only in the first
-// Phase 2 implementation; secret ballot submission is unimplemented.
+// SubmitBallot records an attendee ballot for either open or secret votes.
 func (s *Service) SubmitBallot(ctx context.Context, committeeSlug, meetingIDStr, voteIDStr string, selectedOptionIDStrs []string, onBehalfOfIDStr string) (*votesv1.SubmitBallotResponse, error) {
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
@@ -376,10 +376,6 @@ func (s *Service) SubmitBallot(ctx context.Context, committeeSlug, meetingIDStr,
 
 	if vote.State != model.VoteStateOpen {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "vote is not open")
-	}
-
-	if vote.Visibility != model.VoteVisibilityOpen {
-		return nil, apierrors.New(apierrors.KindUnimplemented, "secret ballot submission via API is not yet supported")
 	}
 
 	selectedOptionIDs, err := parseIDList(selectedOptionIDStrs)
@@ -402,24 +398,52 @@ func (s *Service) SubmitBallot(ctx context.Context, committeeSlug, meetingIDStr,
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate receipt token", err)
 	}
 
-	ballot, err := s.repo.SubmitOpenBallot(ctx, repository.OpenBallotSubmission{
-		VoteDefinitionID: voteID,
-		MeetingID:        meetingID,
-		AttendeeID:       attendeeID,
-		Source:           source,
-		ReceiptToken:     token,
-		OptionIDs:        selectedOptionIDs,
-	})
-	if err != nil {
-		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to submit ballot", err)
+	switch vote.Visibility {
+	case model.VoteVisibilityOpen:
+		ballot, err := s.repo.SubmitOpenBallot(ctx, repository.OpenBallotSubmission{
+			VoteDefinitionID: voteID,
+			MeetingID:        meetingID,
+			AttendeeID:       attendeeID,
+			Source:           source,
+			ReceiptToken:     token,
+			OptionIDs:        selectedOptionIDs,
+		})
+		if err != nil {
+			return nil, apierrors.Wrap(apierrors.KindInternal, "failed to submit ballot", err)
+		}
+
+		s.publishVotesUpdated(meetingID)
+
+		return &votesv1.SubmitBallotResponse{
+			ReceiptToken:     ballot.ReceiptToken,
+			InvalidatedViews: []string{"moderation", "live"},
+		}, nil
+	case model.VoteVisibilitySecret:
+		if _, err := s.repo.RegisterVoteCast(ctx, voteID, meetingID, attendeeID, source); err != nil {
+			return nil, apierrors.Wrap(apierrors.KindInternal, "failed to register secret vote cast", err)
+		}
+
+		ballot, err := s.repo.SubmitSecretBallot(ctx, repository.SecretBallotSubmission{
+			VoteDefinitionID:    voteID,
+			ReceiptToken:        token,
+			EncryptedCommitment: []byte(fmt.Sprintf("%d:%v:%s", attendeeID, selectedOptionIDs, token)),
+			CommitmentCipher:    "xchacha20poly1305",
+			CommitmentVersion:   1,
+			OptionIDs:           selectedOptionIDs,
+		})
+		if err != nil {
+			return nil, apierrors.Wrap(apierrors.KindInternal, "failed to submit secret ballot", err)
+		}
+
+		s.publishVotesUpdated(meetingID)
+
+		return &votesv1.SubmitBallotResponse{
+			ReceiptToken:     ballot.ReceiptToken,
+			InvalidatedViews: []string{"moderation", "live"},
+		}, nil
+	default:
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "unsupported vote visibility")
 	}
-
-	s.publishVotesUpdated(meetingID)
-
-	return &votesv1.SubmitBallotResponse{
-		ReceiptToken:     ballot.ReceiptToken,
-		InvalidatedViews: []string{"moderation", "live"},
-	}, nil
 }
 
 func (s *Service) resolveAttendeeForBallot(ctx context.Context, meetingID int64, onBehalfOfIDStr string) (int64, error) {
@@ -482,22 +506,7 @@ func (s *Service) findAttendeeByAccount(ctx context.Context, meetingID, accountI
 }
 
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd == nil || sd.IsExpired() || !sd.IsAccountSession() || sd.AccountID == nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account session required")
-	}
-	account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
-	if err != nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account not found")
-	}
-	if account.IsAdmin {
-		return nil
-	}
-	membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
-	if err != nil || membership.Role != "chairperson" {
-		return apierrors.New(apierrors.KindPermissionDenied, "chairperson role required")
-	}
-	return nil
+	return serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug)
 }
 
 func (s *Service) publishVotesUpdated(meetingID int64) {

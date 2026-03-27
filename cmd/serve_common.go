@@ -1,0 +1,222 @@
+package cmd
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	docembed "github.com/Y4shin/conference-tool/doc"
+	"github.com/Y4shin/conference-tool/internal/broker"
+	"github.com/Y4shin/conference-tool/internal/config"
+	"github.com/Y4shin/conference-tool/internal/docs"
+	"github.com/Y4shin/conference-tool/internal/handlers"
+	"github.com/Y4shin/conference-tool/internal/locale"
+	"github.com/Y4shin/conference-tool/internal/middleware"
+	"github.com/Y4shin/conference-tool/internal/oauth"
+	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
+	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/conference-tool/internal/storage"
+	"github.com/joho/godotenv"
+)
+
+type serveRuntime struct {
+	cfg            *config.Config
+	repo           *sqlite.Repository
+	store          storage.Service
+	broker         broker.Broker
+	sessionManager *session.Manager
+	oauthService   *oauth.Service
+	docsService    *docs.Service
+	middleware     *middleware.Registry
+	handler        *handlers.Handler
+}
+
+func loadServeRuntime() (*serveRuntime, error) {
+	if _, err := os.Stat(".env"); err == nil {
+		if loadErr := godotenv.Load(".env"); loadErr != nil {
+			return nil, fmt.Errorf("load .env: %w", loadErr)
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("stat .env: %w", err)
+	}
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	repo, err := sqlite.New(cfg.Database.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create repository: %w", err)
+	}
+	slog.Info("database opened", "path", cfg.Database.Path)
+
+	if err := repo.MigrateUp(); err != nil {
+		repo.Close()
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
+	}
+	slog.Info("database migrations applied")
+
+	store, err := storage.NewDirStorage(cfg.Application.StorageDir)
+	if err != nil {
+		repo.Close()
+		return nil, fmt.Errorf("failed to create storage: %w", err)
+	}
+	slog.Info("file storage initialized", "dir", cfg.Application.StorageDir)
+
+	b := broker.NewMemoryBroker()
+
+	sessionManager := session.NewManager(repo, []byte(cfg.Application.SessionSecret))
+	oauthService, err := oauth.New(context.Background(), oauth.Config{
+		Enabled:        cfg.Auth.OAuthEnabled,
+		IssuerURL:      cfg.Auth.OAuthIssuerURL,
+		ClientID:       cfg.Auth.OAuthClientID,
+		ClientSecret:   cfg.Auth.OAuthClientSecret,
+		RedirectURL:    cfg.Auth.OAuthRedirectURL,
+		Scopes:         cfg.Auth.OAuthScopes,
+		GroupsClaim:    cfg.Auth.OAuthGroupsClaim,
+		UsernameClaims: cfg.Auth.OAuthUsernameClaims,
+		FullNameClaims: cfg.Auth.OAuthFullNameClaims,
+		StateTTL:       time.Duration(cfg.Auth.OAuthStateTTLSeconds) * time.Second,
+	}, []byte(cfg.Application.SessionSecret))
+	if err != nil {
+		b.Shutdown()
+		repo.Close()
+		return nil, fmt.Errorf("failed to initialize oauth service: %w", err)
+	}
+	slog.Info("auth configured", "password_enabled", cfg.Auth.PasswordEnabled, "oauth_enabled", cfg.Auth.OAuthEnabled)
+
+	mw := middleware.NewRegistry(sessionManager, repo, cfg.Auth.PasswordEnabled)
+
+	if err := locale.LoadTranslations(); err != nil {
+		b.Shutdown()
+		repo.Close()
+		return nil, fmt.Errorf("failed to load translations: %w", err)
+	}
+	docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
+	if err != nil {
+		b.Shutdown()
+		repo.Close()
+		return nil, fmt.Errorf("failed to load embedded docs: %w", err)
+	}
+
+	handler := &handlers.Handler{
+		Broker:         b,
+		Repository:     repo,
+		Storage:        store,
+		SessionManager: sessionManager,
+		AuthConfig:     cfg.Auth,
+		OAuthService:   oauthService,
+		DocsService:    docsService,
+	}
+
+	return &serveRuntime{
+		cfg:            cfg,
+		repo:           repo,
+		store:          store,
+		broker:         b,
+		sessionManager: sessionManager,
+		oauthService:   oauthService,
+		docsService:    docsService,
+		middleware:     mw,
+		handler:        handler,
+	}, nil
+}
+
+func (rt *serveRuntime) Close() {
+	if rt == nil {
+		return
+	}
+	if rt.docsService != nil {
+		_ = rt.docsService.Close()
+	}
+	if rt.broker != nil {
+		rt.broker.Shutdown()
+	}
+	if rt.repo != nil {
+		rt.repo.Close()
+	}
+}
+
+func runHTTPServer(cfg *config.Config, baseHandler http.Handler) error {
+	handlerWithLocale := locale.NewMiddleware(baseHandler, locale.Config{
+		Default:   "en",
+		Supported: []string{"en", "de"},
+	})
+
+	addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
+	slog.Info("starting server", "addr", addr, "env", cfg.Application.Environment)
+	sigCh := make(chan os.Signal, 2)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(sigCh)
+
+	server := &http.Server{
+		Addr:    addr,
+		Handler: handlerWithLocale,
+	}
+
+	serverErr := make(chan error, 1)
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+			return
+		}
+		serverErr <- nil
+	}()
+
+	select {
+	case err := <-serverErr:
+		return err
+	case sig := <-sigCh:
+		slog.Info("shutdown signal received", "signal", sig.String())
+	}
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	shutdownErrCh := make(chan error, 1)
+	go func() {
+		shutdownErrCh <- server.Shutdown(shutdownCtx)
+	}()
+
+	forceClosed := false
+	select {
+	case err := <-shutdownErrCh:
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				slog.Warn("graceful shutdown timeout reached; forcing immediate close")
+				if closeErr := server.Close(); closeErr != nil && !errors.Is(closeErr, http.ErrServerClosed) {
+					return fmt.Errorf("force close after graceful shutdown timeout: %w", closeErr)
+				}
+			} else {
+				return fmt.Errorf("graceful shutdown failed: %w", err)
+			}
+		}
+	case sig := <-sigCh:
+		slog.Warn("second shutdown signal received; forcing immediate close", "signal", sig.String())
+		forceClosed = true
+		shutdownCancel()
+		if err := server.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("force close failed: %w", err)
+		}
+	case err := <-serverErr:
+		return err
+	}
+
+	if err := <-serverErr; err != nil {
+		return err
+	}
+	if forceClosed {
+		slog.Info("server shutdown complete (forced)")
+	} else {
+		slog.Info("server shutdown complete")
+	}
+	return nil
+}

@@ -2,6 +2,7 @@ package agendaservice
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	agendav1 "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1"
@@ -10,28 +11,30 @@ import (
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/model"
+	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
 	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/conference-tool/internal/storage"
 )
 
 type Service struct {
 	repo   repository.Repository
 	broker broker.Broker
+	store  storage.Service
 }
 
-func New(repo repository.Repository, b broker.Broker) *Service {
-	return &Service{repo: repo, broker: b}
+func New(repo repository.Repository, b broker.Broker, store storage.Service) *Service {
+	return &Service{repo: repo, broker: b, store: store}
 }
 
 // ListAgendaPoints returns the full agenda tree for a meeting. Requires
 // committee membership or chairperson role.
 func (s *Service) ListAgendaPoints(ctx context.Context, committeeSlug, meetingIDStr string) (*agendav1.ListAgendaPointsResponse, error) {
-	if err := s.requireMembership(ctx, committeeSlug); err != nil {
-		return nil, err
-	}
-
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := s.requireAgendaViewer(ctx, committeeSlug, meetingID); err != nil {
+		return nil, err
 	}
 
 	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
@@ -75,6 +78,20 @@ func (s *Service) ListAgendaPoints(ctx context.Context, committeeSlug, meetingID
 		AgendaPoints:        records,
 		ActiveAgendaPointId: activeID,
 	}, nil
+}
+
+// GetAgendaPointTools returns the attachment/current-document tools state for one agenda point.
+func (s *Service) GetAgendaPointTools(ctx context.Context, committeeSlug, meetingIDStr, agendaPointIDStr string) (*agendav1.GetAgendaPointToolsResponse, error) {
+	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+		return nil, err
+	}
+
+	view, err := s.loadAgendaPointToolsView(ctx, committeeSlug, meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agendav1.GetAgendaPointToolsResponse{View: view}, nil
 }
 
 // CreateAgendaPoint creates a new agenda point. Requires chairperson role.
@@ -242,6 +259,133 @@ func (s *Service) ActivateAgendaPoint(ctx context.Context, committeeSlug, meetin
 	return resp, nil
 }
 
+// SetCurrentAttachment marks one attachment as the published live document.
+func (s *Service) SetCurrentAttachment(ctx context.Context, committeeSlug, meetingIDStr, agendaPointIDStr, attachmentIDStr string) (*agendav1.SetCurrentAttachmentResponse, error) {
+	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+		return nil, err
+	}
+
+	meetingID, agendaPointID, attachmentID, err := parseAgendaToolIDs(meetingIDStr, agendaPointIDStr, attachmentIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	ap, err := s.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID)
+	if err != nil {
+		return nil, err
+	}
+
+	attachment, err := s.repo.GetAttachmentByID(ctx, attachmentID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "attachment not found")
+	}
+	if attachment.AgendaPointID != ap.ID {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "attachment does not belong to agenda point")
+	}
+
+	if err := s.repo.SetCurrentAttachment(ctx, ap.ID, attachmentID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set current attachment", err)
+	}
+
+	s.publishAgendaUpdated(meetingID)
+
+	view, err := s.loadAgendaPointToolsView(ctx, committeeSlug, meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agendav1.SetCurrentAttachmentResponse{
+		View:             view,
+		InvalidatedViews: []string{"live", "moderation"},
+	}, nil
+}
+
+// ClearCurrentDocument removes the published live document for an agenda point.
+func (s *Service) ClearCurrentDocument(ctx context.Context, committeeSlug, meetingIDStr, agendaPointIDStr string) (*agendav1.ClearCurrentDocumentResponse, error) {
+	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+		return nil, err
+	}
+
+	meetingID, agendaPointID, err := parseMeetingAndAgendaPointIDs(meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	ap, err := s.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.ClearCurrentDocument(ctx, ap.ID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to clear current document", err)
+	}
+
+	s.publishAgendaUpdated(meetingID)
+
+	view, err := s.loadAgendaPointToolsView(ctx, committeeSlug, meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agendav1.ClearCurrentDocumentResponse{
+		View:             view,
+		InvalidatedViews: []string{"live", "moderation"},
+	}, nil
+}
+
+// DeleteAttachment removes an attachment and its backing blob.
+func (s *Service) DeleteAttachment(ctx context.Context, committeeSlug, meetingIDStr, agendaPointIDStr, attachmentIDStr string) (*agendav1.DeleteAttachmentResponse, error) {
+	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+		return nil, err
+	}
+	if s.store == nil {
+		return nil, apierrors.New(apierrors.KindInternal, "storage service unavailable")
+	}
+
+	meetingID, agendaPointID, attachmentID, err := parseAgendaToolIDs(meetingIDStr, agendaPointIDStr, attachmentIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	ap, err := s.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID)
+	if err != nil {
+		return nil, err
+	}
+
+	attachment, err := s.repo.GetAttachmentByID(ctx, attachmentID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "attachment not found")
+	}
+	if attachment.AgendaPointID != ap.ID {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "attachment does not belong to agenda point")
+	}
+
+	blob, err := s.repo.GetBlobByID(ctx, attachment.BlobID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load attachment blob", err)
+	}
+
+	if err := s.repo.DeleteAttachment(ctx, attachmentID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to delete attachment", err)
+	}
+	if err := s.repo.DeleteBlob(ctx, blob.ID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to delete blob record", err)
+	}
+	_ = s.store.Delete(blob.StoragePath)
+
+	s.publishAgendaUpdated(meetingID)
+
+	view, err := s.loadAgendaPointToolsView(ctx, committeeSlug, meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &agendav1.DeleteAttachmentResponse{
+		View:             view,
+		InvalidatedViews: []string{"live", "moderation"},
+	}, nil
+}
+
 func (s *Service) publishAgendaUpdated(meetingID int64) {
 	mid := meetingID
 	s.broker.Publish(broker.SSEEvent{
@@ -249,6 +393,91 @@ func (s *Service) publishAgendaUpdated(meetingID int64) {
 		Data:      []byte(`{"type":"agenda.updated"}`),
 		MeetingID: &mid,
 	})
+}
+
+func (s *Service) loadAgendaPointForMeeting(ctx context.Context, meetingID, agendaPointID int64) (*model.AgendaPoint, error) {
+	ap, err := s.repo.GetAgendaPointByID(ctx, agendaPointID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "agenda point not found")
+	}
+	if ap.MeetingID != meetingID {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "agenda point does not belong to meeting")
+	}
+	return ap, nil
+}
+
+func (s *Service) loadAgendaPointToolsView(ctx context.Context, committeeSlug, meetingIDStr, agendaPointIDStr string) (*agendav1.AgendaPointToolsView, error) {
+	meetingID, agendaPointID, err := parseMeetingAndAgendaPointIDs(meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+
+	ap, err := s.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID)
+	if err != nil {
+		return nil, err
+	}
+
+	attachments, err := s.repo.ListAttachmentsForAgendaPoint(ctx, ap.ID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to list attachments", err)
+	}
+
+	view := &agendav1.AgendaPointToolsView{
+		CommitteeSlug:    committeeSlug,
+		MeetingId:        meetingIDStr,
+		AgendaPointId:    agendaPointIDStr,
+		AgendaPointTitle: ap.Title,
+	}
+	if ap.CurrentAttachmentID != nil {
+		view.CurrentAttachmentId = strconv.FormatInt(*ap.CurrentAttachmentID, 10)
+	}
+
+	for _, attachment := range attachments {
+		blob, err := s.repo.GetBlobByID(ctx, attachment.BlobID)
+		if err != nil {
+			return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load attachment blob", err)
+		}
+
+		label := ""
+		if attachment.Label != nil {
+			label = *attachment.Label
+		}
+
+		view.Attachments = append(view.Attachments, &agendav1.AttachmentRecord{
+			AttachmentId: strconv.FormatInt(attachment.ID, 10),
+			BlobId:       strconv.FormatInt(blob.ID, 10),
+			Filename:     blob.Filename,
+			Label:        label,
+			DownloadUrl:  fmt.Sprintf("/api/blobs/%d/download", blob.ID),
+			IsCurrent:    ap.CurrentAttachmentID != nil && *ap.CurrentAttachmentID == attachment.ID,
+		})
+	}
+
+	return view, nil
+}
+
+func parseMeetingAndAgendaPointIDs(meetingIDStr, agendaPointIDStr string) (int64, int64, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return 0, 0, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	agendaPointID, err := strconv.ParseInt(agendaPointIDStr, 10, 64)
+	if err != nil {
+		return 0, 0, apierrors.New(apierrors.KindInvalidArgument, "invalid agenda point id")
+	}
+	return meetingID, agendaPointID, nil
+}
+
+func parseAgendaToolIDs(meetingIDStr, agendaPointIDStr, attachmentIDStr string) (int64, int64, int64, error) {
+	meetingID, agendaPointID, err := parseMeetingAndAgendaPointIDs(meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	attachmentID, err := strconv.ParseInt(attachmentIDStr, 10, 64)
+	if err != nil {
+		return 0, 0, 0, apierrors.New(apierrors.KindInvalidArgument, "invalid attachment id")
+	}
+	return meetingID, agendaPointID, attachmentID, nil
 }
 
 func (s *Service) requireMembership(ctx context.Context, committeeSlug string) error {
@@ -266,22 +495,14 @@ func (s *Service) requireMembership(ctx context.Context, committeeSlug string) e
 }
 
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd == nil || sd.IsExpired() || !sd.IsAccountSession() || sd.AccountID == nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account session required")
-	}
-	account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
-	if err != nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account not found")
-	}
-	if account.IsAdmin {
+	return serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug)
+}
+
+func (s *Service) requireAgendaViewer(ctx context.Context, committeeSlug string, meetingID int64) error {
+	if err := s.requireMembership(ctx, committeeSlug); err == nil {
 		return nil
 	}
-	membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
-	if err != nil || membership.Role != "chairperson" {
-		return apierrors.New(apierrors.KindPermissionDenied, "chairperson role required")
-	}
-	return nil
+	return serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID)
 }
 
 func toAgendaPointRecord(ap *model.AgendaPoint, displayNumber string, currentID *int64) *agendav1.AgendaPointRecord {

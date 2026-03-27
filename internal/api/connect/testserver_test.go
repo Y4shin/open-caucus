@@ -36,6 +36,7 @@ import (
 	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
 	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
 	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/conference-tool/internal/storage"
 )
 
 type combinedTestServer struct {
@@ -73,11 +74,12 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 	sessionManager := session.NewManager(repo, []byte(testSecret))
 	mw := middleware.NewRegistry(sessionManager, repo, true)
 	b := broker.NewMemoryBroker()
+	store := storage.NewMemStorage()
 
 	mux := http.NewServeMux()
 
 	// Session service
-	sessionSvc := sessionservice.New(repo, sessionManager, true)
+	sessionSvc := sessionservice.New(repo, sessionManager, true, false)
 	sessionPath, sessionHandler := sessionv1connect.NewSessionServiceHandler(
 		NewSessionHandler(sessionSvc),
 		connect.WithInterceptors(ErrorInterceptor()),
@@ -114,7 +116,7 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 
 	// Agenda service
 	agendaPath, agendaHandler := agendav1connect.NewAgendaServiceHandler(
-		NewAgendaHandler(agendaservice.New(repo, b)),
+		NewAgendaHandler(agendaservice.New(repo, b, store)),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+agendaPath, mw.Get("session")(http.StripPrefix("/api", agendaHandler)))
@@ -143,6 +145,18 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 	// Realtime SSE endpoint
 	mux.Handle("GET /api/realtime/meetings/{meetingId}/events",
 		apihttp.NewMeetingEventsHandler(b),
+	)
+	mux.Handle("POST /api/committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
+		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
+	)
+	mux.Handle("GET /api/blobs/{blobId}/download",
+		apihttp.NewBlobDownloadHandler(repo, store),
+	)
+	mux.Handle("POST /api/votes/verify/open",
+		apihttp.NewVerifyOpenVoteReceiptHandler(repo),
+	)
+	mux.Handle("POST /api/votes/verify/secret",
+		apihttp.NewVerifySecretVoteReceiptHandler(repo),
 	)
 
 	server := httptest.NewServer(locale.NewMiddleware(mux, locale.Config{

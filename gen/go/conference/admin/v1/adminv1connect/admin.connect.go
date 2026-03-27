@@ -39,6 +39,9 @@ const (
 	// AdminServiceListAccountsProcedure is the fully-qualified name of the AdminService's ListAccounts
 	// RPC.
 	AdminServiceListAccountsProcedure = "/conference.admin.v1.AdminService/ListAccounts"
+	// AdminServiceCreateAccountProcedure is the fully-qualified name of the AdminService's
+	// CreateAccount RPC.
+	AdminServiceCreateAccountProcedure = "/conference.admin.v1.AdminService/CreateAccount"
 	// AdminServiceSetAccountAdminProcedure is the fully-qualified name of the AdminService's
 	// SetAccountAdmin RPC.
 	AdminServiceSetAccountAdminProcedure = "/conference.admin.v1.AdminService/SetAccountAdmin"
@@ -86,6 +89,8 @@ type AdminServiceClient interface {
 	GetAdminDashboard(context.Context, *connect.Request[v1.GetAdminDashboardRequest]) (*connect.Response[v1.GetAdminDashboardResponse], error)
 	// ListAccounts returns a paginated list of all accounts.
 	ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error)
+	// CreateAccount creates a new global account with local password auth.
+	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
 	// SetAccountAdmin grants or revokes admin privileges for an account.
 	SetAccountAdmin(context.Context, *connect.Request[v1.SetAccountAdminRequest]) (*connect.Response[v1.SetAccountAdminResponse], error)
 	// ListCommittees returns a paginated list of all committees.
@@ -135,6 +140,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+AdminServiceListAccountsProcedure,
 			connect.WithSchema(adminServiceMethods.ByName("ListAccounts")),
+			connect.WithClientOptions(opts...),
+		),
+		createAccount: connect.NewClient[v1.CreateAccountRequest, v1.CreateAccountResponse](
+			httpClient,
+			baseURL+AdminServiceCreateAccountProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("CreateAccount")),
 			connect.WithClientOptions(opts...),
 		),
 		setAccountAdmin: connect.NewClient[v1.SetAccountAdminRequest, v1.SetAccountAdminResponse](
@@ -222,6 +233,7 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 type adminServiceClient struct {
 	getAdminDashboard        *connect.Client[v1.GetAdminDashboardRequest, v1.GetAdminDashboardResponse]
 	listAccounts             *connect.Client[v1.ListAccountsRequest, v1.ListAccountsResponse]
+	createAccount            *connect.Client[v1.CreateAccountRequest, v1.CreateAccountResponse]
 	setAccountAdmin          *connect.Client[v1.SetAccountAdminRequest, v1.SetAccountAdminResponse]
 	listCommittees           *connect.Client[v1.ListCommitteesRequest, v1.ListCommitteesResponse]
 	createCommittee          *connect.Client[v1.CreateCommitteeRequest, v1.CreateCommitteeResponse]
@@ -245,6 +257,11 @@ func (c *adminServiceClient) GetAdminDashboard(ctx context.Context, req *connect
 // ListAccounts calls conference.admin.v1.AdminService.ListAccounts.
 func (c *adminServiceClient) ListAccounts(ctx context.Context, req *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error) {
 	return c.listAccounts.CallUnary(ctx, req)
+}
+
+// CreateAccount calls conference.admin.v1.AdminService.CreateAccount.
+func (c *adminServiceClient) CreateAccount(ctx context.Context, req *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error) {
+	return c.createAccount.CallUnary(ctx, req)
 }
 
 // SetAccountAdmin calls conference.admin.v1.AdminService.SetAccountAdmin.
@@ -318,6 +335,8 @@ type AdminServiceHandler interface {
 	GetAdminDashboard(context.Context, *connect.Request[v1.GetAdminDashboardRequest]) (*connect.Response[v1.GetAdminDashboardResponse], error)
 	// ListAccounts returns a paginated list of all accounts.
 	ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error)
+	// CreateAccount creates a new global account with local password auth.
+	CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error)
 	// SetAccountAdmin grants or revokes admin privileges for an account.
 	SetAccountAdmin(context.Context, *connect.Request[v1.SetAccountAdminRequest]) (*connect.Response[v1.SetAccountAdminResponse], error)
 	// ListCommittees returns a paginated list of all committees.
@@ -363,6 +382,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		AdminServiceListAccountsProcedure,
 		svc.ListAccounts,
 		connect.WithSchema(adminServiceMethods.ByName("ListAccounts")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceCreateAccountHandler := connect.NewUnaryHandler(
+		AdminServiceCreateAccountProcedure,
+		svc.CreateAccount,
+		connect.WithSchema(adminServiceMethods.ByName("CreateAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
 	adminServiceSetAccountAdminHandler := connect.NewUnaryHandler(
@@ -449,6 +474,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceGetAdminDashboardHandler.ServeHTTP(w, r)
 		case AdminServiceListAccountsProcedure:
 			adminServiceListAccountsHandler.ServeHTTP(w, r)
+		case AdminServiceCreateAccountProcedure:
+			adminServiceCreateAccountHandler.ServeHTTP(w, r)
 		case AdminServiceSetAccountAdminProcedure:
 			adminServiceSetAccountAdminHandler.ServeHTTP(w, r)
 		case AdminServiceListCommitteesProcedure:
@@ -490,6 +517,10 @@ func (UnimplementedAdminServiceHandler) GetAdminDashboard(context.Context, *conn
 
 func (UnimplementedAdminServiceHandler) ListAccounts(context.Context, *connect.Request[v1.ListAccountsRequest]) (*connect.Response[v1.ListAccountsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.admin.v1.AdminService.ListAccounts is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) CreateAccount(context.Context, *connect.Request[v1.CreateAccountRequest]) (*connect.Response[v1.CreateAccountResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.admin.v1.AdminService.CreateAccount is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) SetAccountAdmin(context.Context, *connect.Request[v1.SetAccountAdminRequest]) (*connect.Response[v1.SetAccountAdminResponse], error) {

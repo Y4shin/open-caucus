@@ -71,6 +71,29 @@ func (s *Service) ListAccounts(ctx context.Context, page, pageSize int32) (*admi
 	}, nil
 }
 
+// CreateAccount creates a new global account with local credentials.
+func (s *Service) CreateAccount(ctx context.Context, username, fullName, password string) (*adminv1.CreateAccountResponse, error) {
+	if err := s.requireAdmin(ctx); err != nil {
+		return nil, err
+	}
+
+	if username == "" || fullName == "" || password == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "username, full_name, and password are required")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to hash password", err)
+	}
+
+	account, err := s.repo.CreateAccount(ctx, username, fullName, string(hash))
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to create account", err)
+	}
+
+	return &adminv1.CreateAccountResponse{Account: toAccountRecord(account)}, nil
+}
+
 // SetAccountAdmin grants or revokes admin privileges.
 func (s *Service) SetAccountAdmin(ctx context.Context, accountIDStr string, isAdmin bool) (*adminv1.SetAccountAdminResponse, error) {
 	if err := s.requireAdmin(ctx); err != nil {

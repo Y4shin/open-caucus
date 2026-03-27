@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/admin/v1/admin.proto.
  */
 export const file_conference_admin_v1_admin: GenFile = /*@__PURE__*/
-  fileDesc("Ch9jb25mZXJlbmNlL2FkbWluL3YxL2FkbWluLnByb3RvEhNjb25mZXJlbmNlLmFkbWluLnYxIloKDUFjY291bnRSZWNvcmQSEgoKYWNjb3VudF9pZBgBIAEoCRIQCgh1c2VybmFtZRgCIAEoCRIRCglmdWxsX25hbWUYAyABKAkSEAoIaXNfYWRtaW4YBCABKAgiWQoPQ29tbWl0dGVlUmVjb3JkEhQKDGNvbW1pdHRlZV9pZBgBIAEoCRIMCgRzbHVnGAIgASgJEgwKBG5hbWUYAyABKAkSFAoMbWVtYmVyX2NvdW50GAQgASgDIoMBChNDb21taXR0ZWVVc2VyUmVjb3JkEg8KB3VzZXJfaWQYASABKAkSEAoIdXNlcm5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEgwKBHJvbGUYBCABKAkSDgoGcXVvdGVkGAUgASgIEhgKEGlzX29hdXRoX21hbmFnZWQYBiABKAgiRAoPT0F1dGhSdWxlUmVjb3JkEg8KB3J1bGVfaWQYASABKAkSEgoKZ3JvdXBfbmFtZRgCIAEoCRIMCgRyb2xlGAMgASgJIhoKGEdldEFkbWluRGFzaGJvYXJkUmVxdWVzdCJNChlHZXRBZG1pbkRhc2hib2FyZFJlc3BvbnNlEhYKDnRvdGFsX2FjY291bnRzGAEgASgDEhgKEHRvdGFsX2NvbW1pdHRlZXMYAiABKAMiNgoTTGlzdEFjY291bnRzUmVxdWVzdBIMCgRwYWdlGAEgASgFEhEKCXBhZ2Vfc2l6ZRgCIAEoBSJhChRMaXN0QWNjb3VudHNSZXNwb25zZRI0CghhY2NvdW50cxgBIAMoCzIiLmNvbmZlcmVuY2UuYWRtaW4udjEuQWNjb3VudFJlY29yZBITCgt0b3RhbF9jb3VudBgCIAEoAyI+ChZTZXRBY2NvdW50QWRtaW5SZXF1ZXN0EhIKCmFjY291bnRfaWQYASABKAkSEAoIaXNfYWRtaW4YAiABKAgiTgoXU2V0QWNjb3VudEFkbWluUmVzcG9uc2USMwoHYWNjb3VudBgBIAEoCzIiLmNvbmZlcmVuY2UuYWRtaW4udjEuQWNjb3VudFJlY29yZCI4ChVMaXN0Q29tbWl0dGVlc1JlcXVlc3QSDAoEcGFnZRgBIAEoBRIRCglwYWdlX3NpemUYAiABKAUiZwoWTGlzdENvbW1pdHRlZXNSZXNwb25zZRI4Cgpjb21taXR0ZWVzGAEgAygLMiQuY29uZmVyZW5jZS5hZG1pbi52MS5Db21taXR0ZWVSZWNvcmQSEwoLdG90YWxfY291bnQYAiABKAMiNAoWQ3JlYXRlQ29tbWl0dGVlUmVxdWVzdBIMCgRuYW1lGAEgASgJEgwKBHNsdWcYAiABKAkiUgoXQ3JlYXRlQ29tbWl0dGVlUmVzcG9uc2USNwoJY29tbWl0dGVlGAEgASgLMiQuY29uZmVyZW5jZS5hZG1pbi52MS5Db21taXR0ZWVSZWNvcmQiJgoWRGVsZXRlQ29tbWl0dGVlUmVxdWVzdBIMCgRzbHVnGAEgASgJIhkKF0RlbGV0ZUNvbW1pdHRlZVJlc3BvbnNlIigKGEdldENvbW1pdHRlZUFkbWluUmVxdWVzdBIMCgRzbHVnGAEgASgJIsgBChlHZXRDb21taXR0ZWVBZG1pblJlc3BvbnNlEjcKCWNvbW1pdHRlZRgBIAEoCzIkLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlUmVjb3JkEjcKBXVzZXJzGAIgAygLMiguY29uZmVyZW5jZS5hZG1pbi52MS5Db21taXR0ZWVVc2VyUmVjb3JkEjkKC29hdXRoX3J1bGVzGAMgAygLMiQuY29uZmVyZW5jZS5hZG1pbi52MS5PQXV0aFJ1bGVSZWNvcmQiSgoZTGlzdENvbW1pdHRlZVVzZXJzUmVxdWVzdBIMCgRzbHVnGAEgASgJEgwKBHBhZ2UYAiABKAUSEQoJcGFnZV9zaXplGAMgASgFImoKGkxpc3RDb21taXR0ZWVVc2Vyc1Jlc3BvbnNlEjcKBXVzZXJzGAEgAygLMiguY29uZmVyZW5jZS5hZG1pbi52MS5Db21taXR0ZWVVc2VyUmVjb3JkEhMKC3RvdGFsX2NvdW50GAIgASgDIn8KGkNyZWF0ZUNvbW1pdHRlZVVzZXJSZXF1ZXN0EgwKBHNsdWcYASABKAkSEAoIdXNlcm5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhAKCHBhc3N3b3JkGAQgASgJEgwKBHJvbGUYBSABKAkSDgoGcXVvdGVkGAYgASgIIlUKG0NyZWF0ZUNvbW1pdHRlZVVzZXJSZXNwb25zZRI2CgR1c2VyGAEgASgLMiguY29uZmVyZW5jZS5hZG1pbi52MS5Db21taXR0ZWVVc2VyUmVjb3JkIjsKGkRlbGV0ZUNvbW1pdHRlZVVzZXJSZXF1ZXN0EgwKBHNsdWcYASABKAkSDwoHdXNlcl9pZBgCIAEoCSIdChtEZWxldGVDb21taXR0ZWVVc2VyUmVzcG9uc2UiYQofQXNzaWduQWNjb3VudFRvQ29tbWl0dGVlUmVxdWVzdBIMCgRzbHVnGAEgASgJEhIKCmFjY291bnRfaWQYAiABKAkSDAoEcm9sZRgDIAEoCRIOCgZxdW90ZWQYBCABKAgiWgogQXNzaWduQWNjb3VudFRvQ29tbWl0dGVlUmVzcG9uc2USNgoEdXNlchgBIAEoCzIoLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlVXNlclJlY29yZCJZChpVcGRhdGVDb21taXR0ZWVVc2VyUmVxdWVzdBIMCgRzbHVnGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSDAoEcm9sZRgDIAEoCRIOCgZxdW90ZWQYBCABKAgiVQobVXBkYXRlQ29tbWl0dGVlVXNlclJlc3BvbnNlEjYKBHVzZXIYASABKAsyKC5jb25mZXJlbmNlLmFkbWluLnYxLkNvbW1pdHRlZVVzZXJSZWNvcmQiJQoVTGlzdE9BdXRoUnVsZXNSZXF1ZXN0EgwKBHNsdWcYASABKAkiTQoWTGlzdE9BdXRoUnVsZXNSZXNwb25zZRIzCgVydWxlcxgBIAMoCzIkLmNvbmZlcmVuY2UuYWRtaW4udjEuT0F1dGhSdWxlUmVjb3JkIkgKFkNyZWF0ZU9BdXRoUnVsZVJlcXVlc3QSDAoEc2x1ZxgBIAEoCRISCgpncm91cF9uYW1lGAIgASgJEgwKBHJvbGUYAyABKAkiTQoXQ3JlYXRlT0F1dGhSdWxlUmVzcG9uc2USMgoEcnVsZRgBIAEoCzIkLmNvbmZlcmVuY2UuYWRtaW4udjEuT0F1dGhSdWxlUmVjb3JkIjcKFkRlbGV0ZU9BdXRoUnVsZVJlcXVlc3QSDAoEc2x1ZxgBIAEoCRIPCgdydWxlX2lkGAIgASgJIhkKF0RlbGV0ZU9BdXRoUnVsZVJlc3BvbnNlMsYNCgxBZG1pblNlcnZpY2UScgoRR2V0QWRtaW5EYXNoYm9hcmQSLS5jb25mZXJlbmNlLmFkbWluLnYxLkdldEFkbWluRGFzaGJvYXJkUmVxdWVzdBouLmNvbmZlcmVuY2UuYWRtaW4udjEuR2V0QWRtaW5EYXNoYm9hcmRSZXNwb25zZRJjCgxMaXN0QWNjb3VudHMSKC5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RBY2NvdW50c1JlcXVlc3QaKS5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RBY2NvdW50c1Jlc3BvbnNlEmwKD1NldEFjY291bnRBZG1pbhIrLmNvbmZlcmVuY2UuYWRtaW4udjEuU2V0QWNjb3VudEFkbWluUmVxdWVzdBosLmNvbmZlcmVuY2UuYWRtaW4udjEuU2V0QWNjb3VudEFkbWluUmVzcG9uc2USaQoOTGlzdENvbW1pdHRlZXMSKi5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RDb21taXR0ZWVzUmVxdWVzdBorLmNvbmZlcmVuY2UuYWRtaW4udjEuTGlzdENvbW1pdHRlZXNSZXNwb25zZRJsCg9DcmVhdGVDb21taXR0ZWUSKy5jb25mZXJlbmNlLmFkbWluLnYxLkNyZWF0ZUNvbW1pdHRlZVJlcXVlc3QaLC5jb25mZXJlbmNlLmFkbWluLnYxLkNyZWF0ZUNvbW1pdHRlZVJlc3BvbnNlEmwKD0RlbGV0ZUNvbW1pdHRlZRIrLmNvbmZlcmVuY2UuYWRtaW4udjEuRGVsZXRlQ29tbWl0dGVlUmVxdWVzdBosLmNvbmZlcmVuY2UuYWRtaW4udjEuRGVsZXRlQ29tbWl0dGVlUmVzcG9uc2UScgoRR2V0Q29tbWl0dGVlQWRtaW4SLS5jb25mZXJlbmNlLmFkbWluLnYxLkdldENvbW1pdHRlZUFkbWluUmVxdWVzdBouLmNvbmZlcmVuY2UuYWRtaW4udjEuR2V0Q29tbWl0dGVlQWRtaW5SZXNwb25zZRJ1ChJMaXN0Q29tbWl0dGVlVXNlcnMSLi5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RDb21taXR0ZWVVc2Vyc1JlcXVlc3QaLy5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RDb21taXR0ZWVVc2Vyc1Jlc3BvbnNlEngKE0NyZWF0ZUNvbW1pdHRlZVVzZXISLy5jb25mZXJlbmNlLmFkbWluLnYxLkNyZWF0ZUNvbW1pdHRlZVVzZXJSZXF1ZXN0GjAuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVDb21taXR0ZWVVc2VyUmVzcG9uc2USeAoTRGVsZXRlQ29tbWl0dGVlVXNlchIvLmNvbmZlcmVuY2UuYWRtaW4udjEuRGVsZXRlQ29tbWl0dGVlVXNlclJlcXVlc3QaMC5jb25mZXJlbmNlLmFkbWluLnYxLkRlbGV0ZUNvbW1pdHRlZVVzZXJSZXNwb25zZRKHAQoYQXNzaWduQWNjb3VudFRvQ29tbWl0dGVlEjQuY29uZmVyZW5jZS5hZG1pbi52MS5Bc3NpZ25BY2NvdW50VG9Db21taXR0ZWVSZXF1ZXN0GjUuY29uZmVyZW5jZS5hZG1pbi52MS5Bc3NpZ25BY2NvdW50VG9Db21taXR0ZWVSZXNwb25zZRJ4ChNVcGRhdGVDb21taXR0ZWVVc2VyEi8uY29uZmVyZW5jZS5hZG1pbi52MS5VcGRhdGVDb21taXR0ZWVVc2VyUmVxdWVzdBowLmNvbmZlcmVuY2UuYWRtaW4udjEuVXBkYXRlQ29tbWl0dGVlVXNlclJlc3BvbnNlEmkKDkxpc3RPQXV0aFJ1bGVzEiouY29uZmVyZW5jZS5hZG1pbi52MS5MaXN0T0F1dGhSdWxlc1JlcXVlc3QaKy5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RPQXV0aFJ1bGVzUmVzcG9uc2USbAoPQ3JlYXRlT0F1dGhSdWxlEisuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVPQXV0aFJ1bGVSZXF1ZXN0GiwuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVPQXV0aFJ1bGVSZXNwb25zZRJsCg9EZWxldGVPQXV0aFJ1bGUSKy5jb25mZXJlbmNlLmFkbWluLnYxLkRlbGV0ZU9BdXRoUnVsZVJlcXVlc3QaLC5jb25mZXJlbmNlLmFkbWluLnYxLkRlbGV0ZU9BdXRoUnVsZVJlc3BvbnNlQkZaRGdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9hZG1pbi92MTthZG1pbnYxYgZwcm90bzM");
+  fileDesc("Ch9jb25mZXJlbmNlL2FkbWluL3YxL2FkbWluLnByb3RvEhNjb25mZXJlbmNlLmFkbWluLnYxIloKDUFjY291bnRSZWNvcmQSEgoKYWNjb3VudF9pZBgBIAEoCRIQCgh1c2VybmFtZRgCIAEoCRIRCglmdWxsX25hbWUYAyABKAkSEAoIaXNfYWRtaW4YBCABKAgiWQoPQ29tbWl0dGVlUmVjb3JkEhQKDGNvbW1pdHRlZV9pZBgBIAEoCRIMCgRzbHVnGAIgASgJEgwKBG5hbWUYAyABKAkSFAoMbWVtYmVyX2NvdW50GAQgASgDIoMBChNDb21taXR0ZWVVc2VyUmVjb3JkEg8KB3VzZXJfaWQYASABKAkSEAoIdXNlcm5hbWUYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEgwKBHJvbGUYBCABKAkSDgoGcXVvdGVkGAUgASgIEhgKEGlzX29hdXRoX21hbmFnZWQYBiABKAgiRAoPT0F1dGhSdWxlUmVjb3JkEg8KB3J1bGVfaWQYASABKAkSEgoKZ3JvdXBfbmFtZRgCIAEoCRIMCgRyb2xlGAMgASgJIhoKGEdldEFkbWluRGFzaGJvYXJkUmVxdWVzdCJNChlHZXRBZG1pbkRhc2hib2FyZFJlc3BvbnNlEhYKDnRvdGFsX2FjY291bnRzGAEgASgDEhgKEHRvdGFsX2NvbW1pdHRlZXMYAiABKAMiNgoTTGlzdEFjY291bnRzUmVxdWVzdBIMCgRwYWdlGAEgASgFEhEKCXBhZ2Vfc2l6ZRgCIAEoBSJhChRMaXN0QWNjb3VudHNSZXNwb25zZRI0CghhY2NvdW50cxgBIAMoCzIiLmNvbmZlcmVuY2UuYWRtaW4udjEuQWNjb3VudFJlY29yZBITCgt0b3RhbF9jb3VudBgCIAEoAyJNChRDcmVhdGVBY2NvdW50UmVxdWVzdBIQCgh1c2VybmFtZRgBIAEoCRIRCglmdWxsX25hbWUYAiABKAkSEAoIcGFzc3dvcmQYAyABKAkiTAoVQ3JlYXRlQWNjb3VudFJlc3BvbnNlEjMKB2FjY291bnQYASABKAsyIi5jb25mZXJlbmNlLmFkbWluLnYxLkFjY291bnRSZWNvcmQiPgoWU2V0QWNjb3VudEFkbWluUmVxdWVzdBISCgphY2NvdW50X2lkGAEgASgJEhAKCGlzX2FkbWluGAIgASgIIk4KF1NldEFjY291bnRBZG1pblJlc3BvbnNlEjMKB2FjY291bnQYASABKAsyIi5jb25mZXJlbmNlLmFkbWluLnYxLkFjY291bnRSZWNvcmQiOAoVTGlzdENvbW1pdHRlZXNSZXF1ZXN0EgwKBHBhZ2UYASABKAUSEQoJcGFnZV9zaXplGAIgASgFImcKFkxpc3RDb21taXR0ZWVzUmVzcG9uc2USOAoKY29tbWl0dGVlcxgBIAMoCzIkLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlUmVjb3JkEhMKC3RvdGFsX2NvdW50GAIgASgDIjQKFkNyZWF0ZUNvbW1pdHRlZVJlcXVlc3QSDAoEbmFtZRgBIAEoCRIMCgRzbHVnGAIgASgJIlIKF0NyZWF0ZUNvbW1pdHRlZVJlc3BvbnNlEjcKCWNvbW1pdHRlZRgBIAEoCzIkLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlUmVjb3JkIiYKFkRlbGV0ZUNvbW1pdHRlZVJlcXVlc3QSDAoEc2x1ZxgBIAEoCSIZChdEZWxldGVDb21taXR0ZWVSZXNwb25zZSIoChhHZXRDb21taXR0ZWVBZG1pblJlcXVlc3QSDAoEc2x1ZxgBIAEoCSLIAQoZR2V0Q29tbWl0dGVlQWRtaW5SZXNwb25zZRI3Cgljb21taXR0ZWUYASABKAsyJC5jb25mZXJlbmNlLmFkbWluLnYxLkNvbW1pdHRlZVJlY29yZBI3CgV1c2VycxgCIAMoCzIoLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlVXNlclJlY29yZBI5CgtvYXV0aF9ydWxlcxgDIAMoCzIkLmNvbmZlcmVuY2UuYWRtaW4udjEuT0F1dGhSdWxlUmVjb3JkIkoKGUxpc3RDb21taXR0ZWVVc2Vyc1JlcXVlc3QSDAoEc2x1ZxgBIAEoCRIMCgRwYWdlGAIgASgFEhEKCXBhZ2Vfc2l6ZRgDIAEoBSJqChpMaXN0Q29tbWl0dGVlVXNlcnNSZXNwb25zZRI3CgV1c2VycxgBIAMoCzIoLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlVXNlclJlY29yZBITCgt0b3RhbF9jb3VudBgCIAEoAyJ/ChpDcmVhdGVDb21taXR0ZWVVc2VyUmVxdWVzdBIMCgRzbHVnGAEgASgJEhAKCHVzZXJuYW1lGAIgASgJEhEKCWZ1bGxfbmFtZRgDIAEoCRIQCghwYXNzd29yZBgEIAEoCRIMCgRyb2xlGAUgASgJEg4KBnF1b3RlZBgGIAEoCCJVChtDcmVhdGVDb21taXR0ZWVVc2VyUmVzcG9uc2USNgoEdXNlchgBIAEoCzIoLmNvbmZlcmVuY2UuYWRtaW4udjEuQ29tbWl0dGVlVXNlclJlY29yZCI7ChpEZWxldGVDb21taXR0ZWVVc2VyUmVxdWVzdBIMCgRzbHVnGAEgASgJEg8KB3VzZXJfaWQYAiABKAkiHQobRGVsZXRlQ29tbWl0dGVlVXNlclJlc3BvbnNlImEKH0Fzc2lnbkFjY291bnRUb0NvbW1pdHRlZVJlcXVlc3QSDAoEc2x1ZxgBIAEoCRISCgphY2NvdW50X2lkGAIgASgJEgwKBHJvbGUYAyABKAkSDgoGcXVvdGVkGAQgASgIIloKIEFzc2lnbkFjY291bnRUb0NvbW1pdHRlZVJlc3BvbnNlEjYKBHVzZXIYASABKAsyKC5jb25mZXJlbmNlLmFkbWluLnYxLkNvbW1pdHRlZVVzZXJSZWNvcmQiWQoaVXBkYXRlQ29tbWl0dGVlVXNlclJlcXVlc3QSDAoEc2x1ZxgBIAEoCRIPCgd1c2VyX2lkGAIgASgJEgwKBHJvbGUYAyABKAkSDgoGcXVvdGVkGAQgASgIIlUKG1VwZGF0ZUNvbW1pdHRlZVVzZXJSZXNwb25zZRI2CgR1c2VyGAEgASgLMiguY29uZmVyZW5jZS5hZG1pbi52MS5Db21taXR0ZWVVc2VyUmVjb3JkIiUKFUxpc3RPQXV0aFJ1bGVzUmVxdWVzdBIMCgRzbHVnGAEgASgJIk0KFkxpc3RPQXV0aFJ1bGVzUmVzcG9uc2USMwoFcnVsZXMYASADKAsyJC5jb25mZXJlbmNlLmFkbWluLnYxLk9BdXRoUnVsZVJlY29yZCJIChZDcmVhdGVPQXV0aFJ1bGVSZXF1ZXN0EgwKBHNsdWcYASABKAkSEgoKZ3JvdXBfbmFtZRgCIAEoCRIMCgRyb2xlGAMgASgJIk0KF0NyZWF0ZU9BdXRoUnVsZVJlc3BvbnNlEjIKBHJ1bGUYASABKAsyJC5jb25mZXJlbmNlLmFkbWluLnYxLk9BdXRoUnVsZVJlY29yZCI3ChZEZWxldGVPQXV0aFJ1bGVSZXF1ZXN0EgwKBHNsdWcYASABKAkSDwoHcnVsZV9pZBgCIAEoCSIZChdEZWxldGVPQXV0aFJ1bGVSZXNwb25zZTKuDgoMQWRtaW5TZXJ2aWNlEnIKEUdldEFkbWluRGFzaGJvYXJkEi0uY29uZmVyZW5jZS5hZG1pbi52MS5HZXRBZG1pbkRhc2hib2FyZFJlcXVlc3QaLi5jb25mZXJlbmNlLmFkbWluLnYxLkdldEFkbWluRGFzaGJvYXJkUmVzcG9uc2USYwoMTGlzdEFjY291bnRzEiguY29uZmVyZW5jZS5hZG1pbi52MS5MaXN0QWNjb3VudHNSZXF1ZXN0GikuY29uZmVyZW5jZS5hZG1pbi52MS5MaXN0QWNjb3VudHNSZXNwb25zZRJmCg1DcmVhdGVBY2NvdW50EikuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVBY2NvdW50UmVxdWVzdBoqLmNvbmZlcmVuY2UuYWRtaW4udjEuQ3JlYXRlQWNjb3VudFJlc3BvbnNlEmwKD1NldEFjY291bnRBZG1pbhIrLmNvbmZlcmVuY2UuYWRtaW4udjEuU2V0QWNjb3VudEFkbWluUmVxdWVzdBosLmNvbmZlcmVuY2UuYWRtaW4udjEuU2V0QWNjb3VudEFkbWluUmVzcG9uc2USaQoOTGlzdENvbW1pdHRlZXMSKi5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RDb21taXR0ZWVzUmVxdWVzdBorLmNvbmZlcmVuY2UuYWRtaW4udjEuTGlzdENvbW1pdHRlZXNSZXNwb25zZRJsCg9DcmVhdGVDb21taXR0ZWUSKy5jb25mZXJlbmNlLmFkbWluLnYxLkNyZWF0ZUNvbW1pdHRlZVJlcXVlc3QaLC5jb25mZXJlbmNlLmFkbWluLnYxLkNyZWF0ZUNvbW1pdHRlZVJlc3BvbnNlEmwKD0RlbGV0ZUNvbW1pdHRlZRIrLmNvbmZlcmVuY2UuYWRtaW4udjEuRGVsZXRlQ29tbWl0dGVlUmVxdWVzdBosLmNvbmZlcmVuY2UuYWRtaW4udjEuRGVsZXRlQ29tbWl0dGVlUmVzcG9uc2UScgoRR2V0Q29tbWl0dGVlQWRtaW4SLS5jb25mZXJlbmNlLmFkbWluLnYxLkdldENvbW1pdHRlZUFkbWluUmVxdWVzdBouLmNvbmZlcmVuY2UuYWRtaW4udjEuR2V0Q29tbWl0dGVlQWRtaW5SZXNwb25zZRJ1ChJMaXN0Q29tbWl0dGVlVXNlcnMSLi5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RDb21taXR0ZWVVc2Vyc1JlcXVlc3QaLy5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RDb21taXR0ZWVVc2Vyc1Jlc3BvbnNlEngKE0NyZWF0ZUNvbW1pdHRlZVVzZXISLy5jb25mZXJlbmNlLmFkbWluLnYxLkNyZWF0ZUNvbW1pdHRlZVVzZXJSZXF1ZXN0GjAuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVDb21taXR0ZWVVc2VyUmVzcG9uc2USeAoTRGVsZXRlQ29tbWl0dGVlVXNlchIvLmNvbmZlcmVuY2UuYWRtaW4udjEuRGVsZXRlQ29tbWl0dGVlVXNlclJlcXVlc3QaMC5jb25mZXJlbmNlLmFkbWluLnYxLkRlbGV0ZUNvbW1pdHRlZVVzZXJSZXNwb25zZRKHAQoYQXNzaWduQWNjb3VudFRvQ29tbWl0dGVlEjQuY29uZmVyZW5jZS5hZG1pbi52MS5Bc3NpZ25BY2NvdW50VG9Db21taXR0ZWVSZXF1ZXN0GjUuY29uZmVyZW5jZS5hZG1pbi52MS5Bc3NpZ25BY2NvdW50VG9Db21taXR0ZWVSZXNwb25zZRJ4ChNVcGRhdGVDb21taXR0ZWVVc2VyEi8uY29uZmVyZW5jZS5hZG1pbi52MS5VcGRhdGVDb21taXR0ZWVVc2VyUmVxdWVzdBowLmNvbmZlcmVuY2UuYWRtaW4udjEuVXBkYXRlQ29tbWl0dGVlVXNlclJlc3BvbnNlEmkKDkxpc3RPQXV0aFJ1bGVzEiouY29uZmVyZW5jZS5hZG1pbi52MS5MaXN0T0F1dGhSdWxlc1JlcXVlc3QaKy5jb25mZXJlbmNlLmFkbWluLnYxLkxpc3RPQXV0aFJ1bGVzUmVzcG9uc2USbAoPQ3JlYXRlT0F1dGhSdWxlEisuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVPQXV0aFJ1bGVSZXF1ZXN0GiwuY29uZmVyZW5jZS5hZG1pbi52MS5DcmVhdGVPQXV0aFJ1bGVSZXNwb25zZRJsCg9EZWxldGVPQXV0aFJ1bGUSKy5jb25mZXJlbmNlLmFkbWluLnYxLkRlbGV0ZU9BdXRoUnVsZVJlcXVlc3QaLC5jb25mZXJlbmNlLmFkbWluLnYxLkRlbGV0ZU9BdXRoUnVsZVJlc3BvbnNlQkZaRGdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9hZG1pbi92MTthZG1pbnYxYgZwcm90bzM");
 
 /**
  * @generated from message conference.admin.v1.AccountRecord
@@ -225,6 +225,50 @@ export const ListAccountsResponseSchema: GenMessage<ListAccountsResponse> = /*@_
   messageDesc(file_conference_admin_v1_admin, 7);
 
 /**
+ * @generated from message conference.admin.v1.CreateAccountRequest
+ */
+export type CreateAccountRequest = Message<"conference.admin.v1.CreateAccountRequest"> & {
+  /**
+   * @generated from field: string username = 1;
+   */
+  username: string;
+
+  /**
+   * @generated from field: string full_name = 2;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: string password = 3;
+   */
+  password: string;
+};
+
+/**
+ * Describes the message conference.admin.v1.CreateAccountRequest.
+ * Use `create(CreateAccountRequestSchema)` to create a new message.
+ */
+export const CreateAccountRequestSchema: GenMessage<CreateAccountRequest> = /*@__PURE__*/
+  messageDesc(file_conference_admin_v1_admin, 8);
+
+/**
+ * @generated from message conference.admin.v1.CreateAccountResponse
+ */
+export type CreateAccountResponse = Message<"conference.admin.v1.CreateAccountResponse"> & {
+  /**
+   * @generated from field: conference.admin.v1.AccountRecord account = 1;
+   */
+  account?: AccountRecord;
+};
+
+/**
+ * Describes the message conference.admin.v1.CreateAccountResponse.
+ * Use `create(CreateAccountResponseSchema)` to create a new message.
+ */
+export const CreateAccountResponseSchema: GenMessage<CreateAccountResponse> = /*@__PURE__*/
+  messageDesc(file_conference_admin_v1_admin, 9);
+
+/**
  * @generated from message conference.admin.v1.SetAccountAdminRequest
  */
 export type SetAccountAdminRequest = Message<"conference.admin.v1.SetAccountAdminRequest"> & {
@@ -244,7 +288,7 @@ export type SetAccountAdminRequest = Message<"conference.admin.v1.SetAccountAdmi
  * Use `create(SetAccountAdminRequestSchema)` to create a new message.
  */
 export const SetAccountAdminRequestSchema: GenMessage<SetAccountAdminRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 8);
+  messageDesc(file_conference_admin_v1_admin, 10);
 
 /**
  * @generated from message conference.admin.v1.SetAccountAdminResponse
@@ -261,7 +305,7 @@ export type SetAccountAdminResponse = Message<"conference.admin.v1.SetAccountAdm
  * Use `create(SetAccountAdminResponseSchema)` to create a new message.
  */
 export const SetAccountAdminResponseSchema: GenMessage<SetAccountAdminResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 9);
+  messageDesc(file_conference_admin_v1_admin, 11);
 
 /**
  * @generated from message conference.admin.v1.ListCommitteesRequest
@@ -283,7 +327,7 @@ export type ListCommitteesRequest = Message<"conference.admin.v1.ListCommitteesR
  * Use `create(ListCommitteesRequestSchema)` to create a new message.
  */
 export const ListCommitteesRequestSchema: GenMessage<ListCommitteesRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 10);
+  messageDesc(file_conference_admin_v1_admin, 12);
 
 /**
  * @generated from message conference.admin.v1.ListCommitteesResponse
@@ -305,7 +349,7 @@ export type ListCommitteesResponse = Message<"conference.admin.v1.ListCommittees
  * Use `create(ListCommitteesResponseSchema)` to create a new message.
  */
 export const ListCommitteesResponseSchema: GenMessage<ListCommitteesResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 11);
+  messageDesc(file_conference_admin_v1_admin, 13);
 
 /**
  * @generated from message conference.admin.v1.CreateCommitteeRequest
@@ -327,7 +371,7 @@ export type CreateCommitteeRequest = Message<"conference.admin.v1.CreateCommitte
  * Use `create(CreateCommitteeRequestSchema)` to create a new message.
  */
 export const CreateCommitteeRequestSchema: GenMessage<CreateCommitteeRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 12);
+  messageDesc(file_conference_admin_v1_admin, 14);
 
 /**
  * @generated from message conference.admin.v1.CreateCommitteeResponse
@@ -344,7 +388,7 @@ export type CreateCommitteeResponse = Message<"conference.admin.v1.CreateCommitt
  * Use `create(CreateCommitteeResponseSchema)` to create a new message.
  */
 export const CreateCommitteeResponseSchema: GenMessage<CreateCommitteeResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 13);
+  messageDesc(file_conference_admin_v1_admin, 15);
 
 /**
  * @generated from message conference.admin.v1.DeleteCommitteeRequest
@@ -361,7 +405,7 @@ export type DeleteCommitteeRequest = Message<"conference.admin.v1.DeleteCommitte
  * Use `create(DeleteCommitteeRequestSchema)` to create a new message.
  */
 export const DeleteCommitteeRequestSchema: GenMessage<DeleteCommitteeRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 14);
+  messageDesc(file_conference_admin_v1_admin, 16);
 
 /**
  * @generated from message conference.admin.v1.DeleteCommitteeResponse
@@ -374,7 +418,7 @@ export type DeleteCommitteeResponse = Message<"conference.admin.v1.DeleteCommitt
  * Use `create(DeleteCommitteeResponseSchema)` to create a new message.
  */
 export const DeleteCommitteeResponseSchema: GenMessage<DeleteCommitteeResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 15);
+  messageDesc(file_conference_admin_v1_admin, 17);
 
 /**
  * @generated from message conference.admin.v1.GetCommitteeAdminRequest
@@ -391,7 +435,7 @@ export type GetCommitteeAdminRequest = Message<"conference.admin.v1.GetCommittee
  * Use `create(GetCommitteeAdminRequestSchema)` to create a new message.
  */
 export const GetCommitteeAdminRequestSchema: GenMessage<GetCommitteeAdminRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 16);
+  messageDesc(file_conference_admin_v1_admin, 18);
 
 /**
  * @generated from message conference.admin.v1.GetCommitteeAdminResponse
@@ -418,7 +462,7 @@ export type GetCommitteeAdminResponse = Message<"conference.admin.v1.GetCommitte
  * Use `create(GetCommitteeAdminResponseSchema)` to create a new message.
  */
 export const GetCommitteeAdminResponseSchema: GenMessage<GetCommitteeAdminResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 17);
+  messageDesc(file_conference_admin_v1_admin, 19);
 
 /**
  * @generated from message conference.admin.v1.ListCommitteeUsersRequest
@@ -445,7 +489,7 @@ export type ListCommitteeUsersRequest = Message<"conference.admin.v1.ListCommitt
  * Use `create(ListCommitteeUsersRequestSchema)` to create a new message.
  */
 export const ListCommitteeUsersRequestSchema: GenMessage<ListCommitteeUsersRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 18);
+  messageDesc(file_conference_admin_v1_admin, 20);
 
 /**
  * @generated from message conference.admin.v1.ListCommitteeUsersResponse
@@ -467,7 +511,7 @@ export type ListCommitteeUsersResponse = Message<"conference.admin.v1.ListCommit
  * Use `create(ListCommitteeUsersResponseSchema)` to create a new message.
  */
 export const ListCommitteeUsersResponseSchema: GenMessage<ListCommitteeUsersResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 19);
+  messageDesc(file_conference_admin_v1_admin, 21);
 
 /**
  * @generated from message conference.admin.v1.CreateCommitteeUserRequest
@@ -509,7 +553,7 @@ export type CreateCommitteeUserRequest = Message<"conference.admin.v1.CreateComm
  * Use `create(CreateCommitteeUserRequestSchema)` to create a new message.
  */
 export const CreateCommitteeUserRequestSchema: GenMessage<CreateCommitteeUserRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 20);
+  messageDesc(file_conference_admin_v1_admin, 22);
 
 /**
  * @generated from message conference.admin.v1.CreateCommitteeUserResponse
@@ -526,7 +570,7 @@ export type CreateCommitteeUserResponse = Message<"conference.admin.v1.CreateCom
  * Use `create(CreateCommitteeUserResponseSchema)` to create a new message.
  */
 export const CreateCommitteeUserResponseSchema: GenMessage<CreateCommitteeUserResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 21);
+  messageDesc(file_conference_admin_v1_admin, 23);
 
 /**
  * @generated from message conference.admin.v1.DeleteCommitteeUserRequest
@@ -548,7 +592,7 @@ export type DeleteCommitteeUserRequest = Message<"conference.admin.v1.DeleteComm
  * Use `create(DeleteCommitteeUserRequestSchema)` to create a new message.
  */
 export const DeleteCommitteeUserRequestSchema: GenMessage<DeleteCommitteeUserRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 22);
+  messageDesc(file_conference_admin_v1_admin, 24);
 
 /**
  * @generated from message conference.admin.v1.DeleteCommitteeUserResponse
@@ -561,7 +605,7 @@ export type DeleteCommitteeUserResponse = Message<"conference.admin.v1.DeleteCom
  * Use `create(DeleteCommitteeUserResponseSchema)` to create a new message.
  */
 export const DeleteCommitteeUserResponseSchema: GenMessage<DeleteCommitteeUserResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 23);
+  messageDesc(file_conference_admin_v1_admin, 25);
 
 /**
  * @generated from message conference.admin.v1.AssignAccountToCommitteeRequest
@@ -593,7 +637,7 @@ export type AssignAccountToCommitteeRequest = Message<"conference.admin.v1.Assig
  * Use `create(AssignAccountToCommitteeRequestSchema)` to create a new message.
  */
 export const AssignAccountToCommitteeRequestSchema: GenMessage<AssignAccountToCommitteeRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 24);
+  messageDesc(file_conference_admin_v1_admin, 26);
 
 /**
  * @generated from message conference.admin.v1.AssignAccountToCommitteeResponse
@@ -610,7 +654,7 @@ export type AssignAccountToCommitteeResponse = Message<"conference.admin.v1.Assi
  * Use `create(AssignAccountToCommitteeResponseSchema)` to create a new message.
  */
 export const AssignAccountToCommitteeResponseSchema: GenMessage<AssignAccountToCommitteeResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 25);
+  messageDesc(file_conference_admin_v1_admin, 27);
 
 /**
  * @generated from message conference.admin.v1.UpdateCommitteeUserRequest
@@ -642,7 +686,7 @@ export type UpdateCommitteeUserRequest = Message<"conference.admin.v1.UpdateComm
  * Use `create(UpdateCommitteeUserRequestSchema)` to create a new message.
  */
 export const UpdateCommitteeUserRequestSchema: GenMessage<UpdateCommitteeUserRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 26);
+  messageDesc(file_conference_admin_v1_admin, 28);
 
 /**
  * @generated from message conference.admin.v1.UpdateCommitteeUserResponse
@@ -659,7 +703,7 @@ export type UpdateCommitteeUserResponse = Message<"conference.admin.v1.UpdateCom
  * Use `create(UpdateCommitteeUserResponseSchema)` to create a new message.
  */
 export const UpdateCommitteeUserResponseSchema: GenMessage<UpdateCommitteeUserResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 27);
+  messageDesc(file_conference_admin_v1_admin, 29);
 
 /**
  * @generated from message conference.admin.v1.ListOAuthRulesRequest
@@ -676,7 +720,7 @@ export type ListOAuthRulesRequest = Message<"conference.admin.v1.ListOAuthRulesR
  * Use `create(ListOAuthRulesRequestSchema)` to create a new message.
  */
 export const ListOAuthRulesRequestSchema: GenMessage<ListOAuthRulesRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 28);
+  messageDesc(file_conference_admin_v1_admin, 30);
 
 /**
  * @generated from message conference.admin.v1.ListOAuthRulesResponse
@@ -693,7 +737,7 @@ export type ListOAuthRulesResponse = Message<"conference.admin.v1.ListOAuthRules
  * Use `create(ListOAuthRulesResponseSchema)` to create a new message.
  */
 export const ListOAuthRulesResponseSchema: GenMessage<ListOAuthRulesResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 29);
+  messageDesc(file_conference_admin_v1_admin, 31);
 
 /**
  * @generated from message conference.admin.v1.CreateOAuthRuleRequest
@@ -720,7 +764,7 @@ export type CreateOAuthRuleRequest = Message<"conference.admin.v1.CreateOAuthRul
  * Use `create(CreateOAuthRuleRequestSchema)` to create a new message.
  */
 export const CreateOAuthRuleRequestSchema: GenMessage<CreateOAuthRuleRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 30);
+  messageDesc(file_conference_admin_v1_admin, 32);
 
 /**
  * @generated from message conference.admin.v1.CreateOAuthRuleResponse
@@ -737,7 +781,7 @@ export type CreateOAuthRuleResponse = Message<"conference.admin.v1.CreateOAuthRu
  * Use `create(CreateOAuthRuleResponseSchema)` to create a new message.
  */
 export const CreateOAuthRuleResponseSchema: GenMessage<CreateOAuthRuleResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 31);
+  messageDesc(file_conference_admin_v1_admin, 33);
 
 /**
  * @generated from message conference.admin.v1.DeleteOAuthRuleRequest
@@ -759,7 +803,7 @@ export type DeleteOAuthRuleRequest = Message<"conference.admin.v1.DeleteOAuthRul
  * Use `create(DeleteOAuthRuleRequestSchema)` to create a new message.
  */
 export const DeleteOAuthRuleRequestSchema: GenMessage<DeleteOAuthRuleRequest> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 32);
+  messageDesc(file_conference_admin_v1_admin, 34);
 
 /**
  * @generated from message conference.admin.v1.DeleteOAuthRuleResponse
@@ -772,7 +816,7 @@ export type DeleteOAuthRuleResponse = Message<"conference.admin.v1.DeleteOAuthRu
  * Use `create(DeleteOAuthRuleResponseSchema)` to create a new message.
  */
 export const DeleteOAuthRuleResponseSchema: GenMessage<DeleteOAuthRuleResponse> = /*@__PURE__*/
-  messageDesc(file_conference_admin_v1_admin, 33);
+  messageDesc(file_conference_admin_v1_admin, 35);
 
 /**
  * @generated from service conference.admin.v1.AdminService
@@ -797,6 +841,16 @@ export const AdminService: GenService<{
     methodKind: "unary";
     input: typeof ListAccountsRequestSchema;
     output: typeof ListAccountsResponseSchema;
+  },
+  /**
+   * CreateAccount creates a new global account with local password auth.
+   *
+   * @generated from rpc conference.admin.v1.AdminService.CreateAccount
+   */
+  createAccount: {
+    methodKind: "unary";
+    input: typeof CreateAccountRequestSchema;
+    output: typeof CreateAccountResponseSchema;
   },
   /**
    * SetAccountAdmin grants or revokes admin privileges for an account.

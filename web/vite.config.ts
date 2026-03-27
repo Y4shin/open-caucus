@@ -4,10 +4,9 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
 
-export default defineConfig(({ command }) => ({
-	// In production builds, the SPA is served from /app/ by the Go binary.
-	// In development, Vite serves at the root and proxies /api to the Go backend.
-	base: command === 'build' ? '/app/' : '/',
+export default defineConfig({
+	// The SPA now builds for same-origin root delivery from the Go binary.
+	base: '/',
 	server: {
 		proxy: {
 			'/api': {
@@ -49,4 +48,4 @@ export default defineConfig(({ command }) => ({
 			}
 		]
 	}
-}));
+});

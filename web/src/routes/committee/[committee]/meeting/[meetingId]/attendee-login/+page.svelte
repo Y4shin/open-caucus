@@ -91,6 +91,7 @@
 						<div class="label"><span class="label-text">Access Code</span></div>
 						<input
 							class="input input-bordered"
+							name="secret"
 							bind:value={attendeeSecret}
 							autocomplete="one-time-code"
 							required

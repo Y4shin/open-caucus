@@ -5,6 +5,7 @@ import (
 	"embed"
 	"io/fs"
 	"net/http"
+	"strings"
 )
 
 //go:embed all:build
@@ -32,7 +33,12 @@ type spaHandler struct {
 func (h *spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Try to serve the exact file from the embedded filesystem.
 	build, _ := fs.Sub(h.buildFS, "build")
-	f, err := build.Open(r.URL.Path)
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	if path == "" {
+		path = "."
+	}
+
+	f, err := build.Open(path)
 	if err == nil {
 		stat, sterr := f.Stat()
 		_ = f.Close()

@@ -133,8 +133,8 @@ func TestLivePage_RequiresAttendeeSession(t *testing.T) {
 	if _, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto /live: %v", err)
 	}
-	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to login page for unauthenticated /live: %v", err)
+	if err := page.WaitForURL(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /join for unauthenticated /live: %v", err)
 	}
 }
 
@@ -193,22 +193,22 @@ func TestGuestLive_LogoutButton(t *testing.T) {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	if err := page.Locator(".scaffold-desktop-right button:has-text('Logout')").Click(); err != nil {
+	if err := page.Locator("button:has-text('Logout')").Click(); err != nil {
 		t.Fatalf("click logout on live page: %v", err)
 	}
-	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to login page after logout: %v", err)
+	if err := page.WaitForURL(ts.URL + "/login"); err != nil {
+		t.Fatalf("expected redirect to /login after logout: %v", err)
 	}
 
 	resp, err := page.Goto(liveURL(ts.URL, "test-committee", meetingID))
 	if err != nil {
 		t.Fatalf("goto /live after logout: %v", err)
 	}
-	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to login page for /live after logout: %v", err)
+	if err := page.WaitForURL(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("expected redirect to /join for /live after logout: %v", err)
 	}
 	if resp.Status() != 200 {
-		t.Fatalf("expected final login page response status 200 after redirect, got %d", resp.Status())
+		t.Fatalf("expected final join page response status 200 after redirect, got %d", resp.Status())
 	}
 }
 
@@ -236,7 +236,7 @@ func TestLivePage_AttendeeChair_SeesManageButtonAndCanOpenManage(t *testing.T) {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	manageLink := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Moderate'), .scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')")
+	manageLink := page.Locator("a.btn:has-text('Moderate')")
 	if err := manageLink.WaitFor(); err != nil {
 		t.Fatalf("expected manage button for chair attendee: %v", err)
 	}
@@ -271,7 +271,7 @@ func TestManagePage_AttendeeNonChair_Forbidden(t *testing.T) {
 		t.Fatalf("expected redirect to /live after login: %v", err)
 	}
 
-	manageCount, err := page.Locator(".scaffold-desktop-right a.scaffold-action-btn:has-text('Moderate'), .scaffold-desktop-right a.scaffold-action-btn:has-text('Manage')").Count()
+	manageCount, err := page.Locator("a.btn:has-text('Moderate')").Count()
 	if err != nil {
 		t.Fatalf("count manage links: %v", err)
 	}
@@ -279,11 +279,8 @@ func TestManagePage_AttendeeNonChair_Forbidden(t *testing.T) {
 		t.Fatalf("did not expect manage button for non-chair attendee")
 	}
 
-	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto /moderate as non-chair attendee: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for /moderate as non-chair attendee, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "chairperson role required")
 }

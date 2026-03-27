@@ -12,7 +12,7 @@ import (
 	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/session"
+	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
 )
 
 // MeetingInvalidationEvent is the JSON payload sent over the SSE stream when
@@ -35,13 +35,12 @@ func New(repo repository.Repository, b broker.Broker) *Service {
 }
 
 func (s *Service) GetModerationView(ctx context.Context, committeeSlug, meetingIDStr string) (*moderationv1.GetModerationViewResponse, error) {
-	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
-		return nil, err
-	}
-
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
 	}
 
 	committee, err := s.repo.GetCommitteeBySlug(ctx, committeeSlug)
@@ -143,7 +142,7 @@ func (s *Service) GetModerationView(ctx context.Context, committeeSlug, meetingI
 }
 
 func (s *Service) ToggleSignupOpen(ctx context.Context, committeeSlug, meetingIDStr string, desiredOpen bool, expectedVersion uint64) (*moderationv1.ToggleSignupOpenResponse, error) {
-	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
 		return nil, err
 	}
 
@@ -200,22 +199,5 @@ func (s *Service) publishInvalidation(meetingID int64, eventType string, scope [
 }
 
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd == nil || sd.IsExpired() || !sd.IsAccountSession() || sd.AccountID == nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account session required")
-	}
-
-	account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
-	if err != nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account not found")
-	}
-	if account.IsAdmin {
-		return nil
-	}
-
-	membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
-	if err != nil || membership.Role != "chairperson" {
-		return apierrors.New(apierrors.KindPermissionDenied, "chairperson role required")
-	}
-	return nil
+	return serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug)
 }

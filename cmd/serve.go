@@ -1,19 +1,11 @@
 package cmd
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"strings"
 
 	connect "connectrpc.com/connect"
-	docembed "github.com/Y4shin/conference-tool/doc"
-	webassets "github.com/Y4shin/conference-tool/internal/web"
 	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
 	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
 	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
@@ -25,15 +17,7 @@ import (
 	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
-	"github.com/Y4shin/conference-tool/internal/broker"
-	"github.com/Y4shin/conference-tool/internal/config"
-	"github.com/Y4shin/conference-tool/internal/docs"
-	"github.com/Y4shin/conference-tool/internal/handlers"
-	"github.com/Y4shin/conference-tool/internal/locale"
-	"github.com/Y4shin/conference-tool/internal/middleware"
-	"github.com/Y4shin/conference-tool/internal/oauth"
-	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
-	"github.com/Y4shin/conference-tool/internal/routes"
+	"github.com/Y4shin/conference-tool/internal/session"
 	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
 	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
@@ -43,272 +27,161 @@ import (
 	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
 	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
 	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
-	"github.com/Y4shin/conference-tool/internal/session"
-	"github.com/Y4shin/conference-tool/internal/storage"
-	"github.com/joho/godotenv"
+	webassets "github.com/Y4shin/conference-tool/internal/web"
 	"github.com/spf13/cobra"
 )
 
 var serveCmd = &cobra.Command{
 	Use:          "serve",
-	Short:        "Start the HTTP server",
+	Short:        "Start the SPA/API server",
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if _, err := os.Stat(".env"); err == nil {
-			if loadErr := godotenv.Load(".env"); loadErr != nil {
-				return fmt.Errorf("load .env: %w", loadErr)
-			}
-		} else if !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("stat .env: %w", err)
-		}
-
-		cfg, err := config.LoadConfig()
+		rt, err := loadServeRuntime()
 		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
-		}
-
-		// Initialize database repository
-		repo, err := sqlite.New(cfg.Database.Path)
-		if err != nil {
-			return fmt.Errorf("failed to create repository: %w", err)
-		}
-		defer repo.Close()
-		slog.Info("database opened", "path", cfg.Database.Path)
-
-		// Run migrations
-		if err := repo.MigrateUp(); err != nil {
-			return fmt.Errorf("failed to run migrations: %w", err)
-		}
-		slog.Info("database migrations applied")
-
-		// Initialize file storage
-		store, err := storage.NewDirStorage(cfg.Application.StorageDir)
-		if err != nil {
-			return fmt.Errorf("failed to create storage: %w", err)
-		}
-		slog.Info("file storage initialized", "dir", cfg.Application.StorageDir)
-
-		// Initialize broker
-		b := broker.NewMemoryBroker()
-		defer b.Shutdown()
-
-		// Initialize session manager with repository as store
-		sessionManager := session.NewManager(repo, []byte(cfg.Application.SessionSecret))
-
-		oauthService, err := oauth.New(context.Background(), oauth.Config{
-			Enabled:        cfg.Auth.OAuthEnabled,
-			IssuerURL:      cfg.Auth.OAuthIssuerURL,
-			ClientID:       cfg.Auth.OAuthClientID,
-			ClientSecret:   cfg.Auth.OAuthClientSecret,
-			RedirectURL:    cfg.Auth.OAuthRedirectURL,
-			Scopes:         cfg.Auth.OAuthScopes,
-			GroupsClaim:    cfg.Auth.OAuthGroupsClaim,
-			UsernameClaims: cfg.Auth.OAuthUsernameClaims,
-			FullNameClaims: cfg.Auth.OAuthFullNameClaims,
-			StateTTL:       time.Duration(cfg.Auth.OAuthStateTTLSeconds) * time.Second,
-		}, []byte(cfg.Application.SessionSecret))
-		if err != nil {
-			return fmt.Errorf("failed to initialize oauth service: %w", err)
-		}
-		slog.Info("auth configured", "password_enabled", cfg.Auth.PasswordEnabled, "oauth_enabled", cfg.Auth.OAuthEnabled)
-
-		// Initialize middleware registry with session manager
-		mw := middleware.NewRegistry(sessionManager, repo, cfg.Auth.PasswordEnabled)
-
-		// Load translations (must happen before any request is served).
-		if err := locale.LoadTranslations(); err != nil {
-			return fmt.Errorf("failed to load translations: %w", err)
-		}
-		docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
-		if err != nil {
-			return fmt.Errorf("failed to load embedded docs: %w", err)
-		}
-		defer docsService.Close()
-
-		// Initialize handlers with repository, broker, storage, and session manager
-		handler := &handlers.Handler{
-			Broker:         b,
-			Repository:     repo,
-			Storage:        store,
-			SessionManager: sessionManager,
-			AuthConfig:     cfg.Auth,
-			OAuthService:   oauthService,
-			DocsService:    docsService,
-		}
-
-		// Create router
-		router := routes.NewRouter(handler, mw)
-		mux := router.RegisterRoutes()
-
-		// Compose app routes and locale switcher in a top-level mux.
-		appMux := http.NewServeMux()
-		appMux.Handle("/", mux)
-
-		apiMux := http.NewServeMux()
-
-		sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
-			apiconnect.NewSessionHandler(sessionservice.New(repo, sessionManager, cfg.Auth.PasswordEnabled)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
-
-		committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-			apiconnect.NewCommitteeHandler(committeeservice.New(repo)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))
-
-		meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
-			apiconnect.NewMeetingHandler(meetingservice.New(repo)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(meetingAPIPath, mw.Get("session")(meetingAPIHandler))
-
-		moderationAPIPath, moderationAPIHandler := moderationv1connect.NewModerationServiceHandler(
-			apiconnect.NewModerationHandler(moderationservice.New(repo, b)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(moderationAPIPath, mw.Get("session")(moderationAPIHandler))
-
-		attendeeAPIPath, attendeeAPIHandler := attendeesv1connect.NewAttendeeServiceHandler(
-			apiconnect.NewAttendeeHandler(attendeeservice.New(repo, sessionManager, b)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(attendeeAPIPath, mw.Get("session")(attendeeAPIHandler))
-
-		agendaAPIPath, agendaAPIHandler := agendav1connect.NewAgendaServiceHandler(
-			apiconnect.NewAgendaHandler(agendaservice.New(repo, b)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(agendaAPIPath, mw.Get("session")(agendaAPIHandler))
-
-		speakerAPIPath, speakerAPIHandler := speakersv1connect.NewSpeakerServiceHandler(
-			apiconnect.NewSpeakerHandler(speakerservice.New(repo, b)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(speakerAPIPath, mw.Get("session")(speakerAPIHandler))
-
-		voteAPIPath, voteAPIHandler := votesv1connect.NewVoteServiceHandler(
-			apiconnect.NewVoteHandler(voteservice.New(repo, b)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(voteAPIPath, mw.Get("session")(voteAPIHandler))
-
-		adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
-			apiconnect.NewAdminHandler(adminservice.New(repo)),
-			connect.WithInterceptors(apiconnect.ErrorInterceptor()),
-		)
-		apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
-
-		apiMux.Handle("GET /realtime/meetings/{meetingId}/events",
-			apihttp.NewMeetingEventsHandler(b),
-		)
-
-		appMux.Handle("/api/", http.StripPrefix("/api", apiMux))
-
-		// Serve the SvelteKit SPA at /app/ in non-development environments.
-		// In development, the Vite dev server (port 5173) handles the frontend.
-		if cfg.Application.Environment != "development" {
-			appMux.Handle("/app/", http.StripPrefix("/app", webassets.NewSPAHandler()))
-		}
-
-		// Locale switcher: POST /locale sets the "locale" cookie and redirects.
-		appMux.HandleFunc("POST /locale", func(w http.ResponseWriter, r *http.Request) {
-			lang := r.FormValue("lang")
-			supported := map[string]bool{"en": true, "de": true}
-			if !supported[lang] {
-				http.Error(w, "unsupported locale", http.StatusBadRequest)
-				return
-			}
-			http.SetCookie(w, &http.Cookie{
-				Name:     "locale",
-				Value:    lang,
-				Path:     "/",
-				MaxAge:   365 * 24 * 60 * 60,
-				SameSite: http.SameSiteLaxMode,
-			})
-			ref := r.Header.Get("Referer")
-			if ref == "" {
-				ref = "/"
-			}
-			http.Redirect(w, r, ref, http.StatusSeeOther)
-		})
-
-		handlerWithLocale := locale.NewMiddleware(appMux, locale.Config{
-			Default:   "en",
-			Supported: []string{"en", "de"},
-		})
-
-		addr := fmt.Sprintf("%s:%d", cfg.Application.Host, cfg.Application.Port)
-		slog.Info("starting server", "addr", addr, "env", cfg.Application.Environment)
-		sigCh := make(chan os.Signal, 2)
-		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
-		defer signal.Stop(sigCh)
-
-		server := &http.Server{
-			Addr:    addr,
-			Handler: handlerWithLocale,
-		}
-
-		serverErr := make(chan error, 1)
-		go func() {
-			err := server.ListenAndServe()
-			if err != nil && !errors.Is(err, http.ErrServerClosed) {
-				serverErr <- err
-				return
-			}
-			serverErr <- nil
-		}()
-
-		select {
-		case err := <-serverErr:
-			return err
-		case sig := <-sigCh:
-			slog.Info("shutdown signal received", "signal", sig.String())
-		}
-
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer shutdownCancel()
-
-		shutdownErrCh := make(chan error, 1)
-		go func() {
-			shutdownErrCh <- server.Shutdown(shutdownCtx)
-		}()
-
-		forceClosed := false
-		select {
-		case err := <-shutdownErrCh:
-			if err != nil {
-				if errors.Is(err, context.DeadlineExceeded) {
-					slog.Warn("graceful shutdown timeout reached; forcing immediate close")
-					if closeErr := server.Close(); closeErr != nil && !errors.Is(closeErr, http.ErrServerClosed) {
-						return fmt.Errorf("force close after graceful shutdown timeout: %w", closeErr)
-					}
-				} else {
-					return fmt.Errorf("graceful shutdown failed: %w", err)
-				}
-			}
-		case sig := <-sigCh:
-			slog.Warn("second shutdown signal received; forcing immediate close", "signal", sig.String())
-			forceClosed = true
-			shutdownCancel()
-			if err := server.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				return fmt.Errorf("force close failed: %w", err)
-			}
-		case err := <-serverErr:
 			return err
 		}
+		defer rt.Close()
 
-		if err := <-serverErr; err != nil {
-			return err
-		}
-		if forceClosed {
-			slog.Info("server shutdown complete (forced)")
-		} else {
-			slog.Info("server shutdown complete")
-		}
-		return nil
+		return runHTTPServer(rt.cfg, newSPAServer(rt))
 	},
+}
+
+func newSPAServer(rt *serveRuntime) http.Handler {
+	spaHandler := webassets.NewSPAHandler()
+	apiMux := newAPIMux(rt)
+
+	return rt.middleware.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/api/"):
+			http.StripPrefix("/api", apiMux).ServeHTTP(w, r)
+			return
+		case r.Method == http.MethodGet && (r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/")) && r.URL.Path != "/admin/login":
+			sd, ok := session.GetSession(r.Context())
+			if !ok || sd == nil || sd.AccountID == nil || !sd.IsAdmin || sd.IsExpired() {
+				http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+				return
+			}
+			spaHandler.ServeHTTP(w, r)
+			return
+		case r.URL.Path == "/oauth/start" && r.Method == http.MethodGet:
+			if err := rt.handler.OAuthStart(w, r); err != nil {
+				http.Error(w, fmt.Sprintf("oauth start failed: %v", err), http.StatusInternalServerError)
+			}
+			return
+		case r.URL.Path == "/oauth/callback" && r.Method == http.MethodGet:
+			if err := rt.handler.OAuthCallback(w, r); err != nil {
+				http.Error(w, fmt.Sprintf("oauth callback failed: %v", err), http.StatusInternalServerError)
+			}
+			return
+		case r.URL.Path == "/locale" && r.Method == http.MethodPost:
+			handleLocaleSwitch(w, r)
+			return
+		case r.URL.Path == "/docs/assets" || strings.HasPrefix(r.URL.Path, "/docs/assets/"):
+			apihttp.NewDocsAssetHandler(rt.docsService).ServeHTTP(w, r)
+			return
+		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
+			apihttp.NewBlobDownloadHandler(rt.repo, rt.store).ServeHTTP(w, r)
+			return
+		case r.Method == http.MethodGet || r.Method == http.MethodHead:
+			spaHandler.ServeHTTP(w, r)
+			return
+		default:
+			http.NotFound(w, r)
+			return
+		}
+	}))
+}
+
+func newAPIMux(rt *serveRuntime) *http.ServeMux {
+	apiMux := http.NewServeMux()
+
+	sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
+		apiconnect.NewSessionHandler(sessionservice.New(rt.repo, rt.sessionManager, rt.cfg.Auth.PasswordEnabled, rt.cfg.Auth.OAuthEnabled)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(sessionAPIPath, rt.middleware.Get("session")(sessionAPIHandler))
+
+	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
+		apiconnect.NewCommitteeHandler(committeeservice.New(rt.repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(committeeAPIPath, rt.middleware.Get("session")(committeeAPIHandler))
+
+	meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
+		apiconnect.NewMeetingHandler(meetingservice.New(rt.repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(meetingAPIPath, rt.middleware.Get("session")(meetingAPIHandler))
+
+	moderationAPIPath, moderationAPIHandler := moderationv1connect.NewModerationServiceHandler(
+		apiconnect.NewModerationHandler(moderationservice.New(rt.repo, rt.broker)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(moderationAPIPath, rt.middleware.Get("session")(moderationAPIHandler))
+
+	attendeeAPIPath, attendeeAPIHandler := attendeesv1connect.NewAttendeeServiceHandler(
+		apiconnect.NewAttendeeHandler(attendeeservice.New(rt.repo, rt.sessionManager, rt.broker)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(attendeeAPIPath, rt.middleware.Get("session")(attendeeAPIHandler))
+
+	agendaAPIPath, agendaAPIHandler := agendav1connect.NewAgendaServiceHandler(
+		apiconnect.NewAgendaHandler(agendaservice.New(rt.repo, rt.broker, rt.store)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(agendaAPIPath, rt.middleware.Get("session")(agendaAPIHandler))
+
+	speakerAPIPath, speakerAPIHandler := speakersv1connect.NewSpeakerServiceHandler(
+		apiconnect.NewSpeakerHandler(speakerservice.New(rt.repo, rt.broker)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(speakerAPIPath, rt.middleware.Get("session")(speakerAPIHandler))
+
+	voteAPIPath, voteAPIHandler := votesv1connect.NewVoteServiceHandler(
+		apiconnect.NewVoteHandler(voteservice.New(rt.repo, rt.broker)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(voteAPIPath, rt.middleware.Get("session")(voteAPIHandler))
+
+	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
+		apiconnect.NewAdminHandler(adminservice.New(rt.repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(adminAPIPath, rt.middleware.Get("session")(adminAPIHandler))
+
+	apiMux.Handle("GET /realtime/meetings/{meetingId}/events", apihttp.NewMeetingEventsHandler(rt.broker))
+	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
+		rt.middleware.Get("session")(apihttp.NewAttachmentUploadHandler(rt.repo, rt.store)),
+	)
+	apiMux.Handle("GET /blobs/{blobId}/download", apihttp.NewBlobDownloadHandler(rt.repo, rt.store))
+	apiMux.Handle("POST /votes/verify/open", apihttp.NewVerifyOpenVoteReceiptHandler(rt.repo))
+	apiMux.Handle("POST /votes/verify/secret", apihttp.NewVerifySecretVoteReceiptHandler(rt.repo))
+	apiMux.Handle("GET /docs/page/{docPath...}", apihttp.NewDocsPageHandler(rt.docsService))
+	apiMux.Handle("GET /docs/search", apihttp.NewDocsSearchHandler(rt.docsService))
+	apiMux.Handle("GET /docs/assets/{assetPath...}", apihttp.NewDocsAssetHandler(rt.docsService))
+
+	return apiMux
+}
+
+func handleLocaleSwitch(w http.ResponseWriter, r *http.Request) {
+	lang := r.FormValue("lang")
+	supported := map[string]bool{"en": true, "de": true}
+	if !supported[lang] {
+		http.Error(w, "unsupported locale", http.StatusBadRequest)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "locale",
+		Value:    lang,
+		Path:     "/",
+		MaxAge:   365 * 24 * 60 * 60,
+		SameSite: http.SameSiteLaxMode,
+	})
+	ref := r.Header.Get("Referer")
+	if ref == "" {
+		ref = "/"
+	}
+	http.Redirect(w, r, ref, http.StatusSeeOther)
 }
 
 func init() {

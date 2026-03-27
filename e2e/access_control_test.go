@@ -102,8 +102,8 @@ func TestAccess_CommitteeDashboard_Unauthenticated_RedirectedToLogin(t *testing.
 	if _, err := page.Goto(ts.URL + "/committee/test-committee"); err != nil {
 		t.Fatalf("goto /committee/test-committee: %v", err)
 	}
-	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to / for unauthenticated committee dashboard: %v", err)
+	if err := page.WaitForURL(ts.URL + "/login"); err != nil {
+		t.Fatalf("expected redirect to /login for unauthenticated committee dashboard: %v", err)
 	}
 }
 
@@ -118,13 +118,10 @@ func TestAccess_CommitteeDashboard_WrongCommitteeUser_Forbidden(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "committee-a", "user-a", "pass123")
 
-	resp, err := page.Goto(ts.URL + "/committee/committee-b")
-	if err != nil {
+	if _, err := page.Goto(ts.URL + "/committee/committee-b"); err != nil {
 		t.Fatalf("goto /committee/committee-b: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 when accessing wrong committee dashboard, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "not a member of this committee")
 }
 
 // TestAccess_CommitteeDashboard_Member_Allowed verifies that a member-role user can
@@ -169,13 +166,10 @@ func TestAccess_MeetingPage_Member_NonActiveMeetingForbidden(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")
 
-	resp, err := page.Goto(ts.URL + "/committee/test-committee/meeting/" + oldMeetingID)
-	if err != nil {
+	if _, err := page.Goto(ts.URL + "/committee/test-committee/meeting/" + oldMeetingID); err != nil {
 		t.Fatalf("goto old meeting page as member: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for member on non-active meeting page, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "meeting is not currently active")
 }
 
 // ─── Manage Page ─────────────────────────────────────────────────────────────
@@ -194,8 +188,8 @@ func TestAccess_ManagePage_Unauthenticated_RedirectedToLogin(t *testing.T) {
 	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page: %v", err)
 	}
-	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to / for unauthenticated moderate page: %v", err)
+	if err := page.WaitForURL(ts.URL + "/login"); err != nil {
+		t.Fatalf("expected redirect to /login for unauthenticated moderate page: %v", err)
 	}
 }
 
@@ -211,13 +205,10 @@ func TestAccess_ManagePage_Member_Forbidden(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")
 
-	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page as member: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for member user on moderate page, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "chairperson role required")
 }
 
 // TestAccess_ManagePage_WrongCommitteeUser_Forbidden verifies that a chairperson
@@ -233,13 +224,10 @@ func TestAccess_ManagePage_WrongCommitteeUser_Forbidden(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "committee-a", "chair-a", "pass123")
 
-	resp, err := page.Goto(manageURL(ts.URL, "committee-b", meetingID))
-	if err != nil {
+	if _, err := page.Goto(manageURL(ts.URL, "committee-b", meetingID)); err != nil {
 		t.Fatalf("goto wrong-committee moderate page: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for wrong-committee chairperson on moderate page, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "chairperson role required")
 }
 
 // TestAccess_ManagePage_WrongMeetingAttendee_Forbidden verifies that a chair attendee
@@ -257,13 +245,10 @@ func TestAccess_ManagePage_WrongMeetingAttendee_Forbidden(t *testing.T) {
 	page := newPage(t)
 	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingA, "secret-chair-a")
 
-	resp, err := page.Goto(manageURL(ts.URL, "test-committee", meetingB))
-	if err != nil {
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingB)); err != nil {
 		t.Fatalf("goto wrong-meeting moderate page: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for chair attendee of meeting A on meeting B moderate page, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "chairperson role required")
 }
 
 // TestAccess_ManagePage_DesignatedModerator_Forbidden verifies that an attendee who
@@ -306,8 +291,8 @@ func TestAccess_ModeratePage_Unauthenticated_RedirectedToLogin(t *testing.T) {
 	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page: %v", err)
 	}
-	if err := page.WaitForURL(ts.URL + "/"); err != nil {
-		t.Fatalf("expected redirect to / for unauthenticated moderate page: %v", err)
+	if err := page.WaitForURL(ts.URL + "/login"); err != nil {
+		t.Fatalf("expected redirect to /login for unauthenticated moderate page: %v", err)
 	}
 }
 
@@ -323,13 +308,10 @@ func TestAccess_ModeratePage_Member_Forbidden(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "member1", "pass123")
 
-	resp, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
+	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page as member: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for member user on moderate page, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "chairperson role required")
 }
 
 // A designated meeting moderator has a narrow access window:
@@ -354,7 +336,7 @@ func TestAccess_DesignatedModerator_ModerateAllowed(t *testing.T) {
 	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page as designated moderator: %v", err)
 	}
-	if err := page.Locator("h2:has-text('Speakers')").WaitFor(); err != nil {
+	if err := page.Locator("#speakers-list-container").WaitFor(); err != nil {
 		t.Fatalf("expected moderate page to render for designated moderator: %v", err)
 	}
 

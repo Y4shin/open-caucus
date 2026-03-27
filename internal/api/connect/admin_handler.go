@@ -35,6 +35,14 @@ func (h *AdminHandler) ListAccounts(ctx context.Context, req *connect.Request[ad
 	return connect.NewResponse(resp), nil
 }
 
+func (h *AdminHandler) CreateAccount(ctx context.Context, req *connect.Request[adminv1.CreateAccountRequest]) (*connect.Response[adminv1.CreateAccountResponse], error) {
+	resp, err := h.service.CreateAccount(ctx, req.Msg.Username, req.Msg.FullName, req.Msg.Password)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (h *AdminHandler) SetAccountAdmin(ctx context.Context, req *connect.Request[adminv1.SetAccountAdminRequest]) (*connect.Response[adminv1.SetAccountAdminResponse], error) {
 	resp, err := h.service.SetAccountAdmin(ctx, req.Msg.AccountId, req.Msg.IsAdmin)
 	if err != nil {

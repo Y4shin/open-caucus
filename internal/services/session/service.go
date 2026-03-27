@@ -20,13 +20,15 @@ type Service struct {
 	repo            repository.Repository
 	sessionManager  *session.Manager
 	passwordEnabled bool
+	oauthEnabled    bool
 }
 
-func New(repo repository.Repository, sessionManager *session.Manager, passwordEnabled bool) *Service {
+func New(repo repository.Repository, sessionManager *session.Manager, passwordEnabled, oauthEnabled bool) *Service {
 	return &Service{
 		repo:            repo,
 		sessionManager:  sessionManager,
 		passwordEnabled: passwordEnabled,
+		oauthEnabled:    oauthEnabled,
 	}
 }
 
@@ -102,9 +104,11 @@ func (s *Service) Logout(ctx context.Context, signedSessionID string) (*sessionv
 
 func (s *Service) buildBootstrap(ctx context.Context, sd *session.SessionData) (*sessionv1.SessionBootstrap, error) {
 	bootstrap := &sessionv1.SessionBootstrap{
-		Authenticated: false,
-		Locale:        resolvedLocale(ctx),
-		Capabilities:  []*commonv1.Capability{},
+		Authenticated:   false,
+		Locale:          resolvedLocale(ctx),
+		Capabilities:    []*commonv1.Capability{},
+		PasswordEnabled: s.passwordEnabled,
+		OauthEnabled:    s.oauthEnabled,
 	}
 
 	if sd == nil || sd.IsExpired() {
@@ -118,9 +122,11 @@ func (s *Service) buildBootstrap(ctx context.Context, sd *session.SessionData) (
 		account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
 		if err != nil {
 			return &sessionv1.SessionBootstrap{
-				Authenticated: false,
-				Locale:        bootstrap.Locale,
-				Capabilities:  []*commonv1.Capability{},
+				Authenticated:   false,
+				Locale:          bootstrap.Locale,
+				Capabilities:    []*commonv1.Capability{},
+				PasswordEnabled: s.passwordEnabled,
+				OauthEnabled:    s.oauthEnabled,
 			}, nil
 		}
 
@@ -164,9 +170,11 @@ func (s *Service) buildBootstrap(ctx context.Context, sd *session.SessionData) (
 		attendee, err := s.repo.GetAttendeeByID(ctx, *sd.AttendeeID)
 		if err != nil {
 			return &sessionv1.SessionBootstrap{
-				Authenticated: false,
-				Locale:        bootstrap.Locale,
-				Capabilities:  []*commonv1.Capability{},
+				Authenticated:   false,
+				Locale:          bootstrap.Locale,
+				Capabilities:    []*commonv1.Capability{},
+				PasswordEnabled: s.passwordEnabled,
+				OauthEnabled:    s.oauthEnabled,
 			}, nil
 		}
 

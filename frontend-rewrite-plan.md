@@ -8,16 +8,16 @@ This is a deliberate architectural rewrite, not an incremental migration. The go
 
 ## Status Snapshot
 
-Last updated: 2026-03-25
+Last updated: 2026-03-27
 
-- Current phase: `Phase 5 - Full Feature Port`
+- Current phase: `Phase 6 - Legacy Removal`
 - Phase 0 status: `Completed`
 - Phase 1 status: `Completed`
 - Phase 2 status: `Completed`
 - Phase 3 status: `Completed`
 - Phase 4 status: `Completed`
-- Phase 5 status: `In progress`
-- Phase 6 status: `Not started`
+- Phase 5 status: `Completed`
+- Phase 6 status: `In progress`
 - Rewrite strategy: `Big-bang rewrite approved`
 
 ## Current Implementation Baseline
@@ -62,7 +62,7 @@ The repository is still primarily on the original architecture at the time of th
 - `buf.yaml` and `buf.gen.yaml` now exist.
 - Initial generated Go stubs now exist under `gen/go/`.
 - Generated TypeScript clients now exist under `web/src/lib/gen/` and are consumed directly by the SPA.
-- The SPA now covers session bootstrap, committee home/overview, meeting join and attendee login, live meeting state, moderation speaker controls, the first typed agenda-management workflows, and an initial open-ballot voting slice.
+- The SPA now covers session bootstrap, committee home/overview, meeting join and attendee login, live meeting state, moderation speaker controls, typed agenda-management workflows, vote draft editing, open and secret ballot handling, admin/account management, docs/public verification pages, and attachment/file-serving flows.
 
 ## Target Architecture
 
@@ -1518,6 +1518,6 @@ The rewrite is complete when:
 
 ## Immediate Next Steps
 
-1. Continue voting parity work for draft editing, secret-ballot handling, moderator tally flows, and any remaining vote verification screens.
-2. Finish the remaining Phase 5 areas: admin/account management, public docs/verification pages, and attachment/file-serving flows.
-3. Expand API integration coverage and mapping rows for the remaining unported or partially ported Phase 5 feature areas before legacy removal begins.
+1. Expand the E2E-to-API mapping matrix for the completed Phase 5 workflows so the legacy-removal phase has an accurate parity baseline.
+2. Continue replacing HTML-over-SSE and HTMX-specific partial refresh paths with typed JSON invalidation plus SPA refetch flows.
+3. Identify and remove legacy SSR/HTMX surfaces in low-risk slices, starting with documentation, obsolete helpers, and duplicate transport glue before attempting route-generator removal.

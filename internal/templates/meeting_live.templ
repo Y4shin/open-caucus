@@ -388,107 +388,109 @@ templ LiveSpeakerCard(input AttendeeSpeakersListPartialInput, s SpeakerItem, var
 // AttendeeSpeakersListPartial renders the inner content of the attendee speakers list.
 // It is used both for the initial page render and as SSE event data.
 templ AttendeeSpeakersListPartial(input AttendeeSpeakersListPartialInput) {
-	@LiveAgendaMainStackOOB(input)
-	<div id="live-speakers-panel-meta" hx-swap-oob="innerHTML" hidden>
-		@LiveSpeakersPanelMetaFromPartial(input)
-	</div>
-	<template>
-		@LiveVotesPanelPartial(voteLivePanelInputWithOOB(input.Votes))
-	</template>
-	<div id="live-doc-fab-oob" hx-swap-oob="innerHTML:#live-doc-fab-wrapper" hidden>
-		@LiveDocFabContent(input.toCurrentDocInput())
-	</div>
-	if !input.HasActiveAP {
-		<p>{ i18n.T(ctx, "meeting_live.no_active_agenda") }</p>
-	}
-	if input.HasActiveAP {
-		<div class="flex h-full min-h-0 flex-1 flex-col gap-3">
-			<div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden" data-testid="live-speakers-active-viewport">
-				@ErrorMessage(input.Error)
-				if len(input.ActiveSpeakers()) == 0 {
-					<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
-				} else {
-					<ul class={ "list w-full min-w-0 rounded-box border border-base-300 bg-base-100", "live-speaker-list" } data-testid="live-speakers-active-list">
-						for _, s := range input.ActiveSpeakers() {
-							@LiveSpeakerCard(input, s, input.CardVariant(s), nil, false)
-						}
-					</ul>
-				}
-			</div>
-			<div class={ "live-self-add-row mt-auto shrink-0", "live-self-add-row mt-auto shrink-0" }>
-				if input.IsCurrentAttendeeSpeaking() {
-					<form
-						hx-post={ input.SelfYieldPostStr(ctx) }
-						hx-target="#attendee-speakers-list"
-						hx-swap="innerHTML"
-						class="w-full"
-					>
-						<button
-							type="submit"
-							class="btn btn-sm btn-error w-full"
-							data-testid="live-self-yield"
-							aria-label={ i18n.T(ctx, "meeting_live.yield_speech") }
-							title={ i18n.T(ctx, "meeting_live.yield_speech") }
-						>
-							@Icon(IconMic, "", "live-self-add-icon")
-							<span>{ i18n.T(ctx, "meeting_live.yield_speech") }</span>
-						</button>
-					</form>
-				} else {
-					<form
-						hx-post={ input.SelfAddPostStr(ctx) }
-						hx-target="#attendee-speakers-list"
-						hx-swap="innerHTML"
-						class="w-full"
-					>
-						<div class="join flex w-full">
-							<button
-								type="submit"
-								name="type"
-								value="regular"
-								class="join-item btn btn-sm w-2/3"
-								data-testid="live-add-self-regular"
-								aria-label={ i18n.T(ctx, "meeting_live.add_self_regular") }
-								title={ i18n.T(ctx, "meeting_live.add_self_regular") }
-								disabled?={ input.HasCurrentAttendeeWaitingType("regular") }
-							>
-								@Icon(IconPersonRaised, "", "live-self-add-icon")
-							</button>
-							<button
-								type="submit"
-								name="type"
-								value="ropm"
-								class="join-item btn btn-sm btn-warning w-1/3"
-								data-testid="live-add-self-ropm"
-								aria-label={ i18n.T(ctx, "meeting_live.add_self_ropm") }
-								title={ i18n.T(ctx, "meeting_live.add_self_ropm") }
-								disabled?={ input.HasCurrentAttendeeWaitingType("ropm") }
-							>
-								@Icon(IconScale, "", "live-self-add-icon")
-							</button>
-						</div>
-					</form>
-				}
-			</div>
-			<dialog id="speakers-full-dialog" class="modal" data-live-dialog>
-				<div class={ "modal-box max-w-4xl", "live-speaker-history-dialog" }>
-					<div class="mb-3 flex items-center justify-between gap-3">
-						<h3 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_live.speakers_heading") }</h3>
-						<button type="button" class="btn btn-sm btn-ghost shrink-0" data-live-dialog-close>{ i18n.T(ctx, "meeting_live.agenda_full_close") }</button>
-					</div>
+	<div class="contents">
+		if !input.HasActiveAP {
+			<p>{ i18n.T(ctx, "meeting_live.no_active_agenda") }</p>
+		}
+		if input.HasActiveAP {
+			<div class="flex h-full min-h-0 flex-1 flex-col gap-3">
+				<div class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden" data-testid="live-speakers-active-viewport">
+					@ErrorMessage(input.Error)
 					if len(input.ActiveSpeakers()) == 0 {
 						<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
 					} else {
-						<ul class={ "list w-full min-w-0 rounded-box border border-base-300 bg-base-100", "live-speaker-list" }>
+						<ul class={ "list w-full min-w-0 rounded-box border border-base-300 bg-base-100", "live-speaker-list" } data-testid="live-speakers-active-list">
 							for _, s := range input.ActiveSpeakers() {
 								@LiveSpeakerCard(input, s, input.CardVariant(s), nil, false)
 							}
 						</ul>
 					}
 				</div>
-			</dialog>
+				<div class={ "live-self-add-row mt-auto shrink-0", "live-self-add-row mt-auto shrink-0" }>
+					if input.IsCurrentAttendeeSpeaking() {
+						<form
+							hx-post={ input.SelfYieldPostStr(ctx) }
+							hx-target="#attendee-speakers-list"
+							hx-swap="innerHTML"
+							class="w-full"
+						>
+							<button
+								type="submit"
+								class="btn btn-sm btn-error w-full"
+								data-testid="live-self-yield"
+								aria-label={ i18n.T(ctx, "meeting_live.yield_speech") }
+								title={ i18n.T(ctx, "meeting_live.yield_speech") }
+							>
+								@Icon(IconMic, "", "live-self-add-icon")
+								<span>{ i18n.T(ctx, "meeting_live.yield_speech") }</span>
+							</button>
+						</form>
+					} else {
+						<form
+							hx-post={ input.SelfAddPostStr(ctx) }
+							hx-target="#attendee-speakers-list"
+							hx-swap="innerHTML"
+							class="w-full"
+						>
+							<div class="join flex w-full">
+								<button
+									type="submit"
+									name="type"
+									value="regular"
+									class="join-item btn btn-sm w-2/3"
+									data-testid="live-add-self-regular"
+									aria-label={ i18n.T(ctx, "meeting_live.add_self_regular") }
+									title={ i18n.T(ctx, "meeting_live.add_self_regular") }
+									disabled?={ input.HasCurrentAttendeeWaitingType("regular") }
+								>
+									@Icon(IconPersonRaised, "", "live-self-add-icon")
+								</button>
+								<button
+									type="submit"
+									name="type"
+									value="ropm"
+									class="join-item btn btn-sm btn-warning w-1/3"
+									data-testid="live-add-self-ropm"
+									aria-label={ i18n.T(ctx, "meeting_live.add_self_ropm") }
+									title={ i18n.T(ctx, "meeting_live.add_self_ropm") }
+									disabled?={ input.HasCurrentAttendeeWaitingType("ropm") }
+								>
+									@Icon(IconScale, "", "live-self-add-icon")
+								</button>
+							</div>
+						</form>
+					}
+				</div>
+				<dialog id="speakers-full-dialog" class="modal" data-live-dialog>
+					<div class={ "modal-box max-w-4xl", "live-speaker-history-dialog" }>
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<h3 class="text-lg font-semibold">{ i18n.T(ctx, "meeting_live.speakers_heading") }</h3>
+							<button type="button" class="btn btn-sm btn-ghost shrink-0" data-live-dialog-close>{ i18n.T(ctx, "meeting_live.agenda_full_close") }</button>
+						</div>
+						if len(input.ActiveSpeakers()) == 0 {
+							<p class={ "live-empty-state text-base-content/70" }>{ i18n.T(ctx, "meeting_live.no_speakers") }</p>
+						} else {
+							<ul class={ "list w-full min-w-0 rounded-box border border-base-300 bg-base-100", "live-speaker-list" }>
+								for _, s := range input.ActiveSpeakers() {
+									@LiveSpeakerCard(input, s, input.CardVariant(s), nil, false)
+								}
+							</ul>
+						}
+					</div>
+				</dialog>
+			</div>
+		}
+		@LiveAgendaMainStackOOB(input)
+		<div id="live-speakers-panel-meta" hx-swap-oob="innerHTML" hidden>
+			@LiveSpeakersPanelMetaFromPartial(input)
 		</div>
-	}
+		<template>
+			@LiveVotesPanelPartial(voteLivePanelInputWithOOB(input.Votes))
+		</template>
+		<div id="live-doc-fab-oob" hx-swap-oob="innerHTML:#live-doc-fab-wrapper" hidden>
+			@LiveDocFabContent(input.toCurrentDocInput())
+		</div>
+	</div>
 }
 
 func (i *AttendeeSpeakersListPartialInput) SelfAddPostStr(ctx context.Context) string {

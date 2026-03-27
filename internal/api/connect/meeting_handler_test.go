@@ -113,6 +113,9 @@ func TestMeetingServiceGetLiveMeeting_MemberCanSignupWhenOpen(t *testing.T) {
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "member1", "pass123", "Member One", "member")
 	meetingID := ts.seedMeeting(t, "test-committee", "Open Meeting", true)
+	if err := ts.repo.SetActiveMeeting(context.Background(), "test-committee", &meetingID); err != nil {
+		t.Fatalf("set active meeting: %v", err)
+	}
 
 	client := newCombinedTestClient(t, ts)
 
@@ -157,6 +160,9 @@ func TestMeetingServiceGetLiveMeeting_SignupClosedNoSelfSignup(t *testing.T) {
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "member1", "pass123", "Member One", "member")
 	meetingID := ts.seedMeeting(t, "test-committee", "Closed Meeting", false)
+	if err := ts.repo.SetActiveMeeting(context.Background(), "test-committee", &meetingID); err != nil {
+		t.Fatalf("set active meeting: %v", err)
+	}
 
 	client := newCombinedTestClient(t, ts)
 

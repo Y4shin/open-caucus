@@ -19,9 +19,7 @@ func attendeeLiveSpeakerRows(page playwright.Page) playwright.Locator {
 // attendeeLoginHelper navigates to the attendee-login page and authenticates with the given secret.
 func attendeeLoginHelper(t *testing.T, page playwright.Page, baseURL, slug, meetingID, secret string) {
 	t.Helper()
-	if _, err := page.Goto(attendeeLoginURL(baseURL, slug, meetingID)); err != nil {
-		t.Fatalf("goto attendee-login: %v", err)
-	}
+	gotoAndWaitForInput(t, page, attendeeLoginURL(baseURL, slug, meetingID), "input[name=secret]")
 	if err := page.Locator("input[name=secret]").Fill(secret); err != nil {
 		t.Fatalf("fill secret: %v", err)
 	}
@@ -172,5 +170,3 @@ func TestAttendeeLive_SelfAddButtons(t *testing.T) {
 		return count >= 2, err
 	}, "second speaker row for Alice after PO self-add")
 }
-
-

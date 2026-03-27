@@ -493,6 +493,110 @@ func (x *ListAccountsResponse) GetTotalCount() int64 {
 	return 0
 }
 
+type CreateAccountRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	FullName      string                 `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAccountRequest) Reset() {
+	*x = CreateAccountRequest{}
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAccountRequest) ProtoMessage() {}
+
+func (x *CreateAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAccountRequest.ProtoReflect.Descriptor instead.
+func (*CreateAccountRequest) Descriptor() ([]byte, []int) {
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CreateAccountRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *CreateAccountRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *CreateAccountRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type CreateAccountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Account       *AccountRecord         `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAccountResponse) Reset() {
+	*x = CreateAccountResponse{}
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAccountResponse) ProtoMessage() {}
+
+func (x *CreateAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAccountResponse.ProtoReflect.Descriptor instead.
+func (*CreateAccountResponse) Descriptor() ([]byte, []int) {
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CreateAccountResponse) GetAccount() *AccountRecord {
+	if x != nil {
+		return x.Account
+	}
+	return nil
+}
+
 type SetAccountAdminRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
@@ -503,7 +607,7 @@ type SetAccountAdminRequest struct {
 
 func (x *SetAccountAdminRequest) Reset() {
 	*x = SetAccountAdminRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[8]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -515,7 +619,7 @@ func (x *SetAccountAdminRequest) String() string {
 func (*SetAccountAdminRequest) ProtoMessage() {}
 
 func (x *SetAccountAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[8]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -528,7 +632,7 @@ func (x *SetAccountAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetAccountAdminRequest.ProtoReflect.Descriptor instead.
 func (*SetAccountAdminRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{8}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SetAccountAdminRequest) GetAccountId() string {
@@ -554,7 +658,7 @@ type SetAccountAdminResponse struct {
 
 func (x *SetAccountAdminResponse) Reset() {
 	*x = SetAccountAdminResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[9]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -566,7 +670,7 @@ func (x *SetAccountAdminResponse) String() string {
 func (*SetAccountAdminResponse) ProtoMessage() {}
 
 func (x *SetAccountAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[9]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -579,7 +683,7 @@ func (x *SetAccountAdminResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetAccountAdminResponse.ProtoReflect.Descriptor instead.
 func (*SetAccountAdminResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{9}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SetAccountAdminResponse) GetAccount() *AccountRecord {
@@ -599,7 +703,7 @@ type ListCommitteesRequest struct {
 
 func (x *ListCommitteesRequest) Reset() {
 	*x = ListCommitteesRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[10]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -611,7 +715,7 @@ func (x *ListCommitteesRequest) String() string {
 func (*ListCommitteesRequest) ProtoMessage() {}
 
 func (x *ListCommitteesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[10]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -624,7 +728,7 @@ func (x *ListCommitteesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitteesRequest.ProtoReflect.Descriptor instead.
 func (*ListCommitteesRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{10}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListCommitteesRequest) GetPage() int32 {
@@ -651,7 +755,7 @@ type ListCommitteesResponse struct {
 
 func (x *ListCommitteesResponse) Reset() {
 	*x = ListCommitteesResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[11]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -663,7 +767,7 @@ func (x *ListCommitteesResponse) String() string {
 func (*ListCommitteesResponse) ProtoMessage() {}
 
 func (x *ListCommitteesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[11]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -676,7 +780,7 @@ func (x *ListCommitteesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitteesResponse.ProtoReflect.Descriptor instead.
 func (*ListCommitteesResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{11}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListCommitteesResponse) GetCommittees() []*CommitteeRecord {
@@ -703,7 +807,7 @@ type CreateCommitteeRequest struct {
 
 func (x *CreateCommitteeRequest) Reset() {
 	*x = CreateCommitteeRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[12]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -715,7 +819,7 @@ func (x *CreateCommitteeRequest) String() string {
 func (*CreateCommitteeRequest) ProtoMessage() {}
 
 func (x *CreateCommitteeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[12]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -728,7 +832,7 @@ func (x *CreateCommitteeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCommitteeRequest.ProtoReflect.Descriptor instead.
 func (*CreateCommitteeRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{12}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CreateCommitteeRequest) GetName() string {
@@ -754,7 +858,7 @@ type CreateCommitteeResponse struct {
 
 func (x *CreateCommitteeResponse) Reset() {
 	*x = CreateCommitteeResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[13]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -766,7 +870,7 @@ func (x *CreateCommitteeResponse) String() string {
 func (*CreateCommitteeResponse) ProtoMessage() {}
 
 func (x *CreateCommitteeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[13]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -779,7 +883,7 @@ func (x *CreateCommitteeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCommitteeResponse.ProtoReflect.Descriptor instead.
 func (*CreateCommitteeResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{13}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CreateCommitteeResponse) GetCommittee() *CommitteeRecord {
@@ -798,7 +902,7 @@ type DeleteCommitteeRequest struct {
 
 func (x *DeleteCommitteeRequest) Reset() {
 	*x = DeleteCommitteeRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[14]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -810,7 +914,7 @@ func (x *DeleteCommitteeRequest) String() string {
 func (*DeleteCommitteeRequest) ProtoMessage() {}
 
 func (x *DeleteCommitteeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[14]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -823,7 +927,7 @@ func (x *DeleteCommitteeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCommitteeRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCommitteeRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{14}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DeleteCommitteeRequest) GetSlug() string {
@@ -841,7 +945,7 @@ type DeleteCommitteeResponse struct {
 
 func (x *DeleteCommitteeResponse) Reset() {
 	*x = DeleteCommitteeResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[15]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -853,7 +957,7 @@ func (x *DeleteCommitteeResponse) String() string {
 func (*DeleteCommitteeResponse) ProtoMessage() {}
 
 func (x *DeleteCommitteeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[15]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -866,7 +970,7 @@ func (x *DeleteCommitteeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCommitteeResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCommitteeResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{15}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{17}
 }
 
 type GetCommitteeAdminRequest struct {
@@ -878,7 +982,7 @@ type GetCommitteeAdminRequest struct {
 
 func (x *GetCommitteeAdminRequest) Reset() {
 	*x = GetCommitteeAdminRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[16]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -890,7 +994,7 @@ func (x *GetCommitteeAdminRequest) String() string {
 func (*GetCommitteeAdminRequest) ProtoMessage() {}
 
 func (x *GetCommitteeAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[16]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -903,7 +1007,7 @@ func (x *GetCommitteeAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCommitteeAdminRequest.ProtoReflect.Descriptor instead.
 func (*GetCommitteeAdminRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{16}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetCommitteeAdminRequest) GetSlug() string {
@@ -924,7 +1028,7 @@ type GetCommitteeAdminResponse struct {
 
 func (x *GetCommitteeAdminResponse) Reset() {
 	*x = GetCommitteeAdminResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[17]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -936,7 +1040,7 @@ func (x *GetCommitteeAdminResponse) String() string {
 func (*GetCommitteeAdminResponse) ProtoMessage() {}
 
 func (x *GetCommitteeAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[17]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -949,7 +1053,7 @@ func (x *GetCommitteeAdminResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCommitteeAdminResponse.ProtoReflect.Descriptor instead.
 func (*GetCommitteeAdminResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{17}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetCommitteeAdminResponse) GetCommittee() *CommitteeRecord {
@@ -984,7 +1088,7 @@ type ListCommitteeUsersRequest struct {
 
 func (x *ListCommitteeUsersRequest) Reset() {
 	*x = ListCommitteeUsersRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[18]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -996,7 +1100,7 @@ func (x *ListCommitteeUsersRequest) String() string {
 func (*ListCommitteeUsersRequest) ProtoMessage() {}
 
 func (x *ListCommitteeUsersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[18]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1009,7 +1113,7 @@ func (x *ListCommitteeUsersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitteeUsersRequest.ProtoReflect.Descriptor instead.
 func (*ListCommitteeUsersRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{18}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListCommitteeUsersRequest) GetSlug() string {
@@ -1043,7 +1147,7 @@ type ListCommitteeUsersResponse struct {
 
 func (x *ListCommitteeUsersResponse) Reset() {
 	*x = ListCommitteeUsersResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[19]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1055,7 +1159,7 @@ func (x *ListCommitteeUsersResponse) String() string {
 func (*ListCommitteeUsersResponse) ProtoMessage() {}
 
 func (x *ListCommitteeUsersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[19]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1068,7 +1172,7 @@ func (x *ListCommitteeUsersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitteeUsersResponse.ProtoReflect.Descriptor instead.
 func (*ListCommitteeUsersResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{19}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ListCommitteeUsersResponse) GetUsers() []*CommitteeUserRecord {
@@ -1099,7 +1203,7 @@ type CreateCommitteeUserRequest struct {
 
 func (x *CreateCommitteeUserRequest) Reset() {
 	*x = CreateCommitteeUserRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[20]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1111,7 +1215,7 @@ func (x *CreateCommitteeUserRequest) String() string {
 func (*CreateCommitteeUserRequest) ProtoMessage() {}
 
 func (x *CreateCommitteeUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[20]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1124,7 +1228,7 @@ func (x *CreateCommitteeUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCommitteeUserRequest.ProtoReflect.Descriptor instead.
 func (*CreateCommitteeUserRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{20}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateCommitteeUserRequest) GetSlug() string {
@@ -1178,7 +1282,7 @@ type CreateCommitteeUserResponse struct {
 
 func (x *CreateCommitteeUserResponse) Reset() {
 	*x = CreateCommitteeUserResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[21]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1190,7 +1294,7 @@ func (x *CreateCommitteeUserResponse) String() string {
 func (*CreateCommitteeUserResponse) ProtoMessage() {}
 
 func (x *CreateCommitteeUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[21]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1203,7 +1307,7 @@ func (x *CreateCommitteeUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCommitteeUserResponse.ProtoReflect.Descriptor instead.
 func (*CreateCommitteeUserResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{21}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateCommitteeUserResponse) GetUser() *CommitteeUserRecord {
@@ -1223,7 +1327,7 @@ type DeleteCommitteeUserRequest struct {
 
 func (x *DeleteCommitteeUserRequest) Reset() {
 	*x = DeleteCommitteeUserRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[22]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1235,7 +1339,7 @@ func (x *DeleteCommitteeUserRequest) String() string {
 func (*DeleteCommitteeUserRequest) ProtoMessage() {}
 
 func (x *DeleteCommitteeUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[22]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1248,7 +1352,7 @@ func (x *DeleteCommitteeUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCommitteeUserRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCommitteeUserRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{22}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *DeleteCommitteeUserRequest) GetSlug() string {
@@ -1273,7 +1377,7 @@ type DeleteCommitteeUserResponse struct {
 
 func (x *DeleteCommitteeUserResponse) Reset() {
 	*x = DeleteCommitteeUserResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[23]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1285,7 +1389,7 @@ func (x *DeleteCommitteeUserResponse) String() string {
 func (*DeleteCommitteeUserResponse) ProtoMessage() {}
 
 func (x *DeleteCommitteeUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[23]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1298,7 +1402,7 @@ func (x *DeleteCommitteeUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCommitteeUserResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCommitteeUserResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{23}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{25}
 }
 
 type AssignAccountToCommitteeRequest struct {
@@ -1313,7 +1417,7 @@ type AssignAccountToCommitteeRequest struct {
 
 func (x *AssignAccountToCommitteeRequest) Reset() {
 	*x = AssignAccountToCommitteeRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[24]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1325,7 +1429,7 @@ func (x *AssignAccountToCommitteeRequest) String() string {
 func (*AssignAccountToCommitteeRequest) ProtoMessage() {}
 
 func (x *AssignAccountToCommitteeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[24]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1338,7 +1442,7 @@ func (x *AssignAccountToCommitteeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignAccountToCommitteeRequest.ProtoReflect.Descriptor instead.
 func (*AssignAccountToCommitteeRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{24}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AssignAccountToCommitteeRequest) GetSlug() string {
@@ -1378,7 +1482,7 @@ type AssignAccountToCommitteeResponse struct {
 
 func (x *AssignAccountToCommitteeResponse) Reset() {
 	*x = AssignAccountToCommitteeResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[25]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1390,7 +1494,7 @@ func (x *AssignAccountToCommitteeResponse) String() string {
 func (*AssignAccountToCommitteeResponse) ProtoMessage() {}
 
 func (x *AssignAccountToCommitteeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[25]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1403,7 +1507,7 @@ func (x *AssignAccountToCommitteeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignAccountToCommitteeResponse.ProtoReflect.Descriptor instead.
 func (*AssignAccountToCommitteeResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{25}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *AssignAccountToCommitteeResponse) GetUser() *CommitteeUserRecord {
@@ -1425,7 +1529,7 @@ type UpdateCommitteeUserRequest struct {
 
 func (x *UpdateCommitteeUserRequest) Reset() {
 	*x = UpdateCommitteeUserRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[26]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1437,7 +1541,7 @@ func (x *UpdateCommitteeUserRequest) String() string {
 func (*UpdateCommitteeUserRequest) ProtoMessage() {}
 
 func (x *UpdateCommitteeUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[26]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1450,7 +1554,7 @@ func (x *UpdateCommitteeUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCommitteeUserRequest.ProtoReflect.Descriptor instead.
 func (*UpdateCommitteeUserRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{26}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *UpdateCommitteeUserRequest) GetSlug() string {
@@ -1490,7 +1594,7 @@ type UpdateCommitteeUserResponse struct {
 
 func (x *UpdateCommitteeUserResponse) Reset() {
 	*x = UpdateCommitteeUserResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[27]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1502,7 +1606,7 @@ func (x *UpdateCommitteeUserResponse) String() string {
 func (*UpdateCommitteeUserResponse) ProtoMessage() {}
 
 func (x *UpdateCommitteeUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[27]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1515,7 +1619,7 @@ func (x *UpdateCommitteeUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateCommitteeUserResponse.ProtoReflect.Descriptor instead.
 func (*UpdateCommitteeUserResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{27}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *UpdateCommitteeUserResponse) GetUser() *CommitteeUserRecord {
@@ -1534,7 +1638,7 @@ type ListOAuthRulesRequest struct {
 
 func (x *ListOAuthRulesRequest) Reset() {
 	*x = ListOAuthRulesRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[28]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1546,7 +1650,7 @@ func (x *ListOAuthRulesRequest) String() string {
 func (*ListOAuthRulesRequest) ProtoMessage() {}
 
 func (x *ListOAuthRulesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[28]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1559,7 +1663,7 @@ func (x *ListOAuthRulesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListOAuthRulesRequest.ProtoReflect.Descriptor instead.
 func (*ListOAuthRulesRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{28}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ListOAuthRulesRequest) GetSlug() string {
@@ -1578,7 +1682,7 @@ type ListOAuthRulesResponse struct {
 
 func (x *ListOAuthRulesResponse) Reset() {
 	*x = ListOAuthRulesResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[29]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1590,7 +1694,7 @@ func (x *ListOAuthRulesResponse) String() string {
 func (*ListOAuthRulesResponse) ProtoMessage() {}
 
 func (x *ListOAuthRulesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[29]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1603,7 +1707,7 @@ func (x *ListOAuthRulesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListOAuthRulesResponse.ProtoReflect.Descriptor instead.
 func (*ListOAuthRulesResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{29}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ListOAuthRulesResponse) GetRules() []*OAuthRuleRecord {
@@ -1624,7 +1728,7 @@ type CreateOAuthRuleRequest struct {
 
 func (x *CreateOAuthRuleRequest) Reset() {
 	*x = CreateOAuthRuleRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[30]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1636,7 +1740,7 @@ func (x *CreateOAuthRuleRequest) String() string {
 func (*CreateOAuthRuleRequest) ProtoMessage() {}
 
 func (x *CreateOAuthRuleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[30]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1649,7 +1753,7 @@ func (x *CreateOAuthRuleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateOAuthRuleRequest.ProtoReflect.Descriptor instead.
 func (*CreateOAuthRuleRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{30}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CreateOAuthRuleRequest) GetSlug() string {
@@ -1682,7 +1786,7 @@ type CreateOAuthRuleResponse struct {
 
 func (x *CreateOAuthRuleResponse) Reset() {
 	*x = CreateOAuthRuleResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[31]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1694,7 +1798,7 @@ func (x *CreateOAuthRuleResponse) String() string {
 func (*CreateOAuthRuleResponse) ProtoMessage() {}
 
 func (x *CreateOAuthRuleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[31]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1707,7 +1811,7 @@ func (x *CreateOAuthRuleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateOAuthRuleResponse.ProtoReflect.Descriptor instead.
 func (*CreateOAuthRuleResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{31}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *CreateOAuthRuleResponse) GetRule() *OAuthRuleRecord {
@@ -1727,7 +1831,7 @@ type DeleteOAuthRuleRequest struct {
 
 func (x *DeleteOAuthRuleRequest) Reset() {
 	*x = DeleteOAuthRuleRequest{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[32]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1739,7 +1843,7 @@ func (x *DeleteOAuthRuleRequest) String() string {
 func (*DeleteOAuthRuleRequest) ProtoMessage() {}
 
 func (x *DeleteOAuthRuleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[32]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1752,7 +1856,7 @@ func (x *DeleteOAuthRuleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteOAuthRuleRequest.ProtoReflect.Descriptor instead.
 func (*DeleteOAuthRuleRequest) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{32}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *DeleteOAuthRuleRequest) GetSlug() string {
@@ -1777,7 +1881,7 @@ type DeleteOAuthRuleResponse struct {
 
 func (x *DeleteOAuthRuleResponse) Reset() {
 	*x = DeleteOAuthRuleResponse{}
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[33]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1789,7 +1893,7 @@ func (x *DeleteOAuthRuleResponse) String() string {
 func (*DeleteOAuthRuleResponse) ProtoMessage() {}
 
 func (x *DeleteOAuthRuleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_admin_v1_admin_proto_msgTypes[33]
+	mi := &file_conference_admin_v1_admin_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1802,7 +1906,7 @@ func (x *DeleteOAuthRuleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteOAuthRuleResponse.ProtoReflect.Descriptor instead.
 func (*DeleteOAuthRuleResponse) Descriptor() ([]byte, []int) {
-	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{33}
+	return file_conference_admin_v1_admin_proto_rawDescGZIP(), []int{35}
 }
 
 var File_conference_admin_v1_admin_proto protoreflect.FileDescriptor
@@ -1843,7 +1947,13 @@ const file_conference_admin_v1_admin_proto_rawDesc = "" +
 	"\x14ListAccountsResponse\x12>\n" +
 	"\baccounts\x18\x01 \x03(\v2\".conference.admin.v1.AccountRecordR\baccounts\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x03R\n" +
-	"totalCount\"R\n" +
+	"totalCount\"k\n" +
+	"\x14CreateAccountRequest\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x1b\n" +
+	"\tfull_name\x18\x02 \x01(\tR\bfullName\x12\x1a\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\"U\n" +
+	"\x15CreateAccountResponse\x12<\n" +
+	"\aaccount\x18\x01 \x01(\v2\".conference.admin.v1.AccountRecordR\aaccount\"R\n" +
 	"\x16SetAccountAdminRequest\x12\x1d\n" +
 	"\n" +
 	"account_id\x18\x01 \x01(\tR\taccountId\x12\x19\n" +
@@ -1924,10 +2034,11 @@ const file_conference_admin_v1_admin_proto_rawDesc = "" +
 	"\x16DeleteOAuthRuleRequest\x12\x12\n" +
 	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x17\n" +
 	"\arule_id\x18\x02 \x01(\tR\x06ruleId\"\x19\n" +
-	"\x17DeleteOAuthRuleResponse2\xc6\r\n" +
+	"\x17DeleteOAuthRuleResponse2\xae\x0e\n" +
 	"\fAdminService\x12r\n" +
 	"\x11GetAdminDashboard\x12-.conference.admin.v1.GetAdminDashboardRequest\x1a..conference.admin.v1.GetAdminDashboardResponse\x12c\n" +
-	"\fListAccounts\x12(.conference.admin.v1.ListAccountsRequest\x1a).conference.admin.v1.ListAccountsResponse\x12l\n" +
+	"\fListAccounts\x12(.conference.admin.v1.ListAccountsRequest\x1a).conference.admin.v1.ListAccountsResponse\x12f\n" +
+	"\rCreateAccount\x12).conference.admin.v1.CreateAccountRequest\x1a*.conference.admin.v1.CreateAccountResponse\x12l\n" +
 	"\x0fSetAccountAdmin\x12+.conference.admin.v1.SetAccountAdminRequest\x1a,.conference.admin.v1.SetAccountAdminResponse\x12i\n" +
 	"\x0eListCommittees\x12*.conference.admin.v1.ListCommitteesRequest\x1a+.conference.admin.v1.ListCommitteesResponse\x12l\n" +
 	"\x0fCreateCommittee\x12+.conference.admin.v1.CreateCommitteeRequest\x1a,.conference.admin.v1.CreateCommitteeResponse\x12l\n" +
@@ -1954,7 +2065,7 @@ func file_conference_admin_v1_admin_proto_rawDescGZIP() []byte {
 	return file_conference_admin_v1_admin_proto_rawDescData
 }
 
-var file_conference_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_conference_admin_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_conference_admin_v1_admin_proto_goTypes = []any{
 	(*AccountRecord)(nil),                    // 0: conference.admin.v1.AccountRecord
 	(*CommitteeRecord)(nil),                  // 1: conference.admin.v1.CommitteeRecord
@@ -1964,82 +2075,87 @@ var file_conference_admin_v1_admin_proto_goTypes = []any{
 	(*GetAdminDashboardResponse)(nil),        // 5: conference.admin.v1.GetAdminDashboardResponse
 	(*ListAccountsRequest)(nil),              // 6: conference.admin.v1.ListAccountsRequest
 	(*ListAccountsResponse)(nil),             // 7: conference.admin.v1.ListAccountsResponse
-	(*SetAccountAdminRequest)(nil),           // 8: conference.admin.v1.SetAccountAdminRequest
-	(*SetAccountAdminResponse)(nil),          // 9: conference.admin.v1.SetAccountAdminResponse
-	(*ListCommitteesRequest)(nil),            // 10: conference.admin.v1.ListCommitteesRequest
-	(*ListCommitteesResponse)(nil),           // 11: conference.admin.v1.ListCommitteesResponse
-	(*CreateCommitteeRequest)(nil),           // 12: conference.admin.v1.CreateCommitteeRequest
-	(*CreateCommitteeResponse)(nil),          // 13: conference.admin.v1.CreateCommitteeResponse
-	(*DeleteCommitteeRequest)(nil),           // 14: conference.admin.v1.DeleteCommitteeRequest
-	(*DeleteCommitteeResponse)(nil),          // 15: conference.admin.v1.DeleteCommitteeResponse
-	(*GetCommitteeAdminRequest)(nil),         // 16: conference.admin.v1.GetCommitteeAdminRequest
-	(*GetCommitteeAdminResponse)(nil),        // 17: conference.admin.v1.GetCommitteeAdminResponse
-	(*ListCommitteeUsersRequest)(nil),        // 18: conference.admin.v1.ListCommitteeUsersRequest
-	(*ListCommitteeUsersResponse)(nil),       // 19: conference.admin.v1.ListCommitteeUsersResponse
-	(*CreateCommitteeUserRequest)(nil),       // 20: conference.admin.v1.CreateCommitteeUserRequest
-	(*CreateCommitteeUserResponse)(nil),      // 21: conference.admin.v1.CreateCommitteeUserResponse
-	(*DeleteCommitteeUserRequest)(nil),       // 22: conference.admin.v1.DeleteCommitteeUserRequest
-	(*DeleteCommitteeUserResponse)(nil),      // 23: conference.admin.v1.DeleteCommitteeUserResponse
-	(*AssignAccountToCommitteeRequest)(nil),  // 24: conference.admin.v1.AssignAccountToCommitteeRequest
-	(*AssignAccountToCommitteeResponse)(nil), // 25: conference.admin.v1.AssignAccountToCommitteeResponse
-	(*UpdateCommitteeUserRequest)(nil),       // 26: conference.admin.v1.UpdateCommitteeUserRequest
-	(*UpdateCommitteeUserResponse)(nil),      // 27: conference.admin.v1.UpdateCommitteeUserResponse
-	(*ListOAuthRulesRequest)(nil),            // 28: conference.admin.v1.ListOAuthRulesRequest
-	(*ListOAuthRulesResponse)(nil),           // 29: conference.admin.v1.ListOAuthRulesResponse
-	(*CreateOAuthRuleRequest)(nil),           // 30: conference.admin.v1.CreateOAuthRuleRequest
-	(*CreateOAuthRuleResponse)(nil),          // 31: conference.admin.v1.CreateOAuthRuleResponse
-	(*DeleteOAuthRuleRequest)(nil),           // 32: conference.admin.v1.DeleteOAuthRuleRequest
-	(*DeleteOAuthRuleResponse)(nil),          // 33: conference.admin.v1.DeleteOAuthRuleResponse
+	(*CreateAccountRequest)(nil),             // 8: conference.admin.v1.CreateAccountRequest
+	(*CreateAccountResponse)(nil),            // 9: conference.admin.v1.CreateAccountResponse
+	(*SetAccountAdminRequest)(nil),           // 10: conference.admin.v1.SetAccountAdminRequest
+	(*SetAccountAdminResponse)(nil),          // 11: conference.admin.v1.SetAccountAdminResponse
+	(*ListCommitteesRequest)(nil),            // 12: conference.admin.v1.ListCommitteesRequest
+	(*ListCommitteesResponse)(nil),           // 13: conference.admin.v1.ListCommitteesResponse
+	(*CreateCommitteeRequest)(nil),           // 14: conference.admin.v1.CreateCommitteeRequest
+	(*CreateCommitteeResponse)(nil),          // 15: conference.admin.v1.CreateCommitteeResponse
+	(*DeleteCommitteeRequest)(nil),           // 16: conference.admin.v1.DeleteCommitteeRequest
+	(*DeleteCommitteeResponse)(nil),          // 17: conference.admin.v1.DeleteCommitteeResponse
+	(*GetCommitteeAdminRequest)(nil),         // 18: conference.admin.v1.GetCommitteeAdminRequest
+	(*GetCommitteeAdminResponse)(nil),        // 19: conference.admin.v1.GetCommitteeAdminResponse
+	(*ListCommitteeUsersRequest)(nil),        // 20: conference.admin.v1.ListCommitteeUsersRequest
+	(*ListCommitteeUsersResponse)(nil),       // 21: conference.admin.v1.ListCommitteeUsersResponse
+	(*CreateCommitteeUserRequest)(nil),       // 22: conference.admin.v1.CreateCommitteeUserRequest
+	(*CreateCommitteeUserResponse)(nil),      // 23: conference.admin.v1.CreateCommitteeUserResponse
+	(*DeleteCommitteeUserRequest)(nil),       // 24: conference.admin.v1.DeleteCommitteeUserRequest
+	(*DeleteCommitteeUserResponse)(nil),      // 25: conference.admin.v1.DeleteCommitteeUserResponse
+	(*AssignAccountToCommitteeRequest)(nil),  // 26: conference.admin.v1.AssignAccountToCommitteeRequest
+	(*AssignAccountToCommitteeResponse)(nil), // 27: conference.admin.v1.AssignAccountToCommitteeResponse
+	(*UpdateCommitteeUserRequest)(nil),       // 28: conference.admin.v1.UpdateCommitteeUserRequest
+	(*UpdateCommitteeUserResponse)(nil),      // 29: conference.admin.v1.UpdateCommitteeUserResponse
+	(*ListOAuthRulesRequest)(nil),            // 30: conference.admin.v1.ListOAuthRulesRequest
+	(*ListOAuthRulesResponse)(nil),           // 31: conference.admin.v1.ListOAuthRulesResponse
+	(*CreateOAuthRuleRequest)(nil),           // 32: conference.admin.v1.CreateOAuthRuleRequest
+	(*CreateOAuthRuleResponse)(nil),          // 33: conference.admin.v1.CreateOAuthRuleResponse
+	(*DeleteOAuthRuleRequest)(nil),           // 34: conference.admin.v1.DeleteOAuthRuleRequest
+	(*DeleteOAuthRuleResponse)(nil),          // 35: conference.admin.v1.DeleteOAuthRuleResponse
 }
 var file_conference_admin_v1_admin_proto_depIdxs = []int32{
 	0,  // 0: conference.admin.v1.ListAccountsResponse.accounts:type_name -> conference.admin.v1.AccountRecord
-	0,  // 1: conference.admin.v1.SetAccountAdminResponse.account:type_name -> conference.admin.v1.AccountRecord
-	1,  // 2: conference.admin.v1.ListCommitteesResponse.committees:type_name -> conference.admin.v1.CommitteeRecord
-	1,  // 3: conference.admin.v1.CreateCommitteeResponse.committee:type_name -> conference.admin.v1.CommitteeRecord
-	1,  // 4: conference.admin.v1.GetCommitteeAdminResponse.committee:type_name -> conference.admin.v1.CommitteeRecord
-	2,  // 5: conference.admin.v1.GetCommitteeAdminResponse.users:type_name -> conference.admin.v1.CommitteeUserRecord
-	3,  // 6: conference.admin.v1.GetCommitteeAdminResponse.oauth_rules:type_name -> conference.admin.v1.OAuthRuleRecord
-	2,  // 7: conference.admin.v1.ListCommitteeUsersResponse.users:type_name -> conference.admin.v1.CommitteeUserRecord
-	2,  // 8: conference.admin.v1.CreateCommitteeUserResponse.user:type_name -> conference.admin.v1.CommitteeUserRecord
-	2,  // 9: conference.admin.v1.AssignAccountToCommitteeResponse.user:type_name -> conference.admin.v1.CommitteeUserRecord
-	2,  // 10: conference.admin.v1.UpdateCommitteeUserResponse.user:type_name -> conference.admin.v1.CommitteeUserRecord
-	3,  // 11: conference.admin.v1.ListOAuthRulesResponse.rules:type_name -> conference.admin.v1.OAuthRuleRecord
-	3,  // 12: conference.admin.v1.CreateOAuthRuleResponse.rule:type_name -> conference.admin.v1.OAuthRuleRecord
-	4,  // 13: conference.admin.v1.AdminService.GetAdminDashboard:input_type -> conference.admin.v1.GetAdminDashboardRequest
-	6,  // 14: conference.admin.v1.AdminService.ListAccounts:input_type -> conference.admin.v1.ListAccountsRequest
-	8,  // 15: conference.admin.v1.AdminService.SetAccountAdmin:input_type -> conference.admin.v1.SetAccountAdminRequest
-	10, // 16: conference.admin.v1.AdminService.ListCommittees:input_type -> conference.admin.v1.ListCommitteesRequest
-	12, // 17: conference.admin.v1.AdminService.CreateCommittee:input_type -> conference.admin.v1.CreateCommitteeRequest
-	14, // 18: conference.admin.v1.AdminService.DeleteCommittee:input_type -> conference.admin.v1.DeleteCommitteeRequest
-	16, // 19: conference.admin.v1.AdminService.GetCommitteeAdmin:input_type -> conference.admin.v1.GetCommitteeAdminRequest
-	18, // 20: conference.admin.v1.AdminService.ListCommitteeUsers:input_type -> conference.admin.v1.ListCommitteeUsersRequest
-	20, // 21: conference.admin.v1.AdminService.CreateCommitteeUser:input_type -> conference.admin.v1.CreateCommitteeUserRequest
-	22, // 22: conference.admin.v1.AdminService.DeleteCommitteeUser:input_type -> conference.admin.v1.DeleteCommitteeUserRequest
-	24, // 23: conference.admin.v1.AdminService.AssignAccountToCommittee:input_type -> conference.admin.v1.AssignAccountToCommitteeRequest
-	26, // 24: conference.admin.v1.AdminService.UpdateCommitteeUser:input_type -> conference.admin.v1.UpdateCommitteeUserRequest
-	28, // 25: conference.admin.v1.AdminService.ListOAuthRules:input_type -> conference.admin.v1.ListOAuthRulesRequest
-	30, // 26: conference.admin.v1.AdminService.CreateOAuthRule:input_type -> conference.admin.v1.CreateOAuthRuleRequest
-	32, // 27: conference.admin.v1.AdminService.DeleteOAuthRule:input_type -> conference.admin.v1.DeleteOAuthRuleRequest
-	5,  // 28: conference.admin.v1.AdminService.GetAdminDashboard:output_type -> conference.admin.v1.GetAdminDashboardResponse
-	7,  // 29: conference.admin.v1.AdminService.ListAccounts:output_type -> conference.admin.v1.ListAccountsResponse
-	9,  // 30: conference.admin.v1.AdminService.SetAccountAdmin:output_type -> conference.admin.v1.SetAccountAdminResponse
-	11, // 31: conference.admin.v1.AdminService.ListCommittees:output_type -> conference.admin.v1.ListCommitteesResponse
-	13, // 32: conference.admin.v1.AdminService.CreateCommittee:output_type -> conference.admin.v1.CreateCommitteeResponse
-	15, // 33: conference.admin.v1.AdminService.DeleteCommittee:output_type -> conference.admin.v1.DeleteCommitteeResponse
-	17, // 34: conference.admin.v1.AdminService.GetCommitteeAdmin:output_type -> conference.admin.v1.GetCommitteeAdminResponse
-	19, // 35: conference.admin.v1.AdminService.ListCommitteeUsers:output_type -> conference.admin.v1.ListCommitteeUsersResponse
-	21, // 36: conference.admin.v1.AdminService.CreateCommitteeUser:output_type -> conference.admin.v1.CreateCommitteeUserResponse
-	23, // 37: conference.admin.v1.AdminService.DeleteCommitteeUser:output_type -> conference.admin.v1.DeleteCommitteeUserResponse
-	25, // 38: conference.admin.v1.AdminService.AssignAccountToCommittee:output_type -> conference.admin.v1.AssignAccountToCommitteeResponse
-	27, // 39: conference.admin.v1.AdminService.UpdateCommitteeUser:output_type -> conference.admin.v1.UpdateCommitteeUserResponse
-	29, // 40: conference.admin.v1.AdminService.ListOAuthRules:output_type -> conference.admin.v1.ListOAuthRulesResponse
-	31, // 41: conference.admin.v1.AdminService.CreateOAuthRule:output_type -> conference.admin.v1.CreateOAuthRuleResponse
-	33, // 42: conference.admin.v1.AdminService.DeleteOAuthRule:output_type -> conference.admin.v1.DeleteOAuthRuleResponse
-	28, // [28:43] is the sub-list for method output_type
-	13, // [13:28] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	0,  // 1: conference.admin.v1.CreateAccountResponse.account:type_name -> conference.admin.v1.AccountRecord
+	0,  // 2: conference.admin.v1.SetAccountAdminResponse.account:type_name -> conference.admin.v1.AccountRecord
+	1,  // 3: conference.admin.v1.ListCommitteesResponse.committees:type_name -> conference.admin.v1.CommitteeRecord
+	1,  // 4: conference.admin.v1.CreateCommitteeResponse.committee:type_name -> conference.admin.v1.CommitteeRecord
+	1,  // 5: conference.admin.v1.GetCommitteeAdminResponse.committee:type_name -> conference.admin.v1.CommitteeRecord
+	2,  // 6: conference.admin.v1.GetCommitteeAdminResponse.users:type_name -> conference.admin.v1.CommitteeUserRecord
+	3,  // 7: conference.admin.v1.GetCommitteeAdminResponse.oauth_rules:type_name -> conference.admin.v1.OAuthRuleRecord
+	2,  // 8: conference.admin.v1.ListCommitteeUsersResponse.users:type_name -> conference.admin.v1.CommitteeUserRecord
+	2,  // 9: conference.admin.v1.CreateCommitteeUserResponse.user:type_name -> conference.admin.v1.CommitteeUserRecord
+	2,  // 10: conference.admin.v1.AssignAccountToCommitteeResponse.user:type_name -> conference.admin.v1.CommitteeUserRecord
+	2,  // 11: conference.admin.v1.UpdateCommitteeUserResponse.user:type_name -> conference.admin.v1.CommitteeUserRecord
+	3,  // 12: conference.admin.v1.ListOAuthRulesResponse.rules:type_name -> conference.admin.v1.OAuthRuleRecord
+	3,  // 13: conference.admin.v1.CreateOAuthRuleResponse.rule:type_name -> conference.admin.v1.OAuthRuleRecord
+	4,  // 14: conference.admin.v1.AdminService.GetAdminDashboard:input_type -> conference.admin.v1.GetAdminDashboardRequest
+	6,  // 15: conference.admin.v1.AdminService.ListAccounts:input_type -> conference.admin.v1.ListAccountsRequest
+	8,  // 16: conference.admin.v1.AdminService.CreateAccount:input_type -> conference.admin.v1.CreateAccountRequest
+	10, // 17: conference.admin.v1.AdminService.SetAccountAdmin:input_type -> conference.admin.v1.SetAccountAdminRequest
+	12, // 18: conference.admin.v1.AdminService.ListCommittees:input_type -> conference.admin.v1.ListCommitteesRequest
+	14, // 19: conference.admin.v1.AdminService.CreateCommittee:input_type -> conference.admin.v1.CreateCommitteeRequest
+	16, // 20: conference.admin.v1.AdminService.DeleteCommittee:input_type -> conference.admin.v1.DeleteCommitteeRequest
+	18, // 21: conference.admin.v1.AdminService.GetCommitteeAdmin:input_type -> conference.admin.v1.GetCommitteeAdminRequest
+	20, // 22: conference.admin.v1.AdminService.ListCommitteeUsers:input_type -> conference.admin.v1.ListCommitteeUsersRequest
+	22, // 23: conference.admin.v1.AdminService.CreateCommitteeUser:input_type -> conference.admin.v1.CreateCommitteeUserRequest
+	24, // 24: conference.admin.v1.AdminService.DeleteCommitteeUser:input_type -> conference.admin.v1.DeleteCommitteeUserRequest
+	26, // 25: conference.admin.v1.AdminService.AssignAccountToCommittee:input_type -> conference.admin.v1.AssignAccountToCommitteeRequest
+	28, // 26: conference.admin.v1.AdminService.UpdateCommitteeUser:input_type -> conference.admin.v1.UpdateCommitteeUserRequest
+	30, // 27: conference.admin.v1.AdminService.ListOAuthRules:input_type -> conference.admin.v1.ListOAuthRulesRequest
+	32, // 28: conference.admin.v1.AdminService.CreateOAuthRule:input_type -> conference.admin.v1.CreateOAuthRuleRequest
+	34, // 29: conference.admin.v1.AdminService.DeleteOAuthRule:input_type -> conference.admin.v1.DeleteOAuthRuleRequest
+	5,  // 30: conference.admin.v1.AdminService.GetAdminDashboard:output_type -> conference.admin.v1.GetAdminDashboardResponse
+	7,  // 31: conference.admin.v1.AdminService.ListAccounts:output_type -> conference.admin.v1.ListAccountsResponse
+	9,  // 32: conference.admin.v1.AdminService.CreateAccount:output_type -> conference.admin.v1.CreateAccountResponse
+	11, // 33: conference.admin.v1.AdminService.SetAccountAdmin:output_type -> conference.admin.v1.SetAccountAdminResponse
+	13, // 34: conference.admin.v1.AdminService.ListCommittees:output_type -> conference.admin.v1.ListCommitteesResponse
+	15, // 35: conference.admin.v1.AdminService.CreateCommittee:output_type -> conference.admin.v1.CreateCommitteeResponse
+	17, // 36: conference.admin.v1.AdminService.DeleteCommittee:output_type -> conference.admin.v1.DeleteCommitteeResponse
+	19, // 37: conference.admin.v1.AdminService.GetCommitteeAdmin:output_type -> conference.admin.v1.GetCommitteeAdminResponse
+	21, // 38: conference.admin.v1.AdminService.ListCommitteeUsers:output_type -> conference.admin.v1.ListCommitteeUsersResponse
+	23, // 39: conference.admin.v1.AdminService.CreateCommitteeUser:output_type -> conference.admin.v1.CreateCommitteeUserResponse
+	25, // 40: conference.admin.v1.AdminService.DeleteCommitteeUser:output_type -> conference.admin.v1.DeleteCommitteeUserResponse
+	27, // 41: conference.admin.v1.AdminService.AssignAccountToCommittee:output_type -> conference.admin.v1.AssignAccountToCommitteeResponse
+	29, // 42: conference.admin.v1.AdminService.UpdateCommitteeUser:output_type -> conference.admin.v1.UpdateCommitteeUserResponse
+	31, // 43: conference.admin.v1.AdminService.ListOAuthRules:output_type -> conference.admin.v1.ListOAuthRulesResponse
+	33, // 44: conference.admin.v1.AdminService.CreateOAuthRule:output_type -> conference.admin.v1.CreateOAuthRuleResponse
+	35, // 45: conference.admin.v1.AdminService.DeleteOAuthRule:output_type -> conference.admin.v1.DeleteOAuthRuleResponse
+	30, // [30:46] is the sub-list for method output_type
+	14, // [14:30] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_conference_admin_v1_admin_proto_init() }
@@ -2053,7 +2169,7 @@ func file_conference_admin_v1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_admin_v1_admin_proto_rawDesc), len(file_conference_admin_v1_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   34,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

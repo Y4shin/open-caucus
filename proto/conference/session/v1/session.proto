@@ -20,6 +20,8 @@ message SessionBootstrap {
   string locale = 5;
   repeated conference.common.v1.Capability capabilities = 6;
   string redirect_to = 7;
+  bool password_enabled = 8;
+  bool oauth_enabled = 9;
 }
 
 message GetSessionRequest {}

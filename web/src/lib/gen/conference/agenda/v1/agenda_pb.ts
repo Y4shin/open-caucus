@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/agenda/v1/agenda.proto.
  */
 export const file_conference_agenda_v1_agenda: GenFile = /*@__PURE__*/
-  fileDesc("CiFjb25mZXJlbmNlL2FnZW5kYS92MS9hZ2VuZGEucHJvdG8SFGNvbmZlcmVuY2UuYWdlbmRhLnYxIoMCChFBZ2VuZGFQb2ludFJlY29yZBIXCg9hZ2VuZGFfcG9pbnRfaWQYASABKAkSFgoOZGlzcGxheV9udW1iZXIYAiABKAkSDQoFdGl0bGUYAyABKAkSEQoJaXNfYWN0aXZlGAQgASgIEhAKCHBvc2l0aW9uGAUgASgDEhEKCXBhcmVudF9pZBgGIAEoCRIYChBnZW5kZXJfcXVvdGF0aW9uGAcgASgIEh8KF2ZpcnN0X3NwZWFrZXJfcXVvdGF0aW9uGAggASgIEjsKCnN1Yl9wb2ludHMYCSADKAsyJy5jb25mZXJlbmNlLmFnZW5kYS52MS5BZ2VuZGFQb2ludFJlY29yZCJFChdMaXN0QWdlbmRhUG9pbnRzUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJInoKGExpc3RBZ2VuZGFQb2ludHNSZXNwb25zZRI+Cg1hZ2VuZGFfcG9pbnRzGAEgAygLMicuY29uZmVyZW5jZS5hZ2VuZGEudjEuQWdlbmRhUG9pbnRSZWNvcmQSHgoWYWN0aXZlX2FnZW5kYV9wb2ludF9pZBgCIAEoCSJ1ChhDcmVhdGVBZ2VuZGFQb2ludFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRINCgV0aXRsZRgDIAEoCRIeChZwYXJlbnRfYWdlbmRhX3BvaW50X2lkGAQgASgJInUKGUNyZWF0ZUFnZW5kYVBvaW50UmVzcG9uc2USPQoMYWdlbmRhX3BvaW50GAEgASgLMicuY29uZmVyZW5jZS5hZ2VuZGEudjEuQWdlbmRhUG9pbnRSZWNvcmQSGQoRaW52YWxpZGF0ZWRfdmlld3MYAiADKAkiXwoYRGVsZXRlQWdlbmRhUG9pbnRSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFwoPYWdlbmRhX3BvaW50X2lkGAMgASgJIjYKGURlbGV0ZUFnZW5kYVBvaW50UmVzcG9uc2USGQoRaW52YWxpZGF0ZWRfdmlld3MYASADKAkicAoWTW92ZUFnZW5kYVBvaW50UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhcKD2FnZW5kYV9wb2ludF9pZBgDIAEoCRIRCglkaXJlY3Rpb24YBCABKAkidAoXTW92ZUFnZW5kYVBvaW50UmVzcG9uc2USPgoNYWdlbmRhX3BvaW50cxgBIAMoCzInLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkFnZW5kYVBvaW50UmVjb3JkEhkKEWludmFsaWRhdGVkX3ZpZXdzGAIgAygJImEKGkFjdGl2YXRlQWdlbmRhUG9pbnRSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFwoPYWdlbmRhX3BvaW50X2lkGAMgASgJIp8BChtBY3RpdmF0ZUFnZW5kYVBvaW50UmVzcG9uc2USHgoWYWN0aXZlX2FnZW5kYV9wb2ludF9pZBgBIAEoCRJFChNhY3RpdmVfYWdlbmRhX3BvaW50GAIgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQWdlbmRhUG9pbnRTdW1tYXJ5EhkKEWludmFsaWRhdGVkX3ZpZXdzGAMgAygJMtoECg1BZ2VuZGFTZXJ2aWNlEnEKEExpc3RBZ2VuZGFQb2ludHMSLS5jb25mZXJlbmNlLmFnZW5kYS52MS5MaXN0QWdlbmRhUG9pbnRzUmVxdWVzdBouLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkxpc3RBZ2VuZGFQb2ludHNSZXNwb25zZRJ0ChFDcmVhdGVBZ2VuZGFQb2ludBIuLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkNyZWF0ZUFnZW5kYVBvaW50UmVxdWVzdBovLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkNyZWF0ZUFnZW5kYVBvaW50UmVzcG9uc2USdAoRRGVsZXRlQWdlbmRhUG9pbnQSLi5jb25mZXJlbmNlLmFnZW5kYS52MS5EZWxldGVBZ2VuZGFQb2ludFJlcXVlc3QaLy5jb25mZXJlbmNlLmFnZW5kYS52MS5EZWxldGVBZ2VuZGFQb2ludFJlc3BvbnNlEm4KD01vdmVBZ2VuZGFQb2ludBIsLmNvbmZlcmVuY2UuYWdlbmRhLnYxLk1vdmVBZ2VuZGFQb2ludFJlcXVlc3QaLS5jb25mZXJlbmNlLmFnZW5kYS52MS5Nb3ZlQWdlbmRhUG9pbnRSZXNwb25zZRJ6ChNBY3RpdmF0ZUFnZW5kYVBvaW50EjAuY29uZmVyZW5jZS5hZ2VuZGEudjEuQWN0aXZhdGVBZ2VuZGFQb2ludFJlcXVlc3QaMS5jb25mZXJlbmNlLmFnZW5kYS52MS5BY3RpdmF0ZUFnZW5kYVBvaW50UmVzcG9uc2VCSFpGZ2l0aHViLmNvbS9ZNHNoaW4vY29uZmVyZW5jZS10b29sL2dlbi9nby9jb25mZXJlbmNlL2FnZW5kYS92MTthZ2VuZGF2MWIGcHJvdG8z", [file_conference_common_v1_common]);
+  fileDesc("CiFjb25mZXJlbmNlL2FnZW5kYS92MS9hZ2VuZGEucHJvdG8SFGNvbmZlcmVuY2UuYWdlbmRhLnYxIoMCChFBZ2VuZGFQb2ludFJlY29yZBIXCg9hZ2VuZGFfcG9pbnRfaWQYASABKAkSFgoOZGlzcGxheV9udW1iZXIYAiABKAkSDQoFdGl0bGUYAyABKAkSEQoJaXNfYWN0aXZlGAQgASgIEhAKCHBvc2l0aW9uGAUgASgDEhEKCXBhcmVudF9pZBgGIAEoCRIYChBnZW5kZXJfcXVvdGF0aW9uGAcgASgIEh8KF2ZpcnN0X3NwZWFrZXJfcXVvdGF0aW9uGAggASgIEjsKCnN1Yl9wb2ludHMYCSADKAsyJy5jb25mZXJlbmNlLmFnZW5kYS52MS5BZ2VuZGFQb2ludFJlY29yZCKFAQoQQXR0YWNobWVudFJlY29yZBIVCg1hdHRhY2htZW50X2lkGAEgASgJEg8KB2Jsb2JfaWQYAiABKAkSEAoIZmlsZW5hbWUYAyABKAkSDQoFbGFiZWwYBCABKAkSFAoMZG93bmxvYWRfdXJsGAUgASgJEhIKCmlzX2N1cnJlbnQYBiABKAgi0wEKFEFnZW5kYVBvaW50VG9vbHNWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFwoPYWdlbmRhX3BvaW50X2lkGAMgASgJEhoKEmFnZW5kYV9wb2ludF90aXRsZRgEIAEoCRI7CgthdHRhY2htZW50cxgFIAMoCzImLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkF0dGFjaG1lbnRSZWNvcmQSHQoVY3VycmVudF9hdHRhY2htZW50X2lkGAYgASgJIkUKF0xpc3RBZ2VuZGFQb2ludHNSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiegoYTGlzdEFnZW5kYVBvaW50c1Jlc3BvbnNlEj4KDWFnZW5kYV9wb2ludHMYASADKAsyJy5jb25mZXJlbmNlLmFnZW5kYS52MS5BZ2VuZGFQb2ludFJlY29yZBIeChZhY3RpdmVfYWdlbmRhX3BvaW50X2lkGAIgASgJImEKGkdldEFnZW5kYVBvaW50VG9vbHNSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFwoPYWdlbmRhX3BvaW50X2lkGAMgASgJIlcKG0dldEFnZW5kYVBvaW50VG9vbHNSZXNwb25zZRI4CgR2aWV3GAEgASgLMiouY29uZmVyZW5jZS5hZ2VuZGEudjEuQWdlbmRhUG9pbnRUb29sc1ZpZXcidQoYQ3JlYXRlQWdlbmRhUG9pbnRSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSDQoFdGl0bGUYAyABKAkSHgoWcGFyZW50X2FnZW5kYV9wb2ludF9pZBgEIAEoCSJ1ChlDcmVhdGVBZ2VuZGFQb2ludFJlc3BvbnNlEj0KDGFnZW5kYV9wb2ludBgBIAEoCzInLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkFnZW5kYVBvaW50UmVjb3JkEhkKEWludmFsaWRhdGVkX3ZpZXdzGAIgAygJIl8KGERlbGV0ZUFnZW5kYVBvaW50UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhcKD2FnZW5kYV9wb2ludF9pZBgDIAEoCSI2ChlEZWxldGVBZ2VuZGFQb2ludFJlc3BvbnNlEhkKEWludmFsaWRhdGVkX3ZpZXdzGAEgAygJInAKFk1vdmVBZ2VuZGFQb2ludFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hZ2VuZGFfcG9pbnRfaWQYAyABKAkSEQoJZGlyZWN0aW9uGAQgASgJInQKF01vdmVBZ2VuZGFQb2ludFJlc3BvbnNlEj4KDWFnZW5kYV9wb2ludHMYASADKAsyJy5jb25mZXJlbmNlLmFnZW5kYS52MS5BZ2VuZGFQb2ludFJlY29yZBIZChFpbnZhbGlkYXRlZF92aWV3cxgCIAMoCSJhChpBY3RpdmF0ZUFnZW5kYVBvaW50UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhcKD2FnZW5kYV9wb2ludF9pZBgDIAEoCSKfAQobQWN0aXZhdGVBZ2VuZGFQb2ludFJlc3BvbnNlEh4KFmFjdGl2ZV9hZ2VuZGFfcG9pbnRfaWQYASABKAkSRQoTYWN0aXZlX2FnZW5kYV9wb2ludBgCIAEoCzIoLmNvbmZlcmVuY2UuY29tbW9uLnYxLkFnZW5kYVBvaW50U3VtbWFyeRIZChFpbnZhbGlkYXRlZF92aWV3cxgDIAMoCSJ5ChtTZXRDdXJyZW50QXR0YWNobWVudFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hZ2VuZGFfcG9pbnRfaWQYAyABKAkSFQoNYXR0YWNobWVudF9pZBgEIAEoCSJzChxTZXRDdXJyZW50QXR0YWNobWVudFJlc3BvbnNlEjgKBHZpZXcYASABKAsyKi5jb25mZXJlbmNlLmFnZW5kYS52MS5BZ2VuZGFQb2ludFRvb2xzVmlldxIZChFpbnZhbGlkYXRlZF92aWV3cxgCIAMoCSJiChtDbGVhckN1cnJlbnREb2N1bWVudFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hZ2VuZGFfcG9pbnRfaWQYAyABKAkicwocQ2xlYXJDdXJyZW50RG9jdW1lbnRSZXNwb25zZRI4CgR2aWV3GAEgASgLMiouY29uZmVyZW5jZS5hZ2VuZGEudjEuQWdlbmRhUG9pbnRUb29sc1ZpZXcSGQoRaW52YWxpZGF0ZWRfdmlld3MYAiADKAkidQoXRGVsZXRlQXR0YWNobWVudFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hZ2VuZGFfcG9pbnRfaWQYAyABKAkSFQoNYXR0YWNobWVudF9pZBgEIAEoCSJvChhEZWxldGVBdHRhY2htZW50UmVzcG9uc2USOAoEdmlldxgBIAEoCzIqLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkFnZW5kYVBvaW50VG9vbHNWaWV3EhkKEWludmFsaWRhdGVkX3ZpZXdzGAIgAygJMscICg1BZ2VuZGFTZXJ2aWNlEnEKEExpc3RBZ2VuZGFQb2ludHMSLS5jb25mZXJlbmNlLmFnZW5kYS52MS5MaXN0QWdlbmRhUG9pbnRzUmVxdWVzdBouLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkxpc3RBZ2VuZGFQb2ludHNSZXNwb25zZRJ6ChNHZXRBZ2VuZGFQb2ludFRvb2xzEjAuY29uZmVyZW5jZS5hZ2VuZGEudjEuR2V0QWdlbmRhUG9pbnRUb29sc1JlcXVlc3QaMS5jb25mZXJlbmNlLmFnZW5kYS52MS5HZXRBZ2VuZGFQb2ludFRvb2xzUmVzcG9uc2USdAoRQ3JlYXRlQWdlbmRhUG9pbnQSLi5jb25mZXJlbmNlLmFnZW5kYS52MS5DcmVhdGVBZ2VuZGFQb2ludFJlcXVlc3QaLy5jb25mZXJlbmNlLmFnZW5kYS52MS5DcmVhdGVBZ2VuZGFQb2ludFJlc3BvbnNlEnQKEURlbGV0ZUFnZW5kYVBvaW50Ei4uY29uZmVyZW5jZS5hZ2VuZGEudjEuRGVsZXRlQWdlbmRhUG9pbnRSZXF1ZXN0Gi8uY29uZmVyZW5jZS5hZ2VuZGEudjEuRGVsZXRlQWdlbmRhUG9pbnRSZXNwb25zZRJuCg9Nb3ZlQWdlbmRhUG9pbnQSLC5jb25mZXJlbmNlLmFnZW5kYS52MS5Nb3ZlQWdlbmRhUG9pbnRSZXF1ZXN0Gi0uY29uZmVyZW5jZS5hZ2VuZGEudjEuTW92ZUFnZW5kYVBvaW50UmVzcG9uc2USegoTQWN0aXZhdGVBZ2VuZGFQb2ludBIwLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkFjdGl2YXRlQWdlbmRhUG9pbnRSZXF1ZXN0GjEuY29uZmVyZW5jZS5hZ2VuZGEudjEuQWN0aXZhdGVBZ2VuZGFQb2ludFJlc3BvbnNlEn0KFFNldEN1cnJlbnRBdHRhY2htZW50EjEuY29uZmVyZW5jZS5hZ2VuZGEudjEuU2V0Q3VycmVudEF0dGFjaG1lbnRSZXF1ZXN0GjIuY29uZmVyZW5jZS5hZ2VuZGEudjEuU2V0Q3VycmVudEF0dGFjaG1lbnRSZXNwb25zZRJ9ChRDbGVhckN1cnJlbnREb2N1bWVudBIxLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkNsZWFyQ3VycmVudERvY3VtZW50UmVxdWVzdBoyLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkNsZWFyQ3VycmVudERvY3VtZW50UmVzcG9uc2UScQoQRGVsZXRlQXR0YWNobWVudBItLmNvbmZlcmVuY2UuYWdlbmRhLnYxLkRlbGV0ZUF0dGFjaG1lbnRSZXF1ZXN0Gi4uY29uZmVyZW5jZS5hZ2VuZGEudjEuRGVsZXRlQXR0YWNobWVudFJlc3BvbnNlQkhaRmdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9hZ2VuZGEvdjE7YWdlbmRhdjFiBnByb3RvMw", [file_conference_common_v1_common]);
 
 /**
  * AgendaPointRecord is the read model for one agenda point, including its
@@ -75,6 +75,90 @@ export const AgendaPointRecordSchema: GenMessage<AgendaPointRecord> = /*@__PURE_
   messageDesc(file_conference_agenda_v1_agenda, 0);
 
 /**
+ * @generated from message conference.agenda.v1.AttachmentRecord
+ */
+export type AttachmentRecord = Message<"conference.agenda.v1.AttachmentRecord"> & {
+  /**
+   * @generated from field: string attachment_id = 1;
+   */
+  attachmentId: string;
+
+  /**
+   * @generated from field: string blob_id = 2;
+   */
+  blobId: string;
+
+  /**
+   * @generated from field: string filename = 3;
+   */
+  filename: string;
+
+  /**
+   * @generated from field: string label = 4;
+   */
+  label: string;
+
+  /**
+   * @generated from field: string download_url = 5;
+   */
+  downloadUrl: string;
+
+  /**
+   * @generated from field: bool is_current = 6;
+   */
+  isCurrent: boolean;
+};
+
+/**
+ * Describes the message conference.agenda.v1.AttachmentRecord.
+ * Use `create(AttachmentRecordSchema)` to create a new message.
+ */
+export const AttachmentRecordSchema: GenMessage<AttachmentRecord> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 1);
+
+/**
+ * @generated from message conference.agenda.v1.AgendaPointToolsView
+ */
+export type AgendaPointToolsView = Message<"conference.agenda.v1.AgendaPointToolsView"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string agenda_point_id = 3;
+   */
+  agendaPointId: string;
+
+  /**
+   * @generated from field: string agenda_point_title = 4;
+   */
+  agendaPointTitle: string;
+
+  /**
+   * @generated from field: repeated conference.agenda.v1.AttachmentRecord attachments = 5;
+   */
+  attachments: AttachmentRecord[];
+
+  /**
+   * @generated from field: string current_attachment_id = 6;
+   */
+  currentAttachmentId: string;
+};
+
+/**
+ * Describes the message conference.agenda.v1.AgendaPointToolsView.
+ * Use `create(AgendaPointToolsViewSchema)` to create a new message.
+ */
+export const AgendaPointToolsViewSchema: GenMessage<AgendaPointToolsView> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 2);
+
+/**
  * @generated from message conference.agenda.v1.ListAgendaPointsRequest
  */
 export type ListAgendaPointsRequest = Message<"conference.agenda.v1.ListAgendaPointsRequest"> & {
@@ -94,7 +178,7 @@ export type ListAgendaPointsRequest = Message<"conference.agenda.v1.ListAgendaPo
  * Use `create(ListAgendaPointsRequestSchema)` to create a new message.
  */
 export const ListAgendaPointsRequestSchema: GenMessage<ListAgendaPointsRequest> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 1);
+  messageDesc(file_conference_agenda_v1_agenda, 3);
 
 /**
  * @generated from message conference.agenda.v1.ListAgendaPointsResponse
@@ -116,7 +200,51 @@ export type ListAgendaPointsResponse = Message<"conference.agenda.v1.ListAgendaP
  * Use `create(ListAgendaPointsResponseSchema)` to create a new message.
  */
 export const ListAgendaPointsResponseSchema: GenMessage<ListAgendaPointsResponse> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 2);
+  messageDesc(file_conference_agenda_v1_agenda, 4);
+
+/**
+ * @generated from message conference.agenda.v1.GetAgendaPointToolsRequest
+ */
+export type GetAgendaPointToolsRequest = Message<"conference.agenda.v1.GetAgendaPointToolsRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string agenda_point_id = 3;
+   */
+  agendaPointId: string;
+};
+
+/**
+ * Describes the message conference.agenda.v1.GetAgendaPointToolsRequest.
+ * Use `create(GetAgendaPointToolsRequestSchema)` to create a new message.
+ */
+export const GetAgendaPointToolsRequestSchema: GenMessage<GetAgendaPointToolsRequest> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 5);
+
+/**
+ * @generated from message conference.agenda.v1.GetAgendaPointToolsResponse
+ */
+export type GetAgendaPointToolsResponse = Message<"conference.agenda.v1.GetAgendaPointToolsResponse"> & {
+  /**
+   * @generated from field: conference.agenda.v1.AgendaPointToolsView view = 1;
+   */
+  view?: AgendaPointToolsView;
+};
+
+/**
+ * Describes the message conference.agenda.v1.GetAgendaPointToolsResponse.
+ * Use `create(GetAgendaPointToolsResponseSchema)` to create a new message.
+ */
+export const GetAgendaPointToolsResponseSchema: GenMessage<GetAgendaPointToolsResponse> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 6);
 
 /**
  * @generated from message conference.agenda.v1.CreateAgendaPointRequest
@@ -150,7 +278,7 @@ export type CreateAgendaPointRequest = Message<"conference.agenda.v1.CreateAgend
  * Use `create(CreateAgendaPointRequestSchema)` to create a new message.
  */
 export const CreateAgendaPointRequestSchema: GenMessage<CreateAgendaPointRequest> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 3);
+  messageDesc(file_conference_agenda_v1_agenda, 7);
 
 /**
  * @generated from message conference.agenda.v1.CreateAgendaPointResponse
@@ -172,7 +300,7 @@ export type CreateAgendaPointResponse = Message<"conference.agenda.v1.CreateAgen
  * Use `create(CreateAgendaPointResponseSchema)` to create a new message.
  */
 export const CreateAgendaPointResponseSchema: GenMessage<CreateAgendaPointResponse> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 4);
+  messageDesc(file_conference_agenda_v1_agenda, 8);
 
 /**
  * @generated from message conference.agenda.v1.DeleteAgendaPointRequest
@@ -199,7 +327,7 @@ export type DeleteAgendaPointRequest = Message<"conference.agenda.v1.DeleteAgend
  * Use `create(DeleteAgendaPointRequestSchema)` to create a new message.
  */
 export const DeleteAgendaPointRequestSchema: GenMessage<DeleteAgendaPointRequest> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 5);
+  messageDesc(file_conference_agenda_v1_agenda, 9);
 
 /**
  * @generated from message conference.agenda.v1.DeleteAgendaPointResponse
@@ -216,7 +344,7 @@ export type DeleteAgendaPointResponse = Message<"conference.agenda.v1.DeleteAgen
  * Use `create(DeleteAgendaPointResponseSchema)` to create a new message.
  */
 export const DeleteAgendaPointResponseSchema: GenMessage<DeleteAgendaPointResponse> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 6);
+  messageDesc(file_conference_agenda_v1_agenda, 10);
 
 /**
  * @generated from message conference.agenda.v1.MoveAgendaPointRequest
@@ -250,7 +378,7 @@ export type MoveAgendaPointRequest = Message<"conference.agenda.v1.MoveAgendaPoi
  * Use `create(MoveAgendaPointRequestSchema)` to create a new message.
  */
 export const MoveAgendaPointRequestSchema: GenMessage<MoveAgendaPointRequest> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 7);
+  messageDesc(file_conference_agenda_v1_agenda, 11);
 
 /**
  * @generated from message conference.agenda.v1.MoveAgendaPointResponse
@@ -272,7 +400,7 @@ export type MoveAgendaPointResponse = Message<"conference.agenda.v1.MoveAgendaPo
  * Use `create(MoveAgendaPointResponseSchema)` to create a new message.
  */
 export const MoveAgendaPointResponseSchema: GenMessage<MoveAgendaPointResponse> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 8);
+  messageDesc(file_conference_agenda_v1_agenda, 12);
 
 /**
  * @generated from message conference.agenda.v1.ActivateAgendaPointRequest
@@ -301,7 +429,7 @@ export type ActivateAgendaPointRequest = Message<"conference.agenda.v1.ActivateA
  * Use `create(ActivateAgendaPointRequestSchema)` to create a new message.
  */
 export const ActivateAgendaPointRequestSchema: GenMessage<ActivateAgendaPointRequest> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 9);
+  messageDesc(file_conference_agenda_v1_agenda, 13);
 
 /**
  * @generated from message conference.agenda.v1.ActivateAgendaPointResponse
@@ -328,7 +456,164 @@ export type ActivateAgendaPointResponse = Message<"conference.agenda.v1.Activate
  * Use `create(ActivateAgendaPointResponseSchema)` to create a new message.
  */
 export const ActivateAgendaPointResponseSchema: GenMessage<ActivateAgendaPointResponse> = /*@__PURE__*/
-  messageDesc(file_conference_agenda_v1_agenda, 10);
+  messageDesc(file_conference_agenda_v1_agenda, 14);
+
+/**
+ * @generated from message conference.agenda.v1.SetCurrentAttachmentRequest
+ */
+export type SetCurrentAttachmentRequest = Message<"conference.agenda.v1.SetCurrentAttachmentRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string agenda_point_id = 3;
+   */
+  agendaPointId: string;
+
+  /**
+   * @generated from field: string attachment_id = 4;
+   */
+  attachmentId: string;
+};
+
+/**
+ * Describes the message conference.agenda.v1.SetCurrentAttachmentRequest.
+ * Use `create(SetCurrentAttachmentRequestSchema)` to create a new message.
+ */
+export const SetCurrentAttachmentRequestSchema: GenMessage<SetCurrentAttachmentRequest> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 15);
+
+/**
+ * @generated from message conference.agenda.v1.SetCurrentAttachmentResponse
+ */
+export type SetCurrentAttachmentResponse = Message<"conference.agenda.v1.SetCurrentAttachmentResponse"> & {
+  /**
+   * @generated from field: conference.agenda.v1.AgendaPointToolsView view = 1;
+   */
+  view?: AgendaPointToolsView;
+
+  /**
+   * @generated from field: repeated string invalidated_views = 2;
+   */
+  invalidatedViews: string[];
+};
+
+/**
+ * Describes the message conference.agenda.v1.SetCurrentAttachmentResponse.
+ * Use `create(SetCurrentAttachmentResponseSchema)` to create a new message.
+ */
+export const SetCurrentAttachmentResponseSchema: GenMessage<SetCurrentAttachmentResponse> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 16);
+
+/**
+ * @generated from message conference.agenda.v1.ClearCurrentDocumentRequest
+ */
+export type ClearCurrentDocumentRequest = Message<"conference.agenda.v1.ClearCurrentDocumentRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string agenda_point_id = 3;
+   */
+  agendaPointId: string;
+};
+
+/**
+ * Describes the message conference.agenda.v1.ClearCurrentDocumentRequest.
+ * Use `create(ClearCurrentDocumentRequestSchema)` to create a new message.
+ */
+export const ClearCurrentDocumentRequestSchema: GenMessage<ClearCurrentDocumentRequest> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 17);
+
+/**
+ * @generated from message conference.agenda.v1.ClearCurrentDocumentResponse
+ */
+export type ClearCurrentDocumentResponse = Message<"conference.agenda.v1.ClearCurrentDocumentResponse"> & {
+  /**
+   * @generated from field: conference.agenda.v1.AgendaPointToolsView view = 1;
+   */
+  view?: AgendaPointToolsView;
+
+  /**
+   * @generated from field: repeated string invalidated_views = 2;
+   */
+  invalidatedViews: string[];
+};
+
+/**
+ * Describes the message conference.agenda.v1.ClearCurrentDocumentResponse.
+ * Use `create(ClearCurrentDocumentResponseSchema)` to create a new message.
+ */
+export const ClearCurrentDocumentResponseSchema: GenMessage<ClearCurrentDocumentResponse> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 18);
+
+/**
+ * @generated from message conference.agenda.v1.DeleteAttachmentRequest
+ */
+export type DeleteAttachmentRequest = Message<"conference.agenda.v1.DeleteAttachmentRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string agenda_point_id = 3;
+   */
+  agendaPointId: string;
+
+  /**
+   * @generated from field: string attachment_id = 4;
+   */
+  attachmentId: string;
+};
+
+/**
+ * Describes the message conference.agenda.v1.DeleteAttachmentRequest.
+ * Use `create(DeleteAttachmentRequestSchema)` to create a new message.
+ */
+export const DeleteAttachmentRequestSchema: GenMessage<DeleteAttachmentRequest> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 19);
+
+/**
+ * @generated from message conference.agenda.v1.DeleteAttachmentResponse
+ */
+export type DeleteAttachmentResponse = Message<"conference.agenda.v1.DeleteAttachmentResponse"> & {
+  /**
+   * @generated from field: conference.agenda.v1.AgendaPointToolsView view = 1;
+   */
+  view?: AgendaPointToolsView;
+
+  /**
+   * @generated from field: repeated string invalidated_views = 2;
+   */
+  invalidatedViews: string[];
+};
+
+/**
+ * Describes the message conference.agenda.v1.DeleteAttachmentResponse.
+ * Use `create(DeleteAttachmentResponseSchema)` to create a new message.
+ */
+export const DeleteAttachmentResponseSchema: GenMessage<DeleteAttachmentResponse> = /*@__PURE__*/
+  messageDesc(file_conference_agenda_v1_agenda, 20);
 
 /**
  * @generated from service conference.agenda.v1.AgendaService
@@ -343,6 +628,16 @@ export const AgendaService: GenService<{
     methodKind: "unary";
     input: typeof ListAgendaPointsRequestSchema;
     output: typeof ListAgendaPointsResponseSchema;
+  },
+  /**
+   * GetAgendaPointTools returns the attachment/current-document tools state for one agenda point.
+   *
+   * @generated from rpc conference.agenda.v1.AgendaService.GetAgendaPointTools
+   */
+  getAgendaPointTools: {
+    methodKind: "unary";
+    input: typeof GetAgendaPointToolsRequestSchema;
+    output: typeof GetAgendaPointToolsResponseSchema;
   },
   /**
    * CreateAgendaPoint creates a new top-level or sub-agenda point.
@@ -384,6 +679,36 @@ export const AgendaService: GenService<{
     methodKind: "unary";
     input: typeof ActivateAgendaPointRequestSchema;
     output: typeof ActivateAgendaPointResponseSchema;
+  },
+  /**
+   * SetCurrentAttachment marks one attachment as the published live document.
+   *
+   * @generated from rpc conference.agenda.v1.AgendaService.SetCurrentAttachment
+   */
+  setCurrentAttachment: {
+    methodKind: "unary";
+    input: typeof SetCurrentAttachmentRequestSchema;
+    output: typeof SetCurrentAttachmentResponseSchema;
+  },
+  /**
+   * ClearCurrentDocument unsets the currently published live document for an agenda point.
+   *
+   * @generated from rpc conference.agenda.v1.AgendaService.ClearCurrentDocument
+   */
+  clearCurrentDocument: {
+    methodKind: "unary";
+    input: typeof ClearCurrentDocumentRequestSchema;
+    output: typeof ClearCurrentDocumentResponseSchema;
+  },
+  /**
+   * DeleteAttachment removes an attachment and its backing blob.
+   *
+   * @generated from rpc conference.agenda.v1.AgendaService.DeleteAttachment
+   */
+  deleteAttachment: {
+    methodKind: "unary";
+    input: typeof DeleteAttachmentRequestSchema;
+    output: typeof DeleteAttachmentResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_conference_agenda_v1_agenda, 0);

@@ -2,9 +2,9 @@
 
 ## Purpose
 
-This document links the existing browser E2E scenarios to the new typed API contract and the API integration tests that should be created before the legacy SSR/HTMX implementation is removed.
+This document links the existing browser E2E scenarios to the new typed API contract and the API integration tests that should exist before the legacy SSR/HTMX implementation is removed.
 
-The first version of this matrix covers the initial Phase 1 contract slice:
+The matrix started with the initial Phase 1 contract slice and now also tracks the Phase 5 parity work that landed afterward:
 
 - `conference.session.v1`
 - `conference.committees.v1`
@@ -12,6 +12,10 @@ The first version of this matrix covers the initial Phase 1 contract slice:
 - `conference.attendees.v1`
 - `conference.moderation.v1`
 - companion meeting-scoped SSE transport
+- `conference.speakers.v1`
+- `conference.votes.v1`
+- `conference.admin.v1`
+- plain HTTP docs, verification, upload, and download endpoints that remain outside Connect
 
 ## First-Slice Acceptance Criteria
 
@@ -31,7 +35,7 @@ The first contract slice is acceptable when all of the following are true:
 ## Mapping Rules
 
 - `API surface touched` lists the typed contract first and then any transport exceptions that still belong to the workflow
-- `Draft API integration tests` are proposed names, not yet implemented tests
+- `Draft API integration tests` are proposed names unless they already exist in `internal/api/connect/`
 - `Parity status` means:
   - `mapped`: covered by this document and expected to become an API integration test in the first slice
   - `later slice`: outside the initial contract slice
@@ -59,13 +63,19 @@ The first contract slice is acceptable when all of the following are true:
 | `TestAgendaPoint_Delete` in [agenda_speakers_test.go](/home/patric/Projects/conference-tool/e2e/agenda_speakers_test.go#L230) | Moderator deletes an agenda point from the agenda list | `/committee/[slug]/meeting/[meetingId]/moderate` | `AgendaService.ListAgendaPoints`, `AgendaService.DeleteAgendaPoint`, `GET /api/realtime/meetings/{meetingId}/events` | `TestAgendaService_CreateAndDelete`, `TestMeetingEvents_AgendaUpdated_RefetchesModerationAndLive` | Delete is now part of the typed agenda-management surface on the moderation screen | `mapped` |
 | `TestVoting_OpenVote_ModeratorAndAttendeeHappyPath_HTMX` in [voting_test.go](/home/patric/Projects/conference-tool/e2e/voting_test.go#L321) | Moderator creates and opens an open vote, attendee submits a ballot, and moderator closes the round | `/committee/[slug]/meeting/[meetingId]/moderate` and `/committee/[slug]/meeting/[meetingId]` | `VoteService.GetVotesPanel`, `VoteService.CreateVote`, `VoteService.OpenVote`, `VoteService.CloseVote`, `VoteService.GetLiveVotePanel`, `VoteService.SubmitBallot`, `GET /api/realtime/meetings/{meetingId}/events` | `TestVoteService_CreateOpenCloseVote`, `TestVoteService_GetLiveVotePanel_AndSubmitBallot`, `TestMeetingEvents_VotesUpdated_RefetchesModerationAndLive` | The SPA now covers the first open-ballot voting lifecycle across both the moderator and attendee screens | `mapped` |
 | `TestVoting_CreateRejectedWithoutActiveAgenda` in [voting_test.go](/home/patric/Projects/conference-tool/e2e/voting_test.go#L389) | Moderator sees voting disabled until an agenda point is active and create attempts are rejected server-side | `/committee/[slug]/meeting/[meetingId]/moderate` | `VoteService.GetVotesPanel`, `VoteService.CreateVote` | `TestVoteService_GetVotesPanel_NoActiveAgenda`, `TestVoteService_CreateVote_MemberForbidden` | The SPA now renders the no-active-agenda voting state, while permission/validation checks remain transport-enforced | `mapped` |
+| `TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards` in [voting_test.go](/home/patric/Projects/conference-tool/e2e/voting_test.go#L615) | Moderator runs a secret-ballot round through open, submit, close, count, and public verification guardrails | `/committee/[slug]/meeting/[meetingId]/moderate`, `/committee/[slug]/meeting/[meetingId]`, `/receipts` | `VoteService.GetVotesPanel`, `VoteService.UpdateVoteDraft`, `VoteService.OpenVote`, `VoteService.SubmitBallot`, `VoteService.CloseVote`, `VoteService.CountVote`, `POST /api/votes/verify/secret` | `TestVoteService_SubmitSecretBallot`, `TestVoteService_CountSecretVote`, `TestVoteService_VerifySecretReceipt` | Secret ballots, draft editing, and receipt verification are now part of the Phase 5 parity surface rather than later voting work | `mapped` |
+| `TestVoting_LivePanelUpdatesViaSSEOnVoteOpen` in [voting_test.go](/home/patric/Projects/conference-tool/e2e/voting_test.go#L760) | Moderator opens a vote and attendee live state refetches through meeting-scoped invalidation | `/committee/[slug]/meeting/[meetingId]/moderate` and `/committee/[slug]/meeting/[meetingId]` | `VoteService.OpenVote`, `VoteService.GetLiveVotePanel`, `GET /api/realtime/meetings/{meetingId}/events` | `TestMeetingEvents_VotesUpdated_RefetchesModerationAndLive` | This is now an actively verified SPA invalidation workflow, not just a target scenario | `mapped` |
+| `TestAttendee_SpeakersListUpdates_ViaSSE` in [attendee_speakers_test.go](/home/patric/Projects/conference-tool/e2e/attendee_speakers_test.go#L39) | Moderator adds a speaker and attendee live state updates without navigation | `/committee/[slug]/meeting/[meetingId]/moderate` and `/committee/[slug]/meeting/[meetingId]` | `SpeakerService.AddSpeaker`, `MeetingService.GetLiveMeeting`, `GET /committee/[slug]/meeting/[meetingId]/speakers/stream` | `TestMeetingEvents_SpeakersUpdated_RefetchesLive`, `TestSpeakerService_AddSpeaker_ChairpersonAddsMeetingAttendee` | Legacy attendee SSE parity is still required until the HTMX live page is removed, so this mapping remains important during Phase 6 | `mapped` |
+| `TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive` in [manage_test.go](/home/patric/Projects/conference-tool/e2e/manage_test.go#L703) | Moderator creates a quoted guest attendee, adds them as a speaker, and sees quoted parity on both manage and live surfaces | `/committee/[slug]/meeting/[meetingId]/moderate` and `/committee/[slug]/meeting/[meetingId]` | `AttendeeService.CreateGuestAttendee`, `AttendeeService.ListAttendees`, `SpeakerService.AddSpeaker`, `MeetingService.GetLiveMeeting`, `GET /api/realtime/meetings/{meetingId}/events` | `TestAttendeeService_CreateGuestAttendee_Quoted`, `TestSpeakerService_AddSpeaker_PreservesQuotedStatus` | This row captures an important cross-surface parity rule that survived the Phase 5 port | `mapped` |
+| `TestAttachments_UploadAttachment_AppearsInList` in [attachment_test.go](/home/patric/Projects/conference-tool/e2e/attachment_test.go#L62) | Moderator uploads an agenda attachment and uses it from the agenda-point tools workflow | `/committee/[slug]/meeting/[meetingId]/agenda-point/[agendaPointId]/tools` | `AgendaService.GetAgendaPointTools`, `POST /api/committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments`, `AgendaService.SetCurrentAttachment`, `AgendaService.DeleteAttachment`, `GET /api/blobs/{blobId}/download` | `TestAgendaService_ToolsLifecycle` | Attachment upload/download remains plain HTTP, but the surrounding tools screen and mutations are part of the typed agenda contract | `mapped` |
+| `TestDocsSearchReturnsEmbeddedDocsHit` in [docs_test.go](/home/patric/Projects/conference-tool/e2e/docs_test.go#L61) | User searches embedded docs and opens server-owned documentation content from the SPA-friendly docs surface | `/docs/search` and `/docs/[...docPath]` | `GET /api/docs/search`, `GET /api/docs/page/{docPath...}`, `GET /api/docs/assets/{assetPath...}` | `TestDocsService_SearchAndPageHandlers` | Docs remain backend-owned content for now, so Phase 6 should treat these transport endpoints as required keepers rather than legacy-only paths | `mapped` |
+| `TestAdminCreateAccount` in [admin_test.go](/home/patric/Projects/conference-tool/e2e/admin_test.go#L88) | Admin creates an account and sees it appear in the account-management surface | `/admin/accounts` | `AdminService.ListAccounts`, `AdminService.CreateAccount` | `TestAdminService_CreateAccount` | The SPA admin account-management route is now at parity for account creation and listing | `mapped` |
+| `TestAdminAssignAccount` in [admin_test.go](/home/patric/Projects/conference-tool/e2e/admin_test.go#L125) | Admin assigns an account to a committee and edits committee-scoped membership data | `/admin/committee/[slug]` | `AdminService.GetCommitteeAdminView`, `AdminService.AssignAccountToCommittee`, `AdminService.UpdateMembership`, `AdminService.RemoveMembership`, `AdminService.UpsertOAuthRule` | `TestAdminService_AssignAndUpdateCommitteeMembership` | This row covers the committee-specific admin surface that finished in the later Phase 5 work | `mapped` |
 | `TestManagePage_CrossTab_AttendeeChangePropagates` in [manage_test.go](/home/patric/Projects/conference-tool/e2e/manage_test.go#L265) | One manage session updates another via SSE | `/committee/[slug]/meeting/[meetingId]/moderate` | `GET /api/realtime/meetings/{meetingId}/events` | `TestRealtime_MeetingEvents_AreScopedPerMeeting` | The specific attendee-add mutation is later-slice work, but the meeting-scoped invalidation model starts here | `later slice` |
-| `TestSync_LiveAndManage_SpeakerLifecycleUpdates` in [session_sync_test.go](/home/patric/Projects/conference-tool/e2e/session_sync_test.go#L24) | Speaker state changes in moderation propagate to live session | `/committee/[slug]/meeting/[meetingId]/moderate` and `/committee/[slug]/meeting/[meetingId]` | `MeetingService.GetLiveMeeting`, `GET /api/realtime/meetings/{meetingId}/events` | `TestMeetingService_GetLiveMeeting_RefetchAfterRealtimeInvalidation` | The speaker mutations themselves are later-slice work, but this remains a target scenario for the invalidation model | `later slice` |
+| `TestSync_LiveAndManage_SpeakerLifecycleUpdates` in [session_sync_test.go](/home/patric/Projects/conference-tool/e2e/session_sync_test.go#L24) | Speaker state changes in moderation propagate to the attendee live session | `/committee/[slug]/meeting/[meetingId]/moderate` and `/committee/[slug]/meeting/[meetingId]` | `SpeakerService.SetSpeakerSpeaking`, `SpeakerService.SetSpeakerDone`, `MeetingService.GetLiveMeeting`, `GET /committee/[slug]/meeting/[meetingId]/speakers/stream` | `TestSpeakerService_SetSpeakerSpeaking_ThenDone`, `TestMeetingEvents_SpeakersUpdated_RefetchesModerationAndLive` | This invalidation and parity path is now fully exercised and should be preserved until the legacy live stream is retired | `mapped` |
 
 ## Immediate Follow-Up
 
-1. Validate the new `proto/` contract with `buf lint` and `buf generate` once `buf` is available in the active environment.
-2. Split the first API integration test work into:
-   - typed contract tests for `session`, `committees`, `meetings`, `attendees`, and `moderation`
-   - meeting-scoped realtime transport tests
-3. Extend this matrix row-by-row before removing any legacy workflow implementation.
+1. Add the remaining admin, docs, attachment, and verification API integration tests that are now represented in this matrix but not yet covered in `internal/api/connect/`.
+2. Continue moving realtime parity rows away from HTML-over-SSE specifics and toward typed invalidation plus SPA refetch behavior as the legacy live/manage pages are retired.
+3. Use the mapped rows in this document as the checklist for each Phase 6 legacy-removal slice.

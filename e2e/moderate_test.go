@@ -54,13 +54,10 @@ func TestModeratePage_AttendeeNonChair_Forbidden(t *testing.T) {
 	page := newPage(t)
 	attendeeLoginHelper(t, page, ts.URL, "test-committee", meetingID, "secret-nonchair")
 
-	resp, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID))
-	if err != nil {
+	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page: %v", err)
 	}
-	if resp.Status() != 403 {
-		t.Fatalf("expected 403 for /moderate as non-chair attendee, got %d", resp.Status())
-	}
+	expectAlertContaining(t, page, "chairperson role required")
 }
 
 // TestModeratePage_AttendeeChair_CanAccess verifies a chair attendee session can
@@ -78,7 +75,7 @@ func TestModeratePage_AttendeeChair_CanAccess(t *testing.T) {
 	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page: %v", err)
 	}
-	if err := page.Locator("h2:has-text('Speakers')").WaitFor(); err != nil {
+	if err := page.Locator("#speakers-list-container").WaitFor(); err != nil {
 		t.Fatalf("expected moderate page to load for chair attendee: %v", err)
 	}
 }
@@ -100,7 +97,7 @@ func TestModeratePage_AttendeeModerator_CanAccess(t *testing.T) {
 	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page: %v", err)
 	}
-	if err := page.Locator("h2:has-text('Speakers')").WaitFor(); err != nil {
+	if err := page.Locator("#speakers-list-container").WaitFor(); err != nil {
 		t.Fatalf("expected moderate page to load for designated meeting moderator: %v", err)
 	}
 }
@@ -390,7 +387,7 @@ func TestModeratePage_SSE_SpeakerUpdatePropagates(t *testing.T) {
 	if _, err := moderatePage.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto moderate page: %v", err)
 	}
-	if err := moderatePage.Locator("h2:has-text('Speakers')").WaitFor(); err != nil {
+	if err := moderatePage.Locator("#speakers-list-container").WaitFor(); err != nil {
 		t.Fatalf("moderate page did not load: %v", err)
 	}
 	modURLBefore := moderatePage.URL()

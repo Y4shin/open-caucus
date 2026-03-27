@@ -10,6 +10,9 @@ service AgendaService {
   // ListAgendaPoints returns the full agenda tree for a meeting.
   rpc ListAgendaPoints(ListAgendaPointsRequest) returns (ListAgendaPointsResponse);
 
+  // GetAgendaPointTools returns the attachment/current-document tools state for one agenda point.
+  rpc GetAgendaPointTools(GetAgendaPointToolsRequest) returns (GetAgendaPointToolsResponse);
+
   // CreateAgendaPoint creates a new top-level or sub-agenda point.
   rpc CreateAgendaPoint(CreateAgendaPointRequest) returns (CreateAgendaPointResponse);
 
@@ -22,6 +25,15 @@ service AgendaService {
   // ActivateAgendaPoint sets the active agenda point for a meeting.
   // Pass empty agenda_point_id to deactivate.
   rpc ActivateAgendaPoint(ActivateAgendaPointRequest) returns (ActivateAgendaPointResponse);
+
+  // SetCurrentAttachment marks one attachment as the published live document.
+  rpc SetCurrentAttachment(SetCurrentAttachmentRequest) returns (SetCurrentAttachmentResponse);
+
+  // ClearCurrentDocument unsets the currently published live document for an agenda point.
+  rpc ClearCurrentDocument(ClearCurrentDocumentRequest) returns (ClearCurrentDocumentResponse);
+
+  // DeleteAttachment removes an attachment and its backing blob.
+  rpc DeleteAttachment(DeleteAttachmentRequest) returns (DeleteAttachmentResponse);
 }
 
 // AgendaPointRecord is the read model for one agenda point, including its
@@ -38,6 +50,24 @@ message AgendaPointRecord {
   repeated AgendaPointRecord sub_points = 9;
 }
 
+message AttachmentRecord {
+  string attachment_id = 1;
+  string blob_id = 2;
+  string filename = 3;
+  string label = 4;
+  string download_url = 5;
+  bool is_current = 6;
+}
+
+message AgendaPointToolsView {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+  string agenda_point_title = 4;
+  repeated AttachmentRecord attachments = 5;
+  string current_attachment_id = 6;
+}
+
 message ListAgendaPointsRequest {
   string committee_slug = 1;
   string meeting_id = 2;
@@ -46,6 +76,16 @@ message ListAgendaPointsRequest {
 message ListAgendaPointsResponse {
   repeated AgendaPointRecord agenda_points = 1;
   string active_agenda_point_id = 2;
+}
+
+message GetAgendaPointToolsRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+}
+
+message GetAgendaPointToolsResponse {
+  AgendaPointToolsView view = 1;
 }
 
 message CreateAgendaPointRequest {
@@ -95,4 +135,39 @@ message ActivateAgendaPointResponse {
   string active_agenda_point_id = 1;
   conference.common.v1.AgendaPointSummary active_agenda_point = 2;
   repeated string invalidated_views = 3;
+}
+
+message SetCurrentAttachmentRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+  string attachment_id = 4;
+}
+
+message SetCurrentAttachmentResponse {
+  AgendaPointToolsView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message ClearCurrentDocumentRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+}
+
+message ClearCurrentDocumentResponse {
+  AgendaPointToolsView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message DeleteAttachmentRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+  string attachment_id = 4;
+}
+
+message DeleteAttachmentResponse {
+  AgendaPointToolsView view = 1;
+  repeated string invalidated_views = 2;
 }

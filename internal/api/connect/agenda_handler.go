@@ -27,6 +27,14 @@ func (h *AgendaHandler) ListAgendaPoints(ctx context.Context, req *connect.Reque
 	return connect.NewResponse(resp), nil
 }
 
+func (h *AgendaHandler) GetAgendaPointTools(ctx context.Context, req *connect.Request[agendav1.GetAgendaPointToolsRequest]) (*connect.Response[agendav1.GetAgendaPointToolsResponse], error) {
+	resp, err := h.service.GetAgendaPointTools(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AgendaPointId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (h *AgendaHandler) CreateAgendaPoint(ctx context.Context, req *connect.Request[agendav1.CreateAgendaPointRequest]) (*connect.Response[agendav1.CreateAgendaPointResponse], error) {
 	resp, err := h.service.CreateAgendaPoint(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.Title, req.Msg.ParentAgendaPointId)
 	if err != nil {
@@ -53,6 +61,30 @@ func (h *AgendaHandler) MoveAgendaPoint(ctx context.Context, req *connect.Reques
 
 func (h *AgendaHandler) ActivateAgendaPoint(ctx context.Context, req *connect.Request[agendav1.ActivateAgendaPointRequest]) (*connect.Response[agendav1.ActivateAgendaPointResponse], error) {
 	resp, err := h.service.ActivateAgendaPoint(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AgendaPointId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AgendaHandler) SetCurrentAttachment(ctx context.Context, req *connect.Request[agendav1.SetCurrentAttachmentRequest]) (*connect.Response[agendav1.SetCurrentAttachmentResponse], error) {
+	resp, err := h.service.SetCurrentAttachment(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AgendaPointId, req.Msg.AttachmentId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AgendaHandler) ClearCurrentDocument(ctx context.Context, req *connect.Request[agendav1.ClearCurrentDocumentRequest]) (*connect.Response[agendav1.ClearCurrentDocumentResponse], error) {
+	resp, err := h.service.ClearCurrentDocument(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AgendaPointId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AgendaHandler) DeleteAttachment(ctx context.Context, req *connect.Request[agendav1.DeleteAttachmentRequest]) (*connect.Response[agendav1.DeleteAttachmentResponse], error) {
+	resp, err := h.service.DeleteAttachment(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AgendaPointId, req.Msg.AttachmentId)
 	if err != nil {
 		return nil, err
 	}

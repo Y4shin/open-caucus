@@ -31,6 +31,8 @@ type SessionBootstrap struct {
 	Locale              string                   `protobuf:"bytes,5,opt,name=locale,proto3" json:"locale,omitempty"`
 	Capabilities        []*v1.Capability         `protobuf:"bytes,6,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
 	RedirectTo          string                   `protobuf:"bytes,7,opt,name=redirect_to,json=redirectTo,proto3" json:"redirect_to,omitempty"`
+	PasswordEnabled     bool                     `protobuf:"varint,8,opt,name=password_enabled,json=passwordEnabled,proto3" json:"password_enabled,omitempty"`
+	OauthEnabled        bool                     `protobuf:"varint,9,opt,name=oauth_enabled,json=oauthEnabled,proto3" json:"oauth_enabled,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -112,6 +114,20 @@ func (x *SessionBootstrap) GetRedirectTo() string {
 		return x.RedirectTo
 	}
 	return ""
+}
+
+func (x *SessionBootstrap) GetPasswordEnabled() bool {
+	if x != nil {
+		return x.PasswordEnabled
+	}
+	return false
+}
+
+func (x *SessionBootstrap) GetOauthEnabled() bool {
+	if x != nil {
+		return x.OauthEnabled
+	}
+	return false
 }
 
 type GetSessionRequest struct {
@@ -382,7 +398,7 @@ var File_conference_session_v1_session_proto protoreflect.FileDescriptor
 
 const file_conference_session_v1_session_proto_rawDesc = "" +
 	"\n" +
-	"#conference/session/v1/session.proto\x12\x15conference.session.v1\x1a!conference/common/v1/common.proto\"\xe9\x02\n" +
+	"#conference/session/v1/session.proto\x12\x15conference.session.v1\x1a!conference/common/v1/common.proto\"\xb9\x03\n" +
 	"\x10SessionBootstrap\x12$\n" +
 	"\rauthenticated\x18\x01 \x01(\bR\rauthenticated\x128\n" +
 	"\x05actor\x18\x02 \x01(\v2\".conference.common.v1.ActorSummaryR\x05actor\x12\x19\n" +
@@ -391,7 +407,9 @@ const file_conference_session_v1_session_proto_rawDesc = "" +
 	"\x06locale\x18\x05 \x01(\tR\x06locale\x12D\n" +
 	"\fcapabilities\x18\x06 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\x12\x1f\n" +
 	"\vredirect_to\x18\a \x01(\tR\n" +
-	"redirectTo\"\x13\n" +
+	"redirectTo\x12)\n" +
+	"\x10password_enabled\x18\b \x01(\bR\x0fpasswordEnabled\x12#\n" +
+	"\roauth_enabled\x18\t \x01(\bR\foauthEnabled\"\x13\n" +
 	"\x11GetSessionRequest\"W\n" +
 	"\x12GetSessionResponse\x12A\n" +
 	"\asession\x18\x01 \x01(\v2'.conference.session.v1.SessionBootstrapR\asession\"F\n" +

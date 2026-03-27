@@ -139,25 +139,25 @@ func TestAdminAssignAccount(t *testing.T) {
 	}
 
 	urlBefore := page.URL()
+	createUserForm := page.Locator("#committee-users-container form").Filter(playwright.LocatorFilterOptions{
+		Has: page.Locator("select[name=account_id]"),
+	})
 
 	// Select account and assign it to the committee
-	accountID, err := page.Locator("select[name=account_id] option:has-text('newuser')").GetAttribute("value")
+	accountID, err := createUserForm.Locator("select[name=account_id] option:has-text('newuser')").GetAttribute("value")
 	if err != nil {
 		t.Fatalf("read account option value: %v", err)
 	}
 	if accountID == "" {
 		t.Fatalf("missing account option value for newuser")
 	}
-	if _, err := page.Locator("select[name=account_id]").SelectOption(playwright.SelectOptionValues{Values: &[]string{accountID}}); err != nil {
+	if _, err := createUserForm.Locator("select[name=account_id]").SelectOption(playwright.SelectOptionValues{Values: &[]string{accountID}}); err != nil {
 		t.Fatalf("select account: %v", err)
 	}
 	roleValues := []string{"member"}
-	if _, err := page.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
+	if _, err := createUserForm.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
 		t.Fatalf("select role: %v", err)
 	}
-	createUserForm := page.Locator("#committee-users-container form").Filter(playwright.LocatorFilterOptions{
-		Has: page.Locator("select[name=account_id]"),
-	})
 	if err := createUserForm.Locator("button[type=submit]").Click(); err != nil {
 		t.Fatalf("click submit: %v", err)
 	}

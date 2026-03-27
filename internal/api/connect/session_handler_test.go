@@ -43,7 +43,7 @@ func newAPITestServer(t *testing.T) *apiTestServer {
 
 	sessionManager := session.NewManager(repo, []byte(testSecret))
 	mw := middleware.NewRegistry(sessionManager, repo, true)
-	service := sessionservice.New(repo, sessionManager, true)
+	service := sessionservice.New(repo, sessionManager, true, false)
 	handler := NewSessionHandler(service)
 
 	path, connectHandler := sessionv1connect.NewSessionServiceHandler(
@@ -117,6 +117,12 @@ func TestSessionServiceGetSessionAnonymous(t *testing.T) {
 	if got := resp.Msg.GetSession().GetLocale(); got != "en" {
 		t.Fatalf("unexpected locale: got %q want %q", got, "en")
 	}
+	if !resp.Msg.GetSession().GetPasswordEnabled() {
+		t.Fatalf("expected password auth to be enabled in bootstrap")
+	}
+	if resp.Msg.GetSession().GetOauthEnabled() {
+		t.Fatalf("expected oauth auth to be disabled in bootstrap")
+	}
 }
 
 func TestSessionServiceLoginAndGetSession(t *testing.T) {
@@ -137,6 +143,9 @@ func TestSessionServiceLoginAndGetSession(t *testing.T) {
 	}
 	if got := loginResp.Msg.GetSession().GetRedirectTo(); got != "/home" {
 		t.Fatalf("unexpected login redirect: got %q want %q", got, "/home")
+	}
+	if !loginResp.Msg.GetSession().GetPasswordEnabled() {
+		t.Fatalf("expected password auth to be enabled after login")
 	}
 
 	resp, err := client.GetSession(context.Background(), connect.NewRequest(&sessionv1.GetSessionRequest{}))

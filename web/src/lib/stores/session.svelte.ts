@@ -9,6 +9,8 @@ interface SessionState {
 	actor: ActorSummary | undefined;
 	availableCommittees: CommitteeReference[];
 	locale: string;
+	passwordEnabled: boolean;
+	oauthEnabled: boolean;
 }
 
 function createSessionStore() {
@@ -18,7 +20,9 @@ function createSessionStore() {
 		isAdmin: false,
 		actor: undefined,
 		availableCommittees: [],
-		locale: 'en'
+		locale: 'en',
+		passwordEnabled: true,
+		oauthEnabled: false
 	});
 
 	return {
@@ -40,6 +44,12 @@ function createSessionStore() {
 		get locale() {
 			return state.locale;
 		},
+		get passwordEnabled() {
+			return state.passwordEnabled;
+		},
+		get oauthEnabled() {
+			return state.oauthEnabled;
+		},
 
 		async load() {
 			try {
@@ -51,6 +61,8 @@ function createSessionStore() {
 					state.actor = s.actor;
 					state.availableCommittees = [...s.availableCommittees];
 					state.locale = s.locale || 'en';
+					state.passwordEnabled = s.passwordEnabled;
+					state.oauthEnabled = s.oauthEnabled;
 				}
 			} catch {
 				state.authenticated = false;
@@ -64,6 +76,8 @@ function createSessionStore() {
 			state.actor = bootstrap.actor;
 			state.availableCommittees = [...bootstrap.availableCommittees];
 			state.locale = bootstrap.locale || 'en';
+			state.passwordEnabled = bootstrap.passwordEnabled;
+			state.oauthEnabled = bootstrap.oauthEnabled;
 			state.loaded = true;
 		},
 
@@ -72,6 +86,8 @@ function createSessionStore() {
 			state.isAdmin = false;
 			state.actor = undefined;
 			state.availableCommittees = [];
+			state.passwordEnabled = true;
+			state.oauthEnabled = false;
 			state.loaded = false;
 		}
 	};

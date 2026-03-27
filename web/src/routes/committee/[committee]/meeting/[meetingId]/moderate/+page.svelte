@@ -19,6 +19,17 @@
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { connectEventStream } from '$lib/utils/sse.js';
 
+	type AgendaImportState = 'ignore' | 'heading' | 'subheading';
+	type AgendaImportLine = {
+		lineNo: number;
+		text: string;
+		state: AgendaImportState;
+	};
+	type AgendaImportPoint = {
+		title: string;
+		children: string[];
+	};
+
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
 
@@ -33,13 +44,24 @@
 	let agendaActionPending = $state('');
 	let voteActionPending = $state('');
 	let creatingAgenda = $state(false);
+	let agendaParentId = $state('');
 	let creatingVote = $state(false);
 	let agendaTitle = $state('');
+	let agendaImportOpen = $state(false);
+	let agendaImportSource = $state('');
+	let agendaImportLines = $state<AgendaImportLine[]>([]);
+	let agendaImportFingerprint = $state('');
+	let agendaImportWarning = $state('');
+	let agendaImportBusy = $state(false);
+	let agendaImportStep = $state<'source' | 'correction' | 'diff'>('source');
 	let voteName = $state('');
 	let voteVisibility = $state<'open' | 'secret'>('open');
 	let voteMinSelections = $state('1');
 	let voteMaxSelections = $state('1');
 	let voteOptionsText = $state('Yes\nNo');
+	let draftOptionTexts = $state<Record<string, string>>({});
+	let draftMinSelections = $state<Record<string, string>>({});
+	let draftMaxSelections = $state<Record<string, string>>({});
 	let lastClosedVote = $state<{
 		vote: VoteDefinitionRecord;
 		tally: VoteTallyEntry[];
@@ -93,6 +115,18 @@
 			attendeeState.data = attendeeRes.attendees;
 			agendaState.data = agendaRes.agendaPoints;
 			votesState.data = votesRes.view ?? null;
+			for (const vote of votesRes.view?.votes ?? []) {
+				if (vote.state !== 'draft') continue;
+				if (!(vote.voteId in draftOptionTexts)) {
+					draftOptionTexts[vote.voteId] = vote.options.map((option) => option.label).join('\n');
+				}
+				if (!(vote.voteId in draftMinSelections)) {
+					draftMinSelections[vote.voteId] = vote.minSelections.toString();
+				}
+				if (!(vote.voteId in draftMaxSelections)) {
+					draftMaxSelections[vote.voteId] = vote.maxSelections.toString();
+				}
+			}
 		} catch (err) {
 			moderationState.error = getDisplayError(err, 'Failed to load the moderation view.');
 			speakerState.error = moderationState.error;
@@ -141,6 +175,21 @@
 		return speakerState.data?.speakers.find((speaker) => speaker.state === 'WAITING') ?? null;
 	}
 
+	function mergeDoneSpeaker(view: SpeakerQueueView | null | undefined, doneSpeaker: SpeakerQueueView['speakers'][number] | null) {
+		if (!view || !doneSpeaker) {
+			return view ?? null;
+		}
+
+		if (view.speakers.some((speaker) => speaker.speakerId === doneSpeaker.speakerId)) {
+			return view;
+		}
+
+		return {
+			...view,
+			speakers: [...view.speakers, doneSpeaker]
+		};
+	}
+
 	async function runSpeakerAction(
 		key: string,
 		action: () => Promise<{ view?: SpeakerQueueView }>
@@ -156,6 +205,32 @@
 			actionError = getDisplayError(err, 'Failed to update the speakers queue.');
 			refreshTick += 1;
 			return false;
+		} finally {
+			speakerActionPending = '';
+		}
+	}
+
+	async function endCurrentSpeaker() {
+		const current = activeSpeaker();
+		if (!current) {
+			actionError = 'No active speaker is available.';
+			return;
+		}
+
+		const doneSpeaker = { ...current, state: 'DONE' } as typeof current;
+		actionError = '';
+		speakerActionPending = 'end-current';
+		try {
+			const res = await speakerClient.setSpeakerDone({
+				committeeSlug: slug,
+				meetingId,
+				speakerId: current.speakerId
+			});
+			speakerState.data = mergeDoneSpeaker(res.view ?? speakerState.data, doneSpeaker);
+			refreshTick += 1;
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update the speakers queue.');
+			refreshTick += 1;
 		} finally {
 			speakerActionPending = '';
 		}
@@ -278,9 +353,11 @@
 			await agendaClient.createAgendaPoint({
 				committeeSlug: slug,
 				meetingId,
-				title
+				title,
+				parentAgendaPointId: agendaParentId
 			});
 			agendaTitle = '';
+			agendaParentId = '';
 			refreshTick += 1;
 			agendaTitleInput?.focus();
 		} catch (err) {
@@ -323,12 +400,213 @@
 	}
 
 	async function deleteAgendaPoint(agendaPointId: string) {
+		if (!window.confirm('Delete agenda point?')) return;
 		await runAgendaAction(`delete-${agendaPointId}`, async () => {
 			await agendaClient.deleteAgendaPoint({
 				committeeSlug: slug,
 				meetingId,
 				agendaPointId
 			});
+			refreshTick += 1;
+		});
+	}
+
+	function flattenAgenda(points: AgendaPointRecord[]) {
+		const rows: Array<{ id: string; parentId: string; position: string; title: string }> = [];
+		for (const point of points) {
+			rows.push({
+				id: point.agendaPointId,
+				parentId: point.parentId,
+				position: point.position.toString(),
+				title: point.title.trim()
+			});
+			for (const child of point.subPoints) {
+				rows.push({
+					id: child.agendaPointId,
+					parentId: child.parentId,
+					position: child.position.toString(),
+					title: child.title.trim()
+				});
+			}
+		}
+		return rows;
+	}
+
+	function currentAgendaFingerprint() {
+		return JSON.stringify(flattenAgenda(agendaState.data ?? []));
+	}
+
+	async function fetchAgendaFingerprint() {
+		const res = await agendaClient.listAgendaPoints({ committeeSlug: slug, meetingId });
+		return JSON.stringify(flattenAgenda(res.agendaPoints));
+	}
+
+	function openAgendaImportDialog() {
+		agendaImportOpen = true;
+		agendaImportStep = 'source';
+		agendaImportWarning = '';
+		agendaImportLines = [];
+		agendaImportFingerprint = currentAgendaFingerprint();
+	}
+
+	function closeAgendaImportDialog() {
+		agendaImportOpen = false;
+		agendaImportStep = 'source';
+		agendaImportWarning = '';
+	}
+
+	function nextImportState(state: AgendaImportState): AgendaImportState {
+		switch (state) {
+			case 'ignore':
+				return 'heading';
+			case 'heading':
+				return 'subheading';
+			default:
+				return 'ignore';
+		}
+	}
+
+	function importPrefix(lines: AgendaImportLine[], index: number) {
+		let top = 0;
+		let sub = 0;
+		for (let i = 0; i <= index; i += 1) {
+			const line = lines[i];
+			if (line.state === 'heading') {
+				top += 1;
+				sub = 0;
+			} else if (line.state === 'subheading' && top > 0) {
+				sub += 1;
+			}
+		}
+		const line = lines[index];
+		if (line.state === 'heading' && top > 0) return `TOP ${top}`;
+		if (line.state === 'subheading' && top > 0 && sub > 0) return `TOP ${top}.${sub}`;
+		return '';
+	}
+
+	function parseAgendaImportSource(source: string) {
+		return source
+			.split('\n')
+			.map((line, index) => ({ raw: line.trim(), lineNo: index + 1 }))
+			.filter((line) => line.raw.length > 0)
+			.map(({ raw, lineNo }) => {
+				const match = raw.match(/^(?:TOP\s*)?(\d+(?:\.\d+)?)[:.) -]*\s*(.+)$/i);
+				if (match) {
+					return {
+						lineNo,
+						text: match[2].trim(),
+						state: match[1].includes('.') ? 'subheading' : 'heading'
+					} satisfies AgendaImportLine;
+				}
+				return {
+					lineNo,
+					text: raw,
+					state: 'ignore'
+				} satisfies AgendaImportLine;
+			});
+	}
+
+	function buildImportedAgenda(lines: AgendaImportLine[]) {
+		const points: AgendaImportPoint[] = [];
+		let currentTop: AgendaImportPoint | null = null;
+		for (const line of lines) {
+			if (line.state === 'heading') {
+				currentTop = { title: line.text, children: [] };
+				points.push(currentTop);
+				continue;
+			}
+			if (line.state === 'subheading' && currentTop) {
+				currentTop.children.push(line.text);
+			}
+		}
+		return points;
+	}
+
+	async function extractAgendaImport() {
+		const parsed = parseAgendaImportSource(agendaImportSource.trim());
+		if (parsed.length === 0) {
+			agendaImportWarning = 'No agenda lines were detected.';
+			return;
+		}
+		agendaImportWarning = '';
+		agendaImportLines = parsed;
+		agendaImportStep = 'correction';
+	}
+
+	function toggleAgendaImportLine(index: number) {
+		agendaImportLines = agendaImportLines.map((line, currentIndex) =>
+			currentIndex === index ? { ...line, state: nextImportState(line.state) } : line
+		);
+	}
+
+	function generateAgendaDiff() {
+		if (buildImportedAgenda(agendaImportLines).length === 0) {
+			agendaImportWarning = 'No agenda headings are selected for import.';
+			return;
+		}
+		agendaImportWarning = '';
+		agendaImportFingerprint = currentAgendaFingerprint();
+		agendaImportStep = 'diff';
+	}
+
+	async function applyAgendaImport() {
+		if (agendaImportBusy) return;
+
+		const imported = buildImportedAgenda(agendaImportLines);
+		if (imported.length === 0) {
+			agendaImportWarning = 'No agenda headings are selected for import.';
+			return;
+		}
+
+		agendaImportBusy = true;
+		agendaImportWarning = '';
+		try {
+			const latestFingerprint = await fetchAgendaFingerprint();
+			if (agendaImportFingerprint !== latestFingerprint) {
+				agendaImportWarning = 'Agenda changed while you reviewed this diff';
+				return;
+			}
+
+			for (const point of agendaState.data ?? []) {
+				await agendaClient.deleteAgendaPoint({
+					committeeSlug: slug,
+					meetingId,
+					agendaPointId: point.agendaPointId
+				});
+			}
+
+			for (const point of imported) {
+				const top = await agendaClient.createAgendaPoint({
+					committeeSlug: slug,
+					meetingId,
+					title: point.title
+				});
+				const parentId = top.agendaPoint?.agendaPointId;
+				if (!parentId) continue;
+				for (const child of point.children) {
+					await agendaClient.createAgendaPoint({
+						committeeSlug: slug,
+						meetingId,
+						title: child,
+						parentAgendaPointId: parentId
+					});
+				}
+			}
+			closeAgendaImportDialog();
+			refreshTick += 1;
+		} catch (err) {
+			agendaImportWarning = getDisplayError(err, 'Failed to apply the agenda import.');
+		} finally {
+			agendaImportBusy = false;
+		}
+	}
+
+	function handleAgendaImportFile(event: Event) {
+		const input = event.currentTarget as HTMLInputElement | null;
+		const file = input?.files?.[0];
+		if (!file) return;
+		file.text().then((content) => {
+			agendaImportSource = content;
 		});
 	}
 
@@ -346,6 +624,37 @@
 
 	function canCreateVote() {
 		return voteName.trim().length > 0 && parsedVoteOptions().length >= 2;
+	}
+
+	function getDraftOptionsText(vote: VoteDefinitionRecord) {
+		return draftOptionTexts[vote.voteId] ?? '';
+	}
+
+	function getDraftMinSelections(vote: VoteDefinitionRecord) {
+		return draftMinSelections[vote.voteId] ?? vote.minSelections.toString();
+	}
+
+	function getDraftMaxSelections(vote: VoteDefinitionRecord) {
+		return draftMaxSelections[vote.voteId] ?? vote.maxSelections.toString();
+	}
+
+	async function saveDraftVote(vote: VoteDefinitionRecord) {
+		await runVoteAction(`save-draft-${vote.voteId}`, async () => {
+			await voteClient.updateVoteDraft({
+				committeeSlug: slug,
+				meetingId,
+				voteId: vote.voteId,
+				name: vote.name.trim(),
+				visibility: vote.visibility,
+				minSelections: bigintFromInput(getDraftMinSelections(vote)),
+				maxSelections: bigintFromInput(getDraftMaxSelections(vote)),
+				optionLabels: getDraftOptionsText(vote)
+					.split('\n')
+					.map((line) => line.trim())
+					.filter(Boolean)
+			});
+			refreshTick += 1;
+		});
 	}
 
 	async function createVote() {
@@ -493,8 +802,9 @@
 			</AppCard>
 		</div>
 
-		<AppCard title="Speakers Queue">
-			<div class="mb-4 flex flex-wrap gap-2">
+		<div data-testid="manage-speakers-card">
+			<AppCard title="Speakers Queue">
+				<div class="mb-4 flex flex-wrap gap-2">
 				<button
 					class="btn btn-primary btn-sm"
 					title="Start next speaker"
@@ -518,166 +828,158 @@
 					class="btn btn-outline btn-sm"
 					data-testid="manage-end-current-speaker"
 					title="End current speech"
-					onclick={() =>
-						runSpeakerAction('end-current', async () => {
-							const current = activeSpeaker();
-							if (!current) {
-								throw new Error('No active speaker is available.');
-							}
-							return await speakerClient.setSpeakerDone({
-								committeeSlug: slug,
-								meetingId,
-								speakerId: current.speakerId
-							});
-						})}
+					onclick={endCurrentSpeaker}
 					disabled={speakerActionPending !== '' || !activeSpeaker()}
 				>
 					End Current
 				</button>
-			</div>
-
-			{#if moderationState.data.activeAgendaPoint}
-				<div class="mb-4 rounded-box border border-base-300 bg-base-200/40 p-4">
-					<div class="mb-3">
-						<label class="label" for="speaker-add-search-input">
-							<span class="label-text font-medium">Add Speaker</span>
-						</label>
-						<input
-							id="speaker-add-search-input"
-							class="input input-bordered w-full"
-							bind:value={speakerSearch}
-							bind:this={searchInput}
-							onkeydown={handleSpeakerSearchEnter}
-							placeholder="Search by attendee name or number"
-						/>
-					</div>
-
-					<div id="speaker-add-candidates-container" class="space-y-2">
-						{#each sortedCandidates().slice(0, 8) as attendee}
-							<div
-								class="flex flex-wrap items-center justify-between gap-3 rounded-box border border-base-300 bg-base-100 px-3 py-3"
-								data-testid="manage-speaker-candidate-card"
-							>
-								<div>
-									<div class="font-medium">{attendee.fullName}</div>
-									<div class="text-sm text-base-content/70">
-										#{attendee.attendeeNumber.toString()}
-										{#if attendee.isGuest}
-											• Guest
-										{/if}
-										{#if attendee.quoted}
-											• Quoted
-										{/if}
-									</div>
-								</div>
-								<div class="flex flex-wrap gap-2">
-									<button
-										class="btn btn-primary btn-xs"
-										title="Add regular speech"
-										onclick={() => addCandidate(attendee.attendeeId, 'regular')}
-										disabled={
-											speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'regular')
-										}
-									>
-										Regular
-									</button>
-									<button
-										class="btn btn-outline btn-xs"
-										title="Add Point of Order (PO) speech"
-										onclick={() => addCandidate(attendee.attendeeId, 'ropm')}
-										disabled={
-											speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'ropm')
-										}
-									>
-										PO
-									</button>
-								</div>
-							</div>
-						{/each}
-						{#if sortedCandidates().length === 0}
-							<p class="text-sm text-base-content/70">No matching attendees found.</p>
-						{/if}
-					</div>
 				</div>
-			{/if}
 
-			<div id="speakers-list-container">
-				{#if speakerState.data?.speakers?.length}
-					<div class="space-y-2" data-testid="manage-speakers-viewport">
-						{#each speakerState.data.speakers as speaker}
-							<div
-								class="rounded-box border border-base-300 px-3 py-3"
-								data-testid="live-speaker-item"
-								data-speaker-state={speaker.state.toLowerCase()}
-							>
-								<div class="flex flex-wrap items-start justify-between gap-3">
+				{#if moderationState.data.activeAgendaPoint}
+					<div class="mb-4 rounded-box border border-base-300 bg-base-200/40 p-4">
+						<div class="mb-3">
+							<label class="label" for="speaker-add-search-input">
+								<span class="label-text font-medium">Add Speaker</span>
+							</label>
+							<input
+								id="speaker-add-search-input"
+								class="input input-bordered w-full"
+								bind:value={speakerSearch}
+								bind:this={searchInput}
+								onkeydown={handleSpeakerSearchEnter}
+								placeholder="Search by attendee name or number"
+							/>
+						</div>
+
+						<div id="speaker-add-candidates-container" class="space-y-2">
+							{#each sortedCandidates().slice(0, 8) as attendee}
+								<div
+									class="flex flex-wrap items-center justify-between gap-3 rounded-box border border-base-300 bg-base-100 px-3 py-3"
+									data-testid="manage-speaker-candidate-card"
+								>
 									<div>
-										<div class="font-medium" data-testid="live-speaker-name">{speaker.fullName}</div>
+										<div class="font-medium">{attendee.fullName}</div>
 										<div class="text-sm text-base-content/70">
-											{speaker.speakerType} • {speaker.state}
+											#{attendee.attendeeNumber.toString()}
+											{#if attendee.isGuest}
+												• Guest
+											{/if}
+											{#if attendee.quoted}
+												• Quoted
+											{/if}
 										</div>
 									</div>
 									<div class="flex flex-wrap gap-2">
-										{#if speaker.state === 'WAITING'}
-											<button
-												class="btn btn-ghost btn-xs"
-												title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-												onclick={() =>
-													runSpeakerAction(`priority-${speaker.speakerId}`, async () => {
-														return await speakerClient.setSpeakerPriority({
-															committeeSlug: slug,
-															meetingId,
-															speakerId: speaker.speakerId,
-															priority: !speaker.priority
-														});
-													})}
-												disabled={speakerActionPending !== ''}
-											>
-												{speaker.priority ? 'Priority On' : 'Give Priority'}
-											</button>
-											<button
-												class="btn btn-ghost btn-xs"
-												title="Start"
-												onclick={() =>
-													runSpeakerAction(`start-${speaker.speakerId}`, async () => {
-														return await speakerClient.setSpeakerSpeaking({
-															committeeSlug: slug,
-															meetingId,
-															speakerId: speaker.speakerId
-														});
-													})}
-												disabled={speakerActionPending !== ''}
-											>
-												Start
-											</button>
-										{/if}
-										{#if speaker.state !== 'DONE'}
-											<button
-												class="btn btn-ghost btn-xs text-error"
-												title="Remove"
-												onclick={() =>
-													runSpeakerAction(`remove-${speaker.speakerId}`, async () => {
-														return await speakerClient.removeSpeaker({
-															committeeSlug: slug,
-															meetingId,
-															speakerId: speaker.speakerId
-														});
-													})}
-												disabled={speakerActionPending !== ''}
-											>
-												Remove
-											</button>
-										{/if}
+										<button
+											class="btn btn-primary btn-xs"
+											title="Add regular speech"
+											onclick={() => addCandidate(attendee.attendeeId, 'regular')}
+											disabled={
+												speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'regular')
+											}
+										>
+											Regular
+										</button>
+										<button
+											class="btn btn-outline btn-xs"
+											title="Add Point of Order (PO) speech"
+											onclick={() => addCandidate(attendee.attendeeId, 'ropm')}
+											disabled={
+												speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'ropm')
+											}
+										>
+											PO
+										</button>
 									</div>
 								</div>
-							</div>
-						{/each}
+							{/each}
+							{#if sortedCandidates().length === 0}
+								<p class="text-sm text-base-content/70">No matching attendees found.</p>
+							{/if}
+						</div>
 					</div>
-				{:else}
-					<p class="text-base-content/70">No speakers are queued for the active agenda point.</p>
 				{/if}
-			</div>
-		</AppCard>
+
+				<div id="speakers-list-container">
+					{#if !moderationState.data.activeAgendaPoint}
+						<p class="text-base-content/70">No active agenda point.</p>
+					{:else if speakerState.data?.speakers?.length}
+						<div class="space-y-2" data-testid="manage-speakers-viewport">
+							{#each speakerState.data.speakers as speaker}
+								<div
+									class="rounded-box border border-base-300 px-3 py-3"
+									data-testid="live-speaker-item"
+									data-speaker-state={speaker.state.toLowerCase()}
+								>
+									<div class="flex flex-wrap items-start justify-between gap-3">
+										<div>
+											<div class="font-medium" data-testid="live-speaker-name">{speaker.fullName}</div>
+											<div class="text-sm text-base-content/70">
+												{speaker.speakerType} • {speaker.state}
+											</div>
+										</div>
+										<div class="flex flex-wrap gap-2">
+											{#if speaker.state === 'WAITING'}
+												<button
+													class="btn btn-ghost btn-xs"
+													title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+													onclick={() =>
+														runSpeakerAction(`priority-${speaker.speakerId}`, async () => {
+															return await speakerClient.setSpeakerPriority({
+																committeeSlug: slug,
+																meetingId,
+																speakerId: speaker.speakerId,
+																priority: !speaker.priority
+															});
+														})}
+													disabled={speakerActionPending !== ''}
+												>
+													{speaker.priority ? 'Priority On' : 'Give Priority'}
+												</button>
+												<button
+													class="btn btn-ghost btn-xs"
+													title="Start"
+													onclick={() =>
+														runSpeakerAction(`start-${speaker.speakerId}`, async () => {
+															return await speakerClient.setSpeakerSpeaking({
+																committeeSlug: slug,
+																meetingId,
+																speakerId: speaker.speakerId
+															});
+														})}
+													disabled={speakerActionPending !== ''}
+												>
+													Start
+												</button>
+											{/if}
+											{#if speaker.state !== 'DONE'}
+												<button
+													class="btn btn-ghost btn-xs text-error"
+													title="Remove"
+													onclick={() =>
+														runSpeakerAction(`remove-${speaker.speakerId}`, async () => {
+															return await speakerClient.removeSpeaker({
+																committeeSlug: slug,
+																meetingId,
+																speakerId: speaker.speakerId
+															});
+														})}
+													disabled={speakerActionPending !== ''}
+												>
+													Remove
+												</button>
+											{/if}
+										</div>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-base-content/70">No speakers are queued for the active agenda point.</p>
+					{/if}
+				</div>
+			</AppCard>
+		</div>
 
 		<AppCard title="Current Agenda Point">
 			{#if moderationState.data.activeAgendaPoint}
@@ -694,117 +996,276 @@
 
 		<AppCard title="Agenda Management">
 			<div class="space-y-4">
-				<div class="flex flex-col gap-3 md:flex-row">
-					<input
-						class="input input-bordered flex-1"
-						placeholder="Add a top-level agenda point"
-						bind:value={agendaTitle}
-						bind:this={agendaTitleInput}
-						onkeydown={handleAgendaTitleKeydown}
-					/>
-					<button
-						class="btn btn-primary"
-						onclick={createAgendaPoint}
-						disabled={creatingAgenda || agendaTitle.trim().length === 0}
+				<div id="agenda-point-list-container" class="space-y-4">
+					<form
+						class="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto]"
+						data-testid="manage-agenda-add-form"
+						onsubmit={(event) => {
+							event.preventDefault();
+							createAgendaPoint();
+						}}
 					>
-						{#if creatingAgenda}
-							<span class="loading loading-spinner loading-xs"></span>
-						{/if}
-						Add Agenda Point
+						<input
+							class="input input-bordered"
+							name="title"
+							placeholder="Add an agenda point"
+							bind:value={agendaTitle}
+							bind:this={agendaTitleInput}
+							onkeydown={handleAgendaTitleKeydown}
+						/>
+						<select id="ap_parent_id" class="select select-bordered" bind:value={agendaParentId}>
+							<option value="">Top-level point</option>
+							{#each agendaState.data ?? [] as point}
+								<option value={point.agendaPointId}>{point.title}</option>
+							{/each}
+						</select>
+						<button
+							class="btn btn-primary"
+							type="submit"
+							disabled={creatingAgenda || agendaTitle.trim().length === 0}
+						>
+							{#if creatingAgenda}
+								<span class="loading loading-spinner loading-xs"></span>
+							{/if}
+							Add Agenda Point
+						</button>
+					</form>
+
+					<button
+						type="button"
+						class="btn btn-outline btn-sm"
+						data-manage-dialog-open
+						aria-controls="moderate-agenda-import-dialog"
+						onclick={openAgendaImportDialog}
+					>
+						Import Agenda
 					</button>
-				</div>
 
-				{#if agendaState.loading}
-					<AppSpinner label="Loading agenda" />
-				{:else if agendaState.error}
-					<AppAlert message={agendaState.error} />
-				{:else if agendaState.data?.length}
-					<div class="space-y-2" id="manage-agenda-list">
-						{#snippet agendaRows(points: AgendaPointRecord[], depth: number)}
-							{#each points as point, index}
-								<div
-									class="rounded-box border border-base-300 bg-base-100 px-3 py-3"
-									data-testid="manage-agenda-item"
-									data-agenda-active={point.isActive ? 'true' : 'false'}
-								>
-									<div class="flex flex-wrap items-start justify-between gap-3">
-										<div class="min-w-0" style={`padding-left: ${depth * 1.25}rem`}>
-											<div class="flex flex-wrap items-center gap-2">
-												<span class="font-medium">{point.displayNumber}</span>
-												{#if point.title}
-													<span>{point.title}</span>
-												{:else}
-													<span class="text-base-content/60">Untitled</span>
-												{/if}
-												{#if point.isActive}
-													<span class="badge badge-primary badge-sm">Active</span>
-												{/if}
+					{#if agendaState.loading}
+						<AppSpinner label="Loading agenda" />
+					{:else if agendaState.error}
+						<AppAlert message={agendaState.error} />
+					{:else}
+						<div class="space-y-2" id="manage-agenda-list">
+							{#snippet agendaRows(points: AgendaPointRecord[], depth: number)}
+								{#each points as point, index}
+									<div
+										class="rounded-box border border-base-300 bg-base-100 px-3 py-3"
+										data-testid="manage-agenda-point-card"
+										data-agenda-active={point.isActive ? 'true' : 'false'}
+									>
+										<div class="flex flex-wrap items-start justify-between gap-3">
+											<div class="min-w-0" style={`padding-left: ${depth * 1.25}rem`}>
+												<div class="flex flex-wrap items-center gap-2">
+													<span class="font-medium">{point.displayNumber}</span>
+													{#if point.title}
+														<span>{point.title}</span>
+													{:else}
+														<span class="text-base-content/60">Untitled</span>
+													{/if}
+													{#if point.parentId}
+														<span class="badge badge-outline badge-sm">Child</span>
+													{/if}
+													{#if point.isActive}
+														<span class="badge badge-primary badge-sm" data-testid="manage-agenda-active-badge"
+															>Active</span
+														>
+													{/if}
+												</div>
+												<div class="mt-1 text-sm text-base-content/70">
+													Position {point.position.toString()}
+													{#if point.genderQuotation}
+														• Gender quotation
+													{/if}
+													{#if point.firstSpeakerQuotation}
+														• First speaker quotation
+													{/if}
+												</div>
 											</div>
-											<div class="mt-1 text-sm text-base-content/70">
-												Position {point.position.toString()}
-												{#if point.genderQuotation}
-													• Gender quotation
-												{/if}
-												{#if point.firstSpeakerQuotation}
-													• First speaker quotation
-												{/if}
-											</div>
-										</div>
 
-										<div class="flex flex-wrap gap-2">
-											<button
-												class="btn btn-ghost btn-xs"
-												title={point.isActive ? 'Deactivate' : 'Activate'}
-												onclick={() => activateAgendaPoint(point.agendaPointId, point.isActive)}
-												disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}
-											>
-												{point.isActive ? 'Deactivate' : 'Activate'}
-											</button>
-											{#if !point.parentId}
+											<div class="flex flex-wrap gap-2">
 												<button
 													class="btn btn-ghost btn-xs"
-													title="Move up"
-													onclick={() => moveAgendaPoint(point.agendaPointId, 'up')}
-													disabled={index === 0 || isAgendaBusy(`move-${point.agendaPointId}-up`)}
+													title={point.isActive ? 'Deactivate agenda point' : 'Activate agenda point'}
+													type="button"
+													onclick={() => activateAgendaPoint(point.agendaPointId, point.isActive)}
+													disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}
 												>
-													Up
+													{point.isActive ? 'Deactivate' : 'Activate'}
 												</button>
+												{#if !point.parentId}
+													<button
+														class="btn btn-ghost btn-xs"
+														title="Move up"
+														type="button"
+														onclick={() => moveAgendaPoint(point.agendaPointId, 'up')}
+														disabled={index === 0 || isAgendaBusy(`move-${point.agendaPointId}-up`)}
+													>
+														Up
+													</button>
+													<button
+														class="btn btn-ghost btn-xs"
+														title="Move down"
+														type="button"
+														onclick={() => moveAgendaPoint(point.agendaPointId, 'down')}
+														disabled={
+															index === points.length - 1 || isAgendaBusy(`move-${point.agendaPointId}-down`)
+														}
+													>
+														Down
+													</button>
+												{/if}
 												<button
-													class="btn btn-ghost btn-xs"
-													title="Move down"
-													onclick={() => moveAgendaPoint(point.agendaPointId, 'down')}
-													disabled={
-														index === points.length - 1 || isAgendaBusy(`move-${point.agendaPointId}-down`)
-													}
+													class="btn btn-ghost btn-xs text-error"
+													title="Delete agenda point"
+													type="button"
+													onclick={() => deleteAgendaPoint(point.agendaPointId)}
+													disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}
 												>
-													Down
+													Delete
 												</button>
-											{/if}
-											<button
-												class="btn btn-ghost btn-xs text-error"
-												title="Delete"
-												onclick={() => deleteAgendaPoint(point.agendaPointId)}
-												disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}
-											>
-												Delete
-											</button>
+												<a
+													class="btn btn-ghost btn-xs"
+													href="/committee/{slug}/meeting/{meetingId}/agenda-point/{point.agendaPointId}/tools"
+												>
+													Tools
+												</a>
+											</div>
 										</div>
 									</div>
-								</div>
 
-								{#if point.subPoints.length}
-									{@render agendaRows(point.subPoints, depth + 1)}
-								{/if}
-							{/each}
-						{/snippet}
+									{#if point.subPoints.length}
+										{@render agendaRows(point.subPoints, depth + 1)}
+									{/if}
+								{/each}
+							{/snippet}
 
-						{@render agendaRows(agendaState.data, 0)}
-					</div>
-				{:else}
-					<p class="text-base-content/70">No agenda points have been created yet.</p>
-				{/if}
+							{#if agendaState.data?.length}
+								{@render agendaRows(agendaState.data, 0)}
+							{:else}
+								<p class="text-base-content/70">No agenda points have been created yet.</p>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</AppCard>
+
+		<dialog id="moderate-agenda-import-dialog" class="modal" open={agendaImportOpen}>
+			<div class="modal-box w-11/12 max-w-5xl">
+				<div class="mb-4 flex items-center justify-between gap-2">
+					<h3 class="text-lg font-semibold">Import Agenda</h3>
+					<button class="btn btn-sm btn-circle btn-ghost" type="button" onclick={closeAgendaImportDialog}
+						>✕</button
+					>
+				</div>
+
+				<div class="space-y-4">
+					{#if agendaImportWarning}
+						<AppAlert message={agendaImportWarning} />
+					{/if}
+
+					{#if agendaImportStep === 'source'}
+						<div class="space-y-3" data-agenda-import-panel="1">
+							<label class="label p-0 text-sm font-medium" for="agenda-import-source">
+								Agenda Source
+							</label>
+							<textarea
+								id="agenda-import-source"
+								class="textarea textarea-bordered min-h-40 w-full"
+								bind:value={agendaImportSource}
+								placeholder="TOP1 Opening&#10;TOP2 Reports"
+							></textarea>
+							<div class="flex flex-wrap items-center gap-2">
+								<input
+									type="file"
+									class="file-input file-input-bordered file-input-sm max-w-full"
+									accept=".txt,.md,text/plain,text/markdown"
+									data-agenda-import-file
+									onchange={handleAgendaImportFile}
+								/>
+								<button type="button" class="btn btn-sm btn-outline" onclick={extractAgendaImport}>
+									Extract Agenda
+								</button>
+							</div>
+						</div>
+					{:else if agendaImportStep === 'correction'}
+						<div class="space-y-4" data-agenda-import-panel="2">
+							<form id="agenda-import-correction-form" class="space-y-4">
+								<div class="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
+									<ul class="space-y-2" data-agenda-import-lines>
+										{#each agendaImportLines as line, index}
+											<li>
+												<input type="hidden" name="line_no" value={line.lineNo} />
+												<input type="hidden" name="line_text" value={line.text} />
+												<input type="hidden" name="line_state" value={line.state} data-import-line-state />
+												<button
+													type="button"
+													class="w-full cursor-pointer rounded-box border px-3 py-2 text-left"
+													data-import-line-row
+													data-state={line.state}
+													onclick={() => toggleAgendaImportLine(index)}
+												>
+													<div class="flex items-center gap-3">
+														<span class="w-16 text-sm font-medium" data-import-line-prefix
+															>{importPrefix(agendaImportLines, index)}</span
+														>
+														<span>{line.text}</span>
+													</div>
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
+								<div class="flex flex-wrap gap-2">
+									<button type="button" class="btn btn-sm btn-ghost" onclick={() => (agendaImportStep = 'source')}
+										>Back</button
+									>
+									<button type="button" class="btn btn-sm btn-outline" onclick={generateAgendaDiff}>
+										Generate Diff
+									</button>
+								</div>
+							</form>
+						</div>
+					{:else}
+						<div class="space-y-4" data-agenda-import-panel="3">
+							<h4 class="text-base font-semibold">Agenda Diff</h4>
+							<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-3">
+								<div class="space-y-2 text-sm">
+									{#each buildImportedAgenda(agendaImportLines) as point}
+										<div>
+											<div class="font-medium">{point.title}</div>
+											{#each point.children as child}
+												<div class="pl-4 text-base-content/70">{child}</div>
+											{/each}
+										</div>
+									{/each}
+								</div>
+							</div>
+							<div class="flex flex-wrap gap-2">
+								<button type="button" class="btn btn-sm btn-ghost" onclick={() => (agendaImportStep = 'correction')}
+									>Back</button
+								>
+								<button type="button" class="btn btn-sm btn-outline" onclick={closeAgendaImportDialog}>
+									Deny
+								</button>
+								<button
+									type="button"
+									class="btn btn-sm btn-primary"
+									onclick={applyAgendaImport}
+									disabled={agendaImportBusy}
+								>
+									Accept
+								</button>
+							</div>
+						</div>
+					{/if}
+				</div>
+			</div>
+			<form method="dialog" class="modal-backdrop">
+				<button type="button" onclick={closeAgendaImportDialog}>close</button>
+			</form>
+		</dialog>
 
 		<AppCard title="Votes">
 			{#if votesState.loading}
@@ -979,6 +1440,43 @@
 													{/if}
 												</div>
 											</div>
+
+											{#if vote.state === 'draft'}
+												<div class="mt-4 space-y-3 rounded-box border border-base-300 bg-base-200/40 p-3">
+													<input class="input input-bordered w-full" bind:value={vote.name} />
+													<div class="grid gap-3 sm:grid-cols-3">
+														<select class="select select-bordered" bind:value={vote.visibility}>
+															<option value="open">Open</option>
+															<option value="secret">Secret</option>
+														</select>
+													<input
+														class="input input-bordered"
+														type="number"
+														min="1"
+														bind:value={draftMinSelections[vote.voteId]}
+													/>
+													<input
+														class="input input-bordered"
+														type="number"
+														min="1"
+														bind:value={draftMaxSelections[vote.voteId]}
+													/>
+													</div>
+													<textarea
+														class="textarea textarea-bordered min-h-28 w-full"
+														bind:value={draftOptionTexts[vote.voteId]}
+													></textarea>
+													<div class="flex justify-end">
+														<button
+															class="btn btn-outline btn-sm"
+															onclick={() => saveDraftVote(vote)}
+															disabled={voteActionPending !== ''}
+														>
+															Save Draft
+														</button>
+													</div>
+												</div>
+											{/if}
 										</div>
 									{/each}
 								</div>

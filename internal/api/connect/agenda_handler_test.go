@@ -3,6 +3,7 @@ package apiconnect
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	connect "connectrpc.com/connect"
@@ -266,4 +267,100 @@ func TestAgendaService_ActivateAgendaPoint_MemberForbidden(t *testing.T) {
 	if connect.CodeOf(err) != connect.CodePermissionDenied {
 		t.Fatalf("expected permission denied, got %v", connect.CodeOf(err))
 	}
+}
+
+func TestAgendaService_ToolsLifecycle(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair One", "chairperson")
+	meetingID := ts.seedMeeting(t, "test-committee", "Spring Meeting", false)
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "chair1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	createResp, err := client.agenda.CreateAgendaPoint(context.Background(), connect.NewRequest(&agendav1.CreateAgendaPointRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		Title:         "Budget",
+	}))
+	if err != nil {
+		t.Fatalf("create agenda point: %v", err)
+	}
+	agendaPointID := createResp.Msg.GetAgendaPoint().GetAgendaPointId()
+	agendaPointInt := mustParseInt64(t, agendaPointID)
+
+	blob, err := ts.repo.CreateBlob(context.Background(), "budget.pdf", "application/pdf", 4, "blob-budget")
+	if err != nil {
+		t.Fatalf("create blob: %v", err)
+	}
+	label := "Budget Proposal"
+	attachment, err := ts.repo.CreateAttachment(context.Background(), agendaPointInt, blob.ID, &label)
+	if err != nil {
+		t.Fatalf("create attachment: %v", err)
+	}
+
+	toolsResp, err := client.agenda.GetAgendaPointTools(context.Background(), connect.NewRequest(&agendav1.GetAgendaPointToolsRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		AgendaPointId: agendaPointID,
+	}))
+	if err != nil {
+		t.Fatalf("get tools: %v", err)
+	}
+	if len(toolsResp.Msg.GetView().GetAttachments()) != 1 {
+		t.Fatalf("expected 1 attachment, got %d", len(toolsResp.Msg.GetView().GetAttachments()))
+	}
+
+	setResp, err := client.agenda.SetCurrentAttachment(context.Background(), connect.NewRequest(&agendav1.SetCurrentAttachmentRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		AgendaPointId: agendaPointID,
+		AttachmentId:  fmt.Sprintf("%d", attachment.ID),
+	}))
+	if err != nil {
+		t.Fatalf("set current attachment: %v", err)
+	}
+	if setResp.Msg.GetView().GetCurrentAttachmentId() != fmt.Sprintf("%d", attachment.ID) {
+		t.Fatalf("expected current attachment id to be set")
+	}
+
+	clearResp, err := client.agenda.ClearCurrentDocument(context.Background(), connect.NewRequest(&agendav1.ClearCurrentDocumentRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		AgendaPointId: agendaPointID,
+	}))
+	if err != nil {
+		t.Fatalf("clear current document: %v", err)
+	}
+	if clearResp.Msg.GetView().GetCurrentAttachmentId() != "" {
+		t.Fatalf("expected current attachment to be cleared")
+	}
+
+	deleteResp, err := client.agenda.DeleteAttachment(context.Background(), connect.NewRequest(&agendav1.DeleteAttachmentRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+		AgendaPointId: agendaPointID,
+		AttachmentId:  fmt.Sprintf("%d", attachment.ID),
+	}))
+	if err != nil {
+		t.Fatalf("delete attachment: %v", err)
+	}
+	if len(deleteResp.Msg.GetView().GetAttachments()) != 0 {
+		t.Fatalf("expected attachments to be empty after delete, got %d", len(deleteResp.Msg.GetView().GetAttachments()))
+	}
+}
+
+func mustParseInt64(t *testing.T, raw string) int64 {
+	t.Helper()
+	value, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		t.Fatalf("parse int64 %q: %v", raw, err)
+	}
+	return value
 }

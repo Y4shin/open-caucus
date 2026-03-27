@@ -2,10 +2,10 @@
 
 ## Purpose
 
-This file captures the current frontend rewrite state so another agent can continue Phase 5 without re-discovering the recent work.
+This file captures the current frontend rewrite state so another agent can continue Phase 6 legacy-removal work without re-discovering the recent Phase 5 completion work. It is being updated incrementally during active work so another agent can pick up mid-slice if quota runs out.
 
-Date: 2026-03-26
-Repo state at handoff creation: clean after commit `d4cd535`
+Date: 2026-03-27
+Repo state at handoff update: dirty working tree with completed Phase 5 implementation plus active Phase 6 server split, SPA parity fixes, and E2E migration/debugging
 
 ## Current Rewrite Status
 
@@ -16,14 +16,14 @@ Source of truth:
 
 Plan snapshot:
 
-- Current phase: `Phase 5 - Full Feature Port`
+- Current phase: `Phase 6 - Legacy Removal`
 - Phase 0: completed
 - Phase 1: completed
 - Phase 2: completed
 - Phase 3: completed
 - Phase 4: completed
-- Phase 5: in progress
-- Phase 6: not started
+- Phase 5: completed
+- Phase 6: in progress
 
 What is already ported into the SPA:
 
@@ -48,17 +48,116 @@ What is already ported into the SPA:
   - archive closed vote
   - attendee open-ballot submission
 
-Still not at parity:
+Phase 5 parity now includes:
 
-- full voting parity
-  - draft editing
-  - secret ballot submission/counting
-  - richer moderator tally/verification flows
-  - remaining vote verification surfaces
+- full voting parity for the currently supported open and secret-ballot workflows
 - admin/account management parity
 - docs/public verification parity
 - attachments and file-serving flows
-- later Phase 6 legacy removal
+
+What remains:
+
+- Phase 6 legacy removal
+- replacing HTML-over-SSE/HTMX-only refresh paths with pure typed invalidation flows
+- removing the old SSR route/template stack once the mapping and API coverage are sufficient
+
+## Latest Phase 6 Direction
+
+The current migration direction is:
+
+- keep `serve` as SPA + typed API only
+- move the legacy HTMX/Templ app to a separate `serve-legacy` subcommand
+- migrate browser E2E coverage to the new SPA implementation now, even while `serve-legacy` still exists for manual comparison/debugging
+
+This replaced the earlier mixed-hosting approach because the combined mux caused root-route conflicts and made parity debugging harder.
+
+## What Landed Today
+
+Server/runtime split:
+
+- added a shared serve setup in [`cmd/serve_common.go`](/mnt/c/Users/Patric/Projects/conference-tool/cmd/serve_common.go)
+- converted [`cmd/serve.go`](/mnt/c/Users/Patric/Projects/conference-tool/cmd/serve.go) toward SPA/API-only serving
+- added [`cmd/serve_legacy.go`](/mnt/c/Users/Patric/Projects/conference-tool/cmd/serve_legacy.go) for the old app
+
+SPA serving and auth parity:
+
+- fixed built asset lookup in [`internal/web/handler.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/web/handler.go) by trimming the leading slash before reading from the embedded build FS
+- added coverage in [`internal/web/handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/web/handler_test.go)
+- added SPA admin login at [`web/src/routes/admin/login/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/admin/login/+page.svelte)
+- added auth-provider/session bootstrap parity through:
+  - [`proto/conference/session/v1/session.proto`](/mnt/c/Users/Patric/Projects/conference-tool/proto/conference/session/v1/session.proto)
+  - [`internal/services/session/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/session/service.go)
+  - [`web/src/lib/stores/session.svelte.ts`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/lib/stores/session.svelte.ts)
+
+Backend/API parity fixes:
+
+- added shared moderation/chair authorization helpers in [`internal/services/authz/authz.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/authz/authz.go)
+- wired those checks into:
+  - [`internal/services/moderation/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/moderation/service.go)
+  - [`internal/services/attendees/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/attendees/service.go)
+  - [`internal/services/votes/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/votes/service.go)
+  - [`internal/services/agenda/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/agenda/service.go)
+- restored the “members may only open the active meeting” rule in [`internal/services/meetings/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/meetings/service.go)
+- aligned the API test setup with that rule in [`internal/api/connect/meeting_handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/connect/meeting_handler_test.go) by explicitly marking the seeded meeting active
+
+Moderation page parity work:
+
+- [`web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte) now includes:
+  - parent selection for sub-agenda point creation
+  - legacy-compatible ids/data-testids for agenda cards and actions
+  - agenda import dialog parity hooks and client-side import/diff/accept/deny behavior
+  - button-based clickable import correction rows to satisfy Svelte a11y checks
+  - `data-testid="manage-speakers-card"` wrapper restored for speakers E2E scoping
+  - no-active-agenda-point speaker empty state restored
+
+E2E migration/hardening:
+
+- [`e2e/helpers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/helpers_test.go) and [`e2e/oauth_helpers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/oauth_helpers_test.go) now boot the SPA/API-oriented server shape instead of relying on the legacy router
+- [`e2e/browser_helpers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/browser_helpers_test.go) was updated to:
+  - tolerate SPA moderation layouts without the old left-tab controls
+  - wait for SPA agenda content directly
+  - harden login flows with `gotoAndWaitForInput(...)` retries for `/login` and `/admin/login`
+- [`e2e/attendee_speakers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/attendee_speakers_test.go) now uses the same hardened helper for attendee login
+- SPA-semantic E2E updates landed in:
+  - [`e2e/access_control_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/access_control_test.go)
+  - [`e2e/attendee_login_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/attendee_login_test.go)
+  - [`e2e/moderate_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/moderate_test.go)
+  - [`e2e/oauth_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/oauth_test.go)
+  - [`e2e/admin_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/admin_test.go)
+
+## Current Verification Snapshot
+
+Confirmed passing in this workstream:
+
+- `nix develop . --command go test ./...`
+- `nix develop . --command npm run check`
+- `nix develop . --command npm run build`
+- targeted E2E slices for:
+  - admin access-control redirects
+  - moderation access
+  - attendee login/logout
+  - agenda CRUD/import flows
+
+Full E2E status at latest update:
+
+- the suite progressed through access-control, admin, and agenda/import tests after the login-helper hardening
+- the next concrete failure discovered was `TestSpeakersList_NoActivePoint`
+- that failure was traced to missing SPA compatibility hooks in the moderation speakers card:
+  - missing `data-testid="manage-speakers-card"` wrapper
+  - wrong empty-state text when no agenda point is active
+- both fixes have now been applied in [`web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte)
+- targeted rerun of the speakers slice was in progress at handoff time and should be rerun first
+
+## Immediate Next Steps
+
+If you are resuming from here:
+
+1. Rerun:
+   - `nix develop . --command npm run check` from `web/`
+   - `nix develop . --command env PLAYWRIGHT_DRIVER_PATH=... PLAYWRIGHT_BROWSERS_PATH=... PLAYWRIGHT_NODEJS_PATH=... go test -v -tags=e2e -timeout=180s ./e2e/... -run 'TestSpeakersList_(NoActivePoint|AddSpeaker|SearchEnterAddsBestMatch|OneNonDoneEntryPerType|StartEnd)'`
+2. If that speakers slice passes, rerun the full E2E suite against the SPA server.
+3. Continue fixing the next parity gap surfaced by the suite before removing more legacy code.
+4. Update this file again after each substantial fix or rerun so another agent can always resume cleanly.
 
 ## Most Recent Commits
 
@@ -258,4 +357,3 @@ If you are continuing immediately, start here:
    - `npm run build`
    - `go test ./internal/api/connect/...`
    - `go test ./...`
-

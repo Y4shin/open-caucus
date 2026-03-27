@@ -10,6 +10,7 @@
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
 	import type { LiveVotePanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
+	import { saveReceipt } from '$lib/utils/receipts.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { connectEventStream } from '$lib/utils/sse.js';
 
@@ -88,6 +89,12 @@
 		);
 	}
 
+	function visibleSpeakers() {
+		return (speakerState.data?.speakers ?? liveState.data.speakers).filter(
+			(speaker) => speaker.state !== 'DONE' && speaker.state !== 'WITHDRAWN'
+		);
+	}
+
 	async function addSelfSpeaker(speakerType: string) {
 		if (speakerType === 'regular') {
 			addingRegular = true;
@@ -126,7 +133,7 @@
 		selectedOptionIds = [...selectedOptionIds, optionId];
 	}
 
-	async function submitOpenBallot() {
+	async function submitBallot() {
 		const activeVote = voteState.data?.activeVote;
 		if (!activeVote || selectedOptionIds.length === 0 || submittingVote) return;
 
@@ -141,6 +148,14 @@
 				selectedOptionIds
 			});
 			voteReceipt = res.receiptToken;
+			saveReceipt({
+				id: `${activeVote.visibility}:${activeVote.voteId}:${res.receiptToken}`,
+				kind: activeVote.visibility as 'open' | 'secret',
+				voteId: activeVote.voteId,
+				voteName: activeVote.name,
+				receiptToken: res.receiptToken,
+				receipt: `${activeVote.voteId}:${res.receiptToken}`
+			});
 			selectedOptionIds = [];
 			refreshTick += 1;
 		} catch (err) {
@@ -244,9 +259,9 @@
 
 		<AppCard title="Speakers">
 			<div id="attendee-speakers-list">
-				{#if (speakerState.data?.speakers ?? liveState.data.speakers).length}
+				{#if visibleSpeakers().length}
 					<div class="space-y-2" data-testid="live-speakers-active-viewport">
-						{#each speakerState.data?.speakers ?? liveState.data.speakers as speaker}
+						{#each visibleSpeakers() as speaker}
 							<div
 								class="flex items-center justify-between rounded-box border border-base-300 px-3 py-2"
 								data-testid="live-speaker-item"
@@ -293,6 +308,7 @@
 						{#if voteReceipt}
 							<div class="rounded-box border border-success/30 bg-success/10 px-3 py-2 text-sm">
 								Ballot received. Receipt token: <span class="font-mono">{voteReceipt}</span>
+								<a class="link link-primary ml-2" href="/receipts">Open vault</a>
 							</div>
 						{/if}
 
@@ -303,10 +319,6 @@
 						{:else if !voteState.data.isEligible}
 							<div class="rounded-box border border-warning/30 bg-warning/10 px-3 py-2 text-sm">
 								You are not eligible to vote in this round.
-							</div>
-						{:else if voteState.data.activeVote.visibility === 'secret'}
-							<div class="rounded-box border border-base-300 bg-base-200/50 px-3 py-2 text-sm">
-								Secret ballot submission is not wired in the SPA yet.
 							</div>
 						{:else}
 							<div class="space-y-3">
@@ -330,13 +342,15 @@
 
 								<button
 									class="btn btn-primary"
-									onclick={submitOpenBallot}
+									onclick={submitBallot}
 									disabled={submittingVote || selectedOptionIds.length === 0}
 								>
 									{#if submittingVote}
 										<span class="loading loading-spinner loading-xs"></span>
 									{/if}
-									Submit Open Ballot
+									{voteState.data.activeVote.visibility === 'secret'
+										? 'Submit Secret Ballot'
+										: 'Submit Open Ballot'}
 								</button>
 							</div>
 						{/if}

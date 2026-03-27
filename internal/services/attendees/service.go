@@ -14,6 +14,7 @@ import (
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/model"
+	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
@@ -32,13 +33,12 @@ func New(repo repository.Repository, sessionManager *session.Manager, b broker.B
 }
 
 func (s *Service) ListAttendees(ctx context.Context, committeeSlug, meetingIDStr string) (*attendeesv1.ListAttendeesResponse, error) {
-	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
-		return nil, err
-	}
-
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
 	}
 
 	attendees, err := s.repo.ListAttendeesForMeeting(ctx, meetingID)
@@ -229,22 +229,5 @@ func generateSecret() (string, error) {
 }
 
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
-	sd, ok := session.GetSession(ctx)
-	if !ok || sd == nil || sd.IsExpired() || !sd.IsAccountSession() || sd.AccountID == nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account session required")
-	}
-
-	account, err := s.repo.GetAccountByID(ctx, *sd.AccountID)
-	if err != nil {
-		return apierrors.New(apierrors.KindUnauthenticated, "account not found")
-	}
-	if account.IsAdmin {
-		return nil
-	}
-
-	membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug)
-	if err != nil || membership.Role != "chairperson" {
-		return apierrors.New(apierrors.KindPermissionDenied, "chairperson role required")
-	}
-	return nil
+	return serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug)
 }

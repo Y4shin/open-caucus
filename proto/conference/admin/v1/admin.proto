@@ -11,6 +11,9 @@ service AdminService {
   // ListAccounts returns a paginated list of all accounts.
   rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
 
+  // CreateAccount creates a new global account with local password auth.
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+
   // SetAccountAdmin grants or revokes admin privileges for an account.
   rpc SetAccountAdmin(SetAccountAdminRequest) returns (SetAccountAdminResponse);
 
@@ -95,6 +98,16 @@ message ListAccountsRequest {
 message ListAccountsResponse {
   repeated AccountRecord accounts = 1;
   int64 total_count = 2;
+}
+
+message CreateAccountRequest {
+  string username = 1;
+  string full_name = 2;
+  string password = 3;
+}
+
+message CreateAccountResponse {
+  AccountRecord account = 1;
 }
 
 message SetAccountAdminRequest {

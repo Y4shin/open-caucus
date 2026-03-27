@@ -36,6 +36,9 @@ const (
 	// AgendaServiceListAgendaPointsProcedure is the fully-qualified name of the AgendaService's
 	// ListAgendaPoints RPC.
 	AgendaServiceListAgendaPointsProcedure = "/conference.agenda.v1.AgendaService/ListAgendaPoints"
+	// AgendaServiceGetAgendaPointToolsProcedure is the fully-qualified name of the AgendaService's
+	// GetAgendaPointTools RPC.
+	AgendaServiceGetAgendaPointToolsProcedure = "/conference.agenda.v1.AgendaService/GetAgendaPointTools"
 	// AgendaServiceCreateAgendaPointProcedure is the fully-qualified name of the AgendaService's
 	// CreateAgendaPoint RPC.
 	AgendaServiceCreateAgendaPointProcedure = "/conference.agenda.v1.AgendaService/CreateAgendaPoint"
@@ -48,12 +51,23 @@ const (
 	// AgendaServiceActivateAgendaPointProcedure is the fully-qualified name of the AgendaService's
 	// ActivateAgendaPoint RPC.
 	AgendaServiceActivateAgendaPointProcedure = "/conference.agenda.v1.AgendaService/ActivateAgendaPoint"
+	// AgendaServiceSetCurrentAttachmentProcedure is the fully-qualified name of the AgendaService's
+	// SetCurrentAttachment RPC.
+	AgendaServiceSetCurrentAttachmentProcedure = "/conference.agenda.v1.AgendaService/SetCurrentAttachment"
+	// AgendaServiceClearCurrentDocumentProcedure is the fully-qualified name of the AgendaService's
+	// ClearCurrentDocument RPC.
+	AgendaServiceClearCurrentDocumentProcedure = "/conference.agenda.v1.AgendaService/ClearCurrentDocument"
+	// AgendaServiceDeleteAttachmentProcedure is the fully-qualified name of the AgendaService's
+	// DeleteAttachment RPC.
+	AgendaServiceDeleteAttachmentProcedure = "/conference.agenda.v1.AgendaService/DeleteAttachment"
 )
 
 // AgendaServiceClient is a client for the conference.agenda.v1.AgendaService service.
 type AgendaServiceClient interface {
 	// ListAgendaPoints returns the full agenda tree for a meeting.
 	ListAgendaPoints(context.Context, *connect.Request[v1.ListAgendaPointsRequest]) (*connect.Response[v1.ListAgendaPointsResponse], error)
+	// GetAgendaPointTools returns the attachment/current-document tools state for one agenda point.
+	GetAgendaPointTools(context.Context, *connect.Request[v1.GetAgendaPointToolsRequest]) (*connect.Response[v1.GetAgendaPointToolsResponse], error)
 	// CreateAgendaPoint creates a new top-level or sub-agenda point.
 	CreateAgendaPoint(context.Context, *connect.Request[v1.CreateAgendaPointRequest]) (*connect.Response[v1.CreateAgendaPointResponse], error)
 	// DeleteAgendaPoint removes an agenda point and all its children.
@@ -63,6 +77,12 @@ type AgendaServiceClient interface {
 	// ActivateAgendaPoint sets the active agenda point for a meeting.
 	// Pass empty agenda_point_id to deactivate.
 	ActivateAgendaPoint(context.Context, *connect.Request[v1.ActivateAgendaPointRequest]) (*connect.Response[v1.ActivateAgendaPointResponse], error)
+	// SetCurrentAttachment marks one attachment as the published live document.
+	SetCurrentAttachment(context.Context, *connect.Request[v1.SetCurrentAttachmentRequest]) (*connect.Response[v1.SetCurrentAttachmentResponse], error)
+	// ClearCurrentDocument unsets the currently published live document for an agenda point.
+	ClearCurrentDocument(context.Context, *connect.Request[v1.ClearCurrentDocumentRequest]) (*connect.Response[v1.ClearCurrentDocumentResponse], error)
+	// DeleteAttachment removes an attachment and its backing blob.
+	DeleteAttachment(context.Context, *connect.Request[v1.DeleteAttachmentRequest]) (*connect.Response[v1.DeleteAttachmentResponse], error)
 }
 
 // NewAgendaServiceClient constructs a client for the conference.agenda.v1.AgendaService service. By
@@ -80,6 +100,12 @@ func NewAgendaServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			httpClient,
 			baseURL+AgendaServiceListAgendaPointsProcedure,
 			connect.WithSchema(agendaServiceMethods.ByName("ListAgendaPoints")),
+			connect.WithClientOptions(opts...),
+		),
+		getAgendaPointTools: connect.NewClient[v1.GetAgendaPointToolsRequest, v1.GetAgendaPointToolsResponse](
+			httpClient,
+			baseURL+AgendaServiceGetAgendaPointToolsProcedure,
+			connect.WithSchema(agendaServiceMethods.ByName("GetAgendaPointTools")),
 			connect.WithClientOptions(opts...),
 		),
 		createAgendaPoint: connect.NewClient[v1.CreateAgendaPointRequest, v1.CreateAgendaPointResponse](
@@ -106,21 +132,48 @@ func NewAgendaServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(agendaServiceMethods.ByName("ActivateAgendaPoint")),
 			connect.WithClientOptions(opts...),
 		),
+		setCurrentAttachment: connect.NewClient[v1.SetCurrentAttachmentRequest, v1.SetCurrentAttachmentResponse](
+			httpClient,
+			baseURL+AgendaServiceSetCurrentAttachmentProcedure,
+			connect.WithSchema(agendaServiceMethods.ByName("SetCurrentAttachment")),
+			connect.WithClientOptions(opts...),
+		),
+		clearCurrentDocument: connect.NewClient[v1.ClearCurrentDocumentRequest, v1.ClearCurrentDocumentResponse](
+			httpClient,
+			baseURL+AgendaServiceClearCurrentDocumentProcedure,
+			connect.WithSchema(agendaServiceMethods.ByName("ClearCurrentDocument")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteAttachment: connect.NewClient[v1.DeleteAttachmentRequest, v1.DeleteAttachmentResponse](
+			httpClient,
+			baseURL+AgendaServiceDeleteAttachmentProcedure,
+			connect.WithSchema(agendaServiceMethods.ByName("DeleteAttachment")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // agendaServiceClient implements AgendaServiceClient.
 type agendaServiceClient struct {
-	listAgendaPoints    *connect.Client[v1.ListAgendaPointsRequest, v1.ListAgendaPointsResponse]
-	createAgendaPoint   *connect.Client[v1.CreateAgendaPointRequest, v1.CreateAgendaPointResponse]
-	deleteAgendaPoint   *connect.Client[v1.DeleteAgendaPointRequest, v1.DeleteAgendaPointResponse]
-	moveAgendaPoint     *connect.Client[v1.MoveAgendaPointRequest, v1.MoveAgendaPointResponse]
-	activateAgendaPoint *connect.Client[v1.ActivateAgendaPointRequest, v1.ActivateAgendaPointResponse]
+	listAgendaPoints     *connect.Client[v1.ListAgendaPointsRequest, v1.ListAgendaPointsResponse]
+	getAgendaPointTools  *connect.Client[v1.GetAgendaPointToolsRequest, v1.GetAgendaPointToolsResponse]
+	createAgendaPoint    *connect.Client[v1.CreateAgendaPointRequest, v1.CreateAgendaPointResponse]
+	deleteAgendaPoint    *connect.Client[v1.DeleteAgendaPointRequest, v1.DeleteAgendaPointResponse]
+	moveAgendaPoint      *connect.Client[v1.MoveAgendaPointRequest, v1.MoveAgendaPointResponse]
+	activateAgendaPoint  *connect.Client[v1.ActivateAgendaPointRequest, v1.ActivateAgendaPointResponse]
+	setCurrentAttachment *connect.Client[v1.SetCurrentAttachmentRequest, v1.SetCurrentAttachmentResponse]
+	clearCurrentDocument *connect.Client[v1.ClearCurrentDocumentRequest, v1.ClearCurrentDocumentResponse]
+	deleteAttachment     *connect.Client[v1.DeleteAttachmentRequest, v1.DeleteAttachmentResponse]
 }
 
 // ListAgendaPoints calls conference.agenda.v1.AgendaService.ListAgendaPoints.
 func (c *agendaServiceClient) ListAgendaPoints(ctx context.Context, req *connect.Request[v1.ListAgendaPointsRequest]) (*connect.Response[v1.ListAgendaPointsResponse], error) {
 	return c.listAgendaPoints.CallUnary(ctx, req)
+}
+
+// GetAgendaPointTools calls conference.agenda.v1.AgendaService.GetAgendaPointTools.
+func (c *agendaServiceClient) GetAgendaPointTools(ctx context.Context, req *connect.Request[v1.GetAgendaPointToolsRequest]) (*connect.Response[v1.GetAgendaPointToolsResponse], error) {
+	return c.getAgendaPointTools.CallUnary(ctx, req)
 }
 
 // CreateAgendaPoint calls conference.agenda.v1.AgendaService.CreateAgendaPoint.
@@ -143,10 +196,27 @@ func (c *agendaServiceClient) ActivateAgendaPoint(ctx context.Context, req *conn
 	return c.activateAgendaPoint.CallUnary(ctx, req)
 }
 
+// SetCurrentAttachment calls conference.agenda.v1.AgendaService.SetCurrentAttachment.
+func (c *agendaServiceClient) SetCurrentAttachment(ctx context.Context, req *connect.Request[v1.SetCurrentAttachmentRequest]) (*connect.Response[v1.SetCurrentAttachmentResponse], error) {
+	return c.setCurrentAttachment.CallUnary(ctx, req)
+}
+
+// ClearCurrentDocument calls conference.agenda.v1.AgendaService.ClearCurrentDocument.
+func (c *agendaServiceClient) ClearCurrentDocument(ctx context.Context, req *connect.Request[v1.ClearCurrentDocumentRequest]) (*connect.Response[v1.ClearCurrentDocumentResponse], error) {
+	return c.clearCurrentDocument.CallUnary(ctx, req)
+}
+
+// DeleteAttachment calls conference.agenda.v1.AgendaService.DeleteAttachment.
+func (c *agendaServiceClient) DeleteAttachment(ctx context.Context, req *connect.Request[v1.DeleteAttachmentRequest]) (*connect.Response[v1.DeleteAttachmentResponse], error) {
+	return c.deleteAttachment.CallUnary(ctx, req)
+}
+
 // AgendaServiceHandler is an implementation of the conference.agenda.v1.AgendaService service.
 type AgendaServiceHandler interface {
 	// ListAgendaPoints returns the full agenda tree for a meeting.
 	ListAgendaPoints(context.Context, *connect.Request[v1.ListAgendaPointsRequest]) (*connect.Response[v1.ListAgendaPointsResponse], error)
+	// GetAgendaPointTools returns the attachment/current-document tools state for one agenda point.
+	GetAgendaPointTools(context.Context, *connect.Request[v1.GetAgendaPointToolsRequest]) (*connect.Response[v1.GetAgendaPointToolsResponse], error)
 	// CreateAgendaPoint creates a new top-level or sub-agenda point.
 	CreateAgendaPoint(context.Context, *connect.Request[v1.CreateAgendaPointRequest]) (*connect.Response[v1.CreateAgendaPointResponse], error)
 	// DeleteAgendaPoint removes an agenda point and all its children.
@@ -156,6 +226,12 @@ type AgendaServiceHandler interface {
 	// ActivateAgendaPoint sets the active agenda point for a meeting.
 	// Pass empty agenda_point_id to deactivate.
 	ActivateAgendaPoint(context.Context, *connect.Request[v1.ActivateAgendaPointRequest]) (*connect.Response[v1.ActivateAgendaPointResponse], error)
+	// SetCurrentAttachment marks one attachment as the published live document.
+	SetCurrentAttachment(context.Context, *connect.Request[v1.SetCurrentAttachmentRequest]) (*connect.Response[v1.SetCurrentAttachmentResponse], error)
+	// ClearCurrentDocument unsets the currently published live document for an agenda point.
+	ClearCurrentDocument(context.Context, *connect.Request[v1.ClearCurrentDocumentRequest]) (*connect.Response[v1.ClearCurrentDocumentResponse], error)
+	// DeleteAttachment removes an attachment and its backing blob.
+	DeleteAttachment(context.Context, *connect.Request[v1.DeleteAttachmentRequest]) (*connect.Response[v1.DeleteAttachmentResponse], error)
 }
 
 // NewAgendaServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -169,6 +245,12 @@ func NewAgendaServiceHandler(svc AgendaServiceHandler, opts ...connect.HandlerOp
 		AgendaServiceListAgendaPointsProcedure,
 		svc.ListAgendaPoints,
 		connect.WithSchema(agendaServiceMethods.ByName("ListAgendaPoints")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agendaServiceGetAgendaPointToolsHandler := connect.NewUnaryHandler(
+		AgendaServiceGetAgendaPointToolsProcedure,
+		svc.GetAgendaPointTools,
+		connect.WithSchema(agendaServiceMethods.ByName("GetAgendaPointTools")),
 		connect.WithHandlerOptions(opts...),
 	)
 	agendaServiceCreateAgendaPointHandler := connect.NewUnaryHandler(
@@ -195,10 +277,30 @@ func NewAgendaServiceHandler(svc AgendaServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(agendaServiceMethods.ByName("ActivateAgendaPoint")),
 		connect.WithHandlerOptions(opts...),
 	)
+	agendaServiceSetCurrentAttachmentHandler := connect.NewUnaryHandler(
+		AgendaServiceSetCurrentAttachmentProcedure,
+		svc.SetCurrentAttachment,
+		connect.WithSchema(agendaServiceMethods.ByName("SetCurrentAttachment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agendaServiceClearCurrentDocumentHandler := connect.NewUnaryHandler(
+		AgendaServiceClearCurrentDocumentProcedure,
+		svc.ClearCurrentDocument,
+		connect.WithSchema(agendaServiceMethods.ByName("ClearCurrentDocument")),
+		connect.WithHandlerOptions(opts...),
+	)
+	agendaServiceDeleteAttachmentHandler := connect.NewUnaryHandler(
+		AgendaServiceDeleteAttachmentProcedure,
+		svc.DeleteAttachment,
+		connect.WithSchema(agendaServiceMethods.ByName("DeleteAttachment")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.agenda.v1.AgendaService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AgendaServiceListAgendaPointsProcedure:
 			agendaServiceListAgendaPointsHandler.ServeHTTP(w, r)
+		case AgendaServiceGetAgendaPointToolsProcedure:
+			agendaServiceGetAgendaPointToolsHandler.ServeHTTP(w, r)
 		case AgendaServiceCreateAgendaPointProcedure:
 			agendaServiceCreateAgendaPointHandler.ServeHTTP(w, r)
 		case AgendaServiceDeleteAgendaPointProcedure:
@@ -207,6 +309,12 @@ func NewAgendaServiceHandler(svc AgendaServiceHandler, opts ...connect.HandlerOp
 			agendaServiceMoveAgendaPointHandler.ServeHTTP(w, r)
 		case AgendaServiceActivateAgendaPointProcedure:
 			agendaServiceActivateAgendaPointHandler.ServeHTTP(w, r)
+		case AgendaServiceSetCurrentAttachmentProcedure:
+			agendaServiceSetCurrentAttachmentHandler.ServeHTTP(w, r)
+		case AgendaServiceClearCurrentDocumentProcedure:
+			agendaServiceClearCurrentDocumentHandler.ServeHTTP(w, r)
+		case AgendaServiceDeleteAttachmentProcedure:
+			agendaServiceDeleteAttachmentHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -218,6 +326,10 @@ type UnimplementedAgendaServiceHandler struct{}
 
 func (UnimplementedAgendaServiceHandler) ListAgendaPoints(context.Context, *connect.Request[v1.ListAgendaPointsRequest]) (*connect.Response[v1.ListAgendaPointsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.agenda.v1.AgendaService.ListAgendaPoints is not implemented"))
+}
+
+func (UnimplementedAgendaServiceHandler) GetAgendaPointTools(context.Context, *connect.Request[v1.GetAgendaPointToolsRequest]) (*connect.Response[v1.GetAgendaPointToolsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.agenda.v1.AgendaService.GetAgendaPointTools is not implemented"))
 }
 
 func (UnimplementedAgendaServiceHandler) CreateAgendaPoint(context.Context, *connect.Request[v1.CreateAgendaPointRequest]) (*connect.Response[v1.CreateAgendaPointResponse], error) {
@@ -234,4 +346,16 @@ func (UnimplementedAgendaServiceHandler) MoveAgendaPoint(context.Context, *conne
 
 func (UnimplementedAgendaServiceHandler) ActivateAgendaPoint(context.Context, *connect.Request[v1.ActivateAgendaPointRequest]) (*connect.Response[v1.ActivateAgendaPointResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.agenda.v1.AgendaService.ActivateAgendaPoint is not implemented"))
+}
+
+func (UnimplementedAgendaServiceHandler) SetCurrentAttachment(context.Context, *connect.Request[v1.SetCurrentAttachmentRequest]) (*connect.Response[v1.SetCurrentAttachmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.agenda.v1.AgendaService.SetCurrentAttachment is not implemented"))
+}
+
+func (UnimplementedAgendaServiceHandler) ClearCurrentDocument(context.Context, *connect.Request[v1.ClearCurrentDocumentRequest]) (*connect.Response[v1.ClearCurrentDocumentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.agenda.v1.AgendaService.ClearCurrentDocument is not implemented"))
+}
+
+func (UnimplementedAgendaServiceHandler) DeleteAttachment(context.Context, *connect.Request[v1.DeleteAttachmentRequest]) (*connect.Response[v1.DeleteAttachmentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.agenda.v1.AgendaService.DeleteAttachment is not implemented"))
 }
