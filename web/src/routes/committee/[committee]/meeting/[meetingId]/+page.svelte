@@ -90,7 +90,7 @@
 	}
 
 	function visibleSpeakers() {
-		return (speakerState.data?.speakers ?? liveState.data.speakers).filter(
+		return (speakerState.data?.speakers ?? liveState.data?.speakers ?? []).filter(
 			(speaker) => speaker.state !== 'DONE' && speaker.state !== 'WITHDRAWN'
 		);
 	}
@@ -274,9 +274,14 @@
 									{speaker.speakerType} • {speaker.state}
 								</div>
 							</div>
-							{#if speaker.mine}
-								<span class="badge badge-primary">You</span>
-							{/if}
+							<div class="flex items-center gap-2">
+								{#if speaker.quoted}
+									<span class="badge badge-outline badge-sm" data-testid="live-speaker-quoted-badge">Q</span>
+								{/if}
+								{#if speaker.mine}
+									<span class="badge badge-primary">You</span>
+								{/if}
+							</div>
 							</div>
 						{/each}
 					</div>

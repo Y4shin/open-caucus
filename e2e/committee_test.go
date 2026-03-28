@@ -231,7 +231,7 @@ func TestChairpersonDeleteMeeting(t *testing.T) {
 		}
 	})
 
-	if err := card.Locator("form[hx-post*='/delete'] button[type=submit]").Click(); err != nil {
+	if err := card.Locator("button[data-testid='committee-delete-meeting']").Click(); err != nil {
 		t.Fatalf("click delete: %v", err)
 	}
 	if err := meetingCard(page, "Old Meeting").WaitFor(playwright.LocatorWaitForOptions{

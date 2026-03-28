@@ -191,6 +191,7 @@
 						<label class="form-control gap-2">
 							<span class="label-text font-medium">Label</span>
 							<input
+								id="attachment-label-{agendaPointId}"
 								class="input input-bordered"
 								bind:value={label}
 								placeholder="Budget Proposal"
@@ -199,7 +200,7 @@
 
 						<label class="form-control gap-2">
 							<span class="label-text font-medium">File</span>
-							<input class="file-input file-input-bordered" bind:this={fileInput} type="file" required />
+							<input id="attachment-file-{agendaPointId}" class="file-input file-input-bordered" bind:this={fileInput} type="file" required />
 						</label>
 
 						<button class="btn btn-primary" type="submit" disabled={uploadPending}>
@@ -208,17 +209,16 @@
 					</form>
 				</AppCard>
 
+				<h4 class="mb-4 text-lg font-semibold">{toolsState.data.agendaPointTitle} — Attachments</h4>
 				<AppCard title="Attachments">
 					{#if toolsState.data.attachments.length}
 						<div class="space-y-3">
 							{#each toolsState.data.attachments as attachment}
-								<div class="rounded-box border border-base-300 bg-base-100 p-4">
+								<div id="attachment-item-{attachment.attachmentId}" class="rounded-box border border-base-300 bg-base-100 p-4">
 									<div class="flex flex-wrap items-start justify-between gap-3">
 										<div class="space-y-2">
 											<div class="flex flex-wrap items-center gap-2">
-												<span class="font-medium">
-													{attachment.label || attachment.filename}
-												</span>
+												<a class="font-medium link link-hover" href={attachment.downloadUrl} target="_blank" rel="noreferrer">{attachment.label || attachment.filename}</a>
 												{#if attachment.isCurrent}
 													<span class="badge badge-primary">Current</span>
 												{/if}

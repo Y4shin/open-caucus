@@ -4,8 +4,8 @@
 
 This file captures the current frontend rewrite state so another agent can continue Phase 6 legacy-removal work without re-discovering the recent Phase 5 completion work. It is being updated incrementally during active work so another agent can pick up mid-slice if quota runs out.
 
-Date: 2026-03-27
-Repo state at handoff update: dirty working tree with completed Phase 5 implementation plus active Phase 6 server split, SPA parity fixes, and E2E migration/debugging
+Date: 2026-03-28
+Repo state at handoff update: dirty working tree — full E2E suite passes
 
 ## Current Rewrite Status
 
@@ -17,49 +17,30 @@ Source of truth:
 Plan snapshot:
 
 - Current phase: `Phase 6 - Legacy Removal`
-- Phase 0: completed
-- Phase 1: completed
-- Phase 2: completed
-- Phase 3: completed
-- Phase 4: completed
-- Phase 5: completed
+- Phase 0–5: completed
 - Phase 6: in progress
 
 What is already ported into the SPA:
 
 - session bootstrap/login/logout
-- committee home and committee overview
+- committee home with full chairperson management (create/delete/toggle-active meetings)
+- committee member view (active meeting card + join button)
 - join flow and attendee login
 - live meeting read model
 - moderation read model
 - signup-open moderation control
 - speaker queue controls on moderation and live pages
 - moderation attendee search and add-speaker flow
-- first agenda-management slice
-  - top-level create
-  - activate/deactivate
-  - reorder
-  - delete
-- first voting slice
-  - moderator votes panel
-  - draft creation
-  - open vote
-  - close vote
-  - archive closed vote
-  - attendee open-ballot submission
-
-Phase 5 parity now includes:
-
-- full voting parity for the currently supported open and secret-ballot workflows
+- full agenda management:
+  - top-level create/activate/deactivate/reorder/delete
+  - sub-point creation with parent selection
+  - agenda import dialog with diff/accept/deny
+- full voting parity:
+  - moderator votes panel (draft, open, close, archive)
+  - attendee open and secret-ballot submission
 - admin/account management parity
 - docs/public verification parity
 - attachments and file-serving flows
-
-What remains:
-
-- Phase 6 legacy removal
-- replacing HTML-over-SSE/HTMX-only refresh paths with pure typed invalidation flows
-- removing the old SSR route/template stack once the mapping and API coverage are sufficient
 
 ## Latest Phase 6 Direction
 
@@ -69,281 +50,160 @@ The current migration direction is:
 - move the legacy HTMX/Templ app to a separate `serve-legacy` subcommand
 - migrate browser E2E coverage to the new SPA implementation now, even while `serve-legacy` still exists for manual comparison/debugging
 
-This replaced the earlier mixed-hosting approach because the combined mux caused root-route conflicts and made parity debugging harder.
+## What Landed In This Session
 
-## What Landed Today
+### Phase 6 Part 1: Feature parity + SPA committee management
 
-Server/runtime split:
+Backend/API fixes:
 
-- added a shared serve setup in [`cmd/serve_common.go`](/mnt/c/Users/Patric/Projects/conference-tool/cmd/serve_common.go)
-- converted [`cmd/serve.go`](/mnt/c/Users/Patric/Projects/conference-tool/cmd/serve.go) toward SPA/API-only serving
-- added [`cmd/serve_legacy.go`](/mnt/c/Users/Patric/Projects/conference-tool/cmd/serve_legacy.go) for the old app
+- `internal/services/attendees/service.go`:
+  - `SelfSignup`: removed the `!meeting.SignupOpen` gate — committee members may always self-signup; `signupOpen` only gates guest joins
+  - `AttendeeLogin`: changed error message from "invalid attendee secret" to "Invalid access code"
+  - Fixed `declared and not used: meeting` compile error (now uses `_` for GetMeetingByID result)
 
-SPA serving and auth parity:
+- `internal/services/speakers/service.go`:
+  - `buildQueueView`: only filters WITHDRAWN (not DONE) — legacy parity where chairs see full history
 
-- fixed built asset lookup in [`internal/web/handler.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/web/handler.go) by trimming the leading slash before reading from the embedded build FS
-- added coverage in [`internal/web/handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/web/handler_test.go)
-- added SPA admin login at [`web/src/routes/admin/login/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/admin/login/+page.svelte)
-- added auth-provider/session bootstrap parity through:
-  - [`proto/conference/session/v1/session.proto`](/mnt/c/Users/Patric/Projects/conference-tool/proto/conference/session/v1/session.proto)
-  - [`internal/services/session/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/session/service.go)
-  - [`web/src/lib/stores/session.svelte.ts`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/lib/stores/session.svelte.ts)
+- `internal/api/connect/speakers_handler_test.go`:
+  - Updated `TestSpeakerService_SetSpeakerSpeaking_ThenDone` to expect DONE speaker remains in queue (1 row, DONE state)
 
-Backend/API parity fixes:
+- `internal/api/connect/attendee_handler_test.go`:
+  - Renamed `TestAttendeeService_SelfSignup_SignupClosed` → `TestAttendeeService_SelfSignup_SignupClosed_MemberCanAlwaysSignup`
+  - Now expects success (not error) when signup is closed but caller is a committee member
 
-- added shared moderation/chair authorization helpers in [`internal/services/authz/authz.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/authz/authz.go)
-- wired those checks into:
-  - [`internal/services/moderation/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/moderation/service.go)
-  - [`internal/services/attendees/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/attendees/service.go)
-  - [`internal/services/votes/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/votes/service.go)
-  - [`internal/services/agenda/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/agenda/service.go)
-- restored the “members may only open the active meeting” rule in [`internal/services/meetings/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/meetings/service.go)
-- aligned the API test setup with that rule in [`internal/api/connect/meeting_handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/connect/meeting_handler_test.go) by explicitly marking the seeded meeting active
+- `internal/api/http/committee_meetings.go` (NEW):
+  - `NewCommitteeMeetingCreateHandler` — `POST /committee/{slug}/meetings`
+  - `NewCommitteeMeetingDeleteHandler` — `DELETE /committee/{slug}/meetings/{meetingId}`
+  - `NewCommitteeMeetingActivateHandler` — `POST /committee/{slug}/meetings/{meetingId}/active` (toggle)
+  - All require chairperson/admin role; use session-based auth
 
-Moderation page parity work:
+- `cmd/serve.go` (`newAPIMux`): registered the 3 new REST endpoints
 
-- [`web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte) now includes:
-  - parent selection for sub-agenda point creation
-  - legacy-compatible ids/data-testids for agenda cards and actions
-  - agenda import dialog parity hooks and client-side import/diff/accept/deny behavior
-  - button-based clickable import correction rows to satisfy Svelte a11y checks
-  - `data-testid="manage-speakers-card"` wrapper restored for speakers E2E scoping
-  - no-active-agenda-point speaker empty state restored
+- `e2e/helpers_test.go`: registered the 3 new REST endpoints in the test server
 
-E2E migration/hardening:
+Frontend fixes (various Svelte pages, tab-indented):
 
-- [`e2e/helpers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/helpers_test.go) and [`e2e/oauth_helpers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/oauth_helpers_test.go) now boot the SPA/API-oriented server shape instead of relying on the legacy router
-- [`e2e/browser_helpers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/browser_helpers_test.go) was updated to:
-  - tolerate SPA moderation layouts without the old left-tab controls
-  - wait for SPA agenda content directly
-  - harden login flows with `gotoAndWaitForInput(...)` retries for `/login` and `/admin/login`
-- [`e2e/attendee_speakers_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/attendee_speakers_test.go) now uses the same hardened helper for attendee login
-- SPA-semantic E2E updates landed in:
-  - [`e2e/access_control_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/access_control_test.go)
-  - [`e2e/attendee_login_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/attendee_login_test.go)
-  - [`e2e/moderate_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/moderate_test.go)
-  - [`e2e/oauth_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/oauth_test.go)
-  - [`e2e/admin_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/e2e/admin_test.go)
+- `web/src/routes/committee/[committee]/+page.svelte` — full rewrite:
+  - Chairperson/admin view: `#meeting-list-container` with create form (`data-testid="committee-create-form"`, `input[name=name]`), per-meeting rows (`data-testid="committee-meeting-row"`), active checkbox (`data-testid="committee-toggle-active"`), delete button (`data-testid="committee-delete-meeting"`)
+  - Member view: active meeting card (`data-testid="committee-active-meeting-card"`, `data-testid="committee-active-meeting-name"`, `data-testid="committee-join-active-meeting"`)
+  - Optimistic checkbox toggle for immediate visual feedback before server response
+
+- `web/src/routes/committee/[committee]/meeting/[meetingId]/agenda-point/[agendaPointId]/tools/+page.svelte`:
+  - Added `id="attachment-label-{agendaPointId}"` and `id="attachment-file-{agendaPointId}"` to form inputs
+  - Added `id="attachment-item-{attachment.attachmentId}"` to each attachment container
+  - Changed attachment label from `<span>` to `<a class="... link link-hover" href={downloadUrl}>`
+  - Added `<h4>` heading between Upload and Attachments cards
+
+- `web/src/routes/committee/[committee]/meeting/[meetingId]/attendee-login/+page.svelte`:
+  - Wrapped error display in `<div id="app-notification-target">`
+
+- `web/src/routes/committee/[committee]/meeting/[meetingId]/join/+page.svelte`:
+  - Added `name="full_name"` and `name="meeting_secret"` to form inputs
+  - Wrapped actionError display in `<div id="app-notification-target">`
+
+E2E test fixes:
+
+- `e2e/committee_test.go`: changed `form[hx-post*='/delete'] button[type=submit]` → `button[data-testid='committee-delete-meeting']`
+
+### Phase 6 Part 2: OAuth handler extraction — decouple `serve` from `internal/handlers`
+
+- `internal/api/http/oauth.go` (NEW):
+  - `OAuthHandler` struct with `OAuthService`, `Repository`, `SessionManager`, `AuthConfig` fields
+  - `NewOAuthStartHandler(h *OAuthHandler) http.Handler` — initiates OAuth/OIDC login flow
+  - `NewOAuthCallbackHandler(h *OAuthHandler) http.Handler` — processes callback, resolves/provisions account, syncs admin+committees, creates session
+  - Private helpers: `oauthEnabled`, `resolveAccount`, `validateRequiredGroups`, `syncAdmin`, `syncCommittees`, `upsertIdentity`, `oauthGroupContains`, `oauthRoleRank`, `oauthStrPtr`
+  - This is a standalone extraction; the legacy `internal/handlers/oauth.go` remains for `serve-legacy`
+
+- `cmd/serve.go`:
+  - Creates `oauthH := &apihttp.OAuthHandler{...}` from runtime deps
+  - Routes `/oauth/start` and `/oauth/callback` now use `apihttp.NewOAuthStartHandler(oauthH)` and `apihttp.NewOAuthCallbackHandler(oauthH)`
+  - **`serve.go` no longer imports or references `internal/handlers` at all**
+
+- `e2e/helpers_test.go`:
+  - Replaced `h := &handlers.Handler{...}` with `oauthH := &apihttp.OAuthHandler{...}`
+  - Routes updated to use `apihttp.NewOAuthStartHandler(oauthH)` and `apihttp.NewOAuthCallbackHandler(oauthH)`
+  - Removed `"github.com/Y4shin/conference-tool/internal/handlers"` import
+
+- `e2e/oauth_helpers_test.go`:
+  - Same OAuth migration: uses `apihttp.OAuthHandler` instead of `handlers.Handler`
+  - Removed `handlers` import
+
+**Decoupling achieved**: `internal/handlers` is now only referenced from `cmd/serve_common.go` (for `serve-legacy`). The `serve` command is fully independent.
 
 ## Current Verification Snapshot
 
-Confirmed passing in this workstream:
+All passing (verified after OAuth extraction):
 
-- `nix develop . --command go test ./...`
-- `nix develop . --command npm run check`
-- `nix develop . --command npm run build`
-- targeted E2E slices for:
-  - admin access-control redirects
-  - moderation access
-  - attendee login/logout
-  - agenda CRUD/import flows
-
-Full E2E status at latest update:
-
-- the suite progressed through access-control, admin, and agenda/import tests after the login-helper hardening
-- the next concrete failure discovered was `TestSpeakersList_NoActivePoint`
-- that failure was traced to missing SPA compatibility hooks in the moderation speakers card:
-  - missing `data-testid="manage-speakers-card"` wrapper
-  - wrong empty-state text when no agenda point is active
-- both fixes have now been applied in [`web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte)
-- targeted rerun of the speakers slice was in progress at handoff time and should be rerun first
+- `nix develop . --command go build ./...` — clean build
+- `nix develop . --command go test ./...` — all Go unit/integration tests pass
+- Full E2E suite: all tests pass in ~14s
 
 ## Immediate Next Steps
 
-If you are resuming from here:
+The full E2E suite passes and `serve` is decoupled from `internal/handlers`. Next work:
 
-1. Rerun:
-   - `nix develop . --command npm run check` from `web/`
-   - `nix develop . --command env PLAYWRIGHT_DRIVER_PATH=... PLAYWRIGHT_BROWSERS_PATH=... PLAYWRIGHT_NODEJS_PATH=... go test -v -tags=e2e -timeout=180s ./e2e/... -run 'TestSpeakersList_(NoActivePoint|AddSpeaker|SearchEnterAddsBestMatch|OneNonDoneEntryPerType|StartEnd)'`
-2. If that speakers slice passes, rerun the full E2E suite against the SPA server.
-3. Continue fixing the next parity gap surfaced by the suite before removing more legacy code.
-4. Update this file again after each substantial fix or rerun so another agent can always resume cleanly.
+1. Commit the current batch of Phase 6 changes.
+2. Continue Phase 6 legacy removal: look at what remains in `serve_common.go` that only `serve-legacy` needs (the `handler` field on `serveRuntime`).
+3. Consider extracting or removing the `rt.handler` field from the shared `serveRuntime` struct so it is `serve-legacy`-only.
+4. Identify any remaining legacy routes/handlers in `internal/handlers` that are only used by `serve-legacy`.
+5. After each change: run `go test ./...` and the full E2E suite.
 
-## Most Recent Commits
+## Suggested Verification After Each Change
 
-Recent rewrite commits, newest first:
-
-- `d4cd535` `feat(web): add typed voting workflow to moderate and live pages`
-- `0972109` `feat(web): add agenda management to moderation workspace`
-- `467d64f` `feat(web): add moderation attendee search for speakers`
-- `3f87594` `feat(web): add speaker queue controls to live and moderate`
-- `fe2a8a0` `feat(web): port attendee join and login flows`
-- `415bff9` `feat(web): add first Phase 4 SPA meeting slice`
-- `bef27cd` `feat(web): complete Phase 3 frontend foundation`
+```bash
+nix develop . --command go test ./...
+nix develop . --command sh -lc 'cd web && npm run check'
+nix develop . --command sh -lc 'cd web && npm run build'
+PLAYWRIGHT_DRIVER_PATH=/nix/store/hm3dzl8q4cj08sxd64ha49npppkiwa5i-playwright-driver-1.52.0 \
+PLAYWRIGHT_BROWSERS_PATH=/nix/store/y53pinyaz63p6hs8acbgjnn585wnnr08-playwright-browsers-chromium \
+PLAYWRIGHT_NODEJS_PATH=/nix/store/hm3dzl8q4cj08sxd64ha49npppkiwa5i-playwright-driver-1.52.0/node \
+  nix develop . --command go test -count=1 -v -tags=e2e -timeout=300s ./e2e/...
+```
 
 ## Important Files
 
 Primary SPA surfaces:
 
-- [`web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte)
-  - live meeting page
-  - attendee self-add speaker controls
-  - live vote panel and open-ballot submission
-- [`web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte)
-  - moderation summary
-  - speaker queue controls
-  - attendee search/add speaker
-  - agenda management
-  - moderator votes panel
+- [`web/src/routes/committee/[committee]/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/+page.svelte) — committee home with meeting management
+- [`web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte) — live meeting page
+- [`web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte) — moderation workspace
+
+REST endpoints (non-Connect):
+
+- [`internal/api/http/committee_meetings.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/http/committee_meetings.go) — meeting create/delete/toggle-active
+- [`internal/api/http/oauth.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/http/oauth.go) — OAuth start/callback handlers (extracted from internal/handlers)
+- [`internal/api/http/attachments.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/http/attachments.go) — file upload
 
 Typed client entrypoints:
 
 - [`web/src/lib/api/index.ts`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/lib/api/index.ts)
 - [`web/src/lib/api/services.ts`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/lib/api/services.ts)
 
-Realtime invalidation:
+Backend service layer:
 
-- [`web/src/lib/utils/sse.ts`](/mnt/c/Users/Patric/Projects/conference-tool/web/src/lib/utils/sse.ts)
-  - listens for `attendees.updated`, `speakers.updated`, `agenda.updated`, `votes.updated`, plus older meeting refresh events
-
-Backend vote/agenda service layer:
-
-- [`internal/services/agenda/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/agenda/service.go)
-- [`internal/services/votes/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/votes/service.go)
-
-API integration coverage:
-
-- [`internal/api/connect/agenda_handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/connect/agenda_handler_test.go)
-- [`internal/api/connect/votes_handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/connect/votes_handler_test.go)
-- [`internal/api/connect/testserver_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/connect/testserver_test.go)
-
-Contracts:
-
-- [`proto/conference/agenda/v1/agenda.proto`](/mnt/c/Users/Patric/Projects/conference-tool/proto/conference/agenda/v1/agenda.proto)
-- [`proto/conference/votes/v1/votes.proto`](/mnt/c/Users/Patric/Projects/conference-tool/proto/conference/votes/v1/votes.proto)
-
-## What Landed In The Agenda Slice
-
-Commit: `0972109`
-
-Frontend:
-
-- moderation page now loads `AgendaService.ListAgendaPoints`
-- moderation page can:
-  - create top-level agenda points
-  - activate/deactivate the current point
-  - move top-level points up/down
-  - delete points
-
-Backend/API tests:
-
-- added move/reorder coverage
-- added permission coverage for activation
-
-Docs:
-
-- mapping matrix updated with agenda create/activate/reorder/delete rows
-- rewrite plan updated to mention the agenda slice and new immediate next steps
-
-Known limitation:
-
-- this is the first agenda slice, not full agenda parity
-- sub-point editing/import/tools/attachments remain outside this slice
-
-## What Landed In The Voting Slice
-
-Commit: `d4cd535`
-
-Frontend:
-
-- moderation page now loads `VoteService.GetVotesPanel`
-- moderation votes card supports:
-  - create draft vote
-  - open vote
-  - close vote
-  - archive closed vote
-- live meeting page now loads `VoteService.GetLiveVotePanel`
-- live vote card supports:
-  - attendee-side open-ballot submission
-  - already-voted feedback
-  - ineligible feedback
-  - receipt token feedback after submit
-
-Backend/API tests:
-
-- new file [`internal/api/connect/votes_handler_test.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/api/connect/votes_handler_test.go)
-- added coverage for:
-  - create/open/close happy path
-  - attendee live vote bootstrap and ballot submission
-  - member forbidden from vote creation
-
-Shared test helpers:
-
-- `combinedTestServer` now has helpers for seeding and activating agenda points
-
-Docs:
-
-- mapping matrix updated with the first voting rows
-- rewrite plan updated to mention the initial open-ballot voting slice
-
-Known limitations:
-
-- no SPA draft-editing flow yet
-- secret ballot submission is not wired in the SPA
-- moderator counting/verification flows are not ported
-- live vote UX currently targets the open-ballot path only
-
-## Suggested Next Steps
-
-Best next target:
-
-1. Finish voting parity before jumping to admin/docs.
-
-Recommended order:
-
-1. Draft editing on moderation page
-2. Secret ballot flow
-3. Moderator tally/counting/verification UI
-4. Remaining vote-related API integration coverage
-5. Then move to admin/account management
-6. Then docs/public verification
-7. Then attachments/file-serving flows
-
-Why:
-
-- voting is already partially ported and now has momentum
-- the plan file already calls out remaining voting work explicitly
-- the live and moderation pages both now depend on `VoteService`, so finishing that area reduces the most obvious parity gap
-
-## Verification Commands Recently Used
-
-Run commands inside the Nix devshell:
-
-```bash
-nix develop . --command sh -lc 'cd web && npm run check'
-nix develop . --command sh -lc 'cd web && npm run build'
-nix develop . --command go test ./internal/api/connect/...
-nix develop . --command go test ./...
-```
-
-These all passed at the end of the last voting slice before this handoff file was created.
+- [`internal/services/attendees/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/attendees/service.go)
+- [`internal/services/speakers/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/speakers/service.go)
+- [`internal/services/committees/service.go`](/mnt/c/Users/Patric/Projects/conference-tool/internal/services/committees/service.go)
 
 ## Environment Notes
 
 - `node`, `go`, and `buf` are available in the Nix devshell
-- approved command prefix already exists for:
-  - `nix develop . --command`
-- manual edits should use `apply_patch`
-- prefer `rg` for searching
-- commit messages in this repo should be detailed:
-  - short subject
-  - body paragraph
-  - flat bullet list
+- approved command prefix already exists for: `nix develop . --command`
+- **Svelte files use tabs** — use Python scripts with raw tab characters for precise edits if the Edit tool fails to match
+- After any `.svelte` change, `npm run build` MUST be run before E2E tests can see the changes
+- commit messages in this repo should be detailed: short subject, body paragraph, flat bullet list
+- There is a devshell bootstrap quirk: `/tmp/nix-shell.XXXXXX: line 2172: $'\r': command not found` — this does not block commands
 
-There is still a devshell bootstrap quirk where entering `nix develop` prints:
+## Most Recent Commits
 
-```text
-/tmp/nix-shell.XXXXXX: line 2172: $'\r': command not found
-```
+Recent rewrite commits, newest first (uncommitted work is above `a107c30`):
 
-In my sessions this did not block the actual command being run. `npm run check`, `npm run build`, and `go test` still completed successfully afterward.
-
-## Current Git State
-
-At handoff creation:
-
-- worktree clean
-- HEAD: `d4cd535`
+- `a107c30` `feat: continuing spa migration` ← current HEAD (Phase 6 work not yet committed)
+- `d4cd535` `feat(web): add typed voting workflow to moderate and live pages`
+- `0972109` `feat(web): add agenda management to moderation workspace`
+- `467d64f` `feat(web): add moderation attendee search for speakers`
+- `3f87594` `feat(web): add speaker queue controls to live and moderate`
+- `fe2a8a0` `feat(web): port attendee join and login flows`
 
 ## Pickup Advice For The Next Agent
 
@@ -351,9 +211,9 @@ If you are continuing immediately, start here:
 
 1. Re-read [`frontend-rewrite-plan.md`](/mnt/c/Users/Patric/Projects/conference-tool/frontend-rewrite-plan.md) and keep it as the source of truth.
 2. Re-read [`e2e-api-mapping-matrix.md`](/mnt/c/Users/Patric/Projects/conference-tool/e2e-api-mapping-matrix.md) before removing or replacing legacy workflows.
-3. Continue with voting parity on the existing SPA pages before creating new route surfaces unless the plan requires a new route.
+3. The full E2E suite is green. Any next change that breaks it must be fixed before moving on.
 4. Keep verification tight after each slice:
    - `npm run check`
    - `npm run build`
-   - `go test ./internal/api/connect/...`
    - `go test ./...`
+   - Full E2E suite

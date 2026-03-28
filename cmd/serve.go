@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -49,6 +48,12 @@ var serveCmd = &cobra.Command{
 func newSPAServer(rt *serveRuntime) http.Handler {
 	spaHandler := webassets.NewSPAHandler()
 	apiMux := newAPIMux(rt)
+	oauthH := &apihttp.OAuthHandler{
+		OAuthService:   rt.oauthService,
+		Repository:     rt.repo,
+		SessionManager: rt.sessionManager,
+		AuthConfig:     rt.cfg.Auth,
+	}
 
 	return rt.middleware.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -64,14 +69,10 @@ func newSPAServer(rt *serveRuntime) http.Handler {
 			spaHandler.ServeHTTP(w, r)
 			return
 		case r.URL.Path == "/oauth/start" && r.Method == http.MethodGet:
-			if err := rt.handler.OAuthStart(w, r); err != nil {
-				http.Error(w, fmt.Sprintf("oauth start failed: %v", err), http.StatusInternalServerError)
-			}
+			apihttp.NewOAuthStartHandler(oauthH).ServeHTTP(w, r)
 			return
 		case r.URL.Path == "/oauth/callback" && r.Method == http.MethodGet:
-			if err := rt.handler.OAuthCallback(w, r); err != nil {
-				http.Error(w, fmt.Sprintf("oauth callback failed: %v", err), http.StatusInternalServerError)
-			}
+			apihttp.NewOAuthCallbackHandler(oauthH).ServeHTTP(w, r)
 			return
 		case r.URL.Path == "/locale" && r.Method == http.MethodPost:
 			handleLocaleSwitch(w, r)
@@ -150,6 +151,9 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	apiMux.Handle(adminAPIPath, rt.middleware.Get("session")(adminAPIHandler))
 
 	apiMux.Handle("GET /realtime/meetings/{meetingId}/events", apihttp.NewMeetingEventsHandler(rt.broker))
+	apiMux.Handle("POST /committee/{slug}/meetings", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingCreateHandler(rt.repo)))
+	apiMux.Handle("DELETE /committee/{slug}/meetings/{meetingId}", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingDeleteHandler(rt.repo)))
+	apiMux.Handle("POST /committee/{slug}/meetings/{meetingId}/active", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingActivateHandler(rt.repo)))
 	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		rt.middleware.Get("session")(apihttp.NewAttachmentUploadHandler(rt.repo, rt.store)),
 	)

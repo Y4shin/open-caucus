@@ -294,7 +294,7 @@ func (s *Service) buildQueueView(ctx context.Context, committeeSlug string, meet
 
 	speakers := make([]*commonv1.SpeakerSummary, 0, len(entries))
 	for _, e := range entries {
-		if e.Status == "DONE" || e.Status == "WITHDRAWN" {
+		if e.Status == "WITHDRAWN" {
 			continue
 		}
 		mine := callerAttendeeID != 0 && e.AttendeeID == callerAttendeeID

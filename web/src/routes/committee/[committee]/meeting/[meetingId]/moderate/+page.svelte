@@ -175,20 +175,6 @@
 		return speakerState.data?.speakers.find((speaker) => speaker.state === 'WAITING') ?? null;
 	}
 
-	function mergeDoneSpeaker(view: SpeakerQueueView | null | undefined, doneSpeaker: SpeakerQueueView['speakers'][number] | null) {
-		if (!view || !doneSpeaker) {
-			return view ?? null;
-		}
-
-		if (view.speakers.some((speaker) => speaker.speakerId === doneSpeaker.speakerId)) {
-			return view;
-		}
-
-		return {
-			...view,
-			speakers: [...view.speakers, doneSpeaker]
-		};
-	}
 
 	async function runSpeakerAction(
 		key: string,
@@ -217,7 +203,6 @@
 			return;
 		}
 
-		const doneSpeaker = { ...current, state: 'DONE' } as typeof current;
 		actionError = '';
 		speakerActionPending = 'end-current';
 		try {
@@ -226,7 +211,7 @@
 				meetingId,
 				speakerId: current.speakerId
 			});
-			speakerState.data = mergeDoneSpeaker(res.view ?? speakerState.data, doneSpeaker);
+			speakerState.data = res.view ?? speakerState.data;
 			refreshTick += 1;
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update the speakers queue.');
@@ -746,9 +731,9 @@
 </script>
 
 <div class="space-y-6">
-	{#if moderationState.loading}
+	{#if moderationState.loading && !moderationState.data}
 		<AppSpinner label="Loading moderation view" />
-	{:else if moderationState.error}
+	{:else if moderationState.error && !moderationState.data}
 		<AppAlert message={moderationState.error} />
 	{:else if moderationState.data}
 		<div class="space-y-2">

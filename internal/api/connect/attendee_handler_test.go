@@ -90,7 +90,8 @@ func TestAttendeeService_ListAttendees(t *testing.T) {
 	}
 }
 
-func TestAttendeeService_SelfSignup_SignupClosed(t *testing.T) {
+func TestAttendeeService_SelfSignup_SignupClosed_MemberCanAlwaysSignup(t *testing.T) {
+	// signupOpen only gates guest joins; committee members may always self-signup.
 	ts := newCombinedAPITestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "member1", "pass123", "Alice Member", "member")
@@ -105,12 +106,11 @@ func TestAttendeeService_SelfSignup_SignupClosed(t *testing.T) {
 		t.Fatalf("login: %v", err)
 	}
 
-	_, err := client.attendees.SelfSignup(context.Background(), connect.NewRequest(&attendeesv1.SelfSignupRequest{
+	if _, err := client.attendees.SelfSignup(context.Background(), connect.NewRequest(&attendeesv1.SelfSignupRequest{
 		CommitteeSlug: "test-committee",
 		MeetingId:     fmt.Sprintf("%d", meetingID),
-	}))
-	if err == nil {
-		t.Fatal("expected error when signup is closed")
+	})); err != nil {
+		t.Fatalf("expected member to self-signup even when signup is closed: %v", err)
 	}
 }
 

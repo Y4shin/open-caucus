@@ -67,8 +67,7 @@ func (s *Service) SelfSignup(ctx context.Context, committeeSlug, meetingIDStr st
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
 	}
 
-	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
-	if err != nil {
+	if _, err := s.repo.GetMeetingByID(ctx, meetingID); err != nil {
 		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
 	}
 
@@ -85,9 +84,7 @@ func (s *Service) SelfSignup(ctx context.Context, committeeSlug, meetingIDStr st
 		}, nil
 	}
 
-	if !meeting.SignupOpen {
-		return nil, apierrors.New(apierrors.KindPermissionDenied, "meeting signup is currently closed")
-	}
+	// signupOpen only gates guest joins; committee members may always self-signup.
 
 	user, err := s.repo.GetUserByID(ctx, membership.ID)
 	if err != nil {
@@ -171,7 +168,7 @@ func (s *Service) AttendeeLogin(ctx context.Context, meetingIDStr, attendeeSecre
 
 	attendee, err := s.repo.GetAttendeeByMeetingIDAndSecret(ctx, meetingID, attendeeSecret)
 	if err != nil {
-		return nil, nil, apierrors.New(apierrors.KindUnauthenticated, "invalid attendee secret")
+		return nil, nil, apierrors.New(apierrors.KindUnauthenticated, "Invalid access code")
 	}
 
 	sd := &session.SessionData{

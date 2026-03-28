@@ -211,8 +211,9 @@ func (s *Service) buildJoinMeetingCapabilities(ctx context.Context, committeeSlu
 	isAuthenticated := sd != nil && !sd.IsExpired()
 	isAccountSession := isAuthenticated && sd.IsAccountSession() && sd.AccountID != nil
 
+	// Members can self-signup regardless of whether signup_open is set — signupOpen only gates guests.
 	canSelfSignup := false
-	if isAccountSession && !isAttendee && signupOpen {
+	if isAccountSession && !isAttendee {
 		if _, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, *sd.AccountID, committeeSlug); err == nil {
 			canSelfSignup = true
 		}

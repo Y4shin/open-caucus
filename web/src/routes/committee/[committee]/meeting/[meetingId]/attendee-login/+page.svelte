@@ -80,11 +80,11 @@
 			</div>
 
 			<AppCard title="Attendee Login">
-				{#if actionError}
-					<div class="mb-4">
+				<div id="app-notification-target">
+					{#if actionError}
 						<AppAlert message={actionError} />
-					</div>
-				{/if}
+					{/if}
+				</div>
 
 				<form class="space-y-4" onsubmit={handleSubmit}>
 					<label class="form-control">

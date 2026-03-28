@@ -94,9 +94,11 @@
 			<p class="text-base-content/70">Join {joinState.data.committeeName} and enter the live meeting.</p>
 		</div>
 
-		{#if actionError}
-			<AppAlert message={actionError} />
-		{/if}
+		<div id="app-notification-target">
+			{#if actionError}
+				<AppAlert message={actionError} />
+			{/if}
+		</div>
 
 		<div class="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
 			<AppCard title="Meeting Entry">
@@ -132,7 +134,7 @@
 					<form class="space-y-4" onsubmit={handleGuestSignup}>
 						<label class="form-control">
 							<div class="label"><span class="label-text">Full Name</span></div>
-							<input class="input input-bordered" bind:value={fullName} required />
+							<input class="input input-bordered" name="full_name" bind:value={fullName} required />
 						</label>
 
 						{#if prefilledMeetingSecret}
@@ -145,6 +147,7 @@
 								<input
 									class="input input-bordered"
 									type="password"
+									name="meeting_secret"
 									bind:value={meetingSecret}
 									required
 								/>

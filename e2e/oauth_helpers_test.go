@@ -29,7 +29,6 @@ import (
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/docs"
-	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/oauth"
@@ -147,14 +146,11 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 		t.Fatalf("load embedded docs: %v", err)
 	}
 
-	h := &handlers.Handler{
-		Broker:         b,
+	oauthH := &apihttp.OAuthHandler{
+		OAuthService:   oauthSvc,
 		Repository:     repo,
-		Storage:        store,
 		SessionManager: sessionMgr,
 		AuthConfig:     authCfg,
-		OAuthService:   oauthSvc,
-		DocsService:    docsService,
 	}
 
 	apiMux := http.NewServeMux()
@@ -238,13 +234,9 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 			}
 			spaHandler.ServeHTTP(w, r)
 		case r.URL.Path == "/oauth/start" && r.Method == http.MethodGet:
-			if err := h.OAuthStart(w, r); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			apihttp.NewOAuthStartHandler(oauthH).ServeHTTP(w, r)
 		case r.URL.Path == "/oauth/callback" && r.Method == http.MethodGet:
-			if err := h.OAuthCallback(w, r); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			apihttp.NewOAuthCallbackHandler(oauthH).ServeHTTP(w, r)
 		case r.URL.Path == "/docs/assets" || strings.HasPrefix(r.URL.Path, "/docs/assets/"):
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:

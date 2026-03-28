@@ -122,7 +122,10 @@ func TestSpeakerService_SetSpeakerSpeaking_ThenDone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("set speaker done: %v", err)
 	}
-	if len(doneResp.Msg.GetView().GetSpeakers()) != 0 {
-		t.Fatalf("expected done speaker to fall out of the active queue, got %d rows", len(doneResp.Msg.GetView().GetSpeakers()))
+	if len(doneResp.Msg.GetView().GetSpeakers()) != 1 {
+		t.Fatalf("expected done speaker to remain visible in queue, got %d rows", len(doneResp.Msg.GetView().GetSpeakers()))
+	}
+	if got := doneResp.Msg.GetView().GetSpeakers()[0].GetState(); got != "DONE" {
+		t.Fatalf("expected DONE state after end, got %q", got)
 	}
 }

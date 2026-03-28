@@ -66,7 +66,7 @@
 					{/if}
 				</div>
 				{#if session.authenticated}
-					<span class="hidden text-sm lg:inline">{session.actor?.displayName ?? ''}</span>
+					<p class="scaffold-auth-text hidden text-xs lg:block">{session.actor?.displayName ?? ''}</p>
 					<button
 						class="btn btn-ghost btn-sm"
 						onclick={async () => {
