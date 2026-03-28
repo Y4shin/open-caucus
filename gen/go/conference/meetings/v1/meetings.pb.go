@@ -22,6 +22,64 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type MeetingEventKind int32
+
+const (
+	MeetingEventKind_MEETING_EVENT_KIND_UNSPECIFIED       MeetingEventKind = 0
+	MeetingEventKind_MEETING_EVENT_KIND_SPEAKERS_UPDATED  MeetingEventKind = 1
+	MeetingEventKind_MEETING_EVENT_KIND_VOTES_UPDATED     MeetingEventKind = 2
+	MeetingEventKind_MEETING_EVENT_KIND_AGENDA_UPDATED    MeetingEventKind = 3
+	MeetingEventKind_MEETING_EVENT_KIND_ATTENDEES_UPDATED MeetingEventKind = 4
+	MeetingEventKind_MEETING_EVENT_KIND_MEETING_UPDATED   MeetingEventKind = 5
+)
+
+// Enum value maps for MeetingEventKind.
+var (
+	MeetingEventKind_name = map[int32]string{
+		0: "MEETING_EVENT_KIND_UNSPECIFIED",
+		1: "MEETING_EVENT_KIND_SPEAKERS_UPDATED",
+		2: "MEETING_EVENT_KIND_VOTES_UPDATED",
+		3: "MEETING_EVENT_KIND_AGENDA_UPDATED",
+		4: "MEETING_EVENT_KIND_ATTENDEES_UPDATED",
+		5: "MEETING_EVENT_KIND_MEETING_UPDATED",
+	}
+	MeetingEventKind_value = map[string]int32{
+		"MEETING_EVENT_KIND_UNSPECIFIED":       0,
+		"MEETING_EVENT_KIND_SPEAKERS_UPDATED":  1,
+		"MEETING_EVENT_KIND_VOTES_UPDATED":     2,
+		"MEETING_EVENT_KIND_AGENDA_UPDATED":    3,
+		"MEETING_EVENT_KIND_ATTENDEES_UPDATED": 4,
+		"MEETING_EVENT_KIND_MEETING_UPDATED":   5,
+	}
+)
+
+func (x MeetingEventKind) Enum() *MeetingEventKind {
+	p := new(MeetingEventKind)
+	*p = x
+	return p
+}
+
+func (x MeetingEventKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MeetingEventKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_conference_meetings_v1_meetings_proto_enumTypes[0].Descriptor()
+}
+
+func (MeetingEventKind) Type() protoreflect.EnumType {
+	return &file_conference_meetings_v1_meetings_proto_enumTypes[0]
+}
+
+func (x MeetingEventKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MeetingEventKind.Descriptor instead.
+func (MeetingEventKind) EnumDescriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{0}
+}
+
 type JoinMeetingCapabilities struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	CanSelfSignup       bool                   `protobuf:"varint,1,opt,name=can_self_signup,json=canSelfSignup,proto3" json:"can_self_signup,omitempty"`
@@ -365,7 +423,6 @@ type LiveMeetingView struct {
 	Speakers          []*v1.SpeakerSummary       `protobuf:"bytes,7,rep,name=speakers,proto3" json:"speakers,omitempty"`
 	CurrentDocument   *v1.CurrentDocumentSummary `protobuf:"bytes,8,opt,name=current_document,json=currentDocument,proto3" json:"current_document,omitempty"`
 	Capabilities      *LiveMeetingCapabilities   `protobuf:"bytes,9,opt,name=capabilities,proto3" json:"capabilities,omitempty"`
-	EventsUrl         string                     `protobuf:"bytes,10,opt,name=events_url,json=eventsUrl,proto3" json:"events_url,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -461,13 +518,6 @@ func (x *LiveMeetingView) GetCapabilities() *LiveMeetingCapabilities {
 		return x.Capabilities
 	}
 	return nil
-}
-
-func (x *LiveMeetingView) GetEventsUrl() string {
-	if x != nil {
-		return x.EventsUrl
-	}
-	return ""
 }
 
 type GetLiveMeetingRequest struct {
@@ -566,6 +616,105 @@ func (x *GetLiveMeetingResponse) GetMeeting() *LiveMeetingView {
 	return nil
 }
 
+// SubscribeMeetingEvents streams typed invalidation events for a meeting.
+// Each message indicates which view(s) have changed; the client should
+// refetch the relevant typed RPC for the indicated kind.
+type SubscribeMeetingEventsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscribeMeetingEventsRequest) Reset() {
+	*x = SubscribeMeetingEventsRequest{}
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscribeMeetingEventsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeMeetingEventsRequest) ProtoMessage() {}
+
+func (x *SubscribeMeetingEventsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeMeetingEventsRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeMeetingEventsRequest) Descriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *SubscribeMeetingEventsRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *SubscribeMeetingEventsRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+type MeetingEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          MeetingEventKind       `protobuf:"varint,1,opt,name=kind,proto3,enum=conference.meetings.v1.MeetingEventKind" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MeetingEvent) Reset() {
+	*x = MeetingEvent{}
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MeetingEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MeetingEvent) ProtoMessage() {}
+
+func (x *MeetingEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_meetings_v1_meetings_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MeetingEvent.ProtoReflect.Descriptor instead.
+func (*MeetingEvent) Descriptor() ([]byte, []int) {
+	return file_conference_meetings_v1_meetings_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *MeetingEvent) GetKind() MeetingEventKind {
+	if x != nil {
+		return x.Kind
+	}
+	return MeetingEventKind_MEETING_EVENT_KIND_UNSPECIFIED
+}
+
 var File_conference_meetings_v1_meetings_proto protoreflect.FileDescriptor
 
 const file_conference_meetings_v1_meetings_proto_rawDesc = "" +
@@ -597,7 +746,7 @@ const file_conference_meetings_v1_meetings_proto_rawDesc = "" +
 	"\x16can_add_regular_speech\x18\x02 \x01(\bR\x13canAddRegularSpeech\x12?\n" +
 	"\x1dcan_add_point_of_order_speech\x18\x03 \x01(\bR\x18canAddPointOfOrderSpeech\x12\x19\n" +
 	"\bcan_vote\x18\x04 \x01(\bR\acanVote\x129\n" +
-	"\x19can_view_current_document\x18\x05 \x01(\bR\x16canViewCurrentDocument\"\xa4\x04\n" +
+	"\x19can_view_current_document\x18\x05 \x01(\bR\x16canViewCurrentDocument\"\x85\x04\n" +
 	"\x0fLiveMeetingView\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
@@ -608,19 +757,30 @@ const file_conference_meetings_v1_meetings_proto_rawDesc = "" +
 	"\x13active_agenda_point\x18\x06 \x01(\v2(.conference.common.v1.AgendaPointSummaryR\x11activeAgendaPoint\x12@\n" +
 	"\bspeakers\x18\a \x03(\v2$.conference.common.v1.SpeakerSummaryR\bspeakers\x12W\n" +
 	"\x10current_document\x18\b \x01(\v2,.conference.common.v1.CurrentDocumentSummaryR\x0fcurrentDocument\x12S\n" +
-	"\fcapabilities\x18\t \x01(\v2/.conference.meetings.v1.LiveMeetingCapabilitiesR\fcapabilities\x12\x1d\n" +
-	"\n" +
-	"events_url\x18\n" +
-	" \x01(\tR\teventsUrl\"]\n" +
+	"\fcapabilities\x18\t \x01(\v2/.conference.meetings.v1.LiveMeetingCapabilitiesR\fcapabilities\"]\n" +
 	"\x15GetLiveMeetingRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"[\n" +
 	"\x16GetLiveMeetingResponse\x12A\n" +
-	"\ameeting\x18\x01 \x01(\v2'.conference.meetings.v1.LiveMeetingViewR\ameeting2\xf2\x01\n" +
+	"\ameeting\x18\x01 \x01(\v2'.conference.meetings.v1.LiveMeetingViewR\ameeting\"e\n" +
+	"\x1dSubscribeMeetingEventsRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"L\n" +
+	"\fMeetingEvent\x12<\n" +
+	"\x04kind\x18\x01 \x01(\x0e2(.conference.meetings.v1.MeetingEventKindR\x04kind*\xfe\x01\n" +
+	"\x10MeetingEventKind\x12\"\n" +
+	"\x1eMEETING_EVENT_KIND_UNSPECIFIED\x10\x00\x12'\n" +
+	"#MEETING_EVENT_KIND_SPEAKERS_UPDATED\x10\x01\x12$\n" +
+	" MEETING_EVENT_KIND_VOTES_UPDATED\x10\x02\x12%\n" +
+	"!MEETING_EVENT_KIND_AGENDA_UPDATED\x10\x03\x12(\n" +
+	"$MEETING_EVENT_KIND_ATTENDEES_UPDATED\x10\x04\x12&\n" +
+	"\"MEETING_EVENT_KIND_MEETING_UPDATED\x10\x052\xeb\x02\n" +
 	"\x0eMeetingService\x12o\n" +
 	"\x0eGetJoinMeeting\x12-.conference.meetings.v1.GetJoinMeetingRequest\x1a..conference.meetings.v1.GetJoinMeetingResponse\x12o\n" +
-	"\x0eGetLiveMeeting\x12-.conference.meetings.v1.GetLiveMeetingRequest\x1a..conference.meetings.v1.GetLiveMeetingResponseBLZJgithub.com/Y4shin/conference-tool/gen/go/conference/meetings/v1;meetingsv1b\x06proto3"
+	"\x0eGetLiveMeeting\x12-.conference.meetings.v1.GetLiveMeetingRequest\x1a..conference.meetings.v1.GetLiveMeetingResponse\x12w\n" +
+	"\x16SubscribeMeetingEvents\x125.conference.meetings.v1.SubscribeMeetingEventsRequest\x1a$.conference.meetings.v1.MeetingEvent0\x01BLZJgithub.com/Y4shin/conference-tool/gen/go/conference/meetings/v1;meetingsv1b\x06proto3"
 
 var (
 	file_conference_meetings_v1_meetings_proto_rawDescOnce sync.Once
@@ -634,39 +794,46 @@ func file_conference_meetings_v1_meetings_proto_rawDescGZIP() []byte {
 	return file_conference_meetings_v1_meetings_proto_rawDescData
 }
 
-var file_conference_meetings_v1_meetings_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_conference_meetings_v1_meetings_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_conference_meetings_v1_meetings_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_conference_meetings_v1_meetings_proto_goTypes = []any{
-	(*JoinMeetingCapabilities)(nil),   // 0: conference.meetings.v1.JoinMeetingCapabilities
-	(*JoinMeetingView)(nil),           // 1: conference.meetings.v1.JoinMeetingView
-	(*GetJoinMeetingRequest)(nil),     // 2: conference.meetings.v1.GetJoinMeetingRequest
-	(*GetJoinMeetingResponse)(nil),    // 3: conference.meetings.v1.GetJoinMeetingResponse
-	(*LiveMeetingCapabilities)(nil),   // 4: conference.meetings.v1.LiveMeetingCapabilities
-	(*LiveMeetingView)(nil),           // 5: conference.meetings.v1.LiveMeetingView
-	(*GetLiveMeetingRequest)(nil),     // 6: conference.meetings.v1.GetLiveMeetingRequest
-	(*GetLiveMeetingResponse)(nil),    // 7: conference.meetings.v1.GetLiveMeetingResponse
-	(*v1.AttendeeSummary)(nil),        // 8: conference.common.v1.AttendeeSummary
-	(*v1.AgendaPointSummary)(nil),     // 9: conference.common.v1.AgendaPointSummary
-	(*v1.SpeakerSummary)(nil),         // 10: conference.common.v1.SpeakerSummary
-	(*v1.CurrentDocumentSummary)(nil), // 11: conference.common.v1.CurrentDocumentSummary
+	(MeetingEventKind)(0),                 // 0: conference.meetings.v1.MeetingEventKind
+	(*JoinMeetingCapabilities)(nil),       // 1: conference.meetings.v1.JoinMeetingCapabilities
+	(*JoinMeetingView)(nil),               // 2: conference.meetings.v1.JoinMeetingView
+	(*GetJoinMeetingRequest)(nil),         // 3: conference.meetings.v1.GetJoinMeetingRequest
+	(*GetJoinMeetingResponse)(nil),        // 4: conference.meetings.v1.GetJoinMeetingResponse
+	(*LiveMeetingCapabilities)(nil),       // 5: conference.meetings.v1.LiveMeetingCapabilities
+	(*LiveMeetingView)(nil),               // 6: conference.meetings.v1.LiveMeetingView
+	(*GetLiveMeetingRequest)(nil),         // 7: conference.meetings.v1.GetLiveMeetingRequest
+	(*GetLiveMeetingResponse)(nil),        // 8: conference.meetings.v1.GetLiveMeetingResponse
+	(*SubscribeMeetingEventsRequest)(nil), // 9: conference.meetings.v1.SubscribeMeetingEventsRequest
+	(*MeetingEvent)(nil),                  // 10: conference.meetings.v1.MeetingEvent
+	(*v1.AttendeeSummary)(nil),            // 11: conference.common.v1.AttendeeSummary
+	(*v1.AgendaPointSummary)(nil),         // 12: conference.common.v1.AgendaPointSummary
+	(*v1.SpeakerSummary)(nil),             // 13: conference.common.v1.SpeakerSummary
+	(*v1.CurrentDocumentSummary)(nil),     // 14: conference.common.v1.CurrentDocumentSummary
 }
 var file_conference_meetings_v1_meetings_proto_depIdxs = []int32{
-	8,  // 0: conference.meetings.v1.JoinMeetingView.current_attendee:type_name -> conference.common.v1.AttendeeSummary
-	0,  // 1: conference.meetings.v1.JoinMeetingView.capabilities:type_name -> conference.meetings.v1.JoinMeetingCapabilities
-	1,  // 2: conference.meetings.v1.GetJoinMeetingResponse.meeting:type_name -> conference.meetings.v1.JoinMeetingView
-	9,  // 3: conference.meetings.v1.LiveMeetingView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
-	10, // 4: conference.meetings.v1.LiveMeetingView.speakers:type_name -> conference.common.v1.SpeakerSummary
-	11, // 5: conference.meetings.v1.LiveMeetingView.current_document:type_name -> conference.common.v1.CurrentDocumentSummary
-	4,  // 6: conference.meetings.v1.LiveMeetingView.capabilities:type_name -> conference.meetings.v1.LiveMeetingCapabilities
-	5,  // 7: conference.meetings.v1.GetLiveMeetingResponse.meeting:type_name -> conference.meetings.v1.LiveMeetingView
-	2,  // 8: conference.meetings.v1.MeetingService.GetJoinMeeting:input_type -> conference.meetings.v1.GetJoinMeetingRequest
-	6,  // 9: conference.meetings.v1.MeetingService.GetLiveMeeting:input_type -> conference.meetings.v1.GetLiveMeetingRequest
-	3,  // 10: conference.meetings.v1.MeetingService.GetJoinMeeting:output_type -> conference.meetings.v1.GetJoinMeetingResponse
-	7,  // 11: conference.meetings.v1.MeetingService.GetLiveMeeting:output_type -> conference.meetings.v1.GetLiveMeetingResponse
-	10, // [10:12] is the sub-list for method output_type
-	8,  // [8:10] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	11, // 0: conference.meetings.v1.JoinMeetingView.current_attendee:type_name -> conference.common.v1.AttendeeSummary
+	1,  // 1: conference.meetings.v1.JoinMeetingView.capabilities:type_name -> conference.meetings.v1.JoinMeetingCapabilities
+	2,  // 2: conference.meetings.v1.GetJoinMeetingResponse.meeting:type_name -> conference.meetings.v1.JoinMeetingView
+	12, // 3: conference.meetings.v1.LiveMeetingView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
+	13, // 4: conference.meetings.v1.LiveMeetingView.speakers:type_name -> conference.common.v1.SpeakerSummary
+	14, // 5: conference.meetings.v1.LiveMeetingView.current_document:type_name -> conference.common.v1.CurrentDocumentSummary
+	5,  // 6: conference.meetings.v1.LiveMeetingView.capabilities:type_name -> conference.meetings.v1.LiveMeetingCapabilities
+	6,  // 7: conference.meetings.v1.GetLiveMeetingResponse.meeting:type_name -> conference.meetings.v1.LiveMeetingView
+	0,  // 8: conference.meetings.v1.MeetingEvent.kind:type_name -> conference.meetings.v1.MeetingEventKind
+	3,  // 9: conference.meetings.v1.MeetingService.GetJoinMeeting:input_type -> conference.meetings.v1.GetJoinMeetingRequest
+	7,  // 10: conference.meetings.v1.MeetingService.GetLiveMeeting:input_type -> conference.meetings.v1.GetLiveMeetingRequest
+	9,  // 11: conference.meetings.v1.MeetingService.SubscribeMeetingEvents:input_type -> conference.meetings.v1.SubscribeMeetingEventsRequest
+	4,  // 12: conference.meetings.v1.MeetingService.GetJoinMeeting:output_type -> conference.meetings.v1.GetJoinMeetingResponse
+	8,  // 13: conference.meetings.v1.MeetingService.GetLiveMeeting:output_type -> conference.meetings.v1.GetLiveMeetingResponse
+	10, // 14: conference.meetings.v1.MeetingService.SubscribeMeetingEvents:output_type -> conference.meetings.v1.MeetingEvent
+	12, // [12:15] is the sub-list for method output_type
+	9,  // [9:12] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_conference_meetings_v1_meetings_proto_init() }
@@ -679,13 +846,14 @@ func file_conference_meetings_v1_meetings_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_meetings_v1_meetings_proto_rawDesc), len(file_conference_meetings_v1_meetings_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   8,
+			NumEnums:      1,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_conference_meetings_v1_meetings_proto_goTypes,
 		DependencyIndexes: file_conference_meetings_v1_meetings_proto_depIdxs,
+		EnumInfos:         file_conference_meetings_v1_meetings_proto_enumTypes,
 		MessageInfos:      file_conference_meetings_v1_meetings_proto_msgTypes,
 	}.Build()
 	File_conference_meetings_v1_meetings_proto = out.File

@@ -44,8 +44,8 @@ import (
 	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
-	webassets "github.com/Y4shin/conference-tool/internal/web"
 	oidctest "github.com/Y4shin/conference-tool/internal/testsupport/oidc"
+	webassets "github.com/Y4shin/conference-tool/internal/web"
 )
 
 type oauthServerOptions struct {
@@ -168,7 +168,7 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))
 
 	meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
-		apiconnect.NewMeetingHandler(meetingservice.New(repo)),
+		apiconnect.NewMeetingHandler(meetingservice.New(repo), b),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(meetingAPIPath, mw.Get("session")(meetingAPIHandler))
@@ -209,7 +209,6 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 	)
 	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
 
-	apiMux.Handle("GET /realtime/meetings/{meetingId}/events", apihttp.NewMeetingEventsHandler(b))
 	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
 	)

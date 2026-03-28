@@ -9,6 +9,7 @@ import "conference/common/v1/common.proto";
 service MeetingService {
   rpc GetJoinMeeting(GetJoinMeetingRequest) returns (GetJoinMeetingResponse);
   rpc GetLiveMeeting(GetLiveMeetingRequest) returns (GetLiveMeetingResponse);
+  rpc SubscribeMeetingEvents(SubscribeMeetingEventsRequest) returns (stream MeetingEvent);
 }
 
 message JoinMeetingCapabilities {
@@ -55,7 +56,6 @@ message LiveMeetingView {
   repeated conference.common.v1.SpeakerSummary speakers = 7;
   conference.common.v1.CurrentDocumentSummary current_document = 8;
   LiveMeetingCapabilities capabilities = 9;
-  string events_url = 10;
 }
 
 message GetLiveMeetingRequest {
@@ -65,4 +65,25 @@ message GetLiveMeetingRequest {
 
 message GetLiveMeetingResponse {
   LiveMeetingView meeting = 1;
+}
+
+// SubscribeMeetingEvents streams typed invalidation events for a meeting.
+// Each message indicates which view(s) have changed; the client should
+// refetch the relevant typed RPC for the indicated kind.
+message SubscribeMeetingEventsRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+enum MeetingEventKind {
+  MEETING_EVENT_KIND_UNSPECIFIED = 0;
+  MEETING_EVENT_KIND_SPEAKERS_UPDATED = 1;
+  MEETING_EVENT_KIND_VOTES_UPDATED = 2;
+  MEETING_EVENT_KIND_AGENDA_UPDATED = 3;
+  MEETING_EVENT_KIND_ATTENDEES_UPDATED = 4;
+  MEETING_EVENT_KIND_MEETING_UPDATED = 5;
+}
+
+message MeetingEvent {
+  MeetingEventKind kind = 1;
 }

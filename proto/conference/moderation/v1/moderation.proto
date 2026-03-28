@@ -39,7 +39,6 @@ message ModerationView {
   conference.common.v1.AgendaPointSummary active_agenda_point = 4;
   ModerationSpeakerSummaryBlock speakers = 5;
   repeated conference.common.v1.Capability capabilities = 6;
-  string events_url = 7;
 }
 
 message GetModerationViewRequest {

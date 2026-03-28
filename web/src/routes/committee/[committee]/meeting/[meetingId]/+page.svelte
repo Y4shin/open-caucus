@@ -7,12 +7,12 @@
 	import { meetingClient, speakerClient, voteClient } from '$lib/api/index.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { LiveMeetingView } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
+	import { MeetingEventKind } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
 	import type { LiveVotePanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { saveReceipt } from '$lib/utils/receipts.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
-	import { connectEventStream } from '$lib/utils/sse.js';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -26,7 +26,6 @@
 	let submittingVote = $state(false);
 	let selectedOptionIds = $state<string[]>([]);
 	let voteReceipt = $state('');
-	let refreshTick = $state(0);
 
 	$effect(() => {
 		const activeVote = voteState.data?.activeVote;
@@ -44,16 +43,44 @@
 			goto(`/committee/${slug}/meeting/${meetingId}/join`);
 			return;
 		}
-		refreshTick;
 		loadMeeting();
 	});
 
+	// Subscribe to the typed Connect stream and selectively refetch only the view that changed.
 	$effect(() => {
-		const eventsUrl = liveState.data?.eventsUrl;
-		if (!eventsUrl) return;
-		return connectEventStream(eventsUrl, () => {
-			refreshTick += 1;
-		});
+		if (!session.loaded || !session.authenticated) return;
+		const currentSlug = slug;
+		const currentMeetingId = meetingId;
+		let cancelled = false;
+		(async () => {
+			try {
+				const stream = meetingClient.subscribeMeetingEvents({
+					committeeSlug: currentSlug,
+					meetingId: currentMeetingId
+				});
+				for await (const event of stream) {
+					if (cancelled) break;
+					switch (event.kind) {
+						case MeetingEventKind.SPEAKERS_UPDATED:
+							loadSpeakers();
+							break;
+						case MeetingEventKind.VOTES_UPDATED:
+							loadVotes();
+							break;
+						case MeetingEventKind.AGENDA_UPDATED:
+						case MeetingEventKind.MEETING_UPDATED:
+						case MeetingEventKind.ATTENDEES_UPDATED:
+							loadLiveMeeting();
+							break;
+					}
+				}
+			} catch {
+				// Stream closed or server went away — ignore; the initial load already has the data.
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function loadMeeting() {
@@ -83,6 +110,33 @@
 		}
 	}
 
+	async function loadLiveMeeting() {
+		try {
+			const res = await meetingClient.getLiveMeeting({ committeeSlug: slug, meetingId });
+			liveState.data = res.meeting ?? null;
+		} catch {
+			// Silent refresh — don't clobber existing data on transient errors
+		}
+	}
+
+	async function loadSpeakers() {
+		try {
+			const res = await speakerClient.listSpeakers({ committeeSlug: slug, meetingId });
+			speakerState.data = res.view ?? null;
+		} catch {
+			// Silent refresh
+		}
+	}
+
+	async function loadVotes() {
+		try {
+			const res = await voteClient.getLiveVotePanel({ committeeSlug: slug, meetingId });
+			voteState.data = res.view ?? null;
+		} catch {
+			// Silent refresh
+		}
+	}
+
 	function hasWaitingEntry(type: string) {
 		return (speakerState.data?.speakers ?? []).some(
 			(speaker) => speaker.mine && speaker.state === 'WAITING' && speaker.speakerType === type
@@ -109,7 +163,7 @@
 				speakerType
 			});
 			speakerState.data = res.view ?? speakerState.data;
-			refreshTick += 1;
+			loadSpeakers();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to add you to the speakers list.');
 		} finally {
@@ -157,7 +211,7 @@
 				receipt: `${activeVote.voteId}:${res.receiptToken}`
 			});
 			selectedOptionIds = [];
-			refreshTick += 1;
+			loadVotes();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to submit your ballot.');
 		} finally {

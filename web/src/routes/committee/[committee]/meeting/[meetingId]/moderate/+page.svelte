@@ -4,10 +4,11 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
-	import { agendaClient, attendeeClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
+	import { agendaClient, attendeeClient, meetingClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
+	import { MeetingEventKind } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
 	import type { ModerationView } from '$lib/gen/conference/moderation/v1/moderation_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
 	import type {
@@ -17,7 +18,6 @@
 	} from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
-	import { connectEventStream } from '$lib/utils/sse.js';
 
 	type AgendaImportState = 'ignore' | 'heading' | 'subheading';
 	type AgendaImportLine = {
@@ -71,24 +71,54 @@
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let agendaTitleInput = $state<HTMLInputElement | null>(null);
 	let voteNameInput = $state<HTMLInputElement | null>(null);
-	let refreshTick = $state(0);
-
 	$effect(() => {
 		if (!session.loaded) return;
 		if (!session.authenticated) {
 			goto('/login');
 			return;
 		}
-		refreshTick;
 		loadModerationView();
 	});
 
+	// Subscribe to the typed Connect stream and selectively refetch only the view that changed.
 	$effect(() => {
-		const eventsUrl = moderationState.data?.eventsUrl;
-		if (!eventsUrl) return;
-		return connectEventStream(eventsUrl, () => {
-			refreshTick += 1;
-		});
+		if (!session.loaded || !session.authenticated) return;
+		const currentSlug = slug;
+		const currentMeetingId = meetingId;
+		let cancelled = false;
+		(async () => {
+			try {
+				const stream = meetingClient.subscribeMeetingEvents({
+					committeeSlug: currentSlug,
+					meetingId: currentMeetingId
+				});
+				for await (const event of stream) {
+					if (cancelled) break;
+					switch (event.kind) {
+						case MeetingEventKind.SPEAKERS_UPDATED:
+							loadSpeakers();
+							break;
+						case MeetingEventKind.VOTES_UPDATED:
+							loadVotes();
+							break;
+						case MeetingEventKind.AGENDA_UPDATED:
+							loadAgenda();
+							break;
+						case MeetingEventKind.ATTENDEES_UPDATED:
+							loadAttendees();
+							break;
+						case MeetingEventKind.MEETING_UPDATED:
+							loadModeration();
+							break;
+					}
+				}
+			} catch {
+				// Stream closed or server went away — ignore.
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	async function loadModerationView() {
@@ -142,6 +172,51 @@
 		}
 	}
 
+	async function loadModeration() {
+		try {
+			const res = await moderationClient.getModerationView({ committeeSlug: slug, meetingId });
+			moderationState.data = res.view ?? null;
+		} catch {
+			// Silent refresh
+		}
+	}
+
+	async function loadSpeakers() {
+		try {
+			const res = await speakerClient.listSpeakers({ committeeSlug: slug, meetingId });
+			speakerState.data = res.view ?? null;
+		} catch {
+			// Silent refresh
+		}
+	}
+
+	async function loadAttendees() {
+		try {
+			const res = await attendeeClient.listAttendees({ committeeSlug: slug, meetingId });
+			attendeeState.data = res.attendees;
+		} catch {
+			// Silent refresh
+		}
+	}
+
+	async function loadAgenda() {
+		try {
+			const res = await agendaClient.listAgendaPoints({ committeeSlug: slug, meetingId });
+			agendaState.data = res.agendaPoints;
+		} catch {
+			// Silent refresh
+		}
+	}
+
+	async function loadVotes() {
+		try {
+			const res = await voteClient.getVotesPanel({ committeeSlug: slug, meetingId });
+			votesState.data = res.view ?? null;
+		} catch {
+			// Silent refresh
+		}
+	}
+
 	async function toggleSignupOpen() {
 		const view = moderationState.data;
 		if (!view?.attendees || togglingSignup) return;
@@ -161,7 +236,7 @@
 			view.version = res.version;
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update signup state.');
-			refreshTick += 1;
+			loadModeration();
 		} finally {
 			togglingSignup = false;
 		}
@@ -185,11 +260,11 @@
 		try {
 			const res = await action();
 			speakerState.data = res.view ?? speakerState.data;
-			refreshTick += 1;
+			loadSpeakers();
 			return true;
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update the speakers queue.');
-			refreshTick += 1;
+			loadSpeakers();
 			return false;
 		} finally {
 			speakerActionPending = '';
@@ -212,10 +287,10 @@
 				speakerId: current.speakerId
 			});
 			speakerState.data = res.view ?? speakerState.data;
-			refreshTick += 1;
+			loadSpeakers();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update the speakers queue.');
-			refreshTick += 1;
+			loadSpeakers();
 		} finally {
 			speakerActionPending = '';
 		}
@@ -226,11 +301,11 @@
 		agendaActionPending = key;
 		try {
 			await action();
-			refreshTick += 1;
+			loadAgenda();
 			return true;
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update the agenda.');
-			refreshTick += 1;
+			loadAgenda();
 			return false;
 		} finally {
 			agendaActionPending = '';
@@ -245,7 +320,7 @@
 			return true;
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update the votes panel.');
-			refreshTick += 1;
+			loadVotes();
 			return false;
 		} finally {
 			voteActionPending = '';
@@ -343,7 +418,7 @@
 			});
 			agendaTitle = '';
 			agendaParentId = '';
-			refreshTick += 1;
+			loadAgenda();
 			agendaTitleInput?.focus();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to create the agenda point.');
@@ -392,7 +467,7 @@
 				meetingId,
 				agendaPointId
 			});
-			refreshTick += 1;
+			loadAgenda();
 		});
 	}
 
@@ -578,7 +653,7 @@
 				}
 			}
 			closeAgendaImportDialog();
-			refreshTick += 1;
+			loadAgenda();
 		} catch (err) {
 			agendaImportWarning = getDisplayError(err, 'Failed to apply the agenda import.');
 		} finally {
@@ -638,7 +713,7 @@
 					.map((line) => line.trim())
 					.filter(Boolean)
 			});
-			refreshTick += 1;
+			loadVotes();
 		});
 	}
 
@@ -667,7 +742,7 @@
 			voteMinSelections = '1';
 			voteMaxSelections = '1';
 			voteOptionsText = 'Yes\nNo';
-			refreshTick += 1;
+			loadVotes();
 			voteNameInput?.focus();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to create the vote.');
@@ -688,7 +763,7 @@
 				votesState.data.activeVote = res.vote;
 				votesState.data.activeVoteStats = res.stats;
 			}
-			refreshTick += 1;
+			loadVotes();
 		});
 	}
 
@@ -711,7 +786,7 @@
 				votesState.data.activeVoteStats = undefined;
 				votesState.data.activeVoteTally = [];
 			}
-			refreshTick += 1;
+			loadVotes();
 		});
 	}
 
@@ -725,7 +800,7 @@
 			if (lastClosedVote?.vote.voteId === voteId) {
 				lastClosedVote = null;
 			}
-			refreshTick += 1;
+			loadVotes();
 		});
 	}
 </script>

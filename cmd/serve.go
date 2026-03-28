@@ -16,7 +16,6 @@ import (
 	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
-	"github.com/Y4shin/conference-tool/internal/session"
 	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
 	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
@@ -26,6 +25,7 @@ import (
 	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
 	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
 	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
+	"github.com/Y4shin/conference-tool/internal/session"
 	webassets "github.com/Y4shin/conference-tool/internal/web"
 	"github.com/spf13/cobra"
 )
@@ -109,7 +109,7 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	apiMux.Handle(committeeAPIPath, rt.middleware.Get("session")(committeeAPIHandler))
 
 	meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
-		apiconnect.NewMeetingHandler(meetingservice.New(rt.repo)),
+		apiconnect.NewMeetingHandler(meetingservice.New(rt.repo), rt.broker),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(meetingAPIPath, rt.middleware.Get("session")(meetingAPIHandler))
@@ -150,7 +150,6 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	)
 	apiMux.Handle(adminAPIPath, rt.middleware.Get("session")(adminAPIHandler))
 
-	apiMux.Handle("GET /realtime/meetings/{meetingId}/events", apihttp.NewMeetingEventsHandler(rt.broker))
 	apiMux.Handle("POST /committee/{slug}/meetings", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingCreateHandler(rt.repo)))
 	apiMux.Handle("DELETE /committee/{slug}/meetings/{meetingId}", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingDeleteHandler(rt.repo)))
 	apiMux.Handle("POST /committee/{slug}/meetings/{meetingId}/active", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingActivateHandler(rt.repo)))

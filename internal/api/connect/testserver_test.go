@@ -95,7 +95,7 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 
 	// Meeting service
 	meetingPath, meetingHandler := meetingsv1connect.NewMeetingServiceHandler(
-		NewMeetingHandler(meetingservice.New(repo)),
+		NewMeetingHandler(meetingservice.New(repo), b),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+meetingPath, mw.Get("session")(http.StripPrefix("/api", meetingHandler)))
@@ -142,10 +142,6 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 	)
 	mux.Handle("/api"+adminPath, mw.Get("session")(http.StripPrefix("/api", adminHandler)))
 
-	// Realtime SSE endpoint
-	mux.Handle("GET /api/realtime/meetings/{meetingId}/events",
-		apihttp.NewMeetingEventsHandler(b),
-	)
 	mux.Handle("POST /api/committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
 	)

@@ -101,8 +101,6 @@ func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDSt
 
 	caps := s.buildLiveMeetingCapabilities(ctx, meeting, committee, isAttendee)
 
-	eventsURL := fmt.Sprintf("/api/realtime/meetings/%d/events", meetingID)
-
 	view := &meetingsv1.LiveMeetingView{
 		CommitteeSlug:     committeeSlug,
 		MeetingId:         strconv.FormatInt(meetingID, 10),
@@ -113,7 +111,6 @@ func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDSt
 		Speakers:          speakers,
 		CurrentDocument:   currentDoc,
 		Capabilities:      caps,
-		EventsUrl:         eventsURL,
 	}
 
 	return &meetingsv1.GetLiveMeetingResponse{Meeting: view}, nil

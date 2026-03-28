@@ -234,7 +234,6 @@ type ModerationView struct {
 	ActiveAgendaPoint *v1.AgendaPointSummary          `protobuf:"bytes,4,opt,name=active_agenda_point,json=activeAgendaPoint,proto3" json:"active_agenda_point,omitempty"`
 	Speakers          *ModerationSpeakerSummaryBlock  `protobuf:"bytes,5,opt,name=speakers,proto3" json:"speakers,omitempty"`
 	Capabilities      []*v1.Capability                `protobuf:"bytes,6,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
-	EventsUrl         string                          `protobuf:"bytes,7,opt,name=events_url,json=eventsUrl,proto3" json:"events_url,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -309,13 +308,6 @@ func (x *ModerationView) GetCapabilities() []*v1.Capability {
 		return x.Capabilities
 	}
 	return nil
-}
-
-func (x *ModerationView) GetEventsUrl() string {
-	if x != nil {
-		return x.EventsUrl
-	}
-	return ""
 }
 
 type GetModerationViewRequest struct {
@@ -575,16 +567,14 @@ const file_conference_moderation_v1_moderation_proto_rawDesc = "" +
 	"\vtotal_count\x18\x01 \x01(\x05R\n" +
 	"totalCount\x12,\n" +
 	"\x12has_active_speaker\x18\x02 \x01(\bR\x10hasActiveSpeaker\x12#\n" +
-	"\rwaiting_count\x18\x03 \x01(\x05R\fwaitingCount\"\xe4\x03\n" +
+	"\rwaiting_count\x18\x03 \x01(\x05R\fwaitingCount\"\xc5\x03\n" +
 	"\x0eModerationView\x12L\n" +
 	"\ameeting\x18\x01 \x01(\v22.conference.moderation.v1.ModerationMeetingSummaryR\ameeting\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\x04R\aversion\x12V\n" +
 	"\tattendees\x18\x03 \x01(\v28.conference.moderation.v1.ModerationAttendeeSummaryBlockR\tattendees\x12X\n" +
 	"\x13active_agenda_point\x18\x04 \x01(\v2(.conference.common.v1.AgendaPointSummaryR\x11activeAgendaPoint\x12S\n" +
 	"\bspeakers\x18\x05 \x01(\v27.conference.moderation.v1.ModerationSpeakerSummaryBlockR\bspeakers\x12D\n" +
-	"\fcapabilities\x18\x06 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\x12\x1d\n" +
-	"\n" +
-	"events_url\x18\a \x01(\tR\teventsUrl\"`\n" +
+	"\fcapabilities\x18\x06 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\"`\n" +
 	"\x18GetModerationViewRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +

@@ -1,16 +1,14 @@
 package apiconnect
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
 	"testing"
 	"time"
 
 	connect "connectrpc.com/connect"
 
+	meetingsv1 "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1"
 	moderationv1 "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1"
 	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
 )
@@ -178,44 +176,43 @@ func TestRealtime_MeetingEvents_PublishesSignupInvalidation(t *testing.T) {
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair One", "chairperson")
 	meetingID := ts.seedMeeting(t, "test-committee", "Spring Meeting", false)
 
-	// Open the SSE connection before triggering the mutation.
-	sseURL := fmt.Sprintf("%s/api/realtime/meetings/%d/events", ts.server.URL, meetingID)
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, sseURL, nil)
+	client := newCombinedTestClient(t, ts)
+	streamCtx, cancelStream := context.WithCancel(context.Background())
+	defer cancelStream()
+	eventCh := make(chan meetingsv1.MeetingEventKind, 8)
+	streamErrCh := make(chan error, 1)
+	stream, err := client.meetings.SubscribeMeetingEvents(streamCtx, connect.NewRequest(&meetingsv1.SubscribeMeetingEventsRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     fmt.Sprintf("%d", meetingID),
+	}))
 	if err != nil {
-		t.Fatalf("build SSE request: %v", err)
+		t.Fatalf("subscribe meeting events: %v", err)
 	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("open SSE connection: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("unexpected SSE status: %d", resp.StatusCode)
-	}
-
-	// Channel to receive parsed SSE event lines.
-	eventCh := make(chan string, 8)
+	defer stream.Close()
+	streamDone := make(chan struct{})
 	go func() {
-		scanner := bufio.NewScanner(resp.Body)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, "data:") {
-				eventCh <- strings.TrimPrefix(line, "data:")
+		defer close(streamDone)
+		for stream.Receive() {
+			eventCh <- stream.Msg().GetKind()
+		}
+		if err := stream.Err(); err != nil {
+			select {
+			case streamErrCh <- err:
+			default:
 			}
 		}
 	}()
 
-	// Consume the initial "connected" ping.
+	// Consume the initial event that confirms the stream is live.
 	select {
 	case <-eventCh:
 	case <-time.After(3 * time.Second):
-		t.Fatal("timed out waiting for connected ping")
+		t.Fatal("timed out waiting for initial stream event")
+	case err := <-streamErrCh:
+		t.Fatalf("meeting event stream failed before initial event: %v", err)
 	}
 
 	// Trigger the mutation via a logged-in chairperson.
-	client := newCombinedTestClient(t, ts)
-
 	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
 		Username: "chair1",
 		Password: "pass123",
@@ -232,14 +229,22 @@ func TestRealtime_MeetingEvents_PublishesSignupInvalidation(t *testing.T) {
 		t.Fatalf("toggle signup: %v", err)
 	}
 
-	// The SSE stream should deliver the invalidation event.
+	// The Connect stream should deliver the typed invalidation event.
 	select {
-	case data := <-eventCh:
-		if !strings.Contains(data, "attendees.updated") {
-			t.Fatalf("unexpected event data: %q", data)
+	case kind := <-eventCh:
+		if kind != meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_ATTENDEES_UPDATED {
+			t.Fatalf("unexpected event kind: %v", kind)
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("timed out waiting for invalidation event")
+	case err := <-streamErrCh:
+		t.Fatalf("meeting event stream failed before invalidation: %v", err)
+	}
+
+	cancelStream()
+	select {
+	case <-streamDone:
+	case <-time.After(3 * time.Second):
+		t.Fatal("timed out waiting for meeting event stream shutdown")
 	}
 }
-

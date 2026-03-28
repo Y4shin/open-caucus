@@ -122,7 +122,7 @@ func newTestServer(t *testing.T) *testServer {
 	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))
 
 	meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
-		apiconnect.NewMeetingHandler(meetingservice.New(repo)),
+		apiconnect.NewMeetingHandler(meetingservice.New(repo), b),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(meetingAPIPath, mw.Get("session")(meetingAPIHandler))
@@ -163,7 +163,6 @@ func newTestServer(t *testing.T) *testServer {
 	)
 	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
 
-	apiMux.Handle("GET /realtime/meetings/{meetingId}/events", apihttp.NewMeetingEventsHandler(b))
 	apiMux.Handle("POST /committee/{slug}/meetings", mw.Get("session")(apihttp.NewCommitteeMeetingCreateHandler(repo)))
 	apiMux.Handle("DELETE /committee/{slug}/meetings/{meetingId}", mw.Get("session")(apihttp.NewCommitteeMeetingDeleteHandler(repo)))
 	apiMux.Handle("POST /committee/{slug}/meetings/{meetingId}/active", mw.Get("session")(apihttp.NewCommitteeMeetingActivateHandler(repo)))

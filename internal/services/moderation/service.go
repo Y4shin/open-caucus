@@ -3,7 +3,6 @@ package moderationservice
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -115,7 +114,6 @@ func (s *Service) GetModerationView(ctx context.Context, committeeSlug, meetingI
 	}
 
 	isActiveMeeting := committee.CurrentMeetingID != nil && *committee.CurrentMeetingID == meetingID
-	eventsURL := fmt.Sprintf("/api/realtime/meetings/%d/events", meetingID)
 
 	view := &moderationv1.ModerationView{
 		Meeting: &moderationv1.ModerationMeetingSummary{
@@ -135,7 +133,6 @@ func (s *Service) GetModerationView(ctx context.Context, committeeSlug, meetingI
 		ActiveAgendaPoint: activeAP,
 		Speakers:          speakerSummary,
 		Capabilities:      caps,
-		EventsUrl:         eventsURL,
 	}
 
 	return &moderationv1.GetModerationViewResponse{View: view}, nil

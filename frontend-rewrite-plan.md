@@ -8,7 +8,7 @@ This is a deliberate architectural rewrite, not an incremental migration. The go
 
 ## Status Snapshot
 
-Last updated: 2026-03-27
+Last updated: 2026-03-28
 
 - Current phase: `Phase 6 - Legacy Removal`
 - Phase 0 status: `Completed`
@@ -18,6 +18,8 @@ Last updated: 2026-03-27
 - Phase 4 status: `Completed`
 - Phase 5 status: `Completed`
 - Phase 6 status: `In progress`
+- Phase 6a (decoupling): `Completed` — serve.go fully decoupled from internal/handlers
+- Phase 6b (Connect streaming): `In progress` — replacing raw SSE + refetch with typed streaming RPC
 - Rewrite strategy: `Big-bang rewrite approved`
 
 ## Current Implementation Baseline
@@ -1401,7 +1403,61 @@ Keep only if still useful:
 - storage layer
 - session implementation
 - parts of middleware and auth logic
-- SSE broker concepts
+- SSE broker (internal pub/sub stays; the raw HTTP SSE endpoint is replaced by the Connect stream)
+
+### Phase 6b: Connect Streaming RPC for Meeting Events
+
+**Goal**: replace the hybrid `GET /api/realtime/meetings/{meetingId}/events` raw SSE endpoint
+plus per-event typed-RPC refetch with a single typed Connect server-streaming RPC.
+
+**Why**: Connect server-streaming RPCs are implemented as SSE under HTTP/1.1, so the wire
+protocol is unchanged. The benefit is a fully typed contract — no raw `EventSource`, no manual
+event-name dispatch, no separate refetch round trip. The client receives the updated view
+payload directly in the stream.
+
+**Proto change** (`proto/conference/meetings/v1/meetings.proto`):
+
+```protobuf
+rpc SubscribeMeetingEvents(SubscribeMeetingEventsRequest)
+    returns (stream MeetingEvent);
+
+message SubscribeMeetingEventsRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message MeetingEvent {
+  oneof event {
+    LiveMeetingView    live_updated       = 1;
+    SpeakersUpdated    speakers_updated   = 2;
+    AgendaUpdated      agenda_updated     = 3;
+    VotesUpdated       votes_updated      = 4;
+    AttendeesUpdated   attendees_updated  = 5;
+  }
+}
+```
+
+Each event variant carries the fresh view that the affected page needs — the SPA applies the
+payload directly without a follow-up fetch.
+
+**Backend implementation**:
+- New `SubscribeMeetingEvents` method on the `MeetingService` Connect handler
+- Subscribes to the broker, filters by meeting ID, calls the relevant read-model method on
+  each incoming broker event, and streams the typed result to the client
+- The raw `GET /realtime/meetings/{meetingId}/events` endpoint (`internal/api/http/realtime.go`)
+  is removed after the new RPC is verified
+
+**Frontend change** (`web/src/lib/utils/sse.ts` and the two page components):
+- Replace `connectEventStream(url, onInvalidate)` + follow-up RPC calls with a single
+  `client.meetings.subscribeMeetingEvents(req)` streaming call
+- The stream handler patches the local reactive state directly from the event payload
+
+**Rollout order**:
+1. Add proto message + regenerate
+2. Implement Go handler, register, verify with `go test ./...`
+3. Update SPA pages, rebuild, run E2E suite
+4. Delete `internal/api/http/realtime.go` and `web/src/lib/utils/sse.ts`
+5. Remove `events_url` field from `LiveMeetingView` proto if no longer needed
 
 ## Testing Strategy
 
