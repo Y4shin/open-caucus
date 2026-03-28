@@ -138,15 +138,28 @@ All passing (verified after OAuth extraction):
 - `nix develop . --command go test ./...` — all Go unit/integration tests pass
 - Full E2E suite: all tests pass in ~14s
 
+## Current Phase 6 Decoupling Status
+
+- `serve.go` — **fully decoupled** from `internal/handlers`; imports only `internal/api/connect`, `internal/api/http`, and infrastructure
+- `serve_common.go` — **fully decoupled**; `serveRuntime` struct has no `handler` field; no `internal/handlers` import
+- `serve_legacy.go` — **only remaining consumer** of `internal/handlers`; creates `handlers.Handler` inline in `newLegacyServer()`
+- `e2e/` test helpers — **fully decoupled**; use `apihttp.OAuthHandler` directly
+
+Legacy packages still in the repo (all consumed by `serve-legacy` only):
+- `internal/handlers/` — 6600 lines of HTMX/SSR handlers
+- `internal/templates/` — Templ page components and generated `_templ.go` files
+- `internal/routes/` — generated router + type-safe URL builders (for SSR)
+- `tools/routing/` — route code generator
+- `routes.yaml` — route definitions
+
 ## Immediate Next Steps
 
-The full E2E suite passes and `serve` is decoupled from `internal/handlers`. Next work:
+All E2E tests pass. Working tree is clean. Next Phase 6 steps:
 
-1. Commit the current batch of Phase 6 changes.
-2. Continue Phase 6 legacy removal: look at what remains in `serve_common.go` that only `serve-legacy` needs (the `handler` field on `serveRuntime`).
-3. Consider extracting or removing the `rt.handler` field from the shared `serveRuntime` struct so it is `serve-legacy`-only.
-4. Identify any remaining legacy routes/handlers in `internal/handlers` that are only used by `serve-legacy`.
-5. After each change: run `go test ./...` and the full E2E suite.
+1. Decide whether to delete `serve-legacy` now (along with `internal/handlers`, `internal/templates`, `internal/routes`, `tools/routing/`, `routes.yaml`) or keep it for manual comparison.
+2. If keeping `serve-legacy`, consider whether it still needs to compile (i.e., don't delete any legacy packages yet).
+3. Run `npm run check && npm run build && go test ./...` and the full E2E suite after any change.
+4. Document any remaining parity gaps discovered during manual testing in this file.
 
 ## Suggested Verification After Each Change
 
@@ -196,14 +209,14 @@ Backend service layer:
 
 ## Most Recent Commits
 
-Recent rewrite commits, newest first (uncommitted work is above `a107c30`):
+Recent rewrite commits, newest first:
 
-- `a107c30` `feat: continuing spa migration` ← current HEAD (Phase 6 work not yet committed)
+- `98e9a8b` `refactor(cmd): move handlers.Handler creation into serve_legacy.go`
+- `1b0613c` `feat: phase 6 legacy removal — SPA parity, new REST endpoints, OAuth extraction`
+- `a107c30` `feat: continuing spa migration`
 - `d4cd535` `feat(web): add typed voting workflow to moderate and live pages`
 - `0972109` `feat(web): add agenda management to moderation workspace`
 - `467d64f` `feat(web): add moderation attendee search for speakers`
-- `3f87594` `feat(web): add speaker queue controls to live and moderate`
-- `fe2a8a0` `feat(web): port attendee join and login flows`
 
 ## Pickup Advice For The Next Agent
 
