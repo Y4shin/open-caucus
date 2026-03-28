@@ -3,6 +3,7 @@ package cmd
 import (
 	"net/http"
 
+	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/routes"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,16 @@ var serveLegacyCmd = &cobra.Command{
 }
 
 func newLegacyServer(rt *serveRuntime) http.Handler {
-	return routes.NewRouter(rt.handler, rt.middleware).RegisterRoutes()
+	h := &handlers.Handler{
+		Broker:         rt.broker,
+		Repository:     rt.repo,
+		Storage:        rt.store,
+		SessionManager: rt.sessionManager,
+		AuthConfig:     rt.cfg.Auth,
+		OAuthService:   rt.oauthService,
+		DocsService:    rt.docsService,
+	}
+	return routes.NewRouter(h, rt.middleware).RegisterRoutes()
 }
 
 func init() {

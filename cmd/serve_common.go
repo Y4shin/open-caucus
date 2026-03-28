@@ -15,7 +15,6 @@ import (
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/docs"
-	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/oauth"
@@ -34,7 +33,6 @@ type serveRuntime struct {
 	oauthService   *oauth.Service
 	docsService    *docs.Service
 	middleware     *middleware.Registry
-	handler        *handlers.Handler
 }
 
 func loadServeRuntime() (*serveRuntime, error) {
@@ -106,16 +104,6 @@ func loadServeRuntime() (*serveRuntime, error) {
 		return nil, fmt.Errorf("failed to load embedded docs: %w", err)
 	}
 
-	handler := &handlers.Handler{
-		Broker:         b,
-		Repository:     repo,
-		Storage:        store,
-		SessionManager: sessionManager,
-		AuthConfig:     cfg.Auth,
-		OAuthService:   oauthService,
-		DocsService:    docsService,
-	}
-
 	return &serveRuntime{
 		cfg:            cfg,
 		repo:           repo,
@@ -125,7 +113,6 @@ func loadServeRuntime() (*serveRuntime, error) {
 		oauthService:   oauthService,
 		docsService:    docsService,
 		middleware:     mw,
-		handler:        handler,
 	}, nil
 }
 
