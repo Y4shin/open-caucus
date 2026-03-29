@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import { committeeClient } from '$lib/api/index.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { CommitteeListItem } from '$lib/gen/conference/committees/v1/committees_pb.js';
@@ -34,37 +34,28 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="space-y-2">
-		<h1 class="text-3xl font-bold">Home</h1>
-		<p class="text-base-content/70">
-			Choose a committee to continue into its current meeting workflow.
-		</p>
+{#if committeesState.loading}
+	<AppSpinner label="Loading committees" />
+{:else if committeesState.error}
+	<AppAlert message={committeesState.error} />
+{:else}
+	<div class="rounded-box border-base-300 bg-base-200 shadow-sm p-4">
+		{#if committeesState.data?.length}
+			<ul class="list">
+				<li class="p-4 pb-2 text-xs opacity-60 tracking-wide">My Committees</li>
+				{#each committeesState.data as item}
+					<li class="list-row">
+						<div class="list-col-grow">{item.committee?.name ?? 'Committee'}</div>
+						<a
+							class="btn btn-ghost btn-small btn-square"
+							href="/committee/{item.committee?.slug ?? ''}"
+							aria-label={`To committee: ${item.committee?.name ?? 'Committee'}`}
+						><LegacyIcon name="right" class="h-4 w-4" /></a>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p>You are not a member of any committee.</p>
+		{/if}
 	</div>
-
-	{#if committeesState.loading}
-		<AppSpinner label="Loading committees" />
-	{:else if committeesState.error}
-		<AppAlert message={committeesState.error} />
-	{:else if committeesState.data?.length}
-		<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-			{#each committeesState.data as item}
-				<AppCard title={item.committee?.name ?? 'Committee'}>
-					<p class="text-sm text-base-content/70">
-						{item.meetingCount} meeting{item.meetingCount === 1 ? '' : 's'}
-					</p>
-					{#if item.hasActiveMeeting}
-						<p class="text-sm font-medium text-success">Active meeting available</p>
-					{/if}
-					<div class="card-actions justify-end">
-						<a class="btn btn-primary btn-sm" href="/committee/{item.committee?.slug ?? ''}">
-							Open
-						</a>
-					</div>
-				</AppCard>
-			{/each}
-		</div>
-	{:else}
-		<AppAlert tone="info" message="No committees are available for this account yet." />
-	{/if}
-</div>
+{/if}

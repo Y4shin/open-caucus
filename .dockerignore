@@ -3,6 +3,9 @@
 .vscode
 tmp
 node_modules
+web/node_modules
+web/.svelte-kit
+web/build
 conference-tool.exe
 conference-tool
 conference.db

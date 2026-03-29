@@ -9,6 +9,8 @@ import "conference/common/v1/common.proto";
 service ModerationService {
   rpc GetModerationView(GetModerationViewRequest) returns (GetModerationViewResponse);
   rpc ToggleSignupOpen(ToggleSignupOpenRequest) returns (ToggleSignupOpenResponse);
+  rpc SetMeetingQuotation(SetMeetingQuotationRequest) returns (SetMeetingQuotationResponse);
+  rpc SetMeetingModerator(SetMeetingModeratorRequest) returns (SetMeetingModeratorResponse);
 }
 
 message ModerationMeetingSummary {
@@ -32,6 +34,12 @@ message ModerationSpeakerSummaryBlock {
   int32 waiting_count = 3;
 }
 
+message ModerationMeetingSettingsBlock {
+  bool gender_quotation_enabled = 1;
+  bool first_speaker_quotation_enabled = 2;
+  string moderator_attendee_id = 3;
+}
+
 message ModerationView {
   ModerationMeetingSummary meeting = 1;
   uint64 version = 2;
@@ -39,6 +47,7 @@ message ModerationView {
   conference.common.v1.AgendaPointSummary active_agenda_point = 4;
   ModerationSpeakerSummaryBlock speakers = 5;
   repeated conference.common.v1.Capability capabilities = 6;
+  ModerationMeetingSettingsBlock settings = 7;
 }
 
 message GetModerationViewRequest {
@@ -60,6 +69,34 @@ message ToggleSignupOpenRequest {
 message ToggleSignupOpenResponse {
   string meeting_id = 1;
   bool signup_open = 2;
+  uint64 version = 3;
+  repeated string invalidated_views = 4;
+}
+
+message SetMeetingQuotationRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  bool gender_quotation_enabled = 3;
+  bool first_speaker_quotation_enabled = 4;
+}
+
+message SetMeetingQuotationResponse {
+  string meeting_id = 1;
+  bool gender_quotation_enabled = 2;
+  bool first_speaker_quotation_enabled = 3;
+  uint64 version = 4;
+  repeated string invalidated_views = 5;
+}
+
+message SetMeetingModeratorRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string moderator_attendee_id = 3;
+}
+
+message SetMeetingModeratorResponse {
+  string meeting_id = 1;
+  string moderator_attendee_id = 2;
   uint64 version = 3;
   repeated string invalidated_views = 4;
 }

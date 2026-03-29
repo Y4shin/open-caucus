@@ -34,3 +34,19 @@ func (h *ModerationHandler) ToggleSignupOpen(ctx context.Context, req *connect.R
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (h *ModerationHandler) SetMeetingQuotation(ctx context.Context, req *connect.Request[moderationv1.SetMeetingQuotationRequest]) (*connect.Response[moderationv1.SetMeetingQuotationResponse], error) {
+	resp, err := h.service.SetMeetingQuotation(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.GenderQuotationEnabled, req.Msg.FirstSpeakerQuotationEnabled)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *ModerationHandler) SetMeetingModerator(ctx context.Context, req *connect.Request[moderationv1.SetMeetingModeratorRequest]) (*connect.Response[moderationv1.SetMeetingModeratorResponse], error) {
+	resp, err := h.service.SetMeetingModerator(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.ModeratorAttendeeId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

@@ -53,6 +53,12 @@ const (
 	// VoteServiceSubmitBallotProcedure is the fully-qualified name of the VoteService's SubmitBallot
 	// RPC.
 	VoteServiceSubmitBallotProcedure = "/conference.votes.v1.VoteService/SubmitBallot"
+	// VoteServiceVerifyOpenReceiptProcedure is the fully-qualified name of the VoteService's
+	// VerifyOpenReceipt RPC.
+	VoteServiceVerifyOpenReceiptProcedure = "/conference.votes.v1.VoteService/VerifyOpenReceipt"
+	// VoteServiceVerifySecretReceiptProcedure is the fully-qualified name of the VoteService's
+	// VerifySecretReceipt RPC.
+	VoteServiceVerifySecretReceiptProcedure = "/conference.votes.v1.VoteService/VerifySecretReceipt"
 )
 
 // VoteServiceClient is a client for the conference.votes.v1.VoteService service.
@@ -73,6 +79,10 @@ type VoteServiceClient interface {
 	ArchiveVote(context.Context, *connect.Request[v1.ArchiveVoteRequest]) (*connect.Response[v1.ArchiveVoteResponse], error)
 	// SubmitBallot records a ballot from an attendee for an open vote.
 	SubmitBallot(context.Context, *connect.Request[v1.SubmitBallotRequest]) (*connect.Response[v1.SubmitBallotResponse], error)
+	// VerifyOpenReceipt returns the recorded open ballot choices for a receipt.
+	VerifyOpenReceipt(context.Context, *connect.Request[v1.VerifyOpenReceiptRequest]) (*connect.Response[v1.VerifyOpenReceiptResponse], error)
+	// VerifySecretReceipt returns the recorded secret ballot commitment for a receipt.
+	VerifySecretReceipt(context.Context, *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error)
 }
 
 // NewVoteServiceClient constructs a client for the conference.votes.v1.VoteService service. By
@@ -134,19 +144,33 @@ func NewVoteServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(voteServiceMethods.ByName("SubmitBallot")),
 			connect.WithClientOptions(opts...),
 		),
+		verifyOpenReceipt: connect.NewClient[v1.VerifyOpenReceiptRequest, v1.VerifyOpenReceiptResponse](
+			httpClient,
+			baseURL+VoteServiceVerifyOpenReceiptProcedure,
+			connect.WithSchema(voteServiceMethods.ByName("VerifyOpenReceipt")),
+			connect.WithClientOptions(opts...),
+		),
+		verifySecretReceipt: connect.NewClient[v1.VerifySecretReceiptRequest, v1.VerifySecretReceiptResponse](
+			httpClient,
+			baseURL+VoteServiceVerifySecretReceiptProcedure,
+			connect.WithSchema(voteServiceMethods.ByName("VerifySecretReceipt")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // voteServiceClient implements VoteServiceClient.
 type voteServiceClient struct {
-	getVotesPanel    *connect.Client[v1.GetVotesPanelRequest, v1.GetVotesPanelResponse]
-	getLiveVotePanel *connect.Client[v1.GetLiveVotePanelRequest, v1.GetLiveVotePanelResponse]
-	createVote       *connect.Client[v1.CreateVoteRequest, v1.CreateVoteResponse]
-	updateVoteDraft  *connect.Client[v1.UpdateVoteDraftRequest, v1.UpdateVoteDraftResponse]
-	openVote         *connect.Client[v1.OpenVoteRequest, v1.OpenVoteResponse]
-	closeVote        *connect.Client[v1.CloseVoteRequest, v1.CloseVoteResponse]
-	archiveVote      *connect.Client[v1.ArchiveVoteRequest, v1.ArchiveVoteResponse]
-	submitBallot     *connect.Client[v1.SubmitBallotRequest, v1.SubmitBallotResponse]
+	getVotesPanel       *connect.Client[v1.GetVotesPanelRequest, v1.GetVotesPanelResponse]
+	getLiveVotePanel    *connect.Client[v1.GetLiveVotePanelRequest, v1.GetLiveVotePanelResponse]
+	createVote          *connect.Client[v1.CreateVoteRequest, v1.CreateVoteResponse]
+	updateVoteDraft     *connect.Client[v1.UpdateVoteDraftRequest, v1.UpdateVoteDraftResponse]
+	openVote            *connect.Client[v1.OpenVoteRequest, v1.OpenVoteResponse]
+	closeVote           *connect.Client[v1.CloseVoteRequest, v1.CloseVoteResponse]
+	archiveVote         *connect.Client[v1.ArchiveVoteRequest, v1.ArchiveVoteResponse]
+	submitBallot        *connect.Client[v1.SubmitBallotRequest, v1.SubmitBallotResponse]
+	verifyOpenReceipt   *connect.Client[v1.VerifyOpenReceiptRequest, v1.VerifyOpenReceiptResponse]
+	verifySecretReceipt *connect.Client[v1.VerifySecretReceiptRequest, v1.VerifySecretReceiptResponse]
 }
 
 // GetVotesPanel calls conference.votes.v1.VoteService.GetVotesPanel.
@@ -189,6 +213,16 @@ func (c *voteServiceClient) SubmitBallot(ctx context.Context, req *connect.Reque
 	return c.submitBallot.CallUnary(ctx, req)
 }
 
+// VerifyOpenReceipt calls conference.votes.v1.VoteService.VerifyOpenReceipt.
+func (c *voteServiceClient) VerifyOpenReceipt(ctx context.Context, req *connect.Request[v1.VerifyOpenReceiptRequest]) (*connect.Response[v1.VerifyOpenReceiptResponse], error) {
+	return c.verifyOpenReceipt.CallUnary(ctx, req)
+}
+
+// VerifySecretReceipt calls conference.votes.v1.VoteService.VerifySecretReceipt.
+func (c *voteServiceClient) VerifySecretReceipt(ctx context.Context, req *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error) {
+	return c.verifySecretReceipt.CallUnary(ctx, req)
+}
+
 // VoteServiceHandler is an implementation of the conference.votes.v1.VoteService service.
 type VoteServiceHandler interface {
 	// GetVotesPanel returns the moderator-facing votes panel for the active agenda point.
@@ -207,6 +241,10 @@ type VoteServiceHandler interface {
 	ArchiveVote(context.Context, *connect.Request[v1.ArchiveVoteRequest]) (*connect.Response[v1.ArchiveVoteResponse], error)
 	// SubmitBallot records a ballot from an attendee for an open vote.
 	SubmitBallot(context.Context, *connect.Request[v1.SubmitBallotRequest]) (*connect.Response[v1.SubmitBallotResponse], error)
+	// VerifyOpenReceipt returns the recorded open ballot choices for a receipt.
+	VerifyOpenReceipt(context.Context, *connect.Request[v1.VerifyOpenReceiptRequest]) (*connect.Response[v1.VerifyOpenReceiptResponse], error)
+	// VerifySecretReceipt returns the recorded secret ballot commitment for a receipt.
+	VerifySecretReceipt(context.Context, *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error)
 }
 
 // NewVoteServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -264,6 +302,18 @@ func NewVoteServiceHandler(svc VoteServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(voteServiceMethods.ByName("SubmitBallot")),
 		connect.WithHandlerOptions(opts...),
 	)
+	voteServiceVerifyOpenReceiptHandler := connect.NewUnaryHandler(
+		VoteServiceVerifyOpenReceiptProcedure,
+		svc.VerifyOpenReceipt,
+		connect.WithSchema(voteServiceMethods.ByName("VerifyOpenReceipt")),
+		connect.WithHandlerOptions(opts...),
+	)
+	voteServiceVerifySecretReceiptHandler := connect.NewUnaryHandler(
+		VoteServiceVerifySecretReceiptProcedure,
+		svc.VerifySecretReceipt,
+		connect.WithSchema(voteServiceMethods.ByName("VerifySecretReceipt")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.votes.v1.VoteService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case VoteServiceGetVotesPanelProcedure:
@@ -282,6 +332,10 @@ func NewVoteServiceHandler(svc VoteServiceHandler, opts ...connect.HandlerOption
 			voteServiceArchiveVoteHandler.ServeHTTP(w, r)
 		case VoteServiceSubmitBallotProcedure:
 			voteServiceSubmitBallotHandler.ServeHTTP(w, r)
+		case VoteServiceVerifyOpenReceiptProcedure:
+			voteServiceVerifyOpenReceiptHandler.ServeHTTP(w, r)
+		case VoteServiceVerifySecretReceiptProcedure:
+			voteServiceVerifySecretReceiptHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -321,4 +375,12 @@ func (UnimplementedVoteServiceHandler) ArchiveVote(context.Context, *connect.Req
 
 func (UnimplementedVoteServiceHandler) SubmitBallot(context.Context, *connect.Request[v1.SubmitBallotRequest]) (*connect.Response[v1.SubmitBallotResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.SubmitBallot is not implemented"))
+}
+
+func (UnimplementedVoteServiceHandler) VerifyOpenReceipt(context.Context, *connect.Request[v1.VerifyOpenReceiptRequest]) (*connect.Response[v1.VerifyOpenReceiptResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.VerifyOpenReceipt is not implemented"))
+}
+
+func (UnimplementedVoteServiceHandler) VerifySecretReceipt(context.Context, *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.VerifySecretReceipt is not implemented"))
 }

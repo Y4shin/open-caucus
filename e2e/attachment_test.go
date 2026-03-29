@@ -48,12 +48,12 @@ func TestAttachments_ShowsFormPerAgendaPoint(t *testing.T) {
 		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
-	if err := page.Locator("h4:has-text('Budget — Attachments')").WaitFor(); err != nil {
+	if err := page.Locator("h4:has-text('Budget - Attachments')").WaitFor(); err != nil {
 		t.Fatalf("expected attachment list heading for agenda point: %v", err)
 	}
 
-	if err := page.Locator("button:has-text('Upload Attachment')").WaitFor(); err != nil {
-		t.Fatalf("expected Upload Attachment button: %v", err)
+	if err := page.Locator("button:has-text('Upload')").WaitFor(); err != nil {
+		t.Fatalf("expected Upload button: %v", err)
 	}
 }
 
@@ -76,7 +76,7 @@ func TestAttachments_UploadAttachment_AppearsInList(t *testing.T) {
 		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
-	if err := page.Locator("h4:has-text('Budget — Attachments')").WaitFor(); err != nil {
+	if err := page.Locator("h4:has-text('Budget - Attachments')").WaitFor(); err != nil {
 		t.Fatalf("attachment section not loaded: %v", err)
 	}
 
@@ -92,8 +92,8 @@ func TestAttachments_UploadAttachment_AppearsInList(t *testing.T) {
 		t.Fatalf("set input file: %v", err)
 	}
 
-	if err := page.Locator("button:has-text('Upload Attachment')").Click(); err != nil {
-		t.Fatalf("click Upload Attachment: %v", err)
+	if err := page.Locator("button:has-text('Upload')").Click(); err != nil {
+		t.Fatalf("click Upload: %v", err)
 	}
 
 	if err := page.Locator("a:has-text('Budget Proposal')").WaitFor(); err != nil {
@@ -124,7 +124,7 @@ func TestAttachments_UploadWithoutLabel_ShowsFilename(t *testing.T) {
 		t.Fatalf("goto agenda-point tools page: %v", err)
 	}
 
-	if err := page.Locator("h4:has-text('Budget — Attachments')").WaitFor(); err != nil {
+	if err := page.Locator("h4:has-text('Budget - Attachments')").WaitFor(); err != nil {
 		t.Fatalf("attachment section not loaded: %v", err)
 	}
 
@@ -134,8 +134,8 @@ func TestAttachments_UploadWithoutLabel_ShowsFilename(t *testing.T) {
 		t.Fatalf("set input file: %v", err)
 	}
 
-	if err := page.Locator("button:has-text('Upload Attachment')").Click(); err != nil {
-		t.Fatalf("click Upload Attachment: %v", err)
+	if err := page.Locator("button:has-text('Upload')").Click(); err != nil {
+		t.Fatalf("click Upload: %v", err)
 	}
 
 	if err := page.Locator("a:has-text('report.pdf')").WaitFor(); err != nil {
@@ -185,4 +185,3 @@ func TestAttachments_DeleteAttachment_RemovesFromList(t *testing.T) {
 		t.Errorf("HTMX swap caused unexpected navigation: before=%s after=%s", urlBefore, page.URL())
 	}
 }
-

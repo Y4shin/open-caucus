@@ -68,7 +68,17 @@ func (s *Service) AddSpeaker(ctx context.Context, committeeSlug, meetingIDStr, a
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load active agenda point", err)
 	}
 
-	genderQuoted := ap.GenderQuotationEnabled != nil && *ap.GenderQuotationEnabled
+	effectiveGenderQuotation := meeting.GenderQuotationEnabled
+	if ap.GenderQuotationEnabled != nil {
+		effectiveGenderQuotation = *ap.GenderQuotationEnabled
+	}
+
+	attendee, err := s.repo.GetAttendeeByID(ctx, attendeeID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load attendee", err)
+	}
+
+	genderQuoted := attendee.Quoted && effectiveGenderQuotation
 	firstSpeaker := false
 	if hasPrev, err := s.repo.HasAttendeeSpokenOnAgendaPoint(ctx, ap.ID, attendeeID); err == nil {
 		firstSpeaker = !hasPrev

@@ -34,3 +34,27 @@ func (h *CommitteeHandler) GetCommitteeOverview(ctx context.Context, req *connec
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (h *CommitteeHandler) CreateMeeting(ctx context.Context, req *connect.Request[committeesv1.CreateMeetingRequest]) (*connect.Response[committeesv1.CreateMeetingResponse], error) {
+	resp, err := h.service.CreateMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.Name, req.Msg.Description)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *CommitteeHandler) DeleteMeeting(ctx context.Context, req *connect.Request[committeesv1.DeleteMeetingRequest]) (*connect.Response[committeesv1.DeleteMeetingResponse], error) {
+	resp, err := h.service.DeleteMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *CommitteeHandler) ToggleMeetingActive(ctx context.Context, req *connect.Request[committeesv1.ToggleMeetingActiveRequest]) (*connect.Response[committeesv1.ToggleMeetingActiveResponse], error) {
+	resp, err := h.service.ToggleMeetingActive(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

@@ -49,6 +49,8 @@
 		"@bufbuild/protobuf": "^2.11.0",
 		"@connectrpc/connect": "^2.1.1",
 		"@connectrpc/connect-web": "^2.1.1",
-		"daisyui": "^5.5.19"
+		"@mdi/js": "^7.4.47",
+		"daisyui": "^5.5.19",
+		"htmx.org": "^2.0.8"
 	}
 }

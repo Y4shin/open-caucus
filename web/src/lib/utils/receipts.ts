@@ -1,3 +1,5 @@
+import { voteClient } from '$lib/api/index.js';
+
 export type StoredReceipt = {
 	id: string;
 	kind: 'open' | 'secret';
@@ -40,21 +42,21 @@ export function clearReceipts() {
 }
 
 export async function verifyReceipt(receipt: StoredReceipt) {
-	const endpoint =
-		receipt.kind === 'secret' ? '/api/votes/verify/secret' : '/api/votes/verify/open';
-
-	const response = await fetch(endpoint, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			vote_id: Number(receipt.voteId),
-			receipt_token: receipt.receiptToken
-		})
-	});
-
-	const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
-	if (!response.ok) {
-		throw new Error(String(payload?.error ?? `verify failed (${response.status})`));
+	try {
+		if (receipt.kind === 'secret') {
+			return await voteClient.verifySecretReceipt({
+				voteId: receipt.voteId,
+				receiptToken: receipt.receiptToken
+			});
+		}
+		return await voteClient.verifyOpenReceipt({
+			voteId: receipt.voteId,
+			receiptToken: receipt.receiptToken
+		});
+	} catch (err) {
+		if (err instanceof Error) {
+			throw err;
+		}
+		throw new Error('Verification failed.');
 	}
-	return payload;
 }

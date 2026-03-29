@@ -16,8 +16,8 @@ func TestAdminLogin(t *testing.T) {
 
 	adminLogin(t, page, ts.URL)
 
-	if err := page.Locator("h1:has-text('Admin Dashboard')").WaitFor(); err != nil {
-		t.Fatalf("expected Admin Dashboard heading: %v", err)
+	if err := page.Locator("#create-committee-form").WaitFor(); err != nil {
+		t.Fatalf("expected admin dashboard create-committee form: %v", err)
 	}
 }
 
@@ -72,7 +72,7 @@ func TestAdminDeleteCommittee(t *testing.T) {
 	})
 
 	// Click Delete for the specific committee row
-	deleteBtn := page.Locator("tr").Filter(playwright.LocatorFilterOptions{HasText: "delete-me"}).Locator("button[type=submit]")
+	deleteBtn := page.Locator("tr").Filter(playwright.LocatorFilterOptions{HasText: "delete-me"}).Locator("button:has-text('Delete')")
 	if err := deleteBtn.Click(); err != nil {
 		t.Fatalf("click delete: %v", err)
 	}

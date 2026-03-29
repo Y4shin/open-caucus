@@ -9,10 +9,11 @@ export default defineConfig({
 	base: '/',
 	server: {
 		proxy: {
-			'/api': {
-				target: 'http://localhost:8080',
-				changeOrigin: true
-			}
+			'/api': proxyTarget(),
+			'/oauth': proxyTarget(),
+			'/locale': proxyTarget(),
+			'/blobs': proxyTarget(),
+			'/docs/assets': proxyTarget()
 		}
 	},
 	plugins: [
@@ -49,3 +50,10 @@ export default defineConfig({
 		]
 	}
 });
+
+function proxyTarget() {
+	return {
+		target: process.env.VITE_BACKEND_URL ?? 'http://localhost:8080',
+		changeOrigin: true
+	};
+}

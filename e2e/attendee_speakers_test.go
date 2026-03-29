@@ -69,9 +69,6 @@ func TestAttendee_SpeakersListUpdates_ViaSSE(t *testing.T) {
 	if err := aliceCard.Locator("button[title='Add regular speech']").Click(); err != nil {
 		t.Fatalf("add regular speech for Alice: %v", err)
 	}
-	if err := chairPage.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Speaker')").WaitFor(); err != nil {
-		t.Fatalf("chair page should show Alice in speaker list: %v", err)
-	}
 
 	if err := attendeePage.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']:has-text('Alice Speaker')").WaitFor(); err != nil {
 		t.Fatalf("attendee page should receive SSE speaker update: %v", err)

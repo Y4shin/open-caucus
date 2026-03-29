@@ -95,6 +95,75 @@ func TestSyncOAuthCommitteeMemberships_CreatesManagedAndPromotesManualWithoutMan
 	}
 }
 
+func TestUpsertOAuthIdentity_ReconcilesIssuerChangeForSameAccount(t *testing.T) {
+	repo := newTestRepo(t)
+	if err := repo.MigrateUp(); err != nil {
+		t.Fatalf("migrate up: %v", err)
+	}
+
+	ctx := context.Background()
+	account, err := repo.CreateOAuthAccount(ctx, "oauth-user3", "OAuth User Three")
+	if err != nil {
+		t.Fatalf("create oauth account: %v", err)
+	}
+
+	username := "oauth-user3"
+	fullName := "OAuth User Three"
+	email := "oauth-user3@example.test"
+	groupsJSON := `["committee-a-chair"]`
+
+	firstIdentity, err := repo.UpsertOAuthIdentity(
+		ctx,
+		"http://127.0.0.1:9096",
+		"id1",
+		account.ID,
+		&username,
+		&fullName,
+		&email,
+		&groupsJSON,
+	)
+	if err != nil {
+		t.Fatalf("first upsert oauth identity: %v", err)
+	}
+
+	secondIdentity, err := repo.UpsertOAuthIdentity(
+		ctx,
+		"http://localhost:9096",
+		"id1",
+		account.ID,
+		&username,
+		&fullName,
+		&email,
+		&groupsJSON,
+	)
+	if err != nil {
+		t.Fatalf("second upsert oauth identity after issuer change: %v", err)
+	}
+
+	if secondIdentity.ID != firstIdentity.ID {
+		t.Fatalf("expected identity row to be updated in place, got first=%d second=%d", firstIdentity.ID, secondIdentity.ID)
+	}
+	if secondIdentity.Issuer != "http://localhost:9096" {
+		t.Fatalf("expected issuer to be updated, got %q", secondIdentity.Issuer)
+	}
+
+	refreshed, err := repo.GetOAuthIdentityByIssuerSubject(ctx, "http://localhost:9096", "id1")
+	if err != nil {
+		t.Fatalf("get refreshed oauth identity: %v", err)
+	}
+	if refreshed.AccountID != account.ID {
+		t.Fatalf("expected refreshed identity account id %d, got %d", account.ID, refreshed.AccountID)
+	}
+
+	var count int
+	if err := repo.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM oauth_identities WHERE account_id = ?`, account.ID).Scan(&count); err != nil {
+		t.Fatalf("count oauth identities by account id: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected exactly one oauth identity row for account, got %d", count)
+	}
+}
+
 func seedCommitteeID(t *testing.T, repo *Repository, name, slug string) int64 {
 	t.Helper()
 	if err := repo.CreateCommitteeWithSlug(context.Background(), name, slug); err != nil {

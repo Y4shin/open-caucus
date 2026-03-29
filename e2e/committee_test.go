@@ -6,6 +6,7 @@ import (
 	"context"
 	"strconv"
 	"testing"
+	"time"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
@@ -195,20 +196,17 @@ func TestUnsetActiveMeeting_WhenClickingActiveToggleAgain(t *testing.T) {
 	if err := firstActive.Click(); err != nil {
 		t.Fatalf("deactivate active meeting: %v", err)
 	}
-	firstChecked, err = firstActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read first active toggle after deactivation: %v", err)
-	}
-	if firstChecked {
-		t.Fatalf("expected first meeting to be inactive after toggling active off")
-	}
-	secondChecked, err := secondActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read second active toggle after deactivation: %v", err)
-	}
-	if secondChecked {
-		t.Fatalf("expected no active meetings after deactivating the active one")
-	}
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		firstChecked, err = firstActive.IsChecked()
+		if err != nil {
+			return false, err
+		}
+		secondChecked, err := secondActive.IsChecked()
+		if err != nil {
+			return false, err
+		}
+		return !firstChecked && !secondChecked, nil
+	}, "meeting active toggles to clear after deactivation")
 }
 
 func TestChairpersonDeleteMeeting(t *testing.T) {
@@ -231,7 +229,7 @@ func TestChairpersonDeleteMeeting(t *testing.T) {
 		}
 	})
 
-	if err := card.Locator("button[data-testid='committee-delete-meeting']").Click(); err != nil {
+	if err := card.Locator("button[aria-label='Delete']").Click(); err != nil {
 		t.Fatalf("click delete: %v", err)
 	}
 	if err := meetingCard(page, "Old Meeting").WaitFor(playwright.LocatorWaitForOptions{

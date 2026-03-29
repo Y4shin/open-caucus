@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import DocsOverlay from '$lib/components/docs/DocsOverlay.svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import { docsClient } from '$lib/api/index.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
+	import { onDestroy } from 'svelte';
 
 	interface SearchHit {
 		ref: string;
@@ -16,23 +19,70 @@
 		score: number;
 	}
 
+	interface Crumb {
+		title: string;
+		path: string;
+		current: boolean;
+	}
+
+	interface NavNode {
+		title: string;
+		path: string;
+		current: boolean;
+		expanded: boolean;
+		children: NavNode[];
+	}
+
+	interface DocsPageData {
+		path: string;
+		locale: string;
+		title: string;
+		heading: string;
+		html: string;
+		pathDisplay: string;
+		crumbs: Crumb[];
+		tree: NavNode[];
+	}
+
 	let searchState = $state(createRemoteState<SearchHit[]>());
+	let docsShellState = $state(createRemoteState<DocsPageData>());
 	const query = $derived(page.url.searchParams.get('q') ?? '');
 
+	onDestroy(() => {
+		pageActions.clear();
+	});
+
 	$effect(() => {
+		loadDocsShell();
 		loadSearch();
 	});
+
+	$effect(() => {
+		if (!docsShellState.data) return;
+		pageActions.set([], {
+			title: docsShellState.data.title
+		});
+	});
+
+	async function loadDocsShell() {
+		docsShellState.loading = true;
+		docsShellState.error = '';
+		try {
+			const response = await docsClient.getPage({ path: 'index' });
+			docsShellState.data = (response.page ?? null) as DocsPageData | null;
+		} catch (err) {
+			docsShellState.error = getDisplayError(err, 'Failed to load the documentation shell.');
+		} finally {
+			docsShellState.loading = false;
+		}
+	}
 
 	async function loadSearch() {
 		searchState.loading = true;
 		searchState.error = '';
 		try {
-			const response = await fetch(`/api/docs/search?q=${encodeURIComponent(query)}`);
-			if (!response.ok) {
-				throw new Error(`search failed (${response.status})`);
-			}
-			const payload = (await response.json()) as { hits?: SearchHit[] };
-			searchState.data = payload.hits ?? [];
+			const response = await docsClient.search({ query, limit: 10 });
+			searchState.data = (response.hits ?? []) as SearchHit[];
 		} catch (err) {
 			searchState.error = getDisplayError(err, 'Failed to search documentation.');
 		} finally {
@@ -41,31 +91,20 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="space-y-2">
-		<h1 class="text-3xl font-bold">Documentation Search</h1>
-		<p class="text-base-content/70">Results for “{query || '...'}”.</p>
-	</div>
-
-	{#if searchState.loading}
-		<AppSpinner label="Searching documentation" />
-	{:else if searchState.error}
-		<AppAlert message={searchState.error} />
-	{:else if searchState.data?.length}
-		<div class="space-y-3" id="docs-search-results">
-			{#each searchState.data as hit}
-				<AppCard title={hit.title}>
-					<p class="text-sm text-base-content/70">{hit.path}</p>
-					{#if hit.snippet}
-						<p class="mt-2 text-sm">{hit.snippet}</p>
-					{/if}
-					<div class="card-actions justify-end">
-						<a class="btn btn-primary btn-sm" href={`/docs/${hit.path}`}>Open</a>
-					</div>
-				</AppCard>
-			{/each}
-		</div>
-	{:else}
-		<AppAlert tone="info" message="No documentation results matched that query." />
-	{/if}
-</div>
+{#if docsShellState.loading || searchState.loading}
+	<AppSpinner label="Loading documentation" />
+{:else if docsShellState.error}
+	<AppAlert message={docsShellState.error} />
+{:else if searchState.error}
+	<AppAlert message={searchState.error} />
+{:else if docsShellState.data}
+	<DocsOverlay
+		title={docsShellState.data.title}
+		locale={docsShellState.data.locale}
+		pathDisplay={docsShellState.data.pathDisplay}
+		crumbs={docsShellState.data.crumbs}
+		tree={docsShellState.data.tree}
+		query={query}
+		searchHits={searchState.data ?? []}
+	/>
+{/if}

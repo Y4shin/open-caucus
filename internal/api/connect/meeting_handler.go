@@ -87,9 +87,13 @@ func brokerEventToKind(event string) meetingsv1.MeetingEventKind {
 		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_SPEAKERS_UPDATED
 	case "votes.updated", "votes-updated":
 		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_VOTES_UPDATED
+	case "meeting-votes-changed":
+		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_VOTES_UPDATED
 	case "agenda.updated", "agenda-updated":
 		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_AGENDA_UPDATED
 	case "attendees.updated", "attendees-updated":
+		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_ATTENDEES_UPDATED
+	case "meeting-attendees-changed":
 		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_ATTENDEES_UPDATED
 	case "moderate-updated", "live-updated":
 		return meetingsv1.MeetingEventKind_MEETING_EVENT_KIND_MEETING_UPDATED

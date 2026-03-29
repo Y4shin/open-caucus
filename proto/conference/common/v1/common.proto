@@ -31,6 +31,7 @@ message MeetingReference {
   string committee_slug = 2;
   string name = 3;
   bool signup_open = 4;
+  string description = 5;
 }
 
 message AgendaPointSummary {

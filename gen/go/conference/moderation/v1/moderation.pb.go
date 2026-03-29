@@ -226,6 +226,66 @@ func (x *ModerationSpeakerSummaryBlock) GetWaitingCount() int32 {
 	return 0
 }
 
+type ModerationMeetingSettingsBlock struct {
+	state                        protoimpl.MessageState `protogen:"open.v1"`
+	GenderQuotationEnabled       bool                   `protobuf:"varint,1,opt,name=gender_quotation_enabled,json=genderQuotationEnabled,proto3" json:"gender_quotation_enabled,omitempty"`
+	FirstSpeakerQuotationEnabled bool                   `protobuf:"varint,2,opt,name=first_speaker_quotation_enabled,json=firstSpeakerQuotationEnabled,proto3" json:"first_speaker_quotation_enabled,omitempty"`
+	ModeratorAttendeeId          string                 `protobuf:"bytes,3,opt,name=moderator_attendee_id,json=moderatorAttendeeId,proto3" json:"moderator_attendee_id,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *ModerationMeetingSettingsBlock) Reset() {
+	*x = ModerationMeetingSettingsBlock{}
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModerationMeetingSettingsBlock) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModerationMeetingSettingsBlock) ProtoMessage() {}
+
+func (x *ModerationMeetingSettingsBlock) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModerationMeetingSettingsBlock.ProtoReflect.Descriptor instead.
+func (*ModerationMeetingSettingsBlock) Descriptor() ([]byte, []int) {
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ModerationMeetingSettingsBlock) GetGenderQuotationEnabled() bool {
+	if x != nil {
+		return x.GenderQuotationEnabled
+	}
+	return false
+}
+
+func (x *ModerationMeetingSettingsBlock) GetFirstSpeakerQuotationEnabled() bool {
+	if x != nil {
+		return x.FirstSpeakerQuotationEnabled
+	}
+	return false
+}
+
+func (x *ModerationMeetingSettingsBlock) GetModeratorAttendeeId() string {
+	if x != nil {
+		return x.ModeratorAttendeeId
+	}
+	return ""
+}
+
 type ModerationView struct {
 	state             protoimpl.MessageState          `protogen:"open.v1"`
 	Meeting           *ModerationMeetingSummary       `protobuf:"bytes,1,opt,name=meeting,proto3" json:"meeting,omitempty"`
@@ -234,13 +294,14 @@ type ModerationView struct {
 	ActiveAgendaPoint *v1.AgendaPointSummary          `protobuf:"bytes,4,opt,name=active_agenda_point,json=activeAgendaPoint,proto3" json:"active_agenda_point,omitempty"`
 	Speakers          *ModerationSpeakerSummaryBlock  `protobuf:"bytes,5,opt,name=speakers,proto3" json:"speakers,omitempty"`
 	Capabilities      []*v1.Capability                `protobuf:"bytes,6,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
+	Settings          *ModerationMeetingSettingsBlock `protobuf:"bytes,7,opt,name=settings,proto3" json:"settings,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
 
 func (x *ModerationView) Reset() {
 	*x = ModerationView{}
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[3]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -252,7 +313,7 @@ func (x *ModerationView) String() string {
 func (*ModerationView) ProtoMessage() {}
 
 func (x *ModerationView) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[3]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -265,7 +326,7 @@ func (x *ModerationView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModerationView.ProtoReflect.Descriptor instead.
 func (*ModerationView) Descriptor() ([]byte, []int) {
-	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{3}
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ModerationView) GetMeeting() *ModerationMeetingSummary {
@@ -310,6 +371,13 @@ func (x *ModerationView) GetCapabilities() []*v1.Capability {
 	return nil
 }
 
+func (x *ModerationView) GetSettings() *ModerationMeetingSettingsBlock {
+	if x != nil {
+		return x.Settings
+	}
+	return nil
+}
+
 type GetModerationViewRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
@@ -320,7 +388,7 @@ type GetModerationViewRequest struct {
 
 func (x *GetModerationViewRequest) Reset() {
 	*x = GetModerationViewRequest{}
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[4]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -332,7 +400,7 @@ func (x *GetModerationViewRequest) String() string {
 func (*GetModerationViewRequest) ProtoMessage() {}
 
 func (x *GetModerationViewRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[4]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -345,7 +413,7 @@ func (x *GetModerationViewRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetModerationViewRequest.ProtoReflect.Descriptor instead.
 func (*GetModerationViewRequest) Descriptor() ([]byte, []int) {
-	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{4}
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetModerationViewRequest) GetCommitteeSlug() string {
@@ -371,7 +439,7 @@ type GetModerationViewResponse struct {
 
 func (x *GetModerationViewResponse) Reset() {
 	*x = GetModerationViewResponse{}
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[5]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +451,7 @@ func (x *GetModerationViewResponse) String() string {
 func (*GetModerationViewResponse) ProtoMessage() {}
 
 func (x *GetModerationViewResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[5]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +464,7 @@ func (x *GetModerationViewResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetModerationViewResponse.ProtoReflect.Descriptor instead.
 func (*GetModerationViewResponse) Descriptor() ([]byte, []int) {
-	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{5}
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetModerationViewResponse) GetView() *ModerationView {
@@ -418,7 +486,7 @@ type ToggleSignupOpenRequest struct {
 
 func (x *ToggleSignupOpenRequest) Reset() {
 	*x = ToggleSignupOpenRequest{}
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[6]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -430,7 +498,7 @@ func (x *ToggleSignupOpenRequest) String() string {
 func (*ToggleSignupOpenRequest) ProtoMessage() {}
 
 func (x *ToggleSignupOpenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[6]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -443,7 +511,7 @@ func (x *ToggleSignupOpenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToggleSignupOpenRequest.ProtoReflect.Descriptor instead.
 func (*ToggleSignupOpenRequest) Descriptor() ([]byte, []int) {
-	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{6}
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ToggleSignupOpenRequest) GetCommitteeSlug() string {
@@ -486,7 +554,7 @@ type ToggleSignupOpenResponse struct {
 
 func (x *ToggleSignupOpenResponse) Reset() {
 	*x = ToggleSignupOpenResponse{}
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[7]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -498,7 +566,7 @@ func (x *ToggleSignupOpenResponse) String() string {
 func (*ToggleSignupOpenResponse) ProtoMessage() {}
 
 func (x *ToggleSignupOpenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[7]
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -511,7 +579,7 @@ func (x *ToggleSignupOpenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToggleSignupOpenResponse.ProtoReflect.Descriptor instead.
 func (*ToggleSignupOpenResponse) Descriptor() ([]byte, []int) {
-	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{7}
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ToggleSignupOpenResponse) GetMeetingId() string {
@@ -536,6 +604,278 @@ func (x *ToggleSignupOpenResponse) GetVersion() uint64 {
 }
 
 func (x *ToggleSignupOpenResponse) GetInvalidatedViews() []string {
+	if x != nil {
+		return x.InvalidatedViews
+	}
+	return nil
+}
+
+type SetMeetingQuotationRequest struct {
+	state                        protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug                string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId                    string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	GenderQuotationEnabled       bool                   `protobuf:"varint,3,opt,name=gender_quotation_enabled,json=genderQuotationEnabled,proto3" json:"gender_quotation_enabled,omitempty"`
+	FirstSpeakerQuotationEnabled bool                   `protobuf:"varint,4,opt,name=first_speaker_quotation_enabled,json=firstSpeakerQuotationEnabled,proto3" json:"first_speaker_quotation_enabled,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *SetMeetingQuotationRequest) Reset() {
+	*x = SetMeetingQuotationRequest{}
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMeetingQuotationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMeetingQuotationRequest) ProtoMessage() {}
+
+func (x *SetMeetingQuotationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMeetingQuotationRequest.ProtoReflect.Descriptor instead.
+func (*SetMeetingQuotationRequest) Descriptor() ([]byte, []int) {
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *SetMeetingQuotationRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *SetMeetingQuotationRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SetMeetingQuotationRequest) GetGenderQuotationEnabled() bool {
+	if x != nil {
+		return x.GenderQuotationEnabled
+	}
+	return false
+}
+
+func (x *SetMeetingQuotationRequest) GetFirstSpeakerQuotationEnabled() bool {
+	if x != nil {
+		return x.FirstSpeakerQuotationEnabled
+	}
+	return false
+}
+
+type SetMeetingQuotationResponse struct {
+	state                        protoimpl.MessageState `protogen:"open.v1"`
+	MeetingId                    string                 `protobuf:"bytes,1,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	GenderQuotationEnabled       bool                   `protobuf:"varint,2,opt,name=gender_quotation_enabled,json=genderQuotationEnabled,proto3" json:"gender_quotation_enabled,omitempty"`
+	FirstSpeakerQuotationEnabled bool                   `protobuf:"varint,3,opt,name=first_speaker_quotation_enabled,json=firstSpeakerQuotationEnabled,proto3" json:"first_speaker_quotation_enabled,omitempty"`
+	Version                      uint64                 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
+	InvalidatedViews             []string               `protobuf:"bytes,5,rep,name=invalidated_views,json=invalidatedViews,proto3" json:"invalidated_views,omitempty"`
+	unknownFields                protoimpl.UnknownFields
+	sizeCache                    protoimpl.SizeCache
+}
+
+func (x *SetMeetingQuotationResponse) Reset() {
+	*x = SetMeetingQuotationResponse{}
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMeetingQuotationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMeetingQuotationResponse) ProtoMessage() {}
+
+func (x *SetMeetingQuotationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMeetingQuotationResponse.ProtoReflect.Descriptor instead.
+func (*SetMeetingQuotationResponse) Descriptor() ([]byte, []int) {
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SetMeetingQuotationResponse) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SetMeetingQuotationResponse) GetGenderQuotationEnabled() bool {
+	if x != nil {
+		return x.GenderQuotationEnabled
+	}
+	return false
+}
+
+func (x *SetMeetingQuotationResponse) GetFirstSpeakerQuotationEnabled() bool {
+	if x != nil {
+		return x.FirstSpeakerQuotationEnabled
+	}
+	return false
+}
+
+func (x *SetMeetingQuotationResponse) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *SetMeetingQuotationResponse) GetInvalidatedViews() []string {
+	if x != nil {
+		return x.InvalidatedViews
+	}
+	return nil
+}
+
+type SetMeetingModeratorRequest struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug       string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId           string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	ModeratorAttendeeId string                 `protobuf:"bytes,3,opt,name=moderator_attendee_id,json=moderatorAttendeeId,proto3" json:"moderator_attendee_id,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *SetMeetingModeratorRequest) Reset() {
+	*x = SetMeetingModeratorRequest{}
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMeetingModeratorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMeetingModeratorRequest) ProtoMessage() {}
+
+func (x *SetMeetingModeratorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMeetingModeratorRequest.ProtoReflect.Descriptor instead.
+func (*SetMeetingModeratorRequest) Descriptor() ([]byte, []int) {
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SetMeetingModeratorRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *SetMeetingModeratorRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SetMeetingModeratorRequest) GetModeratorAttendeeId() string {
+	if x != nil {
+		return x.ModeratorAttendeeId
+	}
+	return ""
+}
+
+type SetMeetingModeratorResponse struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	MeetingId           string                 `protobuf:"bytes,1,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	ModeratorAttendeeId string                 `protobuf:"bytes,2,opt,name=moderator_attendee_id,json=moderatorAttendeeId,proto3" json:"moderator_attendee_id,omitempty"`
+	Version             uint64                 `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
+	InvalidatedViews    []string               `protobuf:"bytes,4,rep,name=invalidated_views,json=invalidatedViews,proto3" json:"invalidated_views,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *SetMeetingModeratorResponse) Reset() {
+	*x = SetMeetingModeratorResponse{}
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMeetingModeratorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMeetingModeratorResponse) ProtoMessage() {}
+
+func (x *SetMeetingModeratorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_moderation_v1_moderation_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMeetingModeratorResponse.ProtoReflect.Descriptor instead.
+func (*SetMeetingModeratorResponse) Descriptor() ([]byte, []int) {
+	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SetMeetingModeratorResponse) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SetMeetingModeratorResponse) GetModeratorAttendeeId() string {
+	if x != nil {
+		return x.ModeratorAttendeeId
+	}
+	return ""
+}
+
+func (x *SetMeetingModeratorResponse) GetVersion() uint64 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *SetMeetingModeratorResponse) GetInvalidatedViews() []string {
 	if x != nil {
 		return x.InvalidatedViews
 	}
@@ -567,14 +907,19 @@ const file_conference_moderation_v1_moderation_proto_rawDesc = "" +
 	"\vtotal_count\x18\x01 \x01(\x05R\n" +
 	"totalCount\x12,\n" +
 	"\x12has_active_speaker\x18\x02 \x01(\bR\x10hasActiveSpeaker\x12#\n" +
-	"\rwaiting_count\x18\x03 \x01(\x05R\fwaitingCount\"\xc5\x03\n" +
+	"\rwaiting_count\x18\x03 \x01(\x05R\fwaitingCount\"\xd5\x01\n" +
+	"\x1eModerationMeetingSettingsBlock\x128\n" +
+	"\x18gender_quotation_enabled\x18\x01 \x01(\bR\x16genderQuotationEnabled\x12E\n" +
+	"\x1ffirst_speaker_quotation_enabled\x18\x02 \x01(\bR\x1cfirstSpeakerQuotationEnabled\x122\n" +
+	"\x15moderator_attendee_id\x18\x03 \x01(\tR\x13moderatorAttendeeId\"\x9b\x04\n" +
 	"\x0eModerationView\x12L\n" +
 	"\ameeting\x18\x01 \x01(\v22.conference.moderation.v1.ModerationMeetingSummaryR\ameeting\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\x04R\aversion\x12V\n" +
 	"\tattendees\x18\x03 \x01(\v28.conference.moderation.v1.ModerationAttendeeSummaryBlockR\tattendees\x12X\n" +
 	"\x13active_agenda_point\x18\x04 \x01(\v2(.conference.common.v1.AgendaPointSummaryR\x11activeAgendaPoint\x12S\n" +
 	"\bspeakers\x18\x05 \x01(\v27.conference.moderation.v1.ModerationSpeakerSummaryBlockR\bspeakers\x12D\n" +
-	"\fcapabilities\x18\x06 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\"`\n" +
+	"\fcapabilities\x18\x06 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\x12T\n" +
+	"\bsettings\x18\a \x01(\v28.conference.moderation.v1.ModerationMeetingSettingsBlockR\bsettings\"`\n" +
 	"\x18GetModerationViewRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
@@ -593,10 +938,36 @@ const file_conference_moderation_v1_moderation_proto_rawDesc = "" +
 	"\vsignup_open\x18\x02 \x01(\bR\n" +
 	"signupOpen\x12\x18\n" +
 	"\aversion\x18\x03 \x01(\x04R\aversion\x12+\n" +
-	"\x11invalidated_views\x18\x04 \x03(\tR\x10invalidatedViews2\x8c\x02\n" +
+	"\x11invalidated_views\x18\x04 \x03(\tR\x10invalidatedViews\"\xe3\x01\n" +
+	"\x1aSetMeetingQuotationRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x128\n" +
+	"\x18gender_quotation_enabled\x18\x03 \x01(\bR\x16genderQuotationEnabled\x12E\n" +
+	"\x1ffirst_speaker_quotation_enabled\x18\x04 \x01(\bR\x1cfirstSpeakerQuotationEnabled\"\x84\x02\n" +
+	"\x1bSetMeetingQuotationResponse\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x128\n" +
+	"\x18gender_quotation_enabled\x18\x02 \x01(\bR\x16genderQuotationEnabled\x12E\n" +
+	"\x1ffirst_speaker_quotation_enabled\x18\x03 \x01(\bR\x1cfirstSpeakerQuotationEnabled\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\x04R\aversion\x12+\n" +
+	"\x11invalidated_views\x18\x05 \x03(\tR\x10invalidatedViews\"\x96\x01\n" +
+	"\x1aSetMeetingModeratorRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x122\n" +
+	"\x15moderator_attendee_id\x18\x03 \x01(\tR\x13moderatorAttendeeId\"\xb7\x01\n" +
+	"\x1bSetMeetingModeratorResponse\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x122\n" +
+	"\x15moderator_attendee_id\x18\x02 \x01(\tR\x13moderatorAttendeeId\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\x04R\aversion\x12+\n" +
+	"\x11invalidated_views\x18\x04 \x03(\tR\x10invalidatedViews2\x96\x04\n" +
 	"\x11ModerationService\x12|\n" +
 	"\x11GetModerationView\x122.conference.moderation.v1.GetModerationViewRequest\x1a3.conference.moderation.v1.GetModerationViewResponse\x12y\n" +
-	"\x10ToggleSignupOpen\x121.conference.moderation.v1.ToggleSignupOpenRequest\x1a2.conference.moderation.v1.ToggleSignupOpenResponseBPZNgithub.com/Y4shin/conference-tool/gen/go/conference/moderation/v1;moderationv1b\x06proto3"
+	"\x10ToggleSignupOpen\x121.conference.moderation.v1.ToggleSignupOpenRequest\x1a2.conference.moderation.v1.ToggleSignupOpenResponse\x12\x82\x01\n" +
+	"\x13SetMeetingQuotation\x124.conference.moderation.v1.SetMeetingQuotationRequest\x1a5.conference.moderation.v1.SetMeetingQuotationResponse\x12\x82\x01\n" +
+	"\x13SetMeetingModerator\x124.conference.moderation.v1.SetMeetingModeratorRequest\x1a5.conference.moderation.v1.SetMeetingModeratorResponseBPZNgithub.com/Y4shin/conference-tool/gen/go/conference/moderation/v1;moderationv1b\x06proto3"
 
 var (
 	file_conference_moderation_v1_moderation_proto_rawDescOnce sync.Once
@@ -610,35 +981,45 @@ func file_conference_moderation_v1_moderation_proto_rawDescGZIP() []byte {
 	return file_conference_moderation_v1_moderation_proto_rawDescData
 }
 
-var file_conference_moderation_v1_moderation_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_conference_moderation_v1_moderation_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_conference_moderation_v1_moderation_proto_goTypes = []any{
 	(*ModerationMeetingSummary)(nil),       // 0: conference.moderation.v1.ModerationMeetingSummary
 	(*ModerationAttendeeSummaryBlock)(nil), // 1: conference.moderation.v1.ModerationAttendeeSummaryBlock
 	(*ModerationSpeakerSummaryBlock)(nil),  // 2: conference.moderation.v1.ModerationSpeakerSummaryBlock
-	(*ModerationView)(nil),                 // 3: conference.moderation.v1.ModerationView
-	(*GetModerationViewRequest)(nil),       // 4: conference.moderation.v1.GetModerationViewRequest
-	(*GetModerationViewResponse)(nil),      // 5: conference.moderation.v1.GetModerationViewResponse
-	(*ToggleSignupOpenRequest)(nil),        // 6: conference.moderation.v1.ToggleSignupOpenRequest
-	(*ToggleSignupOpenResponse)(nil),       // 7: conference.moderation.v1.ToggleSignupOpenResponse
-	(*v1.AgendaPointSummary)(nil),          // 8: conference.common.v1.AgendaPointSummary
-	(*v1.Capability)(nil),                  // 9: conference.common.v1.Capability
+	(*ModerationMeetingSettingsBlock)(nil), // 3: conference.moderation.v1.ModerationMeetingSettingsBlock
+	(*ModerationView)(nil),                 // 4: conference.moderation.v1.ModerationView
+	(*GetModerationViewRequest)(nil),       // 5: conference.moderation.v1.GetModerationViewRequest
+	(*GetModerationViewResponse)(nil),      // 6: conference.moderation.v1.GetModerationViewResponse
+	(*ToggleSignupOpenRequest)(nil),        // 7: conference.moderation.v1.ToggleSignupOpenRequest
+	(*ToggleSignupOpenResponse)(nil),       // 8: conference.moderation.v1.ToggleSignupOpenResponse
+	(*SetMeetingQuotationRequest)(nil),     // 9: conference.moderation.v1.SetMeetingQuotationRequest
+	(*SetMeetingQuotationResponse)(nil),    // 10: conference.moderation.v1.SetMeetingQuotationResponse
+	(*SetMeetingModeratorRequest)(nil),     // 11: conference.moderation.v1.SetMeetingModeratorRequest
+	(*SetMeetingModeratorResponse)(nil),    // 12: conference.moderation.v1.SetMeetingModeratorResponse
+	(*v1.AgendaPointSummary)(nil),          // 13: conference.common.v1.AgendaPointSummary
+	(*v1.Capability)(nil),                  // 14: conference.common.v1.Capability
 }
 var file_conference_moderation_v1_moderation_proto_depIdxs = []int32{
-	0, // 0: conference.moderation.v1.ModerationView.meeting:type_name -> conference.moderation.v1.ModerationMeetingSummary
-	1, // 1: conference.moderation.v1.ModerationView.attendees:type_name -> conference.moderation.v1.ModerationAttendeeSummaryBlock
-	8, // 2: conference.moderation.v1.ModerationView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
-	2, // 3: conference.moderation.v1.ModerationView.speakers:type_name -> conference.moderation.v1.ModerationSpeakerSummaryBlock
-	9, // 4: conference.moderation.v1.ModerationView.capabilities:type_name -> conference.common.v1.Capability
-	3, // 5: conference.moderation.v1.GetModerationViewResponse.view:type_name -> conference.moderation.v1.ModerationView
-	4, // 6: conference.moderation.v1.ModerationService.GetModerationView:input_type -> conference.moderation.v1.GetModerationViewRequest
-	6, // 7: conference.moderation.v1.ModerationService.ToggleSignupOpen:input_type -> conference.moderation.v1.ToggleSignupOpenRequest
-	5, // 8: conference.moderation.v1.ModerationService.GetModerationView:output_type -> conference.moderation.v1.GetModerationViewResponse
-	7, // 9: conference.moderation.v1.ModerationService.ToggleSignupOpen:output_type -> conference.moderation.v1.ToggleSignupOpenResponse
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	0,  // 0: conference.moderation.v1.ModerationView.meeting:type_name -> conference.moderation.v1.ModerationMeetingSummary
+	1,  // 1: conference.moderation.v1.ModerationView.attendees:type_name -> conference.moderation.v1.ModerationAttendeeSummaryBlock
+	13, // 2: conference.moderation.v1.ModerationView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
+	2,  // 3: conference.moderation.v1.ModerationView.speakers:type_name -> conference.moderation.v1.ModerationSpeakerSummaryBlock
+	14, // 4: conference.moderation.v1.ModerationView.capabilities:type_name -> conference.common.v1.Capability
+	3,  // 5: conference.moderation.v1.ModerationView.settings:type_name -> conference.moderation.v1.ModerationMeetingSettingsBlock
+	4,  // 6: conference.moderation.v1.GetModerationViewResponse.view:type_name -> conference.moderation.v1.ModerationView
+	5,  // 7: conference.moderation.v1.ModerationService.GetModerationView:input_type -> conference.moderation.v1.GetModerationViewRequest
+	7,  // 8: conference.moderation.v1.ModerationService.ToggleSignupOpen:input_type -> conference.moderation.v1.ToggleSignupOpenRequest
+	9,  // 9: conference.moderation.v1.ModerationService.SetMeetingQuotation:input_type -> conference.moderation.v1.SetMeetingQuotationRequest
+	11, // 10: conference.moderation.v1.ModerationService.SetMeetingModerator:input_type -> conference.moderation.v1.SetMeetingModeratorRequest
+	6,  // 11: conference.moderation.v1.ModerationService.GetModerationView:output_type -> conference.moderation.v1.GetModerationViewResponse
+	8,  // 12: conference.moderation.v1.ModerationService.ToggleSignupOpen:output_type -> conference.moderation.v1.ToggleSignupOpenResponse
+	10, // 13: conference.moderation.v1.ModerationService.SetMeetingQuotation:output_type -> conference.moderation.v1.SetMeetingQuotationResponse
+	12, // 14: conference.moderation.v1.ModerationService.SetMeetingModerator:output_type -> conference.moderation.v1.SetMeetingModeratorResponse
+	11, // [11:15] is the sub-list for method output_type
+	7,  // [7:11] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_conference_moderation_v1_moderation_proto_init() }
@@ -652,7 +1033,7 @@ func file_conference_moderation_v1_moderation_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_moderation_v1_moderation_proto_rawDesc), len(file_conference_moderation_v1_moderation_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

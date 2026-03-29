@@ -82,3 +82,19 @@ func (h *VoteHandler) SubmitBallot(ctx context.Context, req *connect.Request[vot
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (h *VoteHandler) VerifyOpenReceipt(ctx context.Context, req *connect.Request[votesv1.VerifyOpenReceiptRequest]) (*connect.Response[votesv1.VerifyOpenReceiptResponse], error) {
+	resp, err := h.service.VerifyOpenReceipt(ctx, req.Msg.VoteId, req.Msg.ReceiptToken, req.Msg.AttendeeId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *VoteHandler) VerifySecretReceipt(ctx context.Context, req *connect.Request[votesv1.VerifySecretReceiptRequest]) (*connect.Response[votesv1.VerifySecretReceiptResponse], error) {
+	resp, err := h.service.VerifySecretReceipt(ctx, req.Msg.VoteId, req.Msg.ReceiptToken)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

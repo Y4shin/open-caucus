@@ -307,12 +307,28 @@ Local interactive OIDC provider:
 4. Start provider: `task oidc-dev:run`.
 5. Start app with same `.env`: `task run` or `task dev`.
 
+Full hot-reload SPA development with local OIDC:
+
+- `task dev:spa:with-oidc`
+
+That starts three processes together:
+
+- local OIDC dev provider on `http://localhost:9096`
+- Go backend with `air` on `http://localhost:8080`
+- Vite SPA dev server on `http://localhost:5173`
+
+The Vite dev server proxies the backend-facing routes (`/api`, `/oauth`, `/locale`, `/blobs`, `/docs/assets`) to the Go backend, and the OAuth redirect URL is adjusted to `http://localhost:5173/oauth/callback` for this flow. The OIDC dev server binds to `127.0.0.1` in this mode so it stays loopback-only while still being reachable at `localhost`.
+The backend watcher uses a Vite-specific Air config that ignores `web/` so frontend file churn does not slow down Go restarts.
+The frontend task also repairs missing platform-specific Rollup optional dependencies automatically before starting Vite, which helps when `node_modules` was previously installed on a different host platform.
+
 Docker alternatives:
 
 - Linux host networking: `task docker:up` (or `docker compose up --build app oidc`)
 - Docker Desktop-compatible: `task docker:up:desktop` (or `docker compose -f docker-compose.desktop.yml up --build app oidc`)
 
-Compose runs a one-shot `setup` service first (`populate-env` + `generate-users --force`), then starts OIDC and app together.
+Compose runs a one-shot `setup` service first (`populate-env` + `generate-users --force`), then starts the local OIDC provider and the SPA/Connect app server together.
+
+The app service runs `conference-tool serve` and is considered healthy once `http://127.0.0.1:8080/login` responds.
 
 By default, generated env uses `OAUTH_ADMIN_GROUP=ca-admin`, and generated users include Alice in `ca-admin` and `committee-a-chair`.
 

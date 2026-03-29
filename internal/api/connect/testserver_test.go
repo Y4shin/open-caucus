@@ -11,10 +11,12 @@ import (
 	connect "connectrpc.com/connect"
 	"golang.org/x/crypto/bcrypt"
 
+	docembed "github.com/Y4shin/conference-tool/doc"
 	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
 	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
 	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
 	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	docsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1/docsv1connect"
 	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
 	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
@@ -22,6 +24,7 @@ import (
 	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
 	"github.com/Y4shin/conference-tool/internal/broker"
+	"github.com/Y4shin/conference-tool/internal/docs"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/repository"
@@ -55,6 +58,7 @@ type combinedTestClient struct {
 	speakers   speakersv1connect.SpeakerServiceClient
 	votes      votesv1connect.VoteServiceClient
 	admin      adminv1connect.AdminServiceClient
+	docs       docsv1connect.DocsServiceClient
 }
 
 func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
@@ -69,6 +73,10 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 	}
 	if err := locale.LoadTranslations(); err != nil {
 		t.Fatalf("load translations: %v", err)
+	}
+	docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
+	if err != nil {
+		t.Fatalf("load docs: %v", err)
 	}
 
 	sessionManager := session.NewManager(repo, []byte(testSecret))
@@ -142,17 +150,15 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 	)
 	mux.Handle("/api"+adminPath, mw.Get("session")(http.StripPrefix("/api", adminHandler)))
 
+	// Docs service
+	docsPath, docsHandler := docsv1connect.NewDocsServiceHandler(
+		NewDocsHandler(docsService),
+		connect.WithInterceptors(ErrorInterceptor()),
+	)
+	mux.Handle("/api"+docsPath, http.StripPrefix("/api", docsHandler))
+
 	mux.Handle("POST /api/committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
-	)
-	mux.Handle("GET /api/blobs/{blobId}/download",
-		apihttp.NewBlobDownloadHandler(repo, store),
-	)
-	mux.Handle("POST /api/votes/verify/open",
-		apihttp.NewVerifyOpenVoteReceiptHandler(repo),
-	)
-	mux.Handle("POST /api/votes/verify/secret",
-		apihttp.NewVerifySecretVoteReceiptHandler(repo),
 	)
 
 	server := httptest.NewServer(locale.NewMiddleware(mux, locale.Config{
@@ -162,6 +168,7 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 
 	t.Cleanup(func() {
 		server.Close()
+		_ = docsService.Close()
 		b.Shutdown()
 		repo.Close()
 	})
@@ -187,6 +194,7 @@ func newCombinedTestClient(t *testing.T, ts *combinedTestServer) *combinedTestCl
 		speakers:   speakersv1connect.NewSpeakerServiceClient(httpClient, base),
 		votes:      votesv1connect.NewVoteServiceClient(httpClient, base),
 		admin:      adminv1connect.NewAdminServiceClient(httpClient, base),
+		docs:       docsv1connect.NewDocsServiceClient(httpClient, base),
 	}
 }
 

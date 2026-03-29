@@ -136,3 +136,63 @@ func TestCommitteeServiceGetCommitteeOverview_HasActiveMeeting(t *testing.T) {
 		t.Fatal("expected CanViewLive for active meeting")
 	}
 }
+
+func TestCommitteeServiceCreateDeleteAndToggleMeetingActive(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair One", "chairperson")
+
+	client := newCombinedTestClient(t, ts)
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "chair1",
+		Password: "pass123",
+	})); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	createResp, err := client.committees.CreateMeeting(context.Background(), connect.NewRequest(&committeesv1.CreateMeetingRequest{
+		CommitteeSlug: "test-committee",
+		Name:          "Budget Meeting",
+		Description:   "Quarterly budget review",
+	}))
+	if err != nil {
+		t.Fatalf("create meeting: %v", err)
+	}
+	meetingID := createResp.Msg.GetMeeting().GetMeetingId()
+	if meetingID == "" {
+		t.Fatal("expected created meeting id")
+	}
+
+	toggleResp, err := client.committees.ToggleMeetingActive(context.Background(), connect.NewRequest(&committeesv1.ToggleMeetingActiveRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     meetingID,
+	}))
+	if err != nil {
+		t.Fatalf("toggle active meeting: %v", err)
+	}
+	if !toggleResp.Msg.GetActive() {
+		t.Fatal("expected meeting to become active")
+	}
+
+	toggleResp, err = client.committees.ToggleMeetingActive(context.Background(), connect.NewRequest(&committeesv1.ToggleMeetingActiveRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     meetingID,
+	}))
+	if err != nil {
+		t.Fatalf("toggle active meeting off: %v", err)
+	}
+	if toggleResp.Msg.GetActive() {
+		t.Fatal("expected meeting to become inactive")
+	}
+
+	deleteResp, err := client.committees.DeleteMeeting(context.Background(), connect.NewRequest(&committeesv1.DeleteMeetingRequest{
+		CommitteeSlug: "test-committee",
+		MeetingId:     meetingID,
+	}))
+	if err != nil {
+		t.Fatalf("delete meeting: %v", err)
+	}
+	if !deleteResp.Msg.GetDeleted() {
+		t.Fatal("expected deleted=true")
+	}
+}

@@ -64,3 +64,7 @@ func requestCookie(header http.Header, name string) (*http.Cookie, error) {
 	req := &http.Request{Header: header}
 	return req.Cookie(name)
 }
+
+func headerRequest(header http.Header) *http.Request {
+	return &http.Request{Header: header}
+}

@@ -448,7 +448,7 @@ func (s *Service) loadAgendaPointToolsView(ctx context.Context, committeeSlug, m
 			BlobId:       strconv.FormatInt(blob.ID, 10),
 			Filename:     blob.Filename,
 			Label:        label,
-			DownloadUrl:  fmt.Sprintf("/api/blobs/%d/download", blob.ID),
+			DownloadUrl:  fmt.Sprintf("/blobs/%d/download", blob.ID),
 			IsCurrent:    ap.CurrentAttachmentID != nil && *ap.CurrentAttachmentID == attachment.ID,
 		})
 	}
@@ -501,6 +501,13 @@ func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) 
 func (s *Service) requireAgendaViewer(ctx context.Context, committeeSlug string, meetingID int64) error {
 	if err := s.requireMembership(ctx, committeeSlug); err == nil {
 		return nil
+	}
+	sd, ok := session.GetSession(ctx)
+	if ok && sd != nil && !sd.IsExpired() && sd.IsGuestSession() && sd.AttendeeID != nil {
+		attendee, err := s.repo.GetAttendeeByID(ctx, *sd.AttendeeID)
+		if err == nil && attendee.MeetingID == meetingID {
+			return nil
+		}
 	}
 	return serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID)
 }

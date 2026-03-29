@@ -58,3 +58,9 @@ services:
         condition: service_completed_successfully
       oidc:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/login >/dev/null || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 5s

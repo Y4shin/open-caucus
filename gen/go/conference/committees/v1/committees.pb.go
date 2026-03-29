@@ -378,6 +378,318 @@ func (x *GetCommitteeOverviewResponse) GetOverview() *CommitteeOverview {
 	return nil
 }
 
+type CreateMeetingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateMeetingRequest) Reset() {
+	*x = CreateMeetingRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateMeetingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateMeetingRequest) ProtoMessage() {}
+
+func (x *CreateMeetingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateMeetingRequest.ProtoReflect.Descriptor instead.
+func (*CreateMeetingRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CreateMeetingRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *CreateMeetingRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateMeetingRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+type CreateMeetingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Meeting       *v1.MeetingReference   `protobuf:"bytes,1,opt,name=meeting,proto3" json:"meeting,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateMeetingResponse) Reset() {
+	*x = CreateMeetingResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateMeetingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateMeetingResponse) ProtoMessage() {}
+
+func (x *CreateMeetingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateMeetingResponse.ProtoReflect.Descriptor instead.
+func (*CreateMeetingResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *CreateMeetingResponse) GetMeeting() *v1.MeetingReference {
+	if x != nil {
+		return x.Meeting
+	}
+	return nil
+}
+
+type DeleteMeetingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteMeetingRequest) Reset() {
+	*x = DeleteMeetingRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteMeetingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteMeetingRequest) ProtoMessage() {}
+
+func (x *DeleteMeetingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteMeetingRequest.ProtoReflect.Descriptor instead.
+func (*DeleteMeetingRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DeleteMeetingRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *DeleteMeetingRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+type DeleteMeetingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MeetingId     string                 `protobuf:"bytes,1,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	Deleted       bool                   `protobuf:"varint,2,opt,name=deleted,proto3" json:"deleted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteMeetingResponse) Reset() {
+	*x = DeleteMeetingResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteMeetingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteMeetingResponse) ProtoMessage() {}
+
+func (x *DeleteMeetingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteMeetingResponse.ProtoReflect.Descriptor instead.
+func (*DeleteMeetingResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *DeleteMeetingResponse) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *DeleteMeetingResponse) GetDeleted() bool {
+	if x != nil {
+		return x.Deleted
+	}
+	return false
+}
+
+type ToggleMeetingActiveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToggleMeetingActiveRequest) Reset() {
+	*x = ToggleMeetingActiveRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToggleMeetingActiveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToggleMeetingActiveRequest) ProtoMessage() {}
+
+func (x *ToggleMeetingActiveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToggleMeetingActiveRequest.ProtoReflect.Descriptor instead.
+func (*ToggleMeetingActiveRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ToggleMeetingActiveRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *ToggleMeetingActiveRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+type ToggleMeetingActiveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MeetingId     string                 `protobuf:"bytes,1,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	Active        bool                   `protobuf:"varint,2,opt,name=active,proto3" json:"active,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ToggleMeetingActiveResponse) Reset() {
+	*x = ToggleMeetingActiveResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ToggleMeetingActiveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ToggleMeetingActiveResponse) ProtoMessage() {}
+
+func (x *ToggleMeetingActiveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ToggleMeetingActiveResponse.ProtoReflect.Descriptor instead.
+func (*ToggleMeetingActiveResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ToggleMeetingActiveResponse) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *ToggleMeetingActiveResponse) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
 var File_conference_committees_v1_committees_proto protoreflect.FileDescriptor
 
 const file_conference_committees_v1_committees_proto_rawDesc = "" +
@@ -404,10 +716,35 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\x1bGetCommitteeOverviewRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\"g\n" +
 	"\x1cGetCommitteeOverviewResponse\x12G\n" +
-	"\boverview\x18\x01 \x01(\v2+.conference.committees.v1.CommitteeOverviewR\boverview2\x95\x02\n" +
+	"\boverview\x18\x01 \x01(\v2+.conference.committees.v1.CommitteeOverviewR\boverview\"s\n" +
+	"\x14CreateMeetingRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\"Y\n" +
+	"\x15CreateMeetingResponse\x12@\n" +
+	"\ameeting\x18\x01 \x01(\v2&.conference.common.v1.MeetingReferenceR\ameeting\"\\\n" +
+	"\x14DeleteMeetingRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"P\n" +
+	"\x15DeleteMeetingResponse\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12\x18\n" +
+	"\adeleted\x18\x02 \x01(\bR\adeleted\"b\n" +
+	"\x1aToggleMeetingActiveRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\"T\n" +
+	"\x1bToggleMeetingActiveResponse\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12\x16\n" +
+	"\x06active\x18\x02 \x01(\bR\x06active2\xfe\x04\n" +
 	"\x10CommitteeService\x12y\n" +
 	"\x10ListMyCommittees\x121.conference.committees.v1.ListMyCommitteesRequest\x1a2.conference.committees.v1.ListMyCommitteesResponse\x12\x85\x01\n" +
-	"\x14GetCommitteeOverview\x125.conference.committees.v1.GetCommitteeOverviewRequest\x1a6.conference.committees.v1.GetCommitteeOverviewResponseBPZNgithub.com/Y4shin/conference-tool/gen/go/conference/committees/v1;committeesv1b\x06proto3"
+	"\x14GetCommitteeOverview\x125.conference.committees.v1.GetCommitteeOverviewRequest\x1a6.conference.committees.v1.GetCommitteeOverviewResponse\x12p\n" +
+	"\rCreateMeeting\x12..conference.committees.v1.CreateMeetingRequest\x1a/.conference.committees.v1.CreateMeetingResponse\x12p\n" +
+	"\rDeleteMeeting\x12..conference.committees.v1.DeleteMeetingRequest\x1a/.conference.committees.v1.DeleteMeetingResponse\x12\x82\x01\n" +
+	"\x13ToggleMeetingActive\x124.conference.committees.v1.ToggleMeetingActiveRequest\x1a5.conference.committees.v1.ToggleMeetingActiveResponseBPZNgithub.com/Y4shin/conference-tool/gen/go/conference/committees/v1;committeesv1b\x06proto3"
 
 var (
 	file_conference_committees_v1_committees_proto_rawDescOnce sync.Once
@@ -421,7 +758,7 @@ func file_conference_committees_v1_committees_proto_rawDescGZIP() []byte {
 	return file_conference_committees_v1_committees_proto_rawDescData
 }
 
-var file_conference_committees_v1_committees_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_conference_committees_v1_committees_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_conference_committees_v1_committees_proto_goTypes = []any{
 	(*CommitteeListItem)(nil),            // 0: conference.committees.v1.CommitteeListItem
 	(*CommitteeOverviewMeeting)(nil),     // 1: conference.committees.v1.CommitteeOverviewMeeting
@@ -430,27 +767,40 @@ var file_conference_committees_v1_committees_proto_goTypes = []any{
 	(*ListMyCommitteesResponse)(nil),     // 4: conference.committees.v1.ListMyCommitteesResponse
 	(*GetCommitteeOverviewRequest)(nil),  // 5: conference.committees.v1.GetCommitteeOverviewRequest
 	(*GetCommitteeOverviewResponse)(nil), // 6: conference.committees.v1.GetCommitteeOverviewResponse
-	(*v1.CommitteeReference)(nil),        // 7: conference.common.v1.CommitteeReference
-	(*v1.MeetingReference)(nil),          // 8: conference.common.v1.MeetingReference
-	(*v1.Capability)(nil),                // 9: conference.common.v1.Capability
+	(*CreateMeetingRequest)(nil),         // 7: conference.committees.v1.CreateMeetingRequest
+	(*CreateMeetingResponse)(nil),        // 8: conference.committees.v1.CreateMeetingResponse
+	(*DeleteMeetingRequest)(nil),         // 9: conference.committees.v1.DeleteMeetingRequest
+	(*DeleteMeetingResponse)(nil),        // 10: conference.committees.v1.DeleteMeetingResponse
+	(*ToggleMeetingActiveRequest)(nil),   // 11: conference.committees.v1.ToggleMeetingActiveRequest
+	(*ToggleMeetingActiveResponse)(nil),  // 12: conference.committees.v1.ToggleMeetingActiveResponse
+	(*v1.CommitteeReference)(nil),        // 13: conference.common.v1.CommitteeReference
+	(*v1.MeetingReference)(nil),          // 14: conference.common.v1.MeetingReference
+	(*v1.Capability)(nil),                // 15: conference.common.v1.Capability
 }
 var file_conference_committees_v1_committees_proto_depIdxs = []int32{
-	7, // 0: conference.committees.v1.CommitteeListItem.committee:type_name -> conference.common.v1.CommitteeReference
-	8, // 1: conference.committees.v1.CommitteeOverviewMeeting.meeting:type_name -> conference.common.v1.MeetingReference
-	7, // 2: conference.committees.v1.CommitteeOverview.committee:type_name -> conference.common.v1.CommitteeReference
-	1, // 3: conference.committees.v1.CommitteeOverview.meetings:type_name -> conference.committees.v1.CommitteeOverviewMeeting
-	9, // 4: conference.committees.v1.CommitteeOverview.capabilities:type_name -> conference.common.v1.Capability
-	0, // 5: conference.committees.v1.ListMyCommitteesResponse.committees:type_name -> conference.committees.v1.CommitteeListItem
-	2, // 6: conference.committees.v1.GetCommitteeOverviewResponse.overview:type_name -> conference.committees.v1.CommitteeOverview
-	3, // 7: conference.committees.v1.CommitteeService.ListMyCommittees:input_type -> conference.committees.v1.ListMyCommitteesRequest
-	5, // 8: conference.committees.v1.CommitteeService.GetCommitteeOverview:input_type -> conference.committees.v1.GetCommitteeOverviewRequest
-	4, // 9: conference.committees.v1.CommitteeService.ListMyCommittees:output_type -> conference.committees.v1.ListMyCommitteesResponse
-	6, // 10: conference.committees.v1.CommitteeService.GetCommitteeOverview:output_type -> conference.committees.v1.GetCommitteeOverviewResponse
-	9, // [9:11] is the sub-list for method output_type
-	7, // [7:9] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	13, // 0: conference.committees.v1.CommitteeListItem.committee:type_name -> conference.common.v1.CommitteeReference
+	14, // 1: conference.committees.v1.CommitteeOverviewMeeting.meeting:type_name -> conference.common.v1.MeetingReference
+	13, // 2: conference.committees.v1.CommitteeOverview.committee:type_name -> conference.common.v1.CommitteeReference
+	1,  // 3: conference.committees.v1.CommitteeOverview.meetings:type_name -> conference.committees.v1.CommitteeOverviewMeeting
+	15, // 4: conference.committees.v1.CommitteeOverview.capabilities:type_name -> conference.common.v1.Capability
+	0,  // 5: conference.committees.v1.ListMyCommitteesResponse.committees:type_name -> conference.committees.v1.CommitteeListItem
+	2,  // 6: conference.committees.v1.GetCommitteeOverviewResponse.overview:type_name -> conference.committees.v1.CommitteeOverview
+	14, // 7: conference.committees.v1.CreateMeetingResponse.meeting:type_name -> conference.common.v1.MeetingReference
+	3,  // 8: conference.committees.v1.CommitteeService.ListMyCommittees:input_type -> conference.committees.v1.ListMyCommitteesRequest
+	5,  // 9: conference.committees.v1.CommitteeService.GetCommitteeOverview:input_type -> conference.committees.v1.GetCommitteeOverviewRequest
+	7,  // 10: conference.committees.v1.CommitteeService.CreateMeeting:input_type -> conference.committees.v1.CreateMeetingRequest
+	9,  // 11: conference.committees.v1.CommitteeService.DeleteMeeting:input_type -> conference.committees.v1.DeleteMeetingRequest
+	11, // 12: conference.committees.v1.CommitteeService.ToggleMeetingActive:input_type -> conference.committees.v1.ToggleMeetingActiveRequest
+	4,  // 13: conference.committees.v1.CommitteeService.ListMyCommittees:output_type -> conference.committees.v1.ListMyCommitteesResponse
+	6,  // 14: conference.committees.v1.CommitteeService.GetCommitteeOverview:output_type -> conference.committees.v1.GetCommitteeOverviewResponse
+	8,  // 15: conference.committees.v1.CommitteeService.CreateMeeting:output_type -> conference.committees.v1.CreateMeetingResponse
+	10, // 16: conference.committees.v1.CommitteeService.DeleteMeeting:output_type -> conference.committees.v1.DeleteMeetingResponse
+	12, // 17: conference.committees.v1.CommitteeService.ToggleMeetingActive:output_type -> conference.committees.v1.ToggleMeetingActiveResponse
+	13, // [13:18] is the sub-list for method output_type
+	8,  // [8:13] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_conference_committees_v1_committees_proto_init() }
@@ -464,7 +814,7 @@ func file_conference_committees_v1_committees_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_committees_v1_committees_proto_rawDesc), len(file_conference_committees_v1_committees_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -767,6 +767,87 @@ func TestSpeakersList_StartEnd(t *testing.T) {
 	}
 }
 
+// TestSpeakersList_DoneSpeakerCanBeReadded verifies that completed entries do
+// not block re-adding the same attendee, and that done rows do not render a
+// fake numeric position of 0.
+func TestSpeakersList_DoneSpeakerCanBeReadded(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alice Member", "secret-alice")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
+	}
+
+	openSpeakerAddDialog(t, page)
+	aliceCard := speakerCandidateCard(page, "Alice Member")
+	if err := aliceCard.Locator("button[title='Add regular speech']").Click(); err != nil {
+		t.Fatalf("add first regular speech: %v", err)
+	}
+
+	row := page.Locator("#speakers-list-container [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
+		HasText: "Alice Member",
+	})
+	if err := row.WaitFor(); err != nil {
+		t.Fatalf("wait first Alice row: %v", err)
+	}
+	if err := row.Locator("button[title='Start']").Click(); err != nil {
+		t.Fatalf("start Alice speech: %v", err)
+	}
+	if err := page.Locator("[data-testid='manage-end-current-speaker']").Click(); err != nil {
+		t.Fatalf("end Alice speech: %v", err)
+	}
+	if err := row.WaitFor(); err != nil {
+		t.Fatalf("wait done Alice row after end: %v", err)
+	}
+
+	doneRow := page.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='done']").Filter(playwright.LocatorFilterOptions{
+		HasText: "Alice Member",
+	}).First()
+	if err := doneRow.WaitFor(); err != nil {
+		t.Fatalf("wait done Alice row: %v", err)
+	}
+
+	leftColumnText, err := doneRow.Locator("div").First().TextContent()
+	if err != nil {
+		t.Fatalf("read done row left column text: %v", err)
+	}
+	if strings.TrimSpace(leftColumnText) != "" {
+		t.Fatalf("expected done speaker left column to be blank, got %q", strings.TrimSpace(leftColumnText))
+	}
+
+	openSpeakerAddDialog(t, page)
+	aliceCard = speakerCandidateCard(page, "Alice Member")
+	regularDisabled, err := aliceCard.Locator("button[title='Add regular speech']").IsDisabled()
+	if err != nil {
+		t.Fatalf("read regular button disabled state after done: %v", err)
+	}
+	if regularDisabled {
+		t.Fatalf("expected regular add button to re-enable after done speaker")
+	}
+	if err := aliceCard.Locator("button[title='Add regular speech']").Click(); err != nil {
+		t.Fatalf("re-add regular speech after done: %v", err)
+	}
+
+	rows, err := page.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").Count()
+	if err != nil {
+		t.Fatalf("count Alice rows after re-add: %v", err)
+	}
+	if rows < 2 {
+		t.Fatalf("expected Alice to have both a done row and a new waiting row after re-add, got %d rows", rows)
+	}
+	if err := page.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='waiting']:has-text('Alice Member')").WaitFor(); err != nil {
+		t.Fatalf("expected a new waiting Alice row after re-add: %v", err)
+	}
+}
+
 // TestSpeakersList_Remove verifies that removing a waiting speaker deletes the row.
 func TestSpeakersList_Remove(t *testing.T) {
 	ts := newTestServer(t)

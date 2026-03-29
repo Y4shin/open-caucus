@@ -1,21 +1,35 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import { adminClient } from '$lib/api/index.js';
-	import type { AccountRecord } from '$lib/gen/conference/admin/v1/admin_pb.js';
 	import { session } from '$lib/stores/session.svelte.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import { legacyAttrs, legacyValueAttr } from '$lib/utils/legacy-attrs.js';
+	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 
-	let accountsState = $state(createRemoteState<AccountRecord[]>());
+	type AccountRow = {
+		accountId: string;
+		username: string;
+		fullName: string;
+		isAdmin: boolean;
+	};
+
+	let accountsState = $state(createRemoteState<AccountRow[]>());
 	let createAccountPending = $state(false);
-	let updatePendingId = $state('');
 	let createAccountError = $state('');
 	let newUsername = $state('');
 	let newFullName = $state('');
 	let newPassword = $state('');
+
+	$effect(() => {
+		pageActions.set([], { backHref: '/admin' });
+		return () => {
+			pageActions.clear();
+		};
+	});
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -31,7 +45,12 @@
 		accountsState.error = '';
 		try {
 			const res = await adminClient.listAccounts({ page: 1, pageSize: 200 });
-			accountsState.data = res.accounts;
+			accountsState.data = res.accounts.map((account) => ({
+				accountId: account.accountId,
+				username: account.username,
+				fullName: account.fullName,
+				isAdmin: account.isAdmin
+			}));
 		} catch (err) {
 			accountsState.error = getDisplayError(err, 'Failed to load accounts.');
 		} finally {
@@ -58,140 +77,119 @@
 			createAccountPending = false;
 		}
 	}
-
-	async function toggleAdmin(account: AccountRecord) {
-		updatePendingId = account.accountId;
-		accountsState.error = '';
-		try {
-			await adminClient.setAccountAdmin({
-				accountId: account.accountId,
-				isAdmin: !account.isAdmin
-			});
-			await loadAccounts();
-		} catch (err) {
-			accountsState.error = getDisplayError(err, 'Failed to update account permissions.');
-		} finally {
-			updatePendingId = '';
-		}
-	}
 </script>
 
-<div class="space-y-6">
-	<div class="flex flex-wrap items-start justify-between gap-3">
-		<div class="space-y-2">
-			<h1 class="text-3xl font-bold">Admin Accounts</h1>
-			<p class="text-base-content/70">
-				Review platform accounts and grant or revoke administrator access.
-			</p>
-		</div>
-		<a href="/admin" class="btn btn-outline">Back to Admin</a>
-	</div>
-
-	{#if accountsState.loading}
-		<AppSpinner label="Loading accounts" />
-	{:else}
-		{#if accountsState.error}
-			<AppAlert message={accountsState.error} />
-		{/if}
-
-		<div class="grid gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
-			<AppCard title="Add New Account">
-				<form
-					id="create-account-form"
-					class="space-y-4"
-					onsubmit={async (event) => {
-						event.preventDefault();
-						await createAccount();
-					}}
-				>
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Username</span>
-						<input
-							class="input input-bordered"
-							name="username"
-							bind:value={newUsername}
-							required
-						/>
-					</label>
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Full Name</span>
-						<input
-							class="input input-bordered"
-							name="full_name"
-							bind:value={newFullName}
-							required
-						/>
-					</label>
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Password</span>
-						<input
-							class="input input-bordered"
-							type="password"
-							name="password"
-							bind:value={newPassword}
-							required
-						/>
-					</label>
-
-					{#if createAccountError}
-						<AppAlert message={createAccountError} />
-					{/if}
-
-					<button class="btn btn-primary" type="submit" disabled={createAccountPending}>
-						{createAccountPending ? 'Creating...' : 'Create Account'}
-					</button>
-				</form>
-			</AppCard>
-
-			<AppCard title="Accounts">
-				{#if accountsState.data?.length}
-					<div class="overflow-x-auto">
-						<table class="table table-zebra">
-							<thead>
-								<tr>
-									<th>Username</th>
-									<th>Full Name</th>
-									<th>Admin</th>
-									<th class="text-right">Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each accountsState.data as account}
-									<tr>
-										<td class="font-medium">{account.username}</td>
-										<td>{account.fullName}</td>
-										<td>
-											<span class={`badge ${account.isAdmin ? 'badge-success' : 'badge-ghost'}`}>
-												{account.isAdmin ? 'Admin' : 'Standard'}
-											</span>
-										</td>
-										<td>
-											<div class="flex justify-end">
-												<button
-													class="btn btn-sm btn-outline"
-													type="button"
-													disabled={updatePendingId === account.accountId}
-													onclick={() => toggleAdmin(account)}
-												>
-													{#if updatePendingId === account.accountId}
-														Saving...
-													{:else if account.isAdmin}
-														Revoke Admin
-													{:else}
-														Make Admin
-													{/if}
-												</button>
-											</div>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else}
-					<AppAlert tone="info" message="No accounts are available yet." />
-				{/if}
-			</AppCard>
-		</div>
+{#if accountsState.loading}
+	<AppSpinner label="Loading accounts" />
+{:else}
+	{#if accountsState.error}
+		<AppAlert message={accountsState.error} />
 	{/if}
-</div>
+
+	<div id="account-list-container">
+		{#if createAccountError}
+			<AppAlert message={createAccountError} />
+		{/if}
+		<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+			<h2>Add New Account</h2>
+			<form
+				id="create-account-form"
+				use:legacyAttrs={{
+					'hx-post': '/admin/account/create',
+					'hx-target': '#account-list-container',
+					'hx-swap': 'outerHTML',
+					'hx-on::after-request': 'if(event.detail.successful) this.reset()'
+				}}
+				onsubmit={(event) => {
+					event.preventDefault();
+					createAccount();
+				}}
+			>
+				<div>
+					<label for="username">Username:</label>
+					<input
+						class="input input-bordered input-sm"
+						type="text"
+						id="username"
+						name="username"
+						value={newUsername}
+						use:legacyValueAttr={newUsername}
+						oninput={(event) => {
+							newUsername = (event.currentTarget as HTMLInputElement).value;
+						}}
+						required
+					/>
+				</div>
+				<div>
+					<label for="full_name">Full Name:</label>
+					<input
+						class="input input-bordered input-sm"
+						type="text"
+						id="full_name"
+						name="full_name"
+						value={newFullName}
+						use:legacyValueAttr={newFullName}
+						oninput={(event) => {
+							newFullName = (event.currentTarget as HTMLInputElement).value;
+						}}
+						required
+					/>
+				</div>
+				{#if session.passwordEnabled}
+					<div>
+						<label for="password">Password:</label>
+						<input
+							class="input input-bordered input-sm"
+							type="password"
+							id="password"
+							name="password"
+							value={newPassword}
+							use:legacyValueAttr={newPassword}
+							oninput={(event) => {
+								newPassword = (event.currentTarget as HTMLInputElement).value;
+							}}
+							required
+						/>
+					</div>
+				{/if}
+				<button class="btn btn-sm" type="submit" disabled={createAccountPending}>Create Account</button>
+			</form>
+		</section>
+		<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+			<h2>Existing Accounts</h2>
+			{#if accountsState.data?.length === 0}
+				<p>No accounts yet.</p>
+			{:else}
+				<table class="data-table table table-zebra w-full">
+					<thead>
+						<tr>
+							<th>Username</th>
+							<th>Full Name</th>
+							<th>Admin</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each accountsState.data ?? [] as account}
+							<tr>
+								<td>{account.username}</td>
+								<td>{account.fullName}</td>
+								<td>{account.isAdmin ? 'Yes' : 'No'}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+			<nav class="pagination-nav join">
+				<button type="button" disabled class="ui-icon-label btn btn-sm">
+					<LegacyIcon name="left" class="ui-icon--left" />
+					<span class="ui-icon-text">Previous</span>
+				</button>
+				<button class="btn btn-sm" type="button" disabled>1</button>
+				<button type="button" disabled class="ui-icon-label btn btn-sm">
+					<span class="ui-icon-text">Next</span>
+					<LegacyIcon name="right" class="ui-icon--right" />
+				</button>
+			</nav>
+		</section>
+	</div>
+{/if}

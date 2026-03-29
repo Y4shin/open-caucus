@@ -2,6 +2,7 @@ import { createClient } from '@connectrpc/connect';
 import { transport } from './transport.js';
 import {
 	SessionService,
+	DocsService,
 	CommitteeService,
 	MeetingService,
 	AttendeeService,
@@ -13,6 +14,7 @@ import {
 } from './services.js';
 
 export const sessionClient = createClient(SessionService, transport);
+export const docsClient = createClient(DocsService, transport);
 export const committeeClient = createClient(CommitteeService, transport);
 export const meetingClient = createClient(MeetingService, transport);
 export const attendeeClient = createClient(AttendeeService, transport);

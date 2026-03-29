@@ -43,7 +43,7 @@ func TestCurrentDoc_SetAndClearAttachment_UpdatesLivePreview(t *testing.T) {
 	if err := attachmentRow.WaitFor(); err != nil {
 		t.Fatalf("expected attachment row before set-current: %v", err)
 	}
-	if err := attachmentRow.Locator("button:has-text('Set as Current')").Click(); err != nil {
+	if err := attachmentRow.Locator("button:has-text('Set Current')").Click(); err != nil {
 		t.Fatalf("set current attachment: %v", err)
 	}
 	if err := attachmentRow.Locator("button:has-text('Clear')").WaitFor(); err != nil {
@@ -62,7 +62,7 @@ func TestCurrentDoc_SetAndClearAttachment_UpdatesLivePreview(t *testing.T) {
 	if err := attachmentRow.Locator("button:has-text('Clear')").Click(); err != nil {
 		t.Fatalf("clear current attachment: %v", err)
 	}
-	if err := attachmentRow.Locator("button:has-text('Set as Current')").WaitFor(); err != nil {
+	if err := attachmentRow.Locator("button:has-text('Set Current')").WaitFor(); err != nil {
 		t.Fatalf("expected set-current button after clear: %v", err)
 	}
 	if err := livePage.Locator("[data-testid='live-doc-open-desktop']").First().WaitFor(playwright.LocatorWaitForOptions{

@@ -1,26 +1,29 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { adminClient } from '$lib/api/index.js';
 	import type { CommitteeRecord } from '$lib/gen/conference/admin/v1/admin_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import { legacyAttrs, legacyValueAttr } from '$lib/utils/legacy-attrs.js';
 
-	interface DashboardData {
-		totalCommittees: number;
-		totalAccounts: number;
-		committees: CommitteeRecord[];
-	}
-
-	let dashboardState = $state(createRemoteState<DashboardData>());
+	let dashboardState = $state(createRemoteState<CommitteeRecord[]>());
 	let createCommitteePending = $state(false);
 	let createCommitteeError = $state('');
 	let deleteCommitteePendingSlug = $state('');
 	let newCommitteeName = $state('');
 	let newCommitteeSlug = $state('');
+
+	$effect(() => {
+		pageActions.set([{ label: 'Manage Accounts', href: '/admin/accounts', kind: 'ghost' }], { backHref: '/home' });
+		return () => {
+			pageActions.clear();
+		};
+	});
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -35,15 +38,8 @@
 		dashboardState.loading = true;
 		dashboardState.error = '';
 		try {
-			const [dashboard, committees] = await Promise.all([
-				adminClient.getAdminDashboard({}),
-				adminClient.listCommittees({ page: 1, pageSize: 100 })
-			]);
-			dashboardState.data = {
-				totalCommittees: Number(dashboard.totalCommittees),
-				totalAccounts: Number(dashboard.totalAccounts),
-				committees: committees.committees
-			};
+			const committees = await adminClient.listCommittees({ page: 1, pageSize: 100 });
+			dashboardState.data = committees.committees;
 		} catch (err) {
 			dashboardState.error = getDisplayError(err, 'Failed to load admin dashboard.');
 		} finally {
@@ -54,7 +50,6 @@
 	async function createCommittee() {
 		createCommitteePending = true;
 		createCommitteeError = '';
-
 		try {
 			await adminClient.createCommittee({
 				name: newCommitteeName.trim(),
@@ -71,13 +66,11 @@
 	}
 
 	async function deleteCommittee(slug: string) {
-		if (!window.confirm(`Delete committee "${slug}"?`)) {
+		if (!window.confirm('Are you sure you want to delete this committee?')) {
 			return;
 		}
-
 		deleteCommitteePendingSlug = slug;
 		dashboardState.error = '';
-
 		try {
 			await adminClient.deleteCommittee({ slug });
 			await loadDashboard();
@@ -89,124 +82,123 @@
 	}
 </script>
 
-<div class="space-y-6">
-	<div class="space-y-2">
-		<h1 class="text-3xl font-bold">Admin Dashboard</h1>
-		<p class="text-base-content/70">
-			Manage committees, committee memberships, and platform-wide accounts.
-		</p>
-	</div>
+<h2>Committees</h2>
 
-	{#if dashboardState.loading}
-		<AppSpinner label="Loading admin dashboard" />
-	{:else if dashboardState.error}
-		<AppAlert message={dashboardState.error} />
-	{:else if dashboardState.data}
-		<div class="stats shadow">
-			<div class="stat">
-				<div class="stat-title">Committees</div>
-				<div class="stat-value">{dashboardState.data.totalCommittees}</div>
-			</div>
-			<div class="stat">
-				<div class="stat-title">Accounts</div>
-				<div class="stat-value">{dashboardState.data.totalAccounts}</div>
-			</div>
-		</div>
-
-			<div class="flex flex-wrap gap-2">
-				<a href="/admin/accounts" class="btn btn-outline">Manage Accounts</a>
-			</div>
-
-		<div class="grid gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
-			<AppCard title="Create Committee">
-				<form
-					id="create-committee-form"
-					class="space-y-4"
-					onsubmit={async (event) => {
-						event.preventDefault();
-						await createCommittee();
+{#if dashboardState.loading}
+	<AppSpinner label="Loading admin dashboard" />
+{:else if dashboardState.error}
+	<AppAlert message={dashboardState.error} />
+{:else}
+	<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+		<h3>Add New Committee</h3>
+		<form
+			id="create-committee-form"
+			use:legacyAttrs={{
+				'hx-post': '/admin/committee/create',
+				'hx-target': '#committee-list-container',
+				'hx-swap': 'outerHTML',
+				'hx-on::after-request': 'if(event.detail.successful) this.reset()'
+			}}
+			onsubmit={(event) => {
+				event.preventDefault();
+				createCommittee();
+			}}
+		>
+			<div>
+				<label for="name">Committee Name:</label>
+				<input
+					class="input input-bordered input-sm"
+					type="text"
+					id="name"
+					name="name"
+					value={newCommitteeName}
+					use:legacyValueAttr={newCommitteeName}
+					oninput={(event) => {
+						newCommitteeName = (event.currentTarget as HTMLInputElement).value;
 					}}
-				>
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Name</span>
-						<input
-							class="input input-bordered"
-							name="name"
-							bind:value={newCommitteeName}
-							required
-							placeholder="General Assembly"
-						/>
-					</label>
+					required
+				/>
+			</div>
+			<div>
+				<label for="slug">Slug (URL-friendly identifier):</label>
+				<input
+					class="input input-bordered input-sm"
+					type="text"
+					id="slug"
+					name="slug"
+					value={newCommitteeSlug}
+					use:legacyValueAttr={newCommitteeSlug}
+					oninput={(event) => {
+						newCommitteeSlug = (event.currentTarget as HTMLInputElement).value;
+					}}
+					required
+					pattern="[a-z0-9\-]+"
+				/>
+				<small>Only lowercase letters, numbers, and hyphens</small>
+			</div>
+			{#if createCommitteeError}
+				<AppAlert message={createCommitteeError} />
+			{/if}
+			<button class="btn btn-sm" type="submit" disabled={createCommitteePending}>Create Committee</button>
+		</form>
+	</section>
 
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Slug</span>
-						<input
-							class="input input-bordered"
-							name="slug"
-							bind:value={newCommitteeSlug}
-							required
-							pattern="[a-z0-9\\-]+"
-							placeholder="general-assembly"
-						/>
-						<span class="text-xs text-base-content/70">
-							Lowercase letters, numbers, and hyphens only.
-						</span>
-					</label>
-
-					{#if createCommitteeError}
-						<AppAlert message={createCommitteeError} />
-					{/if}
-
-					<button class="btn btn-primary" type="submit" disabled={createCommitteePending}>
-						{createCommitteePending ? 'Creating...' : 'Create Committee'}
-					</button>
-				</form>
-			</AppCard>
-
-			<AppCard title="Committees">
-				{#if dashboardState.data.committees.length}
-					<div class="overflow-x-auto">
-						<table class="table table-zebra">
-							<thead>
+	<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+		<h3>Existing Committees</h3>
+		<div id="committee-list-container">
+			{#if dashboardState.data?.length === 0}
+				<p>No committees have been created yet.</p>
+			{:else}
+				<div id="committee-list">
+					<table class="data-table table table-zebra w-full">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Slug</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each dashboardState.data ?? [] as committee}
 								<tr>
-									<th>Name</th>
-									<th>Slug</th>
-									<th>Members</th>
-									<th class="text-right">Actions</th>
+									<td>{committee.name}</td>
+									<td>{committee.slug}</td>
+									<td>
+										<a href={"/admin/committee/" + committee.slug}>Assign Accounts</a>{' |'}<form
+											class="inline-form inline"
+											use:legacyAttrs={{
+												'hx-post': '/admin/committee/' + committee.slug + '/delete',
+												'hx-target': '#committee-list-container',
+												'hx-swap': 'outerHTML',
+												'hx-confirm': 'Are you sure you want to delete this committee?'
+											}}
+											onsubmit={(event) => {
+												event.preventDefault();
+												deleteCommittee(committee.slug);
+											}}
+										>
+											<button class="btn btn-sm" type="submit" disabled={deleteCommitteePendingSlug === committee.slug}>Delete</button>
+										</form>
+									</td>
 								</tr>
-							</thead>
-							<tbody>
-								{#each dashboardState.data.committees as committee}
-									<tr>
-										<td class="font-medium">{committee.name}</td>
-										<td><code>{committee.slug}</code></td>
-										<td>{Number(committee.memberCount)}</td>
-										<td>
-											<div class="flex justify-end gap-2">
-												<a class="btn btn-sm btn-outline" href="/admin/committee/{committee.slug}">
-													Assign Accounts
-												</a>
-												<button
-													class="btn btn-sm btn-error btn-outline"
-													type="submit"
-													disabled={deleteCommitteePendingSlug === committee.slug}
-													onclick={() => deleteCommittee(committee.slug)}
-												>
-													{deleteCommitteePendingSlug === committee.slug
-														? 'Deleting...'
-														: 'Delete'}
-												</button>
-											</div>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else}
-					<AppAlert tone="info" message="No committees have been created yet." />
-				{/if}
-			</AppCard>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{/if}
 		</div>
-	{/if}
-</div>
+		<div class="centered-pagination-wrap flex justify-center">
+			<nav class="pagination-nav join">
+				<button type="button" disabled class="ui-icon-label btn btn-sm">
+					<LegacyIcon name="left" class="ui-icon--left" />
+					<span class="ui-icon-text">Previous</span>
+				</button>
+				<button class="btn btn-sm" type="button" disabled>1</button>
+				<button type="button" disabled class="ui-icon-label btn btn-sm">
+					<span class="ui-icon-text">Next</span>
+					<LegacyIcon name="right" class="ui-icon--right" />
+				</button>
+			</nav>
+		</div>
+	</section>
+{/if}

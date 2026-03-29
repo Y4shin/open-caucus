@@ -26,6 +26,9 @@ services:
     volumes:
       - ./:/workspace
     command: ["oidc-dev", "serve"]
+    environment:
+      OAUTH_ISSUER_URL: http://127.0.0.1:9096
+      OIDC_DEV_LISTEN_ADDR: 0.0.0.0:9096
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -45,8 +48,18 @@ services:
     volumes:
       - ./:/workspace
     command: ["serve"]
+    environment:
+      HOST: 0.0.0.0
+      OAUTH_ISSUER_URL: http://127.0.0.1:9096
+      OAUTH_REDIRECT_URL: http://127.0.0.1:8080/oauth/callback
     depends_on:
       setup:
         condition: service_completed_successfully
       oidc:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/login >/dev/null || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 5s

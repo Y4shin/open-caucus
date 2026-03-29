@@ -1,0 +1,11 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+pre_cmd = ["go generate ./..."]
+cmd = "go build -o ./tmp/main.exe ."
+bin = "tmp/main.exe"
+args_bin = ["serve"]
+include_ext = ["go", "templ", "yaml", "yml", "proto"]
+exclude_dir = ["web", "tmp", ".git", "node_modules", "internal/web/build", ".svelte-kit"]
+exclude_regex = ["_test\\.go", "_generated\\.go", "_gen\\.go", "_templ\\.go"]

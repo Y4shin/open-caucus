@@ -28,6 +28,12 @@ service VoteService {
 
   // SubmitBallot records a ballot from an attendee for an open vote.
   rpc SubmitBallot(SubmitBallotRequest) returns (SubmitBallotResponse);
+
+  // VerifyOpenReceipt returns the recorded open ballot choices for a receipt.
+  rpc VerifyOpenReceipt(VerifyOpenReceiptRequest) returns (VerifyOpenReceiptResponse);
+
+  // VerifySecretReceipt returns the recorded secret ballot commitment for a receipt.
+  rpc VerifySecretReceipt(VerifySecretReceiptRequest) returns (VerifySecretReceiptResponse);
 }
 
 // VoteOptionRecord is one selectable choice in a vote.
@@ -191,4 +197,34 @@ message SubmitBallotResponse {
   // receipt_token is the verifiable receipt for this ballot.
   string receipt_token = 1;
   repeated string invalidated_views = 2;
+}
+
+message VerifyOpenReceiptRequest {
+  string vote_id = 1;
+  string receipt_token = 2;
+  string attendee_id = 3;
+}
+
+message VerifyOpenReceiptResponse {
+  string vote_id = 1;
+  string vote_name = 2;
+  string attendee_id = 3;
+  string attendee_number = 4;
+  string receipt_token = 5;
+  repeated string choice_labels = 6;
+  repeated string choice_option_ids = 7;
+}
+
+message VerifySecretReceiptRequest {
+  string vote_id = 1;
+  string receipt_token = 2;
+}
+
+message VerifySecretReceiptResponse {
+  string vote_id = 1;
+  string vote_name = 2;
+  string receipt_token = 3;
+  string encrypted_commitment_b64 = 4;
+  string commitment_cipher = 5;
+  int64 commitment_version = 6;
 }

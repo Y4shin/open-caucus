@@ -109,7 +109,7 @@ func (h *attachmentUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		"blob_id":       blob.ID,
 		"filename":      blob.Filename,
 		"label":         labelValue,
-		"download_url":  fmt.Sprintf("/api/blobs/%d/download", blob.ID),
+		"download_url":  fmt.Sprintf("/blobs/%d/download", blob.ID),
 	})
 }
 

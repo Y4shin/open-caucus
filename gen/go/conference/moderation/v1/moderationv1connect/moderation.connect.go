@@ -39,12 +39,20 @@ const (
 	// ModerationServiceToggleSignupOpenProcedure is the fully-qualified name of the ModerationService's
 	// ToggleSignupOpen RPC.
 	ModerationServiceToggleSignupOpenProcedure = "/conference.moderation.v1.ModerationService/ToggleSignupOpen"
+	// ModerationServiceSetMeetingQuotationProcedure is the fully-qualified name of the
+	// ModerationService's SetMeetingQuotation RPC.
+	ModerationServiceSetMeetingQuotationProcedure = "/conference.moderation.v1.ModerationService/SetMeetingQuotation"
+	// ModerationServiceSetMeetingModeratorProcedure is the fully-qualified name of the
+	// ModerationService's SetMeetingModerator RPC.
+	ModerationServiceSetMeetingModeratorProcedure = "/conference.moderation.v1.ModerationService/SetMeetingModerator"
 )
 
 // ModerationServiceClient is a client for the conference.moderation.v1.ModerationService service.
 type ModerationServiceClient interface {
 	GetModerationView(context.Context, *connect.Request[v1.GetModerationViewRequest]) (*connect.Response[v1.GetModerationViewResponse], error)
 	ToggleSignupOpen(context.Context, *connect.Request[v1.ToggleSignupOpenRequest]) (*connect.Response[v1.ToggleSignupOpenResponse], error)
+	SetMeetingQuotation(context.Context, *connect.Request[v1.SetMeetingQuotationRequest]) (*connect.Response[v1.SetMeetingQuotationResponse], error)
+	SetMeetingModerator(context.Context, *connect.Request[v1.SetMeetingModeratorRequest]) (*connect.Response[v1.SetMeetingModeratorResponse], error)
 }
 
 // NewModerationServiceClient constructs a client for the conference.moderation.v1.ModerationService
@@ -70,13 +78,27 @@ func NewModerationServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(moderationServiceMethods.ByName("ToggleSignupOpen")),
 			connect.WithClientOptions(opts...),
 		),
+		setMeetingQuotation: connect.NewClient[v1.SetMeetingQuotationRequest, v1.SetMeetingQuotationResponse](
+			httpClient,
+			baseURL+ModerationServiceSetMeetingQuotationProcedure,
+			connect.WithSchema(moderationServiceMethods.ByName("SetMeetingQuotation")),
+			connect.WithClientOptions(opts...),
+		),
+		setMeetingModerator: connect.NewClient[v1.SetMeetingModeratorRequest, v1.SetMeetingModeratorResponse](
+			httpClient,
+			baseURL+ModerationServiceSetMeetingModeratorProcedure,
+			connect.WithSchema(moderationServiceMethods.ByName("SetMeetingModerator")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // moderationServiceClient implements ModerationServiceClient.
 type moderationServiceClient struct {
-	getModerationView *connect.Client[v1.GetModerationViewRequest, v1.GetModerationViewResponse]
-	toggleSignupOpen  *connect.Client[v1.ToggleSignupOpenRequest, v1.ToggleSignupOpenResponse]
+	getModerationView   *connect.Client[v1.GetModerationViewRequest, v1.GetModerationViewResponse]
+	toggleSignupOpen    *connect.Client[v1.ToggleSignupOpenRequest, v1.ToggleSignupOpenResponse]
+	setMeetingQuotation *connect.Client[v1.SetMeetingQuotationRequest, v1.SetMeetingQuotationResponse]
+	setMeetingModerator *connect.Client[v1.SetMeetingModeratorRequest, v1.SetMeetingModeratorResponse]
 }
 
 // GetModerationView calls conference.moderation.v1.ModerationService.GetModerationView.
@@ -89,11 +111,23 @@ func (c *moderationServiceClient) ToggleSignupOpen(ctx context.Context, req *con
 	return c.toggleSignupOpen.CallUnary(ctx, req)
 }
 
+// SetMeetingQuotation calls conference.moderation.v1.ModerationService.SetMeetingQuotation.
+func (c *moderationServiceClient) SetMeetingQuotation(ctx context.Context, req *connect.Request[v1.SetMeetingQuotationRequest]) (*connect.Response[v1.SetMeetingQuotationResponse], error) {
+	return c.setMeetingQuotation.CallUnary(ctx, req)
+}
+
+// SetMeetingModerator calls conference.moderation.v1.ModerationService.SetMeetingModerator.
+func (c *moderationServiceClient) SetMeetingModerator(ctx context.Context, req *connect.Request[v1.SetMeetingModeratorRequest]) (*connect.Response[v1.SetMeetingModeratorResponse], error) {
+	return c.setMeetingModerator.CallUnary(ctx, req)
+}
+
 // ModerationServiceHandler is an implementation of the conference.moderation.v1.ModerationService
 // service.
 type ModerationServiceHandler interface {
 	GetModerationView(context.Context, *connect.Request[v1.GetModerationViewRequest]) (*connect.Response[v1.GetModerationViewResponse], error)
 	ToggleSignupOpen(context.Context, *connect.Request[v1.ToggleSignupOpenRequest]) (*connect.Response[v1.ToggleSignupOpenResponse], error)
+	SetMeetingQuotation(context.Context, *connect.Request[v1.SetMeetingQuotationRequest]) (*connect.Response[v1.SetMeetingQuotationResponse], error)
+	SetMeetingModerator(context.Context, *connect.Request[v1.SetMeetingModeratorRequest]) (*connect.Response[v1.SetMeetingModeratorResponse], error)
 }
 
 // NewModerationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -115,12 +149,28 @@ func NewModerationServiceHandler(svc ModerationServiceHandler, opts ...connect.H
 		connect.WithSchema(moderationServiceMethods.ByName("ToggleSignupOpen")),
 		connect.WithHandlerOptions(opts...),
 	)
+	moderationServiceSetMeetingQuotationHandler := connect.NewUnaryHandler(
+		ModerationServiceSetMeetingQuotationProcedure,
+		svc.SetMeetingQuotation,
+		connect.WithSchema(moderationServiceMethods.ByName("SetMeetingQuotation")),
+		connect.WithHandlerOptions(opts...),
+	)
+	moderationServiceSetMeetingModeratorHandler := connect.NewUnaryHandler(
+		ModerationServiceSetMeetingModeratorProcedure,
+		svc.SetMeetingModerator,
+		connect.WithSchema(moderationServiceMethods.ByName("SetMeetingModerator")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.moderation.v1.ModerationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ModerationServiceGetModerationViewProcedure:
 			moderationServiceGetModerationViewHandler.ServeHTTP(w, r)
 		case ModerationServiceToggleSignupOpenProcedure:
 			moderationServiceToggleSignupOpenHandler.ServeHTTP(w, r)
+		case ModerationServiceSetMeetingQuotationProcedure:
+			moderationServiceSetMeetingQuotationHandler.ServeHTTP(w, r)
+		case ModerationServiceSetMeetingModeratorProcedure:
+			moderationServiceSetMeetingModeratorHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -136,4 +186,12 @@ func (UnimplementedModerationServiceHandler) GetModerationView(context.Context, 
 
 func (UnimplementedModerationServiceHandler) ToggleSignupOpen(context.Context, *connect.Request[v1.ToggleSignupOpenRequest]) (*connect.Response[v1.ToggleSignupOpenResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.moderation.v1.ModerationService.ToggleSignupOpen is not implemented"))
+}
+
+func (UnimplementedModerationServiceHandler) SetMeetingQuotation(context.Context, *connect.Request[v1.SetMeetingQuotationRequest]) (*connect.Response[v1.SetMeetingQuotationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.moderation.v1.ModerationService.SetMeetingQuotation is not implemented"))
+}
+
+func (UnimplementedModerationServiceHandler) SetMeetingModerator(context.Context, *connect.Request[v1.SetMeetingModeratorRequest]) (*connect.Response[v1.SetMeetingModeratorResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.moderation.v1.ModerationService.SetMeetingModerator is not implemented"))
 }

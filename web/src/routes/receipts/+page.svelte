@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import {
 		clearReceipts,
 		listReceipts,
@@ -13,17 +14,63 @@
 	let error = $state('');
 	let verifyingId = $state('');
 	let verifyResults = $state<Record<string, string>>({});
+	const textNoStoredReceipts = 'No stored receipts.';
+	const textUnknown = 'unknown';
+	const textVote = 'Vote';
+	const textVotePrefix = 'vote #';
+	const textVerify = 'Verify';
+	const textVerifying = 'verifying...';
+	const textOkPrefix = 'OK: ';
+	const textNoChoices = 'no choices';
+	const textCommitmentReturned = 'commitment returned';
+	const textErrorPrefix = 'Error: ';
+	const textLoadingReceipts = 'Loading receipts...';
+	const textLoadedReceipts = 'Loaded receipt(s): ';
+	const textFailedLoadReceipts = 'Failed to load receipts: ';
+	const textFailedClearReceipts = 'Failed to clear receipts: ';
+
+	onMount(() => {
+		pageActions.set([], { title: 'Receipt Vault' });
+		loadReceipts();
+		return () => pageActions.clear();
+	});
+
+	function sortedReceipts(items: StoredReceipt[]) {
+		return [...items].sort((a, b) => {
+			const voteCmp = a.voteId.localeCompare(b.voteId, undefined, { numeric: true });
+			if (voteCmp !== 0) {
+				return voteCmp;
+			}
+			return a.id.localeCompare(b.id);
+		});
+	}
+
+	function setStatus(message: string, isError: boolean) {
+		status = message;
+		error = isError ? message : '';
+	}
 
 	function loadReceipts() {
-		receipts = listReceipts();
-		status = `Loaded ${receipts.length} receipt${receipts.length === 1 ? '' : 's'}.`;
-		error = '';
+		try {
+			setStatus(textLoadingReceipts, false);
+			receipts = sortedReceipts(listReceipts());
+			setStatus(`${textLoadedReceipts}${receipts.length}.`, false);
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'unknown error';
+			receipts = [];
+			setStatus(`${textFailedLoadReceipts}${message}`, true);
+		}
 	}
 
 	function clearAll() {
-		clearReceipts();
-		verifyResults = {};
-		loadReceipts();
+		try {
+			clearReceipts();
+			verifyResults = {};
+			loadReceipts();
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'unknown error';
+			setStatus(`${textFailedClearReceipts}${message}`, true);
+		}
 	}
 
 	async function verifyOne(receipt: StoredReceipt) {
@@ -32,73 +79,89 @@
 		try {
 			const payload = await verifyReceipt(receipt);
 			if (receipt.kind === 'open') {
-				const labels = Array.isArray(payload?.choice_labels)
-					? (payload.choice_labels as string[]).join(', ')
-					: '';
-				verifyResults[receipt.id] = labels || 'Verified.';
+				const labels =
+					payload && 'choiceLabels' in payload && Array.isArray(payload.choiceLabels)
+						? payload.choiceLabels.join(', ')
+						: '';
+				verifyResults[receipt.id] = `${textOkPrefix}${labels || textNoChoices}`;
 			} else {
-				verifyResults[receipt.id] = 'Verified secret-ballot commitment.';
+				verifyResults[receipt.id] = `${textOkPrefix}${textCommitmentReturned}`;
 			}
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Verification failed.';
+			verifyResults[receipt.id] = `${textErrorPrefix}${err instanceof Error ? err.message : 'Verification failed.'}`;
 		} finally {
 			verifyingId = '';
 		}
 	}
-
-	loadReceipts();
 </script>
 
-<div class="space-y-6">
-	<div class="space-y-2">
-		<h1 class="text-3xl font-bold">Receipts Vault</h1>
-		<p class="text-base-content/70">
-			Review locally stored ballot receipts and verify them against the backend.
-		</p>
-	</div>
+<div
+	id="receipts-vault-content"
+	class="mx-auto w-full max-w-5xl space-y-4"
+	data-text-no-stored={textNoStoredReceipts}
+	data-text-unknown={textUnknown}
+	data-text-vote={textVote}
+	data-text-vote-prefix={textVotePrefix}
+	data-text-verify={textVerify}
+	data-text-verifying={textVerifying}
+	data-text-ok-prefix={textOkPrefix}
+	data-text-no-choices={textNoChoices}
+	data-text-commitment-returned={textCommitmentReturned}
+	data-text-error-prefix={textErrorPrefix}
+	data-text-loading-receipts={textLoadingReceipts}
+	data-text-loaded-receipts={textLoadedReceipts}
+	data-text-failed-load-receipts={textFailedLoadReceipts}
+	data-text-failed-clear-receipts={textFailedClearReceipts}
+	data-text-verify-failed-status="verify failed with status "
+>
+	<h1 class="text-2xl font-semibold">Receipt Vault</h1>
+	<p class="text-sm text-base-content/70">Receipts are stored locally in your browser. This page verifies them against public vote verification endpoints.</p>
 
 	{#if error}
 		<AppAlert message={error} />
 	{/if}
 
-	<AppCard title="Stored Receipts">
-		<div class="mb-4 flex flex-wrap gap-2">
-			<button class="btn btn-outline btn-sm" type="button" onclick={loadReceipts}>Refresh</button>
-			<button class="btn btn-error btn-outline btn-sm" type="button" onclick={clearAll}>Clear All</button>
+	<div class="rounded-box border border-base-300 bg-base-100 p-3 space-y-3">
+		<div class="flex flex-wrap items-center gap-2">
+			<button id="receipts-refresh" class="btn btn-sm btn-outline" type="button" onclick={loadReceipts}>Refresh</button>
+			<button id="receipts-clear" class="btn btn-sm btn-error btn-outline" type="button" onclick={clearAll}>Clear All</button>
 		</div>
 
-		<p class="mb-4 text-sm text-base-content/70">{status}</p>
+		<div id="receipts-status" class={error ? 'text-sm text-error' : 'text-sm text-base-content/70'}>
+			{status}
+		</div>
 
 		{#if receipts.length}
-			<div class="space-y-3">
+			<div id="receipts-list" class="space-y-2">
 				{#each receipts as receipt}
-					<div class="rounded-box border border-base-300 bg-base-100 p-4">
-						<div class="flex flex-wrap items-start justify-between gap-3">
-							<div class="space-y-2">
-								<div class="flex flex-wrap items-center gap-2">
-									<span class="badge badge-outline">{receipt.kind}</span>
-									<span class="font-medium">{receipt.voteName}</span>
-								</div>
-								<p class="text-sm text-base-content/70">Vote #{receipt.voteId}</p>
-								<p class="font-mono text-xs break-all">{receipt.receipt}</p>
-								{#if verifyResults[receipt.id]}
-									<p class="text-sm text-success">{verifyResults[receipt.id]}</p>
-								{/if}
-							</div>
+					<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="badge badge-outline badge-sm">{receipt.kind || textUnknown}</span>
+							<span class="font-semibold">{receipt.voteName || textVote}</span>
+							<span class="text-xs text-base-content/70">{textVotePrefix}{receipt.voteId || '?'}</span>
+						</div>
+						<div class="text-xs text-base-content/70 break-all">{receipt.receipt}</div>
+						<div class="flex flex-wrap items-center gap-2">
 							<button
-								class="btn btn-primary btn-sm"
+								class="btn btn-xs btn-primary"
 								type="button"
 								disabled={verifyingId === receipt.id}
 								onclick={() => verifyOne(receipt)}
 							>
-								{verifyingId === receipt.id ? 'Verifying...' : 'Verify'}
+								{verifyingId === receipt.id ? textVerifying : textVerify}
 							</button>
+							<span
+								data-result
+								class={verifyResults[receipt.id]?.startsWith(textErrorPrefix)
+									? 'text-xs text-error'
+									: 'text-xs text-success'}
+							>{verifyResults[receipt.id] || ''}</span>
 						</div>
 					</div>
 				{/each}
 			</div>
 		{:else}
-			<AppAlert tone="info" message="No stored receipts yet." />
+			<div id="receipts-list" class="space-y-2"><p class="text-sm text-base-content/70">{textNoStoredReceipts}</p></div>
 		{/if}
-	</AppCard>
+	</div>
 </div>

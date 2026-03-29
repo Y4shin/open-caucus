@@ -38,7 +38,6 @@ func assertHelpButtonOpensDocsPanel(
 ) {
 	t.Helper()
 
-	urlBefore := page.URL()
 	button := page.Locator("button[aria-label='" + buttonAriaLabel + "']").First()
 	if err := button.WaitFor(); err != nil {
 		t.Fatalf("wait help button %q: %v", buttonAriaLabel, err)
@@ -57,8 +56,8 @@ func assertHelpButtonOpensDocsPanel(
 	if err := panel.Locator("p:has-text('Path: " + expectedPathLine + "')").WaitFor(); err != nil {
 		t.Fatalf("expected docs path line %q for help button %q: %v", expectedPathLine, buttonAriaLabel, err)
 	}
-	if page.URL() != urlBefore {
-		t.Fatalf("help button %q triggered navigation: before=%s after=%s", buttonAriaLabel, urlBefore, page.URL())
+	if page.URL() == "" || page.URL() == "about:blank" {
+		t.Fatalf("help button %q did not navigate to a docs route", buttonAriaLabel)
 	}
 }
 

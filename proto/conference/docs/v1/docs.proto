@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package conference.docs.v1;
+
+option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1;docsv1";
+
+service DocsService {
+  rpc GetPage(GetPageRequest) returns (GetPageResponse);
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+
+message NavCrumb {
+  string title = 1;
+  string path = 2;
+  bool current = 3;
+}
+
+message NavNode {
+  string title = 1;
+  string path = 2;
+  bool current = 3;
+  bool expanded = 4;
+  repeated NavNode children = 5;
+}
+
+message DocsPage {
+  string path = 1;
+  string locale = 2;
+  string title = 3;
+  string heading = 4;
+  string html = 5;
+  string path_display = 6;
+  repeated NavCrumb crumbs = 7;
+  repeated NavNode tree = 8;
+}
+
+message SearchHit {
+  string ref = 1;
+  string path = 2;
+  string heading = 3;
+  string title = 4;
+  string locale = 5;
+  string snippet = 6;
+  double score = 7;
+}
+
+message GetPageRequest {
+  string path = 1;
+  string heading = 2;
+}
+
+message GetPageResponse {
+  DocsPage page = 1;
+}
+
+message SearchRequest {
+  string query = 1;
+  uint32 limit = 2;
+}
+
+message SearchResponse {
+  string query = 1;
+  repeated SearchHit hits = 2;
+}

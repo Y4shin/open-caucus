@@ -308,6 +308,14 @@ func (r *Repository) UpsertOAuthIdentity(
 		     full_name = excluded.full_name,
 		     email = excluded.email,
 		     groups_json = excluded.groups_json,
+		     updated_at = datetime('now')
+		 ON CONFLICT (account_id) DO UPDATE
+		 SET issuer = excluded.issuer,
+		     subject = excluded.subject,
+		     username = excluded.username,
+		     full_name = excluded.full_name,
+		     email = excluded.email,
+		     groups_json = excluded.groups_json,
 		     updated_at = datetime('now')`,
 		issuer,
 		subject,

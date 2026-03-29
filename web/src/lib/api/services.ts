@@ -3,6 +3,7 @@
  * method-level request/response types.
  */
 export { SessionService } from '$lib/gen/conference/session/v1/session_pb.js';
+export { DocsService } from '$lib/gen/conference/docs/v1/docs_pb.js';
 export { CommitteeService } from '$lib/gen/conference/committees/v1/committees_pb.js';
 export { MeetingService } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
 export { AttendeeService } from '$lib/gen/conference/attendees/v1/attendees_pb.js';

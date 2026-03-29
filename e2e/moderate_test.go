@@ -4,6 +4,7 @@ package e2e_test
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -147,6 +148,87 @@ func TestModeratePage_SpeakerQuickControls(t *testing.T) {
 	}
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed during moderate quick controls: got %s, want %s", page.URL(), urlBefore)
+	}
+}
+
+// TestModeratePage_SpeakingRowShowsTimerAndIndicator verifies that the current
+// speaking row exposes the legacy timer and indicator affordances after a
+// speaker is started from the moderation workspace.
+func TestModeratePage_SpeakingRowShowsTimerAndIndicator(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Board Meeting", "Main Topic")
+	ts.activateAgendaPoint(t, "test-committee", "Board Meeting", apID)
+	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alice Speaker", "secret-alice-s")
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto moderate page: %v", err)
+	}
+	if err := page.Locator("#moderate-left-controls").WaitFor(); err != nil {
+		t.Fatalf("wait moderate controls: %v", err)
+	}
+	if err := page.Locator(".loading-spinner").WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateDetached,
+	}); err != nil {
+		t.Fatalf("moderate page should finish loading instead of staying on the spinner: %v", err)
+	}
+
+	if err := page.Locator("#speaker-add-search-input").Fill("Alice"); err != nil {
+		t.Fatalf("fill add-speaker search: %v", err)
+	}
+	candidateCard := page.Locator("#speaker-add-candidates-container [data-testid='manage-speaker-candidate-card']").Filter(playwright.LocatorFilterOptions{
+		HasText: "Alice Speaker",
+	})
+	if err := candidateCard.WaitFor(); err != nil {
+		t.Fatalf("wait Alice candidate card: %v", err)
+	}
+	if err := candidateCard.Locator("button[title='Add regular speech']").Click(); err != nil {
+		t.Fatalf("add Alice regular speech: %v", err)
+	}
+
+	waitingRow := page.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='waiting']").Filter(playwright.LocatorFilterOptions{
+		HasText: "Alice Speaker",
+	}).First()
+	if err := waitingRow.WaitFor(); err != nil {
+		t.Fatalf("wait Alice waiting row: %v", err)
+	}
+	for _, selector := range []struct {
+		label    string
+		selector string
+	}{
+		{label: "Give priority", selector: "button[title='Give Priority'], button[title='Give priority']"},
+		{label: "Start", selector: "button[title='Start']"},
+		{label: "Remove", selector: "button[title='Remove']"},
+	} {
+		if err := waitingRow.Locator(selector.selector).First().WaitFor(); err != nil {
+			t.Fatalf("expected waiting-row control %q: %v", selector.label, err)
+		}
+	}
+	if err := waitingRow.Locator("button[title='Start']").Click(); err != nil {
+		t.Fatalf("start Alice from waiting row: %v", err)
+	}
+
+	speakingRow := page.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']").Filter(playwright.LocatorFilterOptions{
+		HasText: "Alice Speaker",
+	}).First()
+	if err := speakingRow.WaitFor(); err != nil {
+		t.Fatalf("wait Alice speaking row: %v", err)
+	}
+	if err := speakingRow.Locator("[data-testid='live-speaker-speaking-indicator']").WaitFor(); err != nil {
+		t.Fatalf("expected speaking indicator on active speaker row: %v", err)
+	}
+
+	timerText, err := speakingRow.Locator("[data-speaking-since]").TextContent()
+	if err != nil {
+		t.Fatalf("read speaking timer text: %v", err)
+	}
+	if !regexp.MustCompile(`^\d{2}:\d{2}$`).MatchString(strings.TrimSpace(timerText)) {
+		t.Fatalf("expected speaking timer in mm:ss format, got %q", strings.TrimSpace(timerText))
 	}
 }
 

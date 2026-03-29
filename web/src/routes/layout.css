@@ -1,2 +1,82 @@
 @import 'tailwindcss';
 @plugin "daisyui";
+
+.app-shell {
+	min-height: 100vh;
+}
+
+.page-main {
+	min-height: 0;
+}
+
+.manage-speaker-candidate-button-icon,
+.manage-agenda-action-icon,
+.manage-attendee-icon,
+.live-agenda-dialog-icon,
+.live-speaker-history-icon,
+.live-self-add-icon,
+.quoted-status-chip-icon {
+	width: 1.05rem;
+	height: 1.05rem;
+	flex: 0 0 auto;
+}
+
+.ui-icon--left {
+	margin-right: 0.35rem;
+}
+
+.ui-icon--right {
+	margin-left: 0.35rem;
+}
+
+.live-speakers-list-shell,
+.live-speakers-list-viewport {
+	min-height: 0;
+}
+
+.live-speakers-list-viewport {
+	max-height: min(58vh, 30rem);
+	overflow-y: auto;
+	padding-right: 0.1rem;
+}
+
+.live-body .live-self-add-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.45rem;
+	margin-top: 0.72rem;
+}
+
+@keyframes live-speaking-row-sweep {
+	0%,
+	100% {
+		background-position: 100% 50%;
+	}
+
+	50% {
+		background-position: 72% 50%;
+	}
+}
+
+.live-speaker-list [data-testid='live-speaker-item'][data-speaker-state='speaking'] {
+	position: relative;
+	isolation: isolate;
+	background-image: linear-gradient(
+		270deg,
+		#5ee7ff30 0%,
+		#7d8cff2e 16%,
+		#cf79ff26 36%,
+		#ff78b822 52%,
+		transparent 76%
+	);
+	background-size: 170% 100%;
+	background-repeat: no-repeat;
+	background-position: 100% 50%;
+	animation: live-speaking-row-sweep 2.8s ease-in-out infinite;
+	box-shadow: inset 0 0 0 1px #7d8cff26;
+}
+
+.live-speaker-list [data-testid='live-speaker-item'][data-speaker-state='speaking'] > * {
+	position: relative;
+	z-index: 1;
+}

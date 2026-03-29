@@ -19,6 +19,7 @@ import (
 	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
 	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
 	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	docsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1/docsv1connect"
 	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
 	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
@@ -209,14 +210,15 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 	)
 	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
 
+	docsAPIPath, docsAPIHandler := docsv1connect.NewDocsServiceHandler(
+		apiconnect.NewDocsHandler(docsService),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(docsAPIPath, docsAPIHandler)
+
 	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
 	)
-	apiMux.Handle("GET /blobs/{blobId}/download", apihttp.NewBlobDownloadHandler(repo, store))
-	apiMux.Handle("POST /votes/verify/open", apihttp.NewVerifyOpenVoteReceiptHandler(repo))
-	apiMux.Handle("POST /votes/verify/secret", apihttp.NewVerifySecretVoteReceiptHandler(repo))
-	apiMux.Handle("GET /docs/page/{docPath...}", apihttp.NewDocsPageHandler(docsService))
-	apiMux.Handle("GET /docs/search", apihttp.NewDocsSearchHandler(docsService))
 	apiMux.Handle("GET /docs/assets/{assetPath...}", apihttp.NewDocsAssetHandler(docsService))
 
 	spaHandler := webassets.NewSPAHandler()
@@ -238,6 +240,8 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 			apihttp.NewOAuthCallbackHandler(oauthH).ServeHTTP(w, r)
 		case r.URL.Path == "/docs/assets" || strings.HasPrefix(r.URL.Path, "/docs/assets/"):
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
+		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
+			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:
 			spaHandler.ServeHTTP(w, r)
 		default:

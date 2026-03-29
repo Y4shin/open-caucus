@@ -94,6 +94,7 @@ func (h *Handler) publishSpeakersUpdated(meetingID int64) {
 func (h *Handler) publishCurrentDocumentChanged(meetingID int64) {
 	mid := meetingID
 	h.Broker.Publish(broker.SSEEvent{Event: "speakers-updated", Data: []byte("{}"), MeetingID: &mid})
+	h.Broker.Publish(broker.SSEEvent{Event: "live-updated", Data: []byte("{}"), MeetingID: &mid})
 }
 
 // AttendeeSpeakersStream streams live speaker list updates to the attendee via SSE.

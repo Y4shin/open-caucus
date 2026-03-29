@@ -239,6 +239,7 @@ type MeetingReference struct {
 	CommitteeSlug string                 `protobuf:"bytes,2,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	SignupOpen    bool                   `protobuf:"varint,4,opt,name=signup_open,json=signupOpen,proto3" json:"signup_open,omitempty"`
+	Description   string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -299,6 +300,13 @@ func (x *MeetingReference) GetSignupOpen() bool {
 		return x.SignupOpen
 	}
 	return false
+}
+
+func (x *MeetingReference) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
 }
 
 type AgendaPointSummary struct {
@@ -661,14 +669,15 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x19\n" +
 	"\bis_admin\x18\x04 \x01(\bR\aisAdmin\x12%\n" +
 	"\x0eis_chairperson\x18\x05 \x01(\bR\risChairperson\x12\x1b\n" +
-	"\tis_member\x18\x06 \x01(\bR\bisMember\"\x8d\x01\n" +
+	"\tis_member\x18\x06 \x01(\bR\bisMember\"\xaf\x01\n" +
 	"\x10MeetingReference\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12%\n" +
 	"\x0ecommittee_slug\x18\x02 \x01(\tR\rcommitteeSlug\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
 	"\vsignup_open\x18\x04 \x01(\bR\n" +
-	"signupOpen\"\x96\x01\n" +
+	"signupOpen\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\"\x96\x01\n" +
 	"\x12AgendaPointSummary\x12&\n" +
 	"\x0fagenda_point_id\x18\x01 \x01(\tR\ragendaPointId\x12%\n" +
 	"\x0edisplay_number\x18\x02 \x01(\tR\rdisplayNumber\x12\x14\n" +

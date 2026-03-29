@@ -9,6 +9,7 @@ import (
 	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
 	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
 	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	docsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1/docsv1connect"
 	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
 	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
@@ -150,17 +151,15 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	)
 	apiMux.Handle(adminAPIPath, rt.middleware.Get("session")(adminAPIHandler))
 
-	apiMux.Handle("POST /committee/{slug}/meetings", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingCreateHandler(rt.repo)))
-	apiMux.Handle("DELETE /committee/{slug}/meetings/{meetingId}", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingDeleteHandler(rt.repo)))
-	apiMux.Handle("POST /committee/{slug}/meetings/{meetingId}/active", rt.middleware.Get("session")(apihttp.NewCommitteeMeetingActivateHandler(rt.repo)))
+	docsAPIPath, docsAPIHandler := docsv1connect.NewDocsServiceHandler(
+		apiconnect.NewDocsHandler(rt.docsService),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(docsAPIPath, docsAPIHandler)
+
 	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		rt.middleware.Get("session")(apihttp.NewAttachmentUploadHandler(rt.repo, rt.store)),
 	)
-	apiMux.Handle("GET /blobs/{blobId}/download", apihttp.NewBlobDownloadHandler(rt.repo, rt.store))
-	apiMux.Handle("POST /votes/verify/open", apihttp.NewVerifyOpenVoteReceiptHandler(rt.repo))
-	apiMux.Handle("POST /votes/verify/secret", apihttp.NewVerifySecretVoteReceiptHandler(rt.repo))
-	apiMux.Handle("GET /docs/page/{docPath...}", apihttp.NewDocsPageHandler(rt.docsService))
-	apiMux.Handle("GET /docs/search", apihttp.NewDocsSearchHandler(rt.docsService))
 	apiMux.Handle("GET /docs/assets/{assetPath...}", apihttp.NewDocsAssetHandler(rt.docsService))
 
 	return apiMux

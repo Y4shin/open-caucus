@@ -133,6 +133,11 @@ func (s *Service) GetModerationView(ctx context.Context, committeeSlug, meetingI
 		ActiveAgendaPoint: activeAP,
 		Speakers:          speakerSummary,
 		Capabilities:      caps,
+		Settings: &moderationv1.ModerationMeetingSettingsBlock{
+			GenderQuotationEnabled:       meeting.GenderQuotationEnabled,
+			FirstSpeakerQuotationEnabled: meeting.FirstSpeakerQuotationEnabled,
+			ModeratorAttendeeId:          optionalInt64String(meeting.ModeratorID),
+		},
 	}
 
 	return &moderationv1.GetModerationViewResponse{View: view}, nil
@@ -175,6 +180,84 @@ func (s *Service) ToggleSignupOpen(ctx context.Context, committeeSlug, meetingID
 	}, nil
 }
 
+func (s *Service) SetMeetingQuotation(ctx context.Context, committeeSlug, meetingIDStr string, genderQuotationEnabled, firstSpeakerQuotationEnabled bool) (*moderationv1.SetMeetingQuotationResponse, error) {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
+		return nil, err
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	if err := s.repo.SetMeetingGenderQuotation(ctx, meetingID, genderQuotationEnabled); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set gender quotation", err)
+	}
+	if err := s.repo.SetMeetingFirstSpeakerQuotation(ctx, meetingID, firstSpeakerQuotationEnabled); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set first-speaker quotation", err)
+	}
+
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
+	}
+	if meeting.CurrentAgendaPointID != nil {
+		if err := s.repo.RecomputeSpeakerOrder(ctx, *meeting.CurrentAgendaPointID); err != nil {
+			return nil, apierrors.Wrap(apierrors.KindInternal, "failed to recompute speaker order", err)
+		}
+	}
+
+	invalidatedViews := []string{"moderation", "live"}
+	s.publishInvalidation(meetingID, "speakers.updated", invalidatedViews, uint64(meeting.Version))
+
+	return &moderationv1.SetMeetingQuotationResponse{
+		MeetingId:                    strconv.FormatInt(meetingID, 10),
+		GenderQuotationEnabled:       genderQuotationEnabled,
+		FirstSpeakerQuotationEnabled: firstSpeakerQuotationEnabled,
+		Version:                      uint64(meeting.Version),
+		InvalidatedViews:             invalidatedViews,
+	}, nil
+}
+
+func (s *Service) SetMeetingModerator(ctx context.Context, committeeSlug, meetingIDStr, moderatorAttendeeIDStr string) (*moderationv1.SetMeetingModeratorResponse, error) {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
+		return nil, err
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	var moderatorID *int64
+	if moderatorAttendeeIDStr != "" {
+		id, err := strconv.ParseInt(moderatorAttendeeIDStr, 10, 64)
+		if err != nil {
+			return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid moderator attendee id")
+		}
+		moderatorID = &id
+	}
+
+	if err := s.repo.SetMeetingModerator(ctx, meetingID, moderatorID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set meeting moderator", err)
+	}
+
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
+	}
+
+	invalidatedViews := []string{"moderation", "live"}
+	s.publishInvalidation(meetingID, "meeting.updated", invalidatedViews, uint64(meeting.Version))
+
+	return &moderationv1.SetMeetingModeratorResponse{
+		MeetingId:           strconv.FormatInt(meetingID, 10),
+		ModeratorAttendeeId: moderatorAttendeeIDStr,
+		Version:             uint64(meeting.Version),
+		InvalidatedViews:    invalidatedViews,
+	}, nil
+}
+
 func (s *Service) publishInvalidation(meetingID int64, eventType string, scope []string, version uint64) {
 	evt := MeetingInvalidationEvent{
 		Type:       eventType,
@@ -197,4 +280,11 @@ func (s *Service) publishInvalidation(meetingID int64, eventType string, scope [
 
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
 	return serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug)
+}
+
+func optionalInt64String(value *int64) string {
+	if value == nil {
+		return ""
+	}
+	return strconv.FormatInt(*value, 10)
 }

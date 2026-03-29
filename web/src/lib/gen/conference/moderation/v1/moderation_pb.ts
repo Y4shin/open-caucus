@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/moderation/v1/moderation.proto.
  */
 export const file_conference_moderation_v1_moderation: GenFile = /*@__PURE__*/
-  fileDesc("Ciljb25mZXJlbmNlL21vZGVyYXRpb24vdjEvbW9kZXJhdGlvbi5wcm90bxIYY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxInQKGE1vZGVyYXRpb25NZWV0aW5nU3VtbWFyeRIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhQKDG1lZXRpbmdfbmFtZRgDIAEoCRIWCg5jb21taXR0ZWVfbmFtZRgEIAEoCSKOAQoeTW9kZXJhdGlvbkF0dGVuZGVlU3VtbWFyeUJsb2NrEhMKC3NpZ251cF9vcGVuGAEgASgIEhMKC3RvdGFsX2NvdW50GAIgASgFEhMKC2d1ZXN0X2NvdW50GAMgASgFEhMKC2NoYWlyX2NvdW50GAQgASgFEhgKEHNob3dfc2VsZl9zaWdudXAYBSABKAgiZwodTW9kZXJhdGlvblNwZWFrZXJTdW1tYXJ5QmxvY2sSEwoLdG90YWxfY291bnQYASABKAUSGgoSaGFzX2FjdGl2ZV9zcGVha2VyGAIgASgIEhUKDXdhaXRpbmdfY291bnQYAyABKAUi/QIKDk1vZGVyYXRpb25WaWV3EkMKB21lZXRpbmcYASABKAsyMi5jb25mZXJlbmNlLm1vZGVyYXRpb24udjEuTW9kZXJhdGlvbk1lZXRpbmdTdW1tYXJ5Eg8KB3ZlcnNpb24YAiABKAQSSwoJYXR0ZW5kZWVzGAMgASgLMjguY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLk1vZGVyYXRpb25BdHRlbmRlZVN1bW1hcnlCbG9jaxJFChNhY3RpdmVfYWdlbmRhX3BvaW50GAQgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQWdlbmRhUG9pbnRTdW1tYXJ5EkkKCHNwZWFrZXJzGAUgASgLMjcuY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLk1vZGVyYXRpb25TcGVha2VyU3VtbWFyeUJsb2NrEjYKDGNhcGFiaWxpdGllcxgGIAMoCzIgLmNvbmZlcmVuY2UuY29tbW9uLnYxLkNhcGFiaWxpdHkiRgoYR2V0TW9kZXJhdGlvblZpZXdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUwoZR2V0TW9kZXJhdGlvblZpZXdSZXNwb25zZRI2CgR2aWV3GAEgASgLMiguY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLk1vZGVyYXRpb25WaWV3InUKF1RvZ2dsZVNpZ251cE9wZW5SZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMZGVzaXJlZF9vcGVuGAMgASgIEhgKEGV4cGVjdGVkX3ZlcnNpb24YBCABKAQibwoYVG9nZ2xlU2lnbnVwT3BlblJlc3BvbnNlEhIKCm1lZXRpbmdfaWQYASABKAkSEwoLc2lnbnVwX29wZW4YAiABKAgSDwoHdmVyc2lvbhgDIAEoBBIZChFpbnZhbGlkYXRlZF92aWV3cxgEIAMoCTKMAgoRTW9kZXJhdGlvblNlcnZpY2USfAoRR2V0TW9kZXJhdGlvblZpZXcSMi5jb25mZXJlbmNlLm1vZGVyYXRpb24udjEuR2V0TW9kZXJhdGlvblZpZXdSZXF1ZXN0GjMuY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLkdldE1vZGVyYXRpb25WaWV3UmVzcG9uc2USeQoQVG9nZ2xlU2lnbnVwT3BlbhIxLmNvbmZlcmVuY2UubW9kZXJhdGlvbi52MS5Ub2dnbGVTaWdudXBPcGVuUmVxdWVzdBoyLmNvbmZlcmVuY2UubW9kZXJhdGlvbi52MS5Ub2dnbGVTaWdudXBPcGVuUmVzcG9uc2VCUFpOZ2l0aHViLmNvbS9ZNHNoaW4vY29uZmVyZW5jZS10b29sL2dlbi9nby9jb25mZXJlbmNlL21vZGVyYXRpb24vdjE7bW9kZXJhdGlvbnYxYgZwcm90bzM", [file_conference_common_v1_common]);
+  fileDesc("Ciljb25mZXJlbmNlL21vZGVyYXRpb24vdjEvbW9kZXJhdGlvbi5wcm90bxIYY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxInQKGE1vZGVyYXRpb25NZWV0aW5nU3VtbWFyeRIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhQKDG1lZXRpbmdfbmFtZRgDIAEoCRIWCg5jb21taXR0ZWVfbmFtZRgEIAEoCSKOAQoeTW9kZXJhdGlvbkF0dGVuZGVlU3VtbWFyeUJsb2NrEhMKC3NpZ251cF9vcGVuGAEgASgIEhMKC3RvdGFsX2NvdW50GAIgASgFEhMKC2d1ZXN0X2NvdW50GAMgASgFEhMKC2NoYWlyX2NvdW50GAQgASgFEhgKEHNob3dfc2VsZl9zaWdudXAYBSABKAgiZwodTW9kZXJhdGlvblNwZWFrZXJTdW1tYXJ5QmxvY2sSEwoLdG90YWxfY291bnQYASABKAUSGgoSaGFzX2FjdGl2ZV9zcGVha2VyGAIgASgIEhUKDXdhaXRpbmdfY291bnQYAyABKAUiigEKHk1vZGVyYXRpb25NZWV0aW5nU2V0dGluZ3NCbG9jaxIgChhnZW5kZXJfcXVvdGF0aW9uX2VuYWJsZWQYASABKAgSJwofZmlyc3Rfc3BlYWtlcl9xdW90YXRpb25fZW5hYmxlZBgCIAEoCBIdChVtb2RlcmF0b3JfYXR0ZW5kZWVfaWQYAyABKAkiyQMKDk1vZGVyYXRpb25WaWV3EkMKB21lZXRpbmcYASABKAsyMi5jb25mZXJlbmNlLm1vZGVyYXRpb24udjEuTW9kZXJhdGlvbk1lZXRpbmdTdW1tYXJ5Eg8KB3ZlcnNpb24YAiABKAQSSwoJYXR0ZW5kZWVzGAMgASgLMjguY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLk1vZGVyYXRpb25BdHRlbmRlZVN1bW1hcnlCbG9jaxJFChNhY3RpdmVfYWdlbmRhX3BvaW50GAQgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQWdlbmRhUG9pbnRTdW1tYXJ5EkkKCHNwZWFrZXJzGAUgASgLMjcuY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLk1vZGVyYXRpb25TcGVha2VyU3VtbWFyeUJsb2NrEjYKDGNhcGFiaWxpdGllcxgGIAMoCzIgLmNvbmZlcmVuY2UuY29tbW9uLnYxLkNhcGFiaWxpdHkSSgoIc2V0dGluZ3MYByABKAsyOC5jb25mZXJlbmNlLm1vZGVyYXRpb24udjEuTW9kZXJhdGlvbk1lZXRpbmdTZXR0aW5nc0Jsb2NrIkYKGEdldE1vZGVyYXRpb25WaWV3UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIlMKGUdldE1vZGVyYXRpb25WaWV3UmVzcG9uc2USNgoEdmlldxgBIAEoCzIoLmNvbmZlcmVuY2UubW9kZXJhdGlvbi52MS5Nb2RlcmF0aW9uVmlldyJ1ChdUb2dnbGVTaWdudXBPcGVuUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhQKDGRlc2lyZWRfb3BlbhgDIAEoCBIYChBleHBlY3RlZF92ZXJzaW9uGAQgASgEIm8KGFRvZ2dsZVNpZ251cE9wZW5SZXNwb25zZRISCgptZWV0aW5nX2lkGAEgASgJEhMKC3NpZ251cF9vcGVuGAIgASgIEg8KB3ZlcnNpb24YAyABKAQSGQoRaW52YWxpZGF0ZWRfdmlld3MYBCADKAkikwEKGlNldE1lZXRpbmdRdW90YXRpb25SZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSIAoYZ2VuZGVyX3F1b3RhdGlvbl9lbmFibGVkGAMgASgIEicKH2ZpcnN0X3NwZWFrZXJfcXVvdGF0aW9uX2VuYWJsZWQYBCABKAgiqAEKG1NldE1lZXRpbmdRdW90YXRpb25SZXNwb25zZRISCgptZWV0aW5nX2lkGAEgASgJEiAKGGdlbmRlcl9xdW90YXRpb25fZW5hYmxlZBgCIAEoCBInCh9maXJzdF9zcGVha2VyX3F1b3RhdGlvbl9lbmFibGVkGAMgASgIEg8KB3ZlcnNpb24YBCABKAQSGQoRaW52YWxpZGF0ZWRfdmlld3MYBSADKAkiZwoaU2V0TWVldGluZ01vZGVyYXRvclJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIdChVtb2RlcmF0b3JfYXR0ZW5kZWVfaWQYAyABKAkifAobU2V0TWVldGluZ01vZGVyYXRvclJlc3BvbnNlEhIKCm1lZXRpbmdfaWQYASABKAkSHQoVbW9kZXJhdG9yX2F0dGVuZGVlX2lkGAIgASgJEg8KB3ZlcnNpb24YAyABKAQSGQoRaW52YWxpZGF0ZWRfdmlld3MYBCADKAkylgQKEU1vZGVyYXRpb25TZXJ2aWNlEnwKEUdldE1vZGVyYXRpb25WaWV3EjIuY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLkdldE1vZGVyYXRpb25WaWV3UmVxdWVzdBozLmNvbmZlcmVuY2UubW9kZXJhdGlvbi52MS5HZXRNb2RlcmF0aW9uVmlld1Jlc3BvbnNlEnkKEFRvZ2dsZVNpZ251cE9wZW4SMS5jb25mZXJlbmNlLm1vZGVyYXRpb24udjEuVG9nZ2xlU2lnbnVwT3BlblJlcXVlc3QaMi5jb25mZXJlbmNlLm1vZGVyYXRpb24udjEuVG9nZ2xlU2lnbnVwT3BlblJlc3BvbnNlEoIBChNTZXRNZWV0aW5nUXVvdGF0aW9uEjQuY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLlNldE1lZXRpbmdRdW90YXRpb25SZXF1ZXN0GjUuY29uZmVyZW5jZS5tb2RlcmF0aW9uLnYxLlNldE1lZXRpbmdRdW90YXRpb25SZXNwb25zZRKCAQoTU2V0TWVldGluZ01vZGVyYXRvchI0LmNvbmZlcmVuY2UubW9kZXJhdGlvbi52MS5TZXRNZWV0aW5nTW9kZXJhdG9yUmVxdWVzdBo1LmNvbmZlcmVuY2UubW9kZXJhdGlvbi52MS5TZXRNZWV0aW5nTW9kZXJhdG9yUmVzcG9uc2VCUFpOZ2l0aHViLmNvbS9ZNHNoaW4vY29uZmVyZW5jZS10b29sL2dlbi9nby9jb25mZXJlbmNlL21vZGVyYXRpb24vdjE7bW9kZXJhdGlvbnYxYgZwcm90bzM", [file_conference_common_v1_common]);
 
 /**
  * @generated from message conference.moderation.v1.ModerationMeetingSummary
@@ -111,6 +111,33 @@ export const ModerationSpeakerSummaryBlockSchema: GenMessage<ModerationSpeakerSu
   messageDesc(file_conference_moderation_v1_moderation, 2);
 
 /**
+ * @generated from message conference.moderation.v1.ModerationMeetingSettingsBlock
+ */
+export type ModerationMeetingSettingsBlock = Message<"conference.moderation.v1.ModerationMeetingSettingsBlock"> & {
+  /**
+   * @generated from field: bool gender_quotation_enabled = 1;
+   */
+  genderQuotationEnabled: boolean;
+
+  /**
+   * @generated from field: bool first_speaker_quotation_enabled = 2;
+   */
+  firstSpeakerQuotationEnabled: boolean;
+
+  /**
+   * @generated from field: string moderator_attendee_id = 3;
+   */
+  moderatorAttendeeId: string;
+};
+
+/**
+ * Describes the message conference.moderation.v1.ModerationMeetingSettingsBlock.
+ * Use `create(ModerationMeetingSettingsBlockSchema)` to create a new message.
+ */
+export const ModerationMeetingSettingsBlockSchema: GenMessage<ModerationMeetingSettingsBlock> = /*@__PURE__*/
+  messageDesc(file_conference_moderation_v1_moderation, 3);
+
+/**
  * @generated from message conference.moderation.v1.ModerationView
  */
 export type ModerationView = Message<"conference.moderation.v1.ModerationView"> & {
@@ -143,6 +170,11 @@ export type ModerationView = Message<"conference.moderation.v1.ModerationView"> 
    * @generated from field: repeated conference.common.v1.Capability capabilities = 6;
    */
   capabilities: Capability[];
+
+  /**
+   * @generated from field: conference.moderation.v1.ModerationMeetingSettingsBlock settings = 7;
+   */
+  settings?: ModerationMeetingSettingsBlock;
 };
 
 /**
@@ -150,7 +182,7 @@ export type ModerationView = Message<"conference.moderation.v1.ModerationView"> 
  * Use `create(ModerationViewSchema)` to create a new message.
  */
 export const ModerationViewSchema: GenMessage<ModerationView> = /*@__PURE__*/
-  messageDesc(file_conference_moderation_v1_moderation, 3);
+  messageDesc(file_conference_moderation_v1_moderation, 4);
 
 /**
  * @generated from message conference.moderation.v1.GetModerationViewRequest
@@ -172,7 +204,7 @@ export type GetModerationViewRequest = Message<"conference.moderation.v1.GetMode
  * Use `create(GetModerationViewRequestSchema)` to create a new message.
  */
 export const GetModerationViewRequestSchema: GenMessage<GetModerationViewRequest> = /*@__PURE__*/
-  messageDesc(file_conference_moderation_v1_moderation, 4);
+  messageDesc(file_conference_moderation_v1_moderation, 5);
 
 /**
  * @generated from message conference.moderation.v1.GetModerationViewResponse
@@ -189,7 +221,7 @@ export type GetModerationViewResponse = Message<"conference.moderation.v1.GetMod
  * Use `create(GetModerationViewResponseSchema)` to create a new message.
  */
 export const GetModerationViewResponseSchema: GenMessage<GetModerationViewResponse> = /*@__PURE__*/
-  messageDesc(file_conference_moderation_v1_moderation, 5);
+  messageDesc(file_conference_moderation_v1_moderation, 6);
 
 /**
  * @generated from message conference.moderation.v1.ToggleSignupOpenRequest
@@ -221,7 +253,7 @@ export type ToggleSignupOpenRequest = Message<"conference.moderation.v1.ToggleSi
  * Use `create(ToggleSignupOpenRequestSchema)` to create a new message.
  */
 export const ToggleSignupOpenRequestSchema: GenMessage<ToggleSignupOpenRequest> = /*@__PURE__*/
-  messageDesc(file_conference_moderation_v1_moderation, 6);
+  messageDesc(file_conference_moderation_v1_moderation, 7);
 
 /**
  * @generated from message conference.moderation.v1.ToggleSignupOpenResponse
@@ -253,7 +285,135 @@ export type ToggleSignupOpenResponse = Message<"conference.moderation.v1.ToggleS
  * Use `create(ToggleSignupOpenResponseSchema)` to create a new message.
  */
 export const ToggleSignupOpenResponseSchema: GenMessage<ToggleSignupOpenResponse> = /*@__PURE__*/
-  messageDesc(file_conference_moderation_v1_moderation, 7);
+  messageDesc(file_conference_moderation_v1_moderation, 8);
+
+/**
+ * @generated from message conference.moderation.v1.SetMeetingQuotationRequest
+ */
+export type SetMeetingQuotationRequest = Message<"conference.moderation.v1.SetMeetingQuotationRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: bool gender_quotation_enabled = 3;
+   */
+  genderQuotationEnabled: boolean;
+
+  /**
+   * @generated from field: bool first_speaker_quotation_enabled = 4;
+   */
+  firstSpeakerQuotationEnabled: boolean;
+};
+
+/**
+ * Describes the message conference.moderation.v1.SetMeetingQuotationRequest.
+ * Use `create(SetMeetingQuotationRequestSchema)` to create a new message.
+ */
+export const SetMeetingQuotationRequestSchema: GenMessage<SetMeetingQuotationRequest> = /*@__PURE__*/
+  messageDesc(file_conference_moderation_v1_moderation, 9);
+
+/**
+ * @generated from message conference.moderation.v1.SetMeetingQuotationResponse
+ */
+export type SetMeetingQuotationResponse = Message<"conference.moderation.v1.SetMeetingQuotationResponse"> & {
+  /**
+   * @generated from field: string meeting_id = 1;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: bool gender_quotation_enabled = 2;
+   */
+  genderQuotationEnabled: boolean;
+
+  /**
+   * @generated from field: bool first_speaker_quotation_enabled = 3;
+   */
+  firstSpeakerQuotationEnabled: boolean;
+
+  /**
+   * @generated from field: uint64 version = 4;
+   */
+  version: bigint;
+
+  /**
+   * @generated from field: repeated string invalidated_views = 5;
+   */
+  invalidatedViews: string[];
+};
+
+/**
+ * Describes the message conference.moderation.v1.SetMeetingQuotationResponse.
+ * Use `create(SetMeetingQuotationResponseSchema)` to create a new message.
+ */
+export const SetMeetingQuotationResponseSchema: GenMessage<SetMeetingQuotationResponse> = /*@__PURE__*/
+  messageDesc(file_conference_moderation_v1_moderation, 10);
+
+/**
+ * @generated from message conference.moderation.v1.SetMeetingModeratorRequest
+ */
+export type SetMeetingModeratorRequest = Message<"conference.moderation.v1.SetMeetingModeratorRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string moderator_attendee_id = 3;
+   */
+  moderatorAttendeeId: string;
+};
+
+/**
+ * Describes the message conference.moderation.v1.SetMeetingModeratorRequest.
+ * Use `create(SetMeetingModeratorRequestSchema)` to create a new message.
+ */
+export const SetMeetingModeratorRequestSchema: GenMessage<SetMeetingModeratorRequest> = /*@__PURE__*/
+  messageDesc(file_conference_moderation_v1_moderation, 11);
+
+/**
+ * @generated from message conference.moderation.v1.SetMeetingModeratorResponse
+ */
+export type SetMeetingModeratorResponse = Message<"conference.moderation.v1.SetMeetingModeratorResponse"> & {
+  /**
+   * @generated from field: string meeting_id = 1;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string moderator_attendee_id = 2;
+   */
+  moderatorAttendeeId: string;
+
+  /**
+   * @generated from field: uint64 version = 3;
+   */
+  version: bigint;
+
+  /**
+   * @generated from field: repeated string invalidated_views = 4;
+   */
+  invalidatedViews: string[];
+};
+
+/**
+ * Describes the message conference.moderation.v1.SetMeetingModeratorResponse.
+ * Use `create(SetMeetingModeratorResponseSchema)` to create a new message.
+ */
+export const SetMeetingModeratorResponseSchema: GenMessage<SetMeetingModeratorResponse> = /*@__PURE__*/
+  messageDesc(file_conference_moderation_v1_moderation, 12);
 
 /**
  * @generated from service conference.moderation.v1.ModerationService
@@ -274,6 +434,22 @@ export const ModerationService: GenService<{
     methodKind: "unary";
     input: typeof ToggleSignupOpenRequestSchema;
     output: typeof ToggleSignupOpenResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.moderation.v1.ModerationService.SetMeetingQuotation
+   */
+  setMeetingQuotation: {
+    methodKind: "unary";
+    input: typeof SetMeetingQuotationRequestSchema;
+    output: typeof SetMeetingQuotationResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.moderation.v1.ModerationService.SetMeetingModerator
+   */
+  setMeetingModerator: {
+    methodKind: "unary";
+    input: typeof SetMeetingModeratorRequestSchema;
+    output: typeof SetMeetingModeratorResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_conference_moderation_v1_moderation, 0);

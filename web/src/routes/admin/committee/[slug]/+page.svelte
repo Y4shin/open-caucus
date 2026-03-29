@@ -2,18 +2,15 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import { adminClient } from '$lib/api/index.js';
-	import type {
-		AccountRecord,
-		CommitteeRecord,
-		CommitteeUserRecord,
-		OAuthRuleRecord
-	} from '$lib/gen/conference/admin/v1/admin_pb.js';
+	import type { AccountRecord, CommitteeRecord, CommitteeUserRecord, OAuthRuleRecord } from '$lib/gen/conference/admin/v1/admin_pb.js';
 	import { session } from '$lib/stores/session.svelte.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import { legacyAttrs } from '$lib/utils/legacy-attrs.js';
 
 	interface CommitteeAdminData {
 		committee: CommitteeRecord;
@@ -25,7 +22,6 @@
 	const slug = $derived(page.params.slug);
 
 	let committeeState = $state(createRemoteState<CommitteeAdminData>());
-	let createUserPending = $state(false);
 	let assignAccountPending = $state(false);
 	let saveMembershipPendingId = $state('');
 	let deleteMembershipPendingId = $state('');
@@ -33,19 +29,18 @@
 	let deleteRulePendingId = $state('');
 
 	let membershipDrafts = $state<Record<string, { role: string; quoted: boolean }>>({});
-
-	let localUsername = $state('');
-	let localFullName = $state('');
-	let localPassword = $state('');
-	let localRole = $state('member');
-	let localQuoted = $state(false);
-
 	let selectedAccountId = $state('');
 	let selectedAccountRole = $state('member');
 	let selectedAccountQuoted = $state(false);
-
 	let oauthGroupName = $state('');
 	let oauthRole = $state('member');
+
+	$effect(() => {
+		pageActions.set([], { backHref: '/admin' });
+		return () => {
+			pageActions.clear();
+		};
+	});
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -57,25 +52,20 @@
 	});
 
 	function setMembershipDrafts(users: CommitteeUserRecord[]) {
-		membershipDrafts = Object.fromEntries(
-			users.map((user) => [user.userId, { role: user.role, quoted: user.quoted }])
-		);
+		membershipDrafts = Object.fromEntries(users.map((user) => [user.userId, { role: user.role, quoted: user.quoted }]));
 	}
 
 	async function loadCommitteeAdmin() {
 		committeeState.loading = true;
 		committeeState.error = '';
-
 		try {
 			const [committeeAdmin, accounts] = await Promise.all([
 				adminClient.getCommitteeAdmin({ slug }),
 				adminClient.listAccounts({ page: 1, pageSize: 500 })
 			]);
-
 			const users = committeeAdmin.users;
-			const assignedIds = new Set(users.map((user) => user.userId));
-			const assignableAccounts = accounts.accounts.filter((account) => !assignedIds.has(account.accountId));
-
+			const assignedUsernames = new Set(users.map((user) => user.username));
+			const assignableAccounts = accounts.accounts.filter((account) => !assignedUsernames.has(account.username));
 			setMembershipDrafts(users);
 			committeeState.data = {
 				committee: committeeAdmin.committee!,
@@ -84,45 +74,15 @@
 				assignableAccounts
 			};
 		} catch (err) {
-			committeeState.error = getDisplayError(
-				err,
-				`Failed to load admin settings for committee "${slug}".`
-			);
+			committeeState.error = getDisplayError(err, `Failed to load admin settings for committee "${slug}".`);
 		} finally {
 			committeeState.loading = false;
-		}
-	}
-
-	async function createCommitteeUser() {
-		createUserPending = true;
-		committeeState.error = '';
-
-		try {
-			await adminClient.createCommitteeUser({
-				slug,
-				username: localUsername.trim(),
-				fullName: localFullName.trim(),
-				password: localPassword,
-				role: localRole,
-				quoted: localQuoted
-			});
-			localUsername = '';
-			localFullName = '';
-			localPassword = '';
-			localRole = 'member';
-			localQuoted = false;
-			await loadCommitteeAdmin();
-		} catch (err) {
-			committeeState.error = getDisplayError(err, 'Failed to create committee user.');
-		} finally {
-			createUserPending = false;
 		}
 	}
 
 	async function assignExistingAccount() {
 		assignAccountPending = true;
 		committeeState.error = '';
-
 		try {
 			await adminClient.assignAccountToCommittee({
 				slug,
@@ -144,10 +104,8 @@
 	async function saveMembership(userId: string) {
 		const draft = membershipDrafts[userId];
 		if (!draft) return;
-
 		saveMembershipPendingId = userId;
 		committeeState.error = '';
-
 		try {
 			await adminClient.updateCommitteeUser({
 				slug,
@@ -164,13 +122,11 @@
 	}
 
 	async function deleteMembership(user: CommitteeUserRecord) {
-		if (!window.confirm(`Remove ${user.fullName} from this committee?`)) {
+		if (!window.confirm('Delete this committee membership?')) {
 			return;
 		}
-
 		deleteMembershipPendingId = user.userId;
 		committeeState.error = '';
-
 		try {
 			await adminClient.deleteCommitteeUser({ slug, userId: user.userId });
 			await loadCommitteeAdmin();
@@ -184,7 +140,6 @@
 	async function createOAuthRule() {
 		createRulePending = true;
 		committeeState.error = '';
-
 		try {
 			await adminClient.createOAuthRule({
 				slug,
@@ -202,13 +157,11 @@
 	}
 
 	async function deleteOAuthRule(rule: OAuthRuleRecord) {
-		if (!window.confirm(`Delete OAuth rule for group "${rule.groupName}"?`)) {
+		if (!window.confirm('Delete this OAuth rule?')) {
 			return;
 		}
-
 		deleteRulePendingId = rule.ruleId;
 		committeeState.error = '';
-
 		try {
 			await adminClient.deleteOAuthRule({ slug, ruleId: rule.ruleId });
 			await loadCommitteeAdmin();
@@ -220,280 +173,232 @@
 	}
 </script>
 
-<div class="space-y-6" id="committee-users-container">
-	<div class="flex flex-wrap items-start justify-between gap-3">
-		<div class="space-y-2">
-			<h1 class="text-3xl font-bold">
-				{committeeState.data?.committee.name ?? slug}
-			</h1>
-			<p class="text-base-content/70">Manage committee members, local users, and OAuth rules.</p>
-		</div>
-		<a href="/admin" class="btn btn-outline">Back to Admin</a>
-	</div>
-
+<div id="committee-users-container">
 	{#if committeeState.loading}
 		<AppSpinner label="Loading committee admin" />
 	{:else}
 		{#if committeeState.error}
 			<AppAlert message={committeeState.error} />
 		{/if}
-
 		{#if committeeState.data}
-			<div class="stats shadow">
-				<div class="stat">
-					<div class="stat-title">Committee</div>
-					<div class="stat-value text-lg">{committeeState.data.committee.name}</div>
-					<div class="stat-desc"><code>{committeeState.data.committee.slug}</code></div>
-				</div>
-				<div class="stat">
-					<div class="stat-title">Members</div>
-					<div class="stat-value">{Number(committeeState.data.committee.memberCount)}</div>
-				</div>
-				<div class="stat">
-					<div class="stat-title">OAuth Rules</div>
-					<div class="stat-value">{committeeState.data.oauthRules.length}</div>
-				</div>
-			</div>
-
-			<div class="grid gap-6 xl:grid-cols-2">
-				<AppCard title="Create Local User">
+			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+				<h2>Assign Account</h2>
+				{#if committeeState.data.assignableAccounts.length === 0}
+					<p>All accounts are already assigned to this committee.</p>
+				{:else}
 					<form
-						class="space-y-4"
-						onsubmit={async (event) => {
+						use:legacyAttrs={{
+							'hx-post': '/admin/committee/' + slug + '/account/assign',
+							'hx-target': '#committee-users-container',
+							'hx-swap': 'outerHTML',
+							'hx-on::after-request': 'if(event.detail.successful) this.reset()'
+						}}
+						onsubmit={(event) => {
 							event.preventDefault();
-							await createCommitteeUser();
+							assignExistingAccount();
 						}}
 					>
-						<label class="form-control gap-2">
-							<span class="label-text font-medium">Username</span>
-								<input class="input input-bordered" bind:value={localUsername} required />
-						</label>
-						<label class="form-control gap-2">
-							<span class="label-text font-medium">Full Name</span>
-								<input class="input input-bordered" bind:value={localFullName} required />
-						</label>
-						<label class="form-control gap-2">
-							<span class="label-text font-medium">Password</span>
-								<input
-									class="input input-bordered"
-									type="password"
-									bind:value={localPassword}
-									name="password"
-									required
-								/>
-						</label>
-						<label class="form-control gap-2">
-							<span class="label-text font-medium">Role</span>
-								<select class="select select-bordered" bind:value={localRole} name="role">
+						<div>
+							<label for="account_id">Account:</label>
+							<select class="select select-bordered select-sm" id="account_id" name="account_id" bind:value={selectedAccountId} required>
+								<option value="">Select account</option>
+								{#each committeeState.data.assignableAccounts as account}
+									<option value={account.accountId}>{account.fullName} ({account.username})</option>
+								{/each}
+							</select>
+						</div>
+						<div>
+							<label for="role">Role:</label>
+							<select class="select select-bordered select-sm" id="role" name="role" bind:value={selectedAccountRole} required>
 								<option value="member">Member</option>
 								<option value="chairperson">Chairperson</option>
 							</select>
-						</label>
-						<label class="label cursor-pointer justify-start gap-3">
-							<input class="checkbox" type="checkbox" bind:checked={localQuoted} />
-							<span class="label-text">Quoted speaker status</span>
-						</label>
-						<button class="btn btn-primary" type="submit" disabled={createUserPending}>
-							{createUserPending ? 'Creating...' : 'Create User'}
-						</button>
+						</div>
+						<div>
+							<label>
+								<input class="checkbox checkbox-sm" type="checkbox" name="quoted" value="true" bind:checked={selectedAccountQuoted} />
+								FLINTA*
+							</label>
+						</div>
+						<button class="btn btn-sm" type="submit" disabled={assignAccountPending}>Assign Account</button>
 					</form>
-				</AppCard>
-
-				<AppCard title="Assign Existing Account">
-					{#if committeeState.data.assignableAccounts.length}
-						<form
-							class="space-y-4"
-							onsubmit={async (event) => {
-								event.preventDefault();
-								await assignExistingAccount();
-							}}
-						>
-							<label class="form-control gap-2">
-								<span class="label-text font-medium">Account</span>
-								<select
-									class="select select-bordered"
-									bind:value={selectedAccountId}
-									name="account_id"
-									required
-								>
-									<option value="" disabled>Select an account</option>
-									{#each committeeState.data.assignableAccounts as account}
-										<option value={account.accountId}>
-											{account.fullName} ({account.username})
-										</option>
-									{/each}
-								</select>
-							</label>
-							<label class="form-control gap-2">
-								<span class="label-text font-medium">Role</span>
-								<select class="select select-bordered" bind:value={selectedAccountRole} name="role">
-									<option value="member">Member</option>
-									<option value="chairperson">Chairperson</option>
-								</select>
-							</label>
-							<label class="label cursor-pointer justify-start gap-3">
-								<input
-									class="checkbox"
-									type="checkbox"
-									name="quoted"
-									bind:checked={selectedAccountQuoted}
-								/>
-								<span class="label-text">Quoted speaker status</span>
-							</label>
-							<button class="btn btn-primary" type="submit" disabled={assignAccountPending}>
-								{assignAccountPending ? 'Assigning...' : 'Assign Account'}
-							</button>
-						</form>
-					{:else}
-						<AppAlert
-							tone="info"
-							message="Every known account is already assigned to this committee."
-						/>
-					{/if}
-				</AppCard>
-			</div>
-
-			<AppCard title="Committee Members">
-				{#if committeeState.data.users.length}
-					<div class="overflow-x-auto">
-						<table class="table table-zebra">
-							<thead>
-								<tr>
-									<th>Username</th>
-									<th>Full Name</th>
-									<th>Role</th>
-									<th>Quoted</th>
-									<th>Managed By</th>
-									<th class="text-right">Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each committeeState.data.users as user}
-									<tr>
-										<td class="font-medium">{user.username}</td>
-										<td>{user.fullName}</td>
-										<td>
-											<select
-												class="select select-bordered select-sm"
-												bind:value={membershipDrafts[user.userId].role}
-												name="role"
-												disabled={user.isOauthManaged}
-											>
-												<option value="member">Member</option>
-												<option value="chairperson">Chairperson</option>
-											</select>
-										</td>
-										<td>
-											<input
-												class="checkbox"
-												type="checkbox"
-												name="quoted"
-												bind:checked={membershipDrafts[user.userId].quoted}
-											/>
-										</td>
-										<td>
-											<span class={`badge ${user.isOauthManaged ? 'badge-warning' : 'badge-ghost'}`}>
-												{user.isOauthManaged ? 'OAuth' : 'Local'}
-											</span>
-										</td>
-										<td>
-											<div class="flex justify-end gap-2">
-												<button
-													class="btn btn-sm btn-outline"
-													type="button"
-													disabled={
-														saveMembershipPendingId === user.userId ||
-														deleteMembershipPendingId === user.userId
-													}
-													onclick={() => saveMembership(user.userId)}
-												>
-													{saveMembershipPendingId === user.userId ? 'Saving...' : 'Save'}
-												</button>
-												<button
-													class="btn btn-sm btn-error btn-outline"
-													type="button"
-													disabled={
-														saveMembershipPendingId === user.userId ||
-														deleteMembershipPendingId === user.userId
-													}
-													onclick={() => deleteMembership(user)}
-												>
-													{deleteMembershipPendingId === user.userId ? 'Removing...' : 'Remove'}
-												</button>
-											</div>
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
-				{:else}
-					<AppAlert tone="info" message="This committee has no assigned users yet." />
 				{/if}
-			</AppCard>
-
-			<AppCard title="OAuth Group Rules">
-				<form
-					class="mb-6 grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem_auto]"
-					onsubmit={async (event) => {
-						event.preventDefault();
-						await createOAuthRule();
-					}}
-				>
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Group Name</span>
-						<input class="input input-bordered" bind:value={oauthGroupName} required />
-					</label>
-					<label class="form-control gap-2">
-						<span class="label-text font-medium">Role</span>
-						<select class="select select-bordered" bind:value={oauthRole}>
-							<option value="member">Member</option>
-							<option value="chairperson">Chairperson</option>
-						</select>
-					</label>
-					<div class="flex items-end">
-						<button class="btn btn-primary w-full md:w-auto" type="submit" disabled={createRulePending}>
-							{createRulePending ? 'Adding...' : 'Add Rule'}
-						</button>
-					</div>
-				</form>
-
-				{#if committeeState.data.oauthRules.length}
-					<div class="overflow-x-auto">
-						<table class="table table-zebra">
+			</section>
+			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+				<h2>Assigned Accounts</h2>
+				{#if committeeState.data.users.length === 0}
+					<p>No accounts assigned yet.</p>
+				{:else}
+					<table class="data-table table table-zebra w-full">
+						<thead>
+							<tr>
+								<th>Username</th>
+								<th>Full Name</th>
+								<th>Role</th>
+								<th>FLINTA*</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each committeeState.data.users as user}
+								<tr>
+									<td>{user.username}</td>
+									<td>{user.fullName}</td>
+									<td>
+										<select
+											class="select select-bordered select-xs"
+											name="role"
+											form={"membership-update-" + user.userId}
+											disabled={user.isOauthManaged}
+											value={membershipDrafts[user.userId]?.role ?? user.role}
+											onchange={(event) => {
+												const next = (event.currentTarget as HTMLSelectElement).value;
+												membershipDrafts[user.userId] = { ...(membershipDrafts[user.userId] ?? { role: user.role, quoted: user.quoted }), role: next };
+											}}
+										>
+											<option value="member" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'member'}>Member</option>
+											<option value="chairperson" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'chairperson'}>Chairperson</option>
+										</select>
+										{#if user.isOauthManaged}
+											<div class="text-xs text-base-content/70 mt-1">Role managed by OAuth</div>
+										{/if}
+									</td>
+									<td>
+										<input type="hidden" name="quoted" value="false" form={"membership-update-" + user.userId} />
+										<input
+											class="checkbox checkbox-sm"
+											type="checkbox"
+											name="quoted"
+											value="true"
+											checked={membershipDrafts[user.userId]?.quoted ?? user.quoted}
+											form={"membership-update-" + user.userId}
+											onchange={(event) => {
+												const next = (event.currentTarget as HTMLInputElement).checked;
+												membershipDrafts[user.userId] = { ...(membershipDrafts[user.userId] ?? { role: user.role, quoted: user.quoted }), quoted: next };
+											}}
+										/>
+									</td>
+									<td>
+										<form
+											id={"membership-update-" + user.userId}
+											class="inline-form inline"
+											use:legacyAttrs={{
+												'hx-post': '/admin/committee/' + slug + '/membership/' + user.userId + '/update',
+												'hx-target': '#committee-users-container',
+												'hx-swap': 'outerHTML'
+											}}
+											onsubmit={(event) => {
+												event.preventDefault();
+												saveMembership(user.userId);
+											}}
+										>
+											{#if user.isOauthManaged}
+												<input type="hidden" name="role" value={user.role} />
+											{/if}
+											<button class="btn btn-sm" type="submit" disabled={saveMembershipPendingId === user.userId}>Save</button>
+										</form>
+										<form
+											class="inline-form inline ml-1"
+											use:legacyAttrs={{
+												'hx-post': '/admin/committee/' + slug + '/membership/' + user.userId + '/delete',
+												'hx-target': '#committee-users-container',
+												'hx-swap': 'outerHTML',
+												'hx-confirm': 'Are you sure you want to remove this assignment?'
+											}}
+											onsubmit={(event) => {
+												event.preventDefault();
+												deleteMembership(user);
+											}}
+										>
+											<button class="btn btn-sm" type="submit" disabled={deleteMembershipPendingId === user.userId}>Remove</button>
+										</form>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				{/if}
+				<nav class="pagination-nav join">
+					<button type="button" disabled class="ui-icon-label btn btn-sm">
+						<LegacyIcon name="left" class="ui-icon--left" />
+						<span class="ui-icon-text">Previous</span>
+					</button>
+					<button class="btn btn-sm" type="button" disabled>1</button>
+					<button type="button" disabled class="ui-icon-label btn btn-sm">
+						<span class="ui-icon-text">Next</span>
+						<LegacyIcon name="right" class="ui-icon--right" />
+					</button>
+				</nav>
+			</section>
+			{#if session.oauthEnabled}
+				<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+					<h2>OAuth Group Access Rules</h2>
+					<form
+						class="flex flex-wrap gap-2 items-end"
+						use:legacyAttrs={{
+							'hx-post': '/admin/committee/' + slug + '/oauth-group-rule/create',
+							'hx-target': '#committee-users-container',
+							'hx-swap': 'outerHTML',
+							'hx-on::after-request': 'if(event.detail.successful) this.reset()'
+						}}
+						onsubmit={(event) => {
+							event.preventDefault();
+							createOAuthRule();
+						}}
+					>
+						<div>
+							<label for="group_name">OAuth Group</label>
+							<input class="input input-bordered input-sm" type="text" id="group_name" name="group_name" bind:value={oauthGroupName} required />
+						</div>
+						<div>
+							<label for="oauth_rule_role">Role:</label>
+							<select class="select select-bordered select-sm" id="oauth_rule_role" name="role" bind:value={oauthRole} required>
+								<option value="member">Member</option>
+								<option value="chairperson">Chairperson</option>
+							</select>
+						</div>
+						<button class="btn btn-sm" type="submit" disabled={createRulePending}>Add Rule</button>
+					</form>
+					{#if committeeState.data.oauthRules.length === 0}
+						<p class="mt-2">No OAuth group rules configured.</p>
+					{:else}
+						<table class="data-table table table-zebra w-full mt-2">
 							<thead>
 								<tr>
-									<th>Group</th>
+									<th>OAuth Group</th>
 									<th>Role</th>
-									<th class="text-right">Actions</th>
+									<th>Actions</th>
 								</tr>
 							</thead>
 							<tbody>
 								{#each committeeState.data.oauthRules as rule}
 									<tr>
-										<td class="font-medium">{rule.groupName}</td>
+										<td>{rule.groupName}</td>
 										<td>{rule.role}</td>
 										<td>
-											<div class="flex justify-end">
-												<button
-													class="btn btn-sm btn-error btn-outline"
-													type="button"
-													disabled={deleteRulePendingId === rule.ruleId}
-													onclick={() => deleteOAuthRule(rule)}
-												>
-													{deleteRulePendingId === rule.ruleId ? 'Deleting...' : 'Delete'}
-												</button>
-											</div>
+											<form
+												class="inline-form inline"
+												use:legacyAttrs={{
+													'hx-post': '/admin/committee/' + slug + '/oauth-group-rule/' + rule.ruleId + '/delete',
+													'hx-target': '#committee-users-container',
+													'hx-swap': 'outerHTML',
+													'hx-confirm': 'Are you sure you want to remove this assignment?'
+												}}
+												onsubmit={(event) => {
+													event.preventDefault();
+													deleteOAuthRule(rule);
+												}}
+											>
+												<button class="btn btn-sm" type="submit" disabled={deleteRulePendingId === rule.ruleId}>Delete</button>
+											</form>
 										</td>
 									</tr>
 								{/each}
 							</tbody>
 						</table>
-					</div>
-				{:else}
-					<AppAlert tone="info" message="No OAuth rules are configured for this committee." />
-				{/if}
-			</AppCard>
+					{/if}
+				</section>
+			{/if}
 		{/if}
 	{/if}
 </div>

@@ -18,6 +18,18 @@ func manageJoinQRURL(baseURL, slug, meetingID string) string {
 	return fmt.Sprintf("%s/committee/%s/meeting/%s/moderate/join-qr", baseURL, slug, meetingID)
 }
 
+func waitForJoinGuestForm(t *testing.T, page playwright.Page) {
+	t.Helper()
+	if err := page.Locator("input[name=full_name]").WaitFor(); err != nil {
+		t.Fatalf("wait for guest signup name field: %v", err)
+	}
+	if err := page.Locator("input[name=meeting_secret]").WaitFor(playwright.LocatorWaitForOptions{
+		State: playwright.WaitForSelectorStateAttached,
+	}); err != nil {
+		t.Fatalf("wait for meeting secret field: %v", err)
+	}
+}
+
 // TestJoinPage_RegisteredUserSeesSignupButton verifies that a logged-in committee
 // member sees a sign-up button (not the guest form) on the join page.
 func TestJoinPage_RegisteredUserSeesSignupButton(t *testing.T) {
@@ -110,6 +122,7 @@ func TestGuestSignup_Success(t *testing.T) {
 	if _, err := page.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto join page: %v", err)
 	}
+	waitForJoinGuestForm(t, page)
 
 	if err := page.Locator("input[name=full_name]").Fill("Bob Guest"); err != nil {
 		t.Fatalf("fill name: %v", err)
@@ -201,6 +214,7 @@ func TestGuestSignup_InvalidMeetingSecret(t *testing.T) {
 	if _, err := page.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto join page: %v", err)
 	}
+	waitForJoinGuestForm(t, page)
 
 	if err := page.Locator("input[name=full_name]").Fill("Bob Guest"); err != nil {
 		t.Fatalf("fill name: %v", err)
@@ -227,6 +241,9 @@ func TestGuestSignup_PrefilledMeetingSecretFromQuery(t *testing.T) {
 	urlWithSecret := joinURL(ts.URL, "test-committee", meetingID) + "?meeting_secret=test-meeting-secret"
 	if _, err := page.Goto(urlWithSecret); err != nil {
 		t.Fatalf("goto join page with prefilled secret: %v", err)
+	}
+	if err := page.Locator("input[name=full_name]").WaitFor(); err != nil {
+		t.Fatalf("wait for guest signup name field: %v", err)
 	}
 
 	visibleSecretInput, err := page.Locator("#meeting_secret").IsVisible()
@@ -268,6 +285,7 @@ func TestGuestSignup_PublishesManageSSE(t *testing.T) {
 	if _, err := guestPage.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto join page: %v", err)
 	}
+	waitForJoinGuestForm(t, guestPage)
 	if err := guestPage.Locator("input[name=full_name]").Fill("Guest Via Join"); err != nil {
 		t.Fatalf("fill name: %v", err)
 	}
@@ -301,6 +319,7 @@ func TestGuestSignup_Quoted_SetsSpeakerQuotedBadge(t *testing.T) {
 	if _, err := page.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
 		t.Fatalf("goto join page: %v", err)
 	}
+	waitForJoinGuestForm(t, page)
 	if err := page.Locator("input[name=full_name]").Fill("Quoted Via Join"); err != nil {
 		t.Fatalf("fill name: %v", err)
 	}

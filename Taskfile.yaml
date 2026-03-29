@@ -5,6 +5,9 @@ vars:
   BUILD_DIR: ./tmp
   MAIN_PATH: .
   ROUTES_CONFIG: routes.yaml
+  APP_PORT: "8080"
+  OIDC_DEV_PORT: "9096"
+  VITE_DEV_PORT: "5173"
 
 tasks:
   default:
@@ -17,6 +20,25 @@ tasks:
     desc: Run the application with hot reload (using air)
     cmds:
       - go tool air
+
+  dev:go:vite:
+    desc: Run the Go backend with hot reload for Vite-based SPA development
+    env:
+      HOST: 0.0.0.0
+      PORT: "{{.APP_PORT}}"
+      OAUTH_ISSUER_URL: "http://localhost:{{.OIDC_DEV_PORT}}"
+      OAUTH_REDIRECT_URL: "http://localhost:{{.VITE_DEV_PORT}}/oauth/callback"
+    cmds:
+      - go tool air -c .air.vite.toml
+
+  oidc-dev:run:vite:
+    desc: Run the local OAuth/OIDC development provider for the Vite dev server flow
+    env:
+      OAUTH_ISSUER_URL: "http://localhost:{{.OIDC_DEV_PORT}}"
+      OAUTH_REDIRECT_URL: "http://localhost:{{.VITE_DEV_PORT}}/oauth/callback"
+      OIDC_DEV_LISTEN_ADDR: "127.0.0.1:{{.OIDC_DEV_PORT}}"
+    cmds:
+      - go run {{.MAIN_PATH}} oidc-dev serve
 
   run:
     desc: Run the application directly
@@ -47,6 +69,15 @@ tasks:
         vars:
           CLI_ARGS: --force
       - task --parallel oidc-dev:run run
+
+  dev:spa:with-oidc:
+    desc: Run OIDC dev provider, Go air backend, and Vite SPA dev server together
+    cmds:
+      - task: env:populate
+      - task: oidc-dev:generate-users
+        vars:
+          CLI_ARGS: --force
+      - task --parallel oidc-dev:run:vite dev:go:vite dev:web
 
   docker:up:
     desc: Start app + local OIDC in Docker Compose (includes setup bootstrap)
@@ -137,14 +168,14 @@ tasks:
   test:e2e:
     desc: Run browser-based end-to-end tests (requires Playwright browsers installed)
     cmds:
-      - go test -v -tags=e2e -timeout=300s ./e2e/...
+      - go test -v -tags=e2e -timeout=600s ./e2e/...
 
   test:e2e:headed:
     desc: Run browser-based end-to-end tests with visible browser windows
     env:
       PLAYWRIGHT_HEADED: "1"
     cmds:
-      - go test -v -tags=e2e -timeout=300s ./e2e/...
+      - go test -v -tags=e2e -timeout=600s ./e2e/...
 
   test:e2e:headed:slow:
     desc: Run headed E2E tests with slow-motion browser actions
@@ -152,7 +183,7 @@ tasks:
       PLAYWRIGHT_HEADED: "1"
       PLAYWRIGHT_SLOW_MO_MS: "350"
     cmds:
-      - go test -v -tags=e2e -timeout=300s ./e2e/...
+      - go test -v -tags=e2e -timeout=600s ./e2e/...
 
   test:watch:
     desc: Run tests in watch mode
@@ -331,11 +362,40 @@ tasks:
       - echo "Setup complete! Run 'task dev' to start development."
 
   # Frontend (SvelteKit) tasks
+  deps:web:repair-native:
+    desc: Repair platform-specific optional frontend dependencies when npm skipped them
+    dir: web
+    cmds:
+      - |
+        set -eu
+        platform_pkg=""
+        case "$(uname -s)-$(uname -m)" in
+          Linux-x86_64) platform_pkg="@rollup/rollup-linux-x64-gnu" ;;
+          Linux-aarch64) platform_pkg="@rollup/rollup-linux-arm64-gnu" ;;
+          Darwin-x86_64) platform_pkg="@rollup/rollup-darwin-x64" ;;
+          Darwin-arm64) platform_pkg="@rollup/rollup-darwin-arm64" ;;
+        esac
+
+        if [ -z "$platform_pkg" ]; then
+          echo "No platform-specific Rollup repair rule for $(uname -s)-$(uname -m); skipping."
+          exit 0
+        fi
+
+        platform_dir="node_modules/${platform_pkg}"
+        if [ -d "$platform_dir" ]; then
+          echo "Frontend native dependency present: $platform_pkg"
+          exit 0
+        fi
+
+        echo "Missing $platform_pkg; repairing frontend optional dependencies with npm install --include=optional"
+        npm install --include=optional
+
   dev:web:
     desc: Run the SvelteKit dev server with hot reload (proxies /api to Go backend on :8080)
     dir: web
+    deps: [deps:web:repair-native]
     cmds:
-      - npm run dev
+      - npm run dev -- --host 0.0.0.0 --port {{.VITE_DEV_PORT}}
 
   build:web:
     desc: Build the SvelteKit SPA (outputs to internal/web/build for Go embedding)

@@ -3,12 +3,13 @@
 	import { page } from '$app/state';
 	import { attendeeClient, meetingClient } from '$lib/api/index.js';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import type { JoinMeetingView } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import { onDestroy } from 'svelte';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -23,9 +24,21 @@
 	let genderQuoted = $state(false);
 	let submitting = $state(false);
 
+	onDestroy(() => {
+		pageActions.clear();
+	});
+
 	$effect(() => {
 		if (!session.loaded) return;
 		loadJoinView();
+	});
+
+	$effect(() => {
+		if (!joinState.data) return;
+		pageActions.set([], {
+			title: joinState.data.meetingName,
+			subtitle: joinState.data.committeeName
+		});
 	});
 
 	async function loadJoinView() {
@@ -91,7 +104,7 @@
 	{:else if joinState.data}
 		<div class="space-y-2">
 			<h1 class="text-3xl font-bold">{joinState.data.meetingName}</h1>
-			<p class="text-base-content/70">Join {joinState.data.committeeName} and enter the live meeting.</p>
+			<p class="text-base-content/70">{joinState.data.committeeName}</p>
 		</div>
 
 		<div id="app-notification-target">
@@ -100,89 +113,93 @@
 			{/if}
 		</div>
 
-		<div class="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
-			<AppCard title="Meeting Entry">
+		<div class="flex h-full min-h-0 w-full flex-1 justify-center">
+			<div class="h-full min-h-0 w-[90%] md:w-2/3">
+				<div class="space-y-4">
 				{#if joinState.data.capabilities?.alreadyJoined}
 					<div class="space-y-4">
-						<p class="text-base-content/80">
+						<p>
 							You are already signed up as
 							<span class="font-medium">{joinState.data.currentAttendee?.fullName}</span>.
 						</p>
-						{#if joinState.data.currentAttendee?.attendeeNumber}
-							<p class="text-sm text-base-content/70">
-								Attendee #{joinState.data.currentAttendee.attendeeNumber.toString()}
-							</p>
-						{/if}
-						<div class="flex flex-wrap gap-2">
-							<a class="btn btn-primary" href={liveHref}>Enter Meeting</a>
-							<a class="btn btn-outline" href={attendeeLoginHref}>Use Access Code</a>
-						</div>
+						<form
+							onsubmit={(event) => {
+								event.preventDefault();
+								goto(liveHref);
+							}}
+						>
+							<button class="btn btn-sm" type="submit">Enter Meeting</button>
+						</form>
 					</div>
 				{:else if joinState.data.capabilities?.canSelfSignup}
 					<div class="space-y-4">
-						<p class="text-base-content/80">
-							Join with your current committee account and continue directly to the live meeting.
-						</p>
-						<button class="btn btn-primary" onclick={handleSelfSignup} disabled={submitting}>
-							{#if submitting}
-								<span class="loading loading-spinner loading-xs"></span>
-							{/if}
-							Sign Up
-						</button>
+						<h3>Sign Up for This Meeting</h3>
+						<p>You are logged in as a committee member.</p>
+						<form
+							onsubmit={(event) => {
+								event.preventDefault();
+								void handleSelfSignup();
+							}}
+						>
+							<button class="btn btn-sm" type="submit" disabled={submitting}
+								>{#if submitting}<span class="loading loading-spinner loading-xs"></span>{/if}Sign Up</button
+							>
+						</form>
 					</div>
 				{:else if joinState.data.capabilities?.canGuestJoin}
+					<div class="space-y-4">
+					<h3>Guest Sign Up</h3>
 					<form class="space-y-4" onsubmit={handleGuestSignup}>
-						<label class="form-control">
-							<div class="label"><span class="label-text">Full Name</span></div>
-							<input class="input input-bordered" name="full_name" bind:value={fullName} required />
-						</label>
+						<div>
+							<label for="full_name">Full Name</label>
+							<input id="full_name" class="input input-bordered input-sm" name="full_name" bind:value={fullName} required />
+						</div>
 
 						{#if prefilledMeetingSecret}
 							<div class="rounded-box border border-base-300 bg-base-200/60 px-4 py-3 text-sm text-base-content/70">
 								The meeting secret was provided by your join link.
 							</div>
 						{:else}
-							<label class="form-control">
-								<div class="label"><span class="label-text">Meeting Secret</span></div>
+							<div>
+								<label for="meeting_secret">Meeting Secret</label>
 								<input
-									class="input input-bordered"
+									id="meeting_secret"
+									class="input input-bordered input-sm"
 									type="password"
 									name="meeting_secret"
 									bind:value={meetingSecret}
 									required
 								/>
-							</label>
+							</div>
 						{/if}
 
-						<label class="label cursor-pointer justify-start gap-3">
-							<input class="checkbox" type="checkbox" bind:checked={genderQuoted} />
-							<span class="label-text">Quoted / feminine forms apply to me</span>
-						</label>
+						<div>
+							<label for="guest_gender_quoted">Quoted / feminine forms apply to me</label>
+							<input
+								id="guest_gender_quoted"
+								class="checkbox checkbox-sm"
+								type="checkbox"
+								name="gender_quoted"
+								bind:checked={genderQuoted}
+							/>
+						</div>
 
-						<button class="btn btn-primary" type="submit" disabled={submitting}>
+						<button class="btn btn-sm" type="submit" disabled={submitting}>
 							{#if submitting}
 								<span class="loading loading-spinner loading-xs"></span>
 							{/if}
 							Sign Up as Guest
 						</button>
 					</form>
-				{:else}
-					<div class="space-y-4">
-						<p class="text-base-content/80">
-							Meeting signup is currently closed for new attendees.
-						</p>
-						<a class="btn btn-outline" href={attendeeLoginHref}>I Already Have an Access Code</a>
 					</div>
+				{:else}
+					<p>Meeting signup is currently closed for new attendees.</p>
 				{/if}
-			</AppCard>
-
-			<AppCard title="Existing Attendee?">
-				<div class="space-y-3 text-sm text-base-content/75">
-					<p>Use your attendee access code if you have already joined this meeting before.</p>
-					<a class="btn btn-outline w-full" href={attendeeLoginHref}>Attendee Login</a>
-					<a class="btn btn-ghost w-full" href={`/committee/${slug}`}>Back to Committee</a>
 				</div>
-			</AppCard>
+				<div class="pt-2">
+					<p><a href={attendeeLoginHref}>Attendee Login</a></p>
+				</div>
+			</div>
 		</div>
 	{/if}
 </div>

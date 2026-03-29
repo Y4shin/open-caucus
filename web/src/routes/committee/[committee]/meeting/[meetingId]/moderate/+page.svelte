@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { onDestroy, tick } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import { agendaClient, attendeeClient, meetingClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
@@ -30,6 +32,236 @@
 		children: string[];
 	};
 
+	const moderateAgendaImportLegacyScript = `(function() {
+				var agendaImportTopPrefix = (document.getElementById("agenda-point-list-container")?.getAttribute("data-import-top-prefix")) || "TOP";
+
+				function nextImportLineState(state) {
+					switch (state) {
+						case "ignore":
+							return "heading";
+						case "heading":
+							return "subheading";
+						default:
+							return "ignore";
+					}
+				}
+
+				function setImportLineVisualState(row, state) {
+					row.setAttribute("data-state", state);
+					row.classList.remove("border-base-300", "bg-base-100", "border-primary/30", "bg-primary/10", "border-info/30", "bg-info/10", "opacity-60");
+					switch (state) {
+						case "heading":
+							row.classList.add("border-primary/30", "bg-primary/10");
+							break;
+						case "subheading":
+							row.classList.add("border-info/30", "bg-info/10");
+							break;
+						default:
+						row.classList.add("border-base-300", "bg-base-100", "opacity-60");
+					}
+				}
+
+				function setAgendaImportStep(flow, step) {
+					if (!(flow instanceof Element)) { return; }
+					var parsedStep = parseInt(step, 10);
+					if (!Number.isFinite(parsedStep)) {
+						parsedStep = 1;
+					}
+					if (parsedStep < 1) { parsedStep = 1; }
+					if (parsedStep > 3) { parsedStep = 3; }
+					flow.setAttribute("data-agenda-import-step", String(parsedStep));
+
+					var panels = flow.querySelectorAll("[data-agenda-import-panel]");
+					for (var i = 0; i < panels.length; i++) {
+						var panel = panels[i];
+						var panelStep = parseInt(panel.getAttribute("data-agenda-import-panel") || "", 10);
+						var isVisible = panelStep === parsedStep;
+						panel.classList.toggle("hidden", !isVisible);
+					}
+
+					var stepItems = flow.querySelectorAll("[data-agenda-import-step-item]");
+					for (var j = 0; j < stepItems.length; j++) {
+						var stepItem = stepItems[j];
+						var itemStep = parseInt(stepItem.getAttribute("data-agenda-import-step-item") || "", 10);
+						stepItem.classList.toggle("step-primary", itemStep <= parsedStep);
+					}
+				}
+
+				function recomputeAgendaImportDetectedNumbers(scope) {
+					var root = scope instanceof Element ? scope : document;
+					var containers = [];
+					if (root instanceof Element && root.matches("[data-agenda-import-lines]")) {
+						containers.push(root);
+					}
+					var nested = root.querySelectorAll("[data-agenda-import-lines]");
+					for (var n = 0; n < nested.length; n++) {
+						containers.push(nested[n]);
+					}
+					for (var c = 0; c < containers.length; c++) {
+						var topIndex = 0;
+						var subIndex = 0;
+						var rows = containers[c].querySelectorAll("[data-import-line-row]");
+						for (var i = 0; i < rows.length; i++) {
+							var row = rows[i];
+							var state = row.getAttribute("data-state") || "ignore";
+							var prefix = row.querySelector("[data-import-line-prefix]");
+							var label = "";
+							if (state === "heading") {
+								topIndex++;
+								subIndex = 0;
+								label = agendaImportTopPrefix + " " + topIndex;
+							} else if (state === "subheading" && topIndex > 0) {
+								subIndex++;
+								label = agendaImportTopPrefix + " " + topIndex + "." + subIndex;
+							}
+							if (prefix) {
+								prefix.textContent = label;
+							}
+						}
+					}
+				}
+
+				function syncAgendaImportLineStates(scope) {
+					var root = scope instanceof Element ? scope : document;
+					var rows = root.querySelectorAll("[data-import-line-row]");
+					for (var i = 0; i < rows.length; i++) {
+						var row = rows[i];
+						var container = row.parentElement;
+						if (!container) { continue; }
+						var hiddenState = container.querySelector("[data-import-line-state]");
+						var state = "ignore";
+						if (hiddenState instanceof HTMLInputElement) {
+							state = hiddenState.value;
+						}
+						if (state !== "ignore" && state !== "heading" && state !== "subheading") {
+							state = "ignore";
+							if (hiddenState instanceof HTMLInputElement) {
+								hiddenState.value = state;
+							}
+						}
+						setImportLineVisualState(row, state);
+					}
+					recomputeAgendaImportDetectedNumbers(root);
+				}
+
+				function clearAgendaImportDiffHover() {
+					var hovered = document.querySelectorAll("#agenda-import-diff-grid [data-diff-cell][data-hovered='true']");
+					for (var i = 0; i < hovered.length; i++) {
+						hovered[i].removeAttribute("data-hovered");
+					}
+				}
+
+				function applyAgendaImportDiffHover(key) {
+					clearAgendaImportDiffHover();
+					if (!key) { return; }
+					var safeKey = key.replace(/"/g, '\\\\"');
+					var selector = "#agenda-import-diff-grid [data-diff-cell][data-diff-hover-key=\\"" + safeKey + "\\"]";
+					var cells = document.querySelectorAll(selector);
+					for (var i = 0; i < cells.length; i++) {
+						cells[i].setAttribute("data-hovered", "true");
+					}
+				}
+
+				if (!window.__agendaImportFileWired) {
+					document.addEventListener("change", function(event) {
+						var input = event.target;
+						if (!(input instanceof HTMLInputElement) || !input.matches("[data-agenda-import-file]")) { return; }
+						if (!input.files || input.files.length === 0) { return; }
+						var file = input.files[0];
+						var targetID = input.getAttribute("data-target");
+						if (!targetID) { return; }
+						file.text().then(function(content) {
+							var target = document.getElementById(targetID);
+							if (target instanceof HTMLTextAreaElement) {
+								target.value = content;
+							}
+						});
+					});
+					window.__agendaImportFileWired = true;
+				}
+
+				if (!window.__agendaImportCorrectionWired) {
+					document.addEventListener("click", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var row = target.closest("[data-import-line-row]");
+						if (!row) { return; }
+						var container = row.parentElement;
+						if (!container) { return; }
+						var hiddenState = container.querySelector("[data-import-line-state]");
+						if (!(hiddenState instanceof HTMLInputElement)) { return; }
+						var next = nextImportLineState(hiddenState.value);
+						hiddenState.value = next;
+						setImportLineVisualState(row, next);
+						recomputeAgendaImportDetectedNumbers(row.closest("[data-agenda-import-lines]"));
+					});
+					document.addEventListener("htmx:afterSwap", function(event) {
+						var target = event.target;
+						if (target instanceof Element) {
+							syncAgendaImportLineStates(target);
+							return;
+						}
+						syncAgendaImportLineStates(document);
+					});
+					window.__agendaImportCorrectionWired = true;
+				}
+
+				if (!window.__agendaImportDiffHoverWired) {
+					document.addEventListener("mouseover", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var cell = target.closest("#agenda-import-diff-grid [data-diff-cell]");
+						if (!cell) { return; }
+						applyAgendaImportDiffHover(cell.getAttribute("data-diff-hover-key") || "");
+					});
+					document.addEventListener("mouseout", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var cell = target.closest("#agenda-import-diff-grid [data-diff-cell]");
+						if (!cell) { return; }
+						var related = event.relatedTarget;
+						if (related instanceof Element) {
+							var nextCell = related.closest("#agenda-import-diff-grid [data-diff-cell]");
+							if (nextCell) {
+								applyAgendaImportDiffHover(nextCell.getAttribute("data-diff-hover-key") || "");
+								return;
+							}
+						}
+						clearAgendaImportDiffHover();
+					});
+					document.addEventListener("htmx:afterSwap", function() {
+						clearAgendaImportDiffHover();
+					});
+					window.__agendaImportDiffHoverWired = true;
+				}
+
+				if (!window.__agendaImportStepWired) {
+					document.addEventListener("click", function(event) {
+						var target = event.target;
+						if (!(target instanceof Element)) { return; }
+						var backButton = target.closest("[data-agenda-import-back]");
+						if (!backButton) { return; }
+						var flow = backButton.closest("[data-agenda-import-flow]");
+						if (!(flow instanceof Element)) { return; }
+						var nextStep = backButton.getAttribute("data-agenda-import-back") || "";
+						setAgendaImportStep(flow, nextStep);
+					});
+					window.__agendaImportStepWired = true;
+				}
+
+				var root = document.getElementById("agenda-point-list-container");
+				var modal = document.getElementById("moderate-agenda-import-dialog");
+				if (!root || !modal || typeof modal.showModal !== "function") { return; }
+				syncAgendaImportLineStates(root);
+				var flow = root.querySelector("[data-agenda-import-flow]");
+				if (flow) {
+					setAgendaImportStep(flow, flow.getAttribute("data-agenda-import-step") || "1");
+				}
+				if (root.getAttribute("data-import-open") === "true" && !modal.open) {
+					modal.showModal();
+				}
+			})();`;
+
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
 
@@ -38,12 +270,17 @@
 	let attendeeState = $state(createRemoteState<AttendeeRecord[]>());
 	let agendaState = $state(createRemoteState<AgendaPointRecord[]>());
 	let votesState = $state(createRemoteState<VotesPanelView>());
+	let legacyVotesPanelHTML = $state('');
+	let legacyVotesPanelAgendaPointId = $state('');
 	let actionError = $state('');
 	let togglingSignup = $state(false);
+	let attendeeActionPending = $state('');
 	let speakerActionPending = $state('');
 	let agendaActionPending = $state('');
 	let voteActionPending = $state('');
+	let settingsActionPending = $state('');
 	let creatingAgenda = $state(false);
+	let agendaEditOpen = $state(false);
 	let agendaParentId = $state('');
 	let creatingVote = $state(false);
 	let agendaTitle = $state('');
@@ -54,6 +291,7 @@
 	let agendaImportWarning = $state('');
 	let agendaImportBusy = $state(false);
 	let agendaImportStep = $state<'source' | 'correction' | 'diff'>('source');
+	let moderateSettingsTab = $state<'meeting' | 'agenda'>('meeting');
 	let voteName = $state('');
 	let voteVisibility = $state<'open' | 'secret'>('open');
 	let voteMinSelections = $state('1');
@@ -67,10 +305,27 @@
 		tally: VoteTallyEntry[];
 		outcome: string;
 	} | null>(null);
+	let moderateLeftTab = $state<'agenda' | 'tools' | 'attendees' | 'settings'>('agenda');
 	let speakerSearch = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let agendaTitleInput = $state<HTMLInputElement | null>(null);
 	let voteNameInput = $state<HTMLInputElement | null>(null);
+	let nowMs = $state(Date.now());
+	let speakingSinceMs = $state<Record<string, number>>({});
+	let agendaEditDialogEl = $state<HTMLDialogElement | null>(null);
+	let agendaImportDialogEl = $state<HTMLDialogElement | null>(null);
+
+	onDestroy(() => {
+		pageActions.clear();
+	});
+
+	$effect(() => {
+		if (!moderationState.data?.meeting) return;
+		pageActions.set([], {
+			backHref: `/committee/${slug}`,
+			title: `Moderate ${moderationState.data.meeting.meetingName}`
+		});
+	});
 	$effect(() => {
 		if (!session.loaded) return;
 		if (!session.authenticated) {
@@ -78,6 +333,42 @@
 			return;
 		}
 		loadModerationView();
+	});
+
+	$effect(() => {
+		const interval = window.setInterval(() => {
+			nowMs = Date.now();
+		}, 1000);
+		return () => window.clearInterval(interval);
+	});
+
+	$effect(() => {
+		const activeAgendaPointId = moderationState.data?.activeAgendaPoint?.agendaPointId ?? '';
+		if (!activeAgendaPointId) {
+			legacyVotesPanelHTML = '';
+			legacyVotesPanelAgendaPointId = '';
+			return;
+		}
+		if (legacyVotesPanelAgendaPointId !== activeAgendaPointId) {
+			legacyVotesPanelHTML = '';
+			legacyVotesPanelAgendaPointId = '';
+		}
+		if (moderateLeftTab === 'tools' && !legacyVotesPanelHTML) {
+			void loadLegacyVotesPanel();
+		}
+	});
+
+	$effect(() => {
+		if (!session.loaded || !session.authenticated) return;
+		const interval = window.setInterval(() => {
+			if (agendaEditOpen || agendaImportOpen) return;
+			loadModeration();
+			loadSpeakers();
+			loadAttendees();
+			loadAgenda();
+			loadVotes();
+		}, 2000);
+		return () => window.clearInterval(interval);
 	});
 
 	// Subscribe to the typed Connect stream and selectively refetch only the view that changed.
@@ -142,6 +433,7 @@
 			]);
 			moderationState.data = moderationRes.view ?? null;
 			speakerState.data = speakerRes.view ?? null;
+			syncSpeakingSince(speakerState.data?.speakers ?? []);
 			attendeeState.data = attendeeRes.attendees;
 			agendaState.data = agendaRes.agendaPoints;
 			votesState.data = votesRes.view ?? null;
@@ -185,6 +477,7 @@
 		try {
 			const res = await speakerClient.listSpeakers({ committeeSlug: slug, meetingId });
 			speakerState.data = res.view ?? null;
+			syncSpeakingSince(speakerState.data?.speakers ?? []);
 		} catch {
 			// Silent refresh
 		}
@@ -217,6 +510,39 @@
 		}
 	}
 
+	async function loadLegacyVotesPanel() {
+		const activeAgendaPointId = moderationState.data?.activeAgendaPoint?.agendaPointId ?? '';
+		if (!activeAgendaPointId) {
+			legacyVotesPanelHTML = '';
+			legacyVotesPanelAgendaPointId = '';
+			return;
+		}
+		if (legacyVotesPanelHTML && legacyVotesPanelAgendaPointId === activeAgendaPointId) {
+			return;
+		}
+		try {
+			const response = await fetch(`/committee/${slug}/meeting/${meetingId}/votes/partial`, {
+				headers: {
+					'HX-Request': 'true'
+				},
+				credentials: 'same-origin'
+			});
+			if (!response.ok) {
+				return;
+			}
+			legacyVotesPanelHTML = await response.text();
+			legacyVotesPanelAgendaPointId = activeAgendaPointId;
+			await tick();
+			const host = document.getElementById('moderate-votes-panel-host');
+			const htmx = (window as typeof window & { htmx?: { process?: (node: Element) => void } }).htmx;
+			if (host && typeof htmx?.process === 'function') {
+				htmx.process(host);
+			}
+		} catch {
+			// Silent refresh
+		}
+	}
+
 	async function toggleSignupOpen() {
 		const view = moderationState.data;
 		if (!view?.attendees || togglingSignup) return;
@@ -242,12 +568,248 @@
 		}
 	}
 
+	function attendeeCreateURL() {
+		return `/committee/${slug}/meeting/${meetingId}/attendee/create`;
+	}
+
+	function attendeeSelfSignupURL() {
+		return `/committee/${slug}/meeting/${meetingId}/attendee/self-signup`;
+	}
+
+	function attendeeDeleteURL(attendeeId: string) {
+		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/delete`;
+	}
+
+	function attendeeToggleChairURL(attendeeId: string) {
+		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/chair`;
+	}
+
+	function attendeeToggleQuotedURL(attendeeId: string) {
+		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/quoted`;
+	}
+
+	function attendeeRecoveryURL(attendeeId: string) {
+		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/recovery`;
+	}
+
+	function manageJoinQrURL() {
+		return `/committee/${slug}/meeting/${meetingId}/moderate/join-qr`;
+	}
+
+	async function postLegacyAttendeeAction(url: string, body: URLSearchParams) {
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+			body
+		});
+		if (!response.ok) {
+			throw new Error((await response.text()) || `request failed (${response.status})`);
+		}
+		await Promise.all([loadModeration(), loadAttendees(), loadSpeakers()]);
+	}
+
+	async function addGuestAttendee(event: SubmitEvent) {
+		event.preventDefault();
+		const form = event.currentTarget as HTMLFormElement | null;
+		if (!form || attendeeActionPending !== '') return;
+
+		const fullName = String(new FormData(form).get('full_name') ?? '').trim();
+		if (!fullName) {
+			actionError = 'Name is required.';
+			return;
+		}
+
+		attendeeActionPending = 'add-guest';
+		actionError = '';
+		try {
+			const body = new URLSearchParams();
+			body.set('full_name', fullName);
+			if (form.querySelector<HTMLInputElement>('input[name="gender_quoted"]')?.checked) {
+				body.set('gender_quoted', 'true');
+			}
+			await postLegacyAttendeeAction(attendeeCreateURL(), body);
+			form.reset();
+			searchInput?.focus();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to add the guest attendee.');
+		} finally {
+			attendeeActionPending = '';
+		}
+	}
+
+	async function selfSignupAttendee() {
+		if (attendeeActionPending !== '') return;
+		attendeeActionPending = 'self-signup';
+		actionError = '';
+		try {
+			await postLegacyAttendeeAction(attendeeSelfSignupURL(), new URLSearchParams());
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to sign you up as an attendee.');
+		} finally {
+			attendeeActionPending = '';
+		}
+	}
+
+	async function removeAttendee(attendeeId: string, fullName: string) {
+		if (!window.confirm('Remove attendee?')) return;
+		if (attendeeActionPending !== '') return;
+
+		attendeeActionPending = `remove-${attendeeId}`;
+		actionError = '';
+		try {
+			await postLegacyAttendeeAction(attendeeDeleteURL(attendeeId), new URLSearchParams());
+		} catch (err) {
+			actionError = getDisplayError(err, `Failed to remove ${fullName}.`);
+		} finally {
+			attendeeActionPending = '';
+		}
+	}
+
+	async function toggleAttendeeChair(attendee: AttendeeRecord) {
+		if (attendeeActionPending !== '') return;
+		attendeeActionPending = `chair-${attendee.attendeeId}`;
+		actionError = '';
+		try {
+			await postLegacyAttendeeAction(attendeeToggleChairURL(attendee.attendeeId), new URLSearchParams());
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update chairperson status.');
+			loadAttendees();
+		} finally {
+			attendeeActionPending = '';
+		}
+	}
+
+	async function toggleAttendeeQuoted(attendee: AttendeeRecord) {
+		if (attendeeActionPending !== '') return;
+		attendeeActionPending = `quoted-${attendee.attendeeId}`;
+		actionError = '';
+		try {
+			await postLegacyAttendeeAction(attendeeToggleQuotedURL(attendee.attendeeId), new URLSearchParams());
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update FLINTA* status.');
+			loadAttendees();
+		} finally {
+			attendeeActionPending = '';
+		}
+	}
+
+	function attendeeRows() {
+		return [...(attendeeState.data ?? [])].sort((left, right) => Number(left.attendeeNumber - right.attendeeNumber));
+	}
+
 	function activeSpeaker() {
 		return speakerState.data?.speakers.find((speaker) => speaker.state === 'SPEAKING') ?? null;
 	}
 
 	function nextWaitingSpeaker() {
 		return speakerState.data?.speakers.find((speaker) => speaker.state === 'WAITING') ?? null;
+	}
+
+	function syncSpeakingSince(speakers: SpeakerQueueView['speakers']) {
+		const next = { ...speakingSinceMs };
+		const activeIds = new Set(speakers.map((speaker) => speaker.speakerId));
+		for (const speaker of speakers) {
+			if (speaker.state === 'SPEAKING' && next[speaker.speakerId] == null) {
+				next[speaker.speakerId] = Date.now();
+			}
+		}
+		for (const speakerId of Object.keys(next)) {
+			if (!activeIds.has(speakerId)) delete next[speakerId];
+		}
+		speakingSinceMs = next;
+	}
+
+	function waitingDisplayNumber(speakerId: string) {
+		let index = 0;
+		for (const speaker of speakerState.data?.speakers ?? []) {
+			if (speaker.state !== 'WAITING') continue;
+			index += 1;
+			if (speaker.speakerId === speakerId) return index;
+		}
+		return 0;
+	}
+
+	function formatElapsed(totalMs: number) {
+		const totalSeconds = Math.max(0, Math.floor(totalMs / 1000));
+		const mins = Math.floor(totalSeconds / 60);
+		const secs = totalSeconds % 60;
+		return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+	}
+
+	function speakingTimerLabel(speakerId: string) {
+		const since = speakingSinceMs[speakerId];
+		if (since == null) return '00:00';
+		return formatElapsed(nowMs - since);
+	}
+
+	function scrollToInitialSpeaker() {
+		const target = document.querySelector('#speakers-list-container [data-manage-scroll-anchor="true"]');
+		if (target instanceof HTMLElement) {
+			target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+		}
+	}
+
+	function isInitialScrollSpeaker(speakerId: string) {
+		const active = activeSpeaker();
+		if (active) return active.speakerId === speakerId;
+		const next = nextWaitingSpeaker();
+		return next?.speakerId === speakerId;
+	}
+
+	function selectModerateLeftTab(tab: 'agenda' | 'tools' | 'attendees' | 'settings') {
+		moderateLeftTab = tab;
+		if (tab === 'tools' && !legacyVotesPanelHTML) {
+			void loadLegacyVotesPanel();
+		}
+	}
+
+	function openDocs(path: string) {
+		goto(`/docs/${path}`);
+	}
+
+	function openDocsWithHeading(path: string, heading?: string) {
+		const url = new URL(`/docs/${path}`, window.location.origin);
+		if (heading) {
+			url.searchParams.set('heading', heading);
+		}
+		goto(`${url.pathname}${url.search}`);
+	}
+
+	function preserveEmptyClass(node: HTMLElement, enabled: boolean) {
+		function sync(nextEnabled: boolean) {
+			if (nextEnabled) {
+				node.setAttribute('class', node.className);
+				if (!node.hasAttribute('class')) {
+					node.setAttribute('class', '');
+				}
+				return;
+			}
+			if (node.getAttribute('class') === '') {
+				node.removeAttribute('class');
+			}
+		}
+
+		sync(enabled);
+
+		return {
+			update(nextEnabled: boolean) {
+				sync(nextEnabled);
+			}
+		};
+	}
+
+	function moderateAgendaImportScriptHTML() {
+		return `<script>
+			${moderateAgendaImportLegacyScript}
+		<\/script>`;
+	}
+
+	function legacyClientIDVals() {
+		return "js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}";
+	}
+
+	function attendeeCreateAfterRequest() {
+		return "if(event.detail.successful){ this.reset(); var speakerSearch=document.getElementById('speaker-add-search-input') || document.getElementById('moderate-speaker-search'); if(speakerSearch && window.htmx){ htmx.trigger(speakerSearch,'search'); } }";
 	}
 
 
@@ -327,14 +889,69 @@
 		}
 	}
 
+	async function updateMeetingModerator(event: Event) {
+		const target = event.currentTarget as HTMLSelectElement | null;
+		if (!target || settingsActionPending !== '') return;
+
+		settingsActionPending = 'moderator';
+		actionError = '';
+		try {
+			await moderationClient.setMeetingModerator({
+				committeeSlug: slug,
+				meetingId,
+				moderatorAttendeeId: target.value
+			});
+			if (moderationState.data?.settings) {
+				moderationState.data.settings.moderatorAttendeeId = target.value;
+			}
+			loadModeration();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update the meeting moderator.');
+			loadModeration();
+		} finally {
+			settingsActionPending = '';
+		}
+	}
+
+	async function updateMeetingQuotation() {
+		const settings = moderationState.data?.settings;
+		if (!settings || settingsActionPending !== '') return;
+
+		settingsActionPending = 'quotation';
+		actionError = '';
+		try {
+			await moderationClient.setMeetingQuotation({
+				committeeSlug: slug,
+				meetingId,
+				genderQuotationEnabled: settings.genderQuotationEnabled,
+				firstSpeakerQuotationEnabled: settings.firstSpeakerQuotationEnabled
+			});
+			loadModeration();
+			loadSpeakers();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update the quotation settings.');
+			loadModeration();
+			loadSpeakers();
+		} finally {
+			settingsActionPending = '';
+		}
+	}
+
 	function normalized(value: string) {
 		return value.trim().toLowerCase();
 	}
 
 	function hasOpenSpeaker(attendeeId: string, speakerType: string) {
 		return (speakerState.data?.speakers ?? []).some(
-			(speaker) => speaker.attendeeId === attendeeId && speaker.speakerType === speakerType
+			(speaker) =>
+				speaker.attendeeId === attendeeId &&
+				speaker.speakerType === speakerType &&
+				(speaker.state === 'WAITING' || speaker.state === 'SPEAKING')
 		);
+	}
+
+	function settingsAttendees() {
+		return attendeeRows();
 	}
 
 	function candidateRank(attendee: AttendeeRecord, query: string) {
@@ -492,6 +1109,39 @@
 		return rows;
 	}
 
+	function agendaPointsFlat(points: AgendaPointRecord[] = agendaState.data ?? []) {
+		const rows: AgendaPointRecord[] = [];
+		const visit = (items: AgendaPointRecord[]) => {
+			for (const item of items) {
+				rows.push(item);
+				if (item.subPoints.length) {
+					visit(item.subPoints);
+				}
+			}
+		};
+		visit(points);
+		return rows;
+	}
+
+	function agendaSiblings(point: AgendaPointRecord) {
+		return agendaPointsFlat().filter((candidate) => candidate.parentId === point.parentId);
+	}
+
+	function agendaPointCanMoveUp(point: AgendaPointRecord) {
+		return agendaSiblings(point).findIndex((candidate) => candidate.agendaPointId === point.agendaPointId) > 0;
+	}
+
+	function agendaPointCanMoveDown(point: AgendaPointRecord) {
+		const siblings = agendaSiblings(point);
+		const index = siblings.findIndex((candidate) => candidate.agendaPointId === point.agendaPointId);
+		return index !== -1 && index < siblings.length - 1;
+	}
+
+	function legacyAgendaDisplayNumber(point: AgendaPointRecord) {
+		if (point.displayNumber.startsWith('TOP')) return point.displayNumber;
+		return `TOP ${point.displayNumber}`;
+	}
+
 	function currentAgendaFingerprint() {
 		return JSON.stringify(flattenAgenda(agendaState.data ?? []));
 	}
@@ -507,12 +1157,30 @@
 		agendaImportWarning = '';
 		agendaImportLines = [];
 		agendaImportFingerprint = currentAgendaFingerprint();
+		agendaImportDialogEl?.showModal();
 	}
 
 	function closeAgendaImportDialog() {
 		agendaImportOpen = false;
 		agendaImportStep = 'source';
 		agendaImportWarning = '';
+		agendaImportDialogEl?.close();
+	}
+
+	function openAgendaEditDialog() {
+		agendaEditOpen = true;
+		agendaEditDialogEl?.showModal();
+	}
+
+	function closeAgendaEditDialog() {
+		agendaEditOpen = false;
+		agendaEditDialogEl?.close();
+	}
+
+	function agendaImportCurrentStep() {
+		if (agendaImportStep === 'correction') return 2;
+		if (agendaImportStep === 'diff') return 3;
+		return 1;
 	}
 
 	function nextImportState(state: AgendaImportState): AgendaImportState {
@@ -822,733 +1490,837 @@
 			<AppAlert message={actionError} />
 		{/if}
 
-		<div class="grid gap-4 xl:grid-cols-3">
-			<AppCard title="Signup Control">
-				<p class="text-sm text-base-content/70">
-					Version {moderationState.data.version.toString()}
-				</p>
-				<p class="mt-3 font-medium">
-					Signup is {moderationState.data.attendees?.signupOpen ? 'open' : 'closed'}.
-				</p>
-				<button class="btn btn-primary btn-sm mt-4" onclick={toggleSignupOpen} disabled={togglingSignup}>
-					{#if togglingSignup}
-						<span class="loading loading-spinner loading-xs"></span>
-					{/if}
-					{moderationState.data.attendees?.signupOpen ? 'Close Signup' : 'Open Signup'}
-				</button>
-			</AppCard>
-
-			<AppCard title="Attendees">
-				<div class="space-y-2 text-sm">
-					<p>Total: {moderationState.data.attendees?.totalCount ?? 0}</p>
-					<p>Guests: {moderationState.data.attendees?.guestCount ?? 0}</p>
-					<p>Chairs: {moderationState.data.attendees?.chairCount ?? 0}</p>
-					<p>
-						Self-signup visible:
-						{moderationState.data.attendees?.showSelfSignup ? 'Yes' : 'No'}
-					</p>
-				</div>
-			</AppCard>
-
-			<AppCard title="Speakers">
-				<div class="space-y-2 text-sm">
-					<p>Total: {moderationState.data.speakers?.totalCount ?? 0}</p>
-					<p>Waiting: {moderationState.data.speakers?.waitingCount ?? 0}</p>
-					<p>
-						Active speaker:
-						{moderationState.data.speakers?.hasActiveSpeaker ? 'Yes' : 'No'}
-					</p>
-				</div>
-			</AppCard>
-		</div>
-
-		<div data-testid="manage-speakers-card">
-			<AppCard title="Speakers Queue">
-				<div class="mb-4 flex flex-wrap gap-2">
-				<button
-					class="btn btn-primary btn-sm"
-					title="Start next speaker"
-					onclick={() =>
-						runSpeakerAction('start-next', async () => {
-							const next = nextWaitingSpeaker();
-							if (!next) {
-								throw new Error('No waiting speaker is available.');
-							}
-							return await speakerClient.setSpeakerSpeaking({
-								committeeSlug: slug,
-								meetingId,
-								speakerId: next.speakerId
-							});
-						})}
-					disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
-				>
-					Start Next
-				</button>
-				<button
-					class="btn btn-outline btn-sm"
-					data-testid="manage-end-current-speaker"
-					title="End current speech"
-					onclick={endCurrentSpeaker}
-					disabled={speakerActionPending !== '' || !activeSpeaker()}
-				>
-					End Current
-				</button>
-				</div>
-
-				{#if moderationState.data.activeAgendaPoint}
-					<div class="mb-4 rounded-box border border-base-300 bg-base-200/40 p-4">
-						<div class="mb-3">
-							<label class="label" for="speaker-add-search-input">
-								<span class="label-text font-medium">Add Speaker</span>
-							</label>
-							<input
-								id="speaker-add-search-input"
-								class="input input-bordered w-full"
-								bind:value={speakerSearch}
-								bind:this={searchInput}
-								onkeydown={handleSpeakerSearchEnter}
-								placeholder="Search by attendee name or number"
-							/>
-						</div>
-
-						<div id="speaker-add-candidates-container" class="space-y-2">
-							{#each sortedCandidates().slice(0, 8) as attendee}
-								<div
-									class="flex flex-wrap items-center justify-between gap-3 rounded-box border border-base-300 bg-base-100 px-3 py-3"
-									data-testid="manage-speaker-candidate-card"
-								>
-									<div>
-										<div class="font-medium">{attendee.fullName}</div>
-										<div class="text-sm text-base-content/70">
-											#{attendee.attendeeNumber.toString()}
-											{#if attendee.isGuest}
-												• Guest
-											{/if}
-											{#if attendee.quoted}
-												• Quoted
-											{/if}
-										</div>
-									</div>
-									<div class="flex flex-wrap gap-2">
-										<button
-											class="btn btn-primary btn-xs"
-											title="Add regular speech"
-											onclick={() => addCandidate(attendee.attendeeId, 'regular')}
-											disabled={
-												speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'regular')
-											}
-										>
-											Regular
-										</button>
-										<button
-											class="btn btn-outline btn-xs"
-											title="Add Point of Order (PO) speech"
-											onclick={() => addCandidate(attendee.attendeeId, 'ropm')}
-											disabled={
-												speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'ropm')
-											}
-										>
-											PO
-										</button>
+		<div id="moderate-sse-root" class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:h-full lg:grid-cols-2 lg:grid-rows-1 lg:overflow-hidden">
+			<section
+				id="moderate-left-controls"
+				data-meeting-id={meetingId}
+				data-tabs-wired="true"
+				class="order-2 card min-h-0 min-w-0 overflow-hidden border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:h-full lg:self-stretch"
+			>
+				<div class="card-body flex h-full min-h-0 flex-col overflow-hidden p-4">
+					<div role="tablist" class="tabs tabs-border tabs-sm grid w-full grid-cols-4 [--tab-p:0.35rem] sm:[--tab-p:0.75rem]">
+						<button
+							type="button"
+							class={moderateLeftTab === 'agenda' ? 'tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm' : 'tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm'}
+							data-moderate-left-tab="agenda"
+							onclick={() => selectModerateLeftTab('agenda')}
+						>
+							Agenda
+						</button>
+						<button
+							type="button"
+							class={moderateLeftTab === 'tools' ? 'tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm' : 'tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm'}
+							data-moderate-left-tab="tools"
+							onclick={() => selectModerateLeftTab('tools')}
+						>
+							Tools
+						</button>
+						<button
+							type="button"
+							class={moderateLeftTab === 'attendees' ? 'tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm' : 'tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm'}
+							data-moderate-left-tab="attendees"
+							onclick={() => selectModerateLeftTab('attendees')}
+						>
+							Attendees
+						</button>
+						<button
+							type="button"
+							class={moderateLeftTab === 'settings' ? 'tab tab-active min-w-0 justify-center truncate text-[0.72rem] sm:text-sm' : 'tab min-w-0 justify-center truncate text-[0.72rem] sm:text-sm'}
+							data-moderate-left-tab="settings"
+							onclick={() => selectModerateLeftTab('settings')}
+						>
+							Settings
+						</button>
+					</div>
+					<div class="mt-3 min-h-0 flex-1">
+						<div id="moderate-left-panel-agenda" data-moderate-left-panel="agenda" class={moderateLeftTab === 'agenda' ? 'h-full min-h-0 overflow-y-auto pr-1' : 'hidden'}>
+							<section class="min-h-0" data-testid="manage-agenda-card">
+								<div class="mb-3 flex items-center justify-between gap-2">
+									<h2 class="text-lg font-semibold">Agenda Points</h2>
+									<div class="flex items-center gap-2">
+										<button type="button" class="btn btn-sm btn-square btn-ghost" title="Open agenda help" aria-label="Open agenda help" hx-get="/docs/oob/03-chairperson/03-agenda-management-and-import?heading=agenda-routes" hx-swap="none" onclick={() => openDocsWithHeading('03-chairperson/03-agenda-management-and-import', 'agenda-routes')}><LegacyIcon name="help" class="h-4 w-4" /></button>
+										<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda" data-manage-dialog-open aria-controls="moderate-agenda-edit-dialog" title="Edit agenda" aria-label="Edit agenda" onclick={openAgendaEditDialog}><LegacyIcon name="settings" class="h-4 w-4" /></button>
 									</div>
 								</div>
-							{/each}
-							{#if sortedCandidates().length === 0}
-								<p class="text-sm text-base-content/70">No matching attendees found.</p>
-							{/if}
-						</div>
-					</div>
-				{/if}
-
-				<div id="speakers-list-container">
-					{#if !moderationState.data.activeAgendaPoint}
-						<p class="text-base-content/70">No active agenda point.</p>
-					{:else if speakerState.data?.speakers?.length}
-						<div class="space-y-2" data-testid="manage-speakers-viewport">
-							{#each speakerState.data.speakers as speaker}
-								<div
-									class="rounded-box border border-base-300 px-3 py-3"
-									data-testid="live-speaker-item"
-									data-speaker-state={speaker.state.toLowerCase()}
+								<div id="moderate-agenda-compact" hx-get={`/committee/${slug}/meeting/${meetingId}/moderate/agenda`} hx-trigger="reload" hx-swap="outerHTML" class="space-y-2">
+									{#if agendaPointsFlat().length === 0}
+										<p class="text-sm text-base-content/70">No agenda points have been created yet.</p>
+									{:else}
+										<ul class="list rounded-box border border-base-300 bg-base-100">
+											{#each agendaPointsFlat() as point}
+												<li class={point.isActive ? 'list-row items-center gap-3 bg-primary/10' : point.parentId ? 'list-row items-center gap-3 pl-8' : 'list-row items-center gap-3'}>
+													<span class="badge badge-outline">{legacyAgendaDisplayNumber(point)}</span>
+													<span class={point.isActive ? 'flex-1 truncate font-semibold' : 'flex-1 truncate'}>{point.title}</span>
+													{#if point.isActive}
+														<span class="badge badge-success badge-sm">Active</span>
+													{:else}
+														<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/activate`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')" class="inline" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
+															<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
+														</form>
+													{/if}
+												</li>
+											{/each}
+										</ul>
+									{/if}
+								</div>
+								<dialog
+									id="moderate-agenda-edit-dialog"
+									class="modal"
+									data-manage-dialog
+									bind:this={agendaEditDialogEl}
+									onclose={() => {
+										agendaEditOpen = false;
+									}}
 								>
-									<div class="flex flex-wrap items-start justify-between gap-3">
-										<div>
-											<div class="font-medium" data-testid="live-speaker-name">{speaker.fullName}</div>
-											<div class="text-sm text-base-content/70">
-												{speaker.speakerType} • {speaker.state}
+									<div class="modal-box w-11/12 max-w-5xl">
+										<div class="mb-4 flex items-center justify-between gap-2">
+											<h3 class="text-lg font-semibold">Edit Agenda</h3>
+											<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaEditDialog}>Close</button>
+										</div>
+										<div id="agenda-point-list-container" class="space-y-3" data-import-open={agendaImportOpen ? 'true' : 'false'} data-import-top-prefix="TOP">
+											<div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+												<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-1">
+													<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/create`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3" data-testid="manage-agenda-add-form" onsubmit={async (event) => { event.preventDefault(); await createAgendaPoint(); }}>
+														<fieldset class="fieldset rounded-box border border-base-300 p-3">
+															<legend class="fieldset-legend px-1 text-sm font-semibold">Add Agenda Point</legend>
+															<label class="label p-0 text-sm font-medium" for="ap_title">Title</label>
+															<input class="input input-bordered input-sm w-full" type="text" id="ap_title" name="title" required placeholder="Agenda point title" bind:value={agendaTitle} bind:this={agendaTitleInput} onkeydown={handleAgendaTitleKeydown} />
+															<label class="label mt-2 p-0 text-sm font-medium" for="ap_parent_id">Parent (optional)</label>
+															<select class="select select-bordered select-sm w-full" id="ap_parent_id" name="parent_id" bind:value={agendaParentId}>
+																<option value="">-- top-level --</option>
+																{#each agendaPointsFlat() as point}
+																	<option value={point.agendaPointId}>{point.title}</option>
+																{/each}
+															</select>
+															<button type="submit" class="btn btn-sm mt-3 w-full"><LegacyIcon name="arrow-forward" class="h-4 w-4" />Add</button>
+															<button type="button" class="btn btn-sm btn-outline mt-2 w-full" data-manage-dialog-open aria-controls="moderate-agenda-import-dialog" onclick={openAgendaImportDialog}>Import</button>
+														</fieldset>
+													</form>
+												</div>
+												<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-2">
+													{#if agendaPointsFlat().length === 0}
+														<p class="text-sm text-base-content/70">No agenda points have been created yet.</p>
+													{:else}
+														<div class="grid gap-3">
+															{#each agendaPointsFlat() as point}
+																<div class={point.isActive ? `card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm bg-primary/5 border-primary/40${point.parentId ? ' ml-5' : ''}` : point.parentId ? 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm ml-5' : 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm'} data-testid="manage-agenda-point-card">
+																	<div class="flex items-start gap-3">
+																		<span class="badge badge-outline shrink-0">{legacyAgendaDisplayNumber(point)}</span>
+																		<div class="min-w-0 flex-1">
+																			<div class="truncate font-semibold">{point.title}</div>
+																			<div class="mt-1 flex flex-wrap gap-1">
+																				{#if point.parentId}
+																					<span class="badge badge-outline">Child</span>
+																				{/if}
+																				{#if point.isActive}
+																					<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">Active</span>
+																				{/if}
+																			</div>
+																		</div>
+																	</div>
+																	<div class="mt-2 flex items-center gap-2">
+																		<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-up`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'up'); }}>
+																			<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move up" title="Move up" aria-label="Move up" disabled={!agendaPointCanMoveUp(point) || isAgendaBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
+																		</form>
+																		<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-down`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'down'); }}>
+																			<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move down" title="Move down" aria-label="Move down" disabled={!agendaPointCanMoveDown(point) || isAgendaBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
+																		</form>
+																		{#if !point.isActive}
+																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/activate`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
+																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
+																			</form>
+																		{/if}
+																		<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Open tools" title="Open tools" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
+																		<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/delete`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-confirm="Delete this agenda point?" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await deleteAgendaPoint(point.agendaPointId); }}>
+																			<button type="submit" class="btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Delete agenda point" title="Delete agenda point" aria-label="Delete agenda point" disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+																		</form>
+																	</div>
+																</div>
+															{/each}
+														</div>
+													{/if}
+												</div>
+											</div>
+											<dialog
+												id="moderate-agenda-import-dialog"
+												class="modal"
+												data-manage-dialog
+												bind:this={agendaImportDialogEl}
+												onclose={() => {
+													agendaImportOpen = false;
+													agendaImportStep = 'source';
+													agendaImportWarning = '';
+												}}
+											>
+												<div class="modal-box w-11/12 max-w-5xl">
+													<div class="mb-4 flex items-center justify-between gap-2">
+														<h3 class="text-lg font-semibold">Import Agenda</h3>
+														<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>Close</button>
+													</div>
+													<div class="space-y-4">
+														{#if agendaImportWarning}
+															<div class="alert alert-warning text-sm">{agendaImportWarning}</div>
+														{/if}
+														<div class="space-y-4" data-agenda-import-flow data-agenda-import-step={agendaImportCurrentStep().toString()}>
+															<ul class="steps steps-horizontal w-full">
+																<li class={agendaImportCurrentStep() >= 1 ? 'step step-primary' : 'step'} data-agenda-import-step-item="1">Source</li>
+																<li class={agendaImportCurrentStep() >= 2 ? 'step step-primary' : 'step'} data-agenda-import-step-item="2">Correction</li>
+																<li class={agendaImportCurrentStep() >= 3 ? 'step step-primary' : 'step'} data-agenda-import-step-item="3">Diff</li>
+															</ul>
+															{#if agendaImportCurrentStep() === 1}
+																<div use:preserveEmptyClass={true} data-agenda-import-panel="1" class="">
+																	<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda/import/extract`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
+																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">Source text</label>
+																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder="Paste markdown or plaintext agenda here." bind:value={agendaImportSource}></textarea>
+																		<div class="flex flex-wrap items-center gap-2">
+																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
+																			<button type="submit" class="btn btn-sm btn-outline">Extract Agenda</button>
+																		</div>
+																	</form>
+																</div>
+															{:else}
+																<div use:preserveEmptyClass={false} data-agenda-import-panel="1" class="hidden">
+																	<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda/import/extract`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
+																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">Source text</label>
+																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder="Paste markdown or plaintext agenda here." bind:value={agendaImportSource}></textarea>
+																		<div class="flex flex-wrap items-center gap-2">
+																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
+																			<button type="submit" class="btn btn-sm btn-outline">Extract Agenda</button>
+																		</div>
+																	</form>
+																</div>
+															{/if}
+															{#if agendaImportLines.length > 0}
+																<div use:preserveEmptyClass={agendaImportCurrentStep() === 2} data-agenda-import-panel="2" class={agendaImportCurrentStep() === 2 ? '' : 'hidden'}>
+																	<form id="agenda-import-correction-form" hx-post={`/committee/${slug}/meeting/${meetingId}/agenda/import/diff`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="space-y-3" onsubmit={(event) => { event.preventDefault(); generateAgendaDiff(); }}>
+																		<input type="hidden" name="source_text" value={agendaImportSource} />
+																		<h4 class="text-base font-semibold">Correct detected agenda structure</h4>
+																		<p class="text-sm text-base-content/70">Click each line to cycle between ignored, heading, and subheading.</p>
+																		<div class="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
+																			<ul class="space-y-2" data-agenda-import-lines>
+																				{#each agendaImportLines as line, index}
+																					<li>
+																						<input type="hidden" name="line_no" value={line.lineNo.toString()} />
+																						<input type="hidden" name="line_text" value={line.text} />
+																						<input type="hidden" name="line_detected_state" value={line.state} />
+																						<input type="hidden" name="line_state" value={line.state} data-import-line-state />
+																						<button type="button" class={line.state === 'heading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-primary/30 bg-primary/10' : line.state === 'subheading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-info/30 bg-info/10' : 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-base-300 bg-base-100 opacity-60'} data-import-line-row data-state={line.state} onclick={() => toggleAgendaImportLine(index)}>
+																							<span class="w-24 shrink-0 text-xs font-medium tabular-nums text-base-content/60" data-import-line-prefix>{importPrefix(agendaImportLines, index)}</span>
+																							<span class="min-w-0 flex-1 truncate text-sm" title={line.text}>{line.text}</span>
+																						</button>
+																					</li>
+																				{/each}
+																			</ul>
+																		</div>
+																		<div class="flex flex-wrap gap-2">
+																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'source')}>Back</button>
+																			<button type="submit" class="btn btn-sm">Generate Diff</button>
+																		</div>
+																	</form>
+																</div>
+															{/if}
+															{#if agendaImportStep === 'diff' && buildImportedAgenda(agendaImportLines).length > 0}
+																<div use:preserveEmptyClass={agendaImportCurrentStep() === 3} data-agenda-import-panel="3" class={agendaImportCurrentStep() === 3 ? '' : 'hidden'}>
+																	<div class="space-y-3">
+																		<h4 class="text-base font-semibold">Agenda Diff</h4>
+																		<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-2">
+																			<style>
+																				#agenda-import-diff-grid [data-diff-cell] {
+																					transition: filter 120ms ease, box-shadow 120ms ease;
+																				}
+																				#agenda-import-diff-grid [data-diff-cell][data-hovered="true"] {
+																					filter: brightness(0.95);
+																					box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
+																				}
+																			</style>
+																			<div class="mb-2 hidden grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-base-content/60 md:grid">
+																				<div>Current</div>
+																				<div class="text-center">Change</div>
+																				<div>Imported</div>
+																			</div>
+																			<ul class="space-y-2">
+																				{#each buildImportedAgenda(agendaImportLines) as point}
+																					<li class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 text-sm">
+																						<div class="min-h-12 rounded-box border border-dashed border-base-300/70 bg-base-200/20"></div>
+																						<div class="flex min-h-12 items-center justify-center"><span class="tooltip tooltip-top text-success" data-tip="Add"><LegacyIcon name="arrow-forward" class="h-5 w-5" /></span></div>
+																						<div class="min-h-12 rounded-box border border-success/30 bg-success/10 p-2" data-diff-cell data-diff-hover-key={point.title}>
+																							<div class="mb-1 text-xs font-medium uppercase tracking-wide text-base-content/60 md:hidden">Imported</div>
+																							<div class="flex items-start justify-between gap-2">
+																								<div class="min-w-0 flex-1">
+																									<div class="text-xs text-base-content/70">TOP</div>
+																									<div class="truncate">{point.title}</div>
+																								</div>
+																							</div>
+																						</div>
+																					</li>
+																				{/each}
+																			</ul>
+																		</div>
+																		<div class="alert alert-warning text-sm">Applying this import replaces the existing agenda.</div>
+																		<div class="flex flex-wrap gap-2">
+																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="2" onclick={() => (agendaImportStep = 'correction')}>Back</button>
+																			<form class="inline-flex" onsubmit={(event) => { event.preventDefault(); void applyAgendaImport(); }}>
+																				<button type="submit" class="btn btn-sm btn-primary" disabled={agendaImportBusy}>Accept</button>
+																			</form>
+																			<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>Deny</button>
+																		</div>
+																	</div>
+																</div>
+															{/if}
+														</div>
+													</div>
+												</div>
+												<form method="dialog" class="modal-backdrop">
+													<button aria-label="Close">Close</button>
+												</form>
+											</dialog>{@html moderateAgendaImportScriptHTML()}
+										</div>
+									</div>
+									<form method="dialog" class="modal-backdrop">
+										<button aria-label="Close">Close</button>
+									</form>
+								</dialog>
+							</section>
+						</div>
+						<div id="moderate-left-panel-tools" data-moderate-left-panel="tools" class={moderateLeftTab === 'tools' ? 'h-full min-h-0 overflow-hidden' : 'hidden h-full min-h-0 overflow-hidden'}>
+							<section class="flex h-full min-h-0 flex-col overflow-hidden">
+								<div class="flex items-center justify-between gap-2">
+									<h2 class="text-lg font-semibold">Tools</h2>
+								</div>
+								<div class="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+									{#if !moderationState.data.activeAgendaPoint}
+										<p class="text-sm text-base-content/70">No active agenda point.</p>
+									{:else}
+										<div class="space-y-5">
+											<div class="space-y-2">
+												<div class="flex items-center justify-between gap-2">
+													<strong class="text-base">Files</strong>
+												</div>
+												<p class="text-sm text-base-content/70">No files have been uploaded yet.</p>
+											</div>
+											<div id="moderate-votes-panel-host">
+												{#if legacyVotesPanelHTML}
+													{@html legacyVotesPanelHTML}
+												{:else}
+													<div id="moderate-votes-panel" class="space-y-4">
+														<div class="flex items-center justify-between gap-2">
+															<h3 class="text-base font-semibold">Votes</h3>
+															<button type="button" class="btn btn-xs btn-outline" onclick={() => void loadVotes()}>Refresh</button>
+														</div>
+														<p class="text-sm text-base-content/70">Loading vote tools...</p>
+													</div>
+												{/if}
 											</div>
 										</div>
-										<div class="flex flex-wrap gap-2">
-											{#if speaker.state === 'WAITING'}
+									{/if}
+								</div>
+							</section>
+						</div>
+						<div id="moderate-left-panel-attendees" data-moderate-left-panel="attendees" class={moderateLeftTab === 'attendees' ? 'h-full min-h-0 overflow-y-auto pr-1' : 'hidden h-full min-h-0 overflow-y-auto pr-1'}>
+							<section class="min-h-0" data-testid="manage-attendees-card">
+								<div class="mb-3 flex items-center justify-between gap-2">
+									<h2 class="text-lg font-semibold">Attendees</h2>
+									<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
+										<form hx-post={`/committee/${slug}/meeting/${meetingId}/signup-open`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-trigger="change" class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
+											<label class="label cursor-pointer justify-start gap-3 " for="manage_signup_open">
+												{#if moderationState.data.attendees?.signupOpen}
+													<input checked class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
+												{:else}
+													<input class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
+												{/if}
+												<span>Guest signup</span>
+											</label>
+										</form>
+										<form hx-post={attendeeSelfSignupURL()} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
+											<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Sign yourself up" title="Sign yourself up" aria-label="Sign yourself up" disabled={attendeeActionPending !== ''}><LegacyIcon name="person-raised" class="h-4 w-4" /></button>
+										</form>
+										<a href={manageJoinQrURL()} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR"><LegacyIcon name="qr-code" class="h-4 w-4" /></a>
+									</div>
+								</div>
+								<div id="attendee-list-container" hx-swap="outerHTML" sse-swap="manage-attendee-list-updated">
+									<div class="mb-4">
+										<form hx-post={attendeeCreateURL()} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-on::after-request={attendeeCreateAfterRequest()} class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" onsubmit={addGuestAttendee}>
+											<div class="w-full min-w-0 flex-1">
+												<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
+												<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder="Display name" required disabled={attendeeActionPending !== ''} />
+											</div>
+											<label class="label cursor-pointer justify-start gap-2 p-0 sm:mb-1 whitespace-nowrap" for="manage_guest_gender_quoted">
+												<span class="text-sm font-medium">FLINTA*</span>
+												<input class="checkbox checkbox-sm" type="checkbox" id="manage_guest_gender_quoted" name="gender_quoted" value="true" disabled={attendeeActionPending !== ''} />
+											</label>
+											<button class="btn btn-sm sm:mb-1" type="submit" disabled={attendeeActionPending !== ''}>Add</button>
+										</form>
+									</div>
+									{#if attendeeRows().length === 0}
+										<p class="text-sm text-base-content/70">No attendees are registered yet.</p>
+									{:else}
+										<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="manage-attendee-grid">
+											{#each attendeeRows() as attendee}
+												<li class="list-row grid-cols-1 items-center gap-3" data-testid="manage-attendee-card">
+													<div class="col-span-full w-full min-w-0 space-y-2">
+														<div class="flex min-w-0 items-center gap-2">
+															<div class="w-12 shrink-0 text-base-content/70">#{attendee.attendeeNumber.toString()}</div>
+															<div class="min-w-0 flex-1 overflow-x-hidden">
+																<div class="truncate overflow-x-hidden font-semibold">{attendee.fullName}</div>
+																{#if attendee.isGuest || attendee.isChair || attendee.quoted}
+																	<div class="mt-1 hidden flex-wrap items-center gap-1 sm:flex">
+																		{#if attendee.isGuest}
+																			<span class="badge badge-neutral badge-sm">Guest</span>
+																		{/if}
+																		{#if attendee.isChair}
+																			<span class="tooltip tooltip-right" data-tip="Chairperson">
+																				<span class="badge badge-success badge-sm"><LegacyIcon name="crown" class="h-3.5 w-3.5" /></span>
+																			</span>
+																		{/if}
+																		{#if attendee.quoted}
+																			<span class="tooltip tooltip-right" data-tip="FLINTA*">
+																				<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																			</span>
+																		{/if}
+																	</div>
+																{/if}
+															</div>
+															<div class="ml-auto shrink-0 self-center">
+																<div class="join sm:join-vertical">
+																	{#if attendee.isGuest}
+																		<a href={attendeeRecoveryURL(attendee.attendeeId)} class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link"><LegacyIcon name="history" class="h-4 w-4" /></a>
+																	{/if}
+																	<form hx-post={attendeeDeleteURL(attendee.attendeeId)} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-confirm="Remove this attendee?" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await removeAttendee(attendee.attendeeId, attendee.fullName); }}>
+																		<button type="submit" class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Remove attendee" title="Remove attendee" aria-label="Remove attendee" disabled={attendeeActionPending !== ''}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+																	</form>
+																</div>
+															</div>
+														</div>
+														<div class="flex items-center justify-between gap-3">
+															<form hx-post={attendeeToggleChairURL(attendee.attendeeId)} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-trigger="change" class="inline-flex">
+																<label class="label cursor-pointer justify-start gap-2 p-0">
+																	<input class={attendee.isChair ? 'toggle toggle-sm toggle-primary' : 'toggle toggle-sm'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async () => await toggleAttendeeChair(attendee)} />
+																	<span class="text-xs leading-none">Chairperson</span>
+																</label>
+															</form>
+															{#if attendee.isGuest}
+																<form hx-post={attendeeToggleQuotedURL(attendee.attendeeId)} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-trigger="change" class="inline-flex">
+																	<label class="label cursor-pointer justify-start gap-2 p-0">
+																		<input class={attendee.quoted ? 'toggle toggle-sm toggle-info' : 'toggle toggle-sm'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async () => await toggleAttendeeQuoted(attendee)} />
+																		<span class="text-xs leading-none">FLINTA*</span>
+																	</label>
+																</form>
+															{:else}
+																<div class="inline-flex items-center text-xs leading-none text-base-content/50">FLINTA* unavailable</div>
+															{/if}
+														</div>
+													</div>
+												</li>
+											{/each}
+										</ul>
+									{/if}
+								</div>
+							</section>
+						</div>
+						<div id="moderate-left-panel-settings" data-moderate-left-panel="settings" class={moderateLeftTab === 'settings' ? 'h-full min-h-0 overflow-y-auto pr-1' : 'hidden h-full min-h-0 overflow-y-auto pr-1'}>
+							<section class="min-h-0 space-y-3" data-testid="manage-settings-card">
+								<div class="flex flex-wrap items-end justify-between gap-2">
+									<h2 class="text-lg font-semibold">Settings</h2>
+									<p class="text-sm text-base-content/70">Configure meeting defaults and agenda-point overrides.</p>
+								</div>
+								<div id="moderate-settings-shell" class="rounded-box border border-base-300 bg-base-200/30 p-3" data-active-tab={moderateSettingsTab} data-settings-tabs-wired="true">
+									<div role="tablist" class="tabs tabs-box tabs-sm w-full bg-base-100">
+										<button type="button" class={moderateSettingsTab === 'meeting' ? 'tab tab-active flex-1 justify-center' : 'tab flex-1 justify-center'} data-moderate-settings-tab="meeting" onclick={() => (moderateSettingsTab = 'meeting')}>Meeting</button>
+										<button type="button" class={moderateSettingsTab === 'agenda' ? 'tab tab-active flex-1 justify-center' : 'tab flex-1 justify-center'} data-moderate-settings-tab="agenda" onclick={() => (moderateSettingsTab = 'agenda')}>Agenda Point</button>
+									</div>
+									<div class="mt-3 min-h-0">
+										<div data-moderate-settings-panel="meeting" class={moderateSettingsTab === 'meeting' ? '' : 'hidden'}>
+											<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Meeting Defaults</div>
+											<div id="meeting-settings-container">
+												<div class="space-y-3">
+													<div class="rounded-box border border-base-300 bg-base-100 p-3">
+														<h3 class="mb-2 text-sm font-semibold">Quotation Settings</h3>
+														<form hx-post={`/committee/${slug}/meeting/${meetingId}/quotation`} hx-target="#meeting-settings-container" hx-swap="outerHTML" hx-trigger="change" class="grid gap-3 md:grid-cols-2">
+															<div class="space-y-1">
+																<label for="gender_quotation_enabled">FLINTA* quotation</label>
+																<select class="select select-bordered select-sm" id="gender_quotation_enabled" name="gender_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.genderQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
+																	{#if moderationState.data.settings?.genderQuotationEnabled ?? true}
+																		<option selected value="true">Enabled</option>
+																		<option value="false">Disabled</option>
+																	{:else}
+																		<option value="true">Enabled</option>
+																		<option selected value="false">Disabled</option>
+																	{/if}
+																</select>
+															</div>
+															<div class="space-y-1">
+																<label for="first_speaker_quotation_enabled">First-speaker bonus</label>
+																<select class="select select-bordered select-sm" id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.firstSpeakerQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
+																	{#if moderationState.data.settings?.firstSpeakerQuotationEnabled ?? true}
+																		<option selected value="true">Enabled</option>
+																		<option value="false">Disabled</option>
+																	{:else}
+																		<option value="true">Enabled</option>
+																		<option selected value="false">Disabled</option>
+																	{/if}
+																</select>
+															</div>
+														</form>
+													</div>
+													<div class="rounded-box border border-base-300 bg-base-100 p-3">
+														<h3 class="mb-2 text-sm font-semibold">Moderator</h3>
+														<form hx-post={`/committee/${slug}/meeting/${meetingId}/moderator`} hx-target="#meeting-settings-container" hx-swap="outerHTML" hx-trigger="change" class="flex flex-wrap items-end gap-3">
+															<select class="select select-bordered select-sm" id="meeting_moderator_attendee_id" name="attendee_id" disabled={settingsActionPending !== ''} onchange={updateMeetingModerator}>
+																{#if !(moderationState.data.settings?.moderatorAttendeeId ?? '')}
+																	<option selected value="">-- none --</option>
+																{:else}
+																	<option value="">-- none --</option>
+																{/if}
+																{#each settingsAttendees() as attendee}
+																	{#if (moderationState.data.settings?.moderatorAttendeeId ?? '') === attendee.attendeeId}
+																		<option selected value={attendee.attendeeId}>{attendee.fullName}</option>
+																	{:else}
+																		<option value={attendee.attendeeId}>{attendee.fullName}</option>
+																	{/if}
+																{/each}
+															</select>
+														</form>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div data-moderate-settings-panel="agenda" class={moderateSettingsTab === 'agenda' ? '' : 'hidden'}>
+											<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Agenda Point Overrides</div>
+											<div id="moderate-speaker-settings-container">
+												<p class="text-sm text-base-content/70">No active agenda point. Activate one above to configure agenda-point settings.</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</section>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div id="moderate-dependent-container" class="order-1 flex min-h-0 min-w-0 flex-col lg:order-2 lg:h-full lg:self-stretch">
+				<div id="moderate-right-resizable-stack" data-meeting-id={meetingId} class="flex min-h-0 flex-1 flex-col gap-4 lg:h-full lg:gap-0">
+					<section
+						id="moderate-speakers-card"
+						class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none"
+						data-testid="manage-speakers-card"
+					>
+						<div class="card-body flex min-h-0 flex-col p-4">
+							<div class="mb-3 flex items-center justify-between gap-2">
+								<h2 class="text-lg font-semibold">Speakers Queue</h2>
+								<button
+									type="button"
+									class="btn btn-ghost btn-xs"
+									title="Open speakers help"
+									aria-label="Open speakers help"
+									onclick={() => openDocs('03-chairperson/05-speakers-moderator-and-quotation')}
+								>
+									<LegacyIcon name="help" />
+								</button>
+							</div>
+							<div id="speakers-list-container" sse-swap="manage-speakers-list-updated" hx-swap="outerHTML" class="flex min-h-0 flex-1 flex-col">
+								{#if !moderationState.data.activeAgendaPoint}
+									<p class="text-sm text-base-content/70">No active agenda point.</p>
+								{:else if speakerState.data?.speakers?.length}
+									<div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-testid="manage-speakers-quick-controls">
+										<div class="flex flex-wrap items-center gap-2">
+											{#if activeSpeaker()}
 												<button
-													class="btn btn-ghost btn-xs"
-													title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-													onclick={() =>
-														runSpeakerAction(`priority-${speaker.speakerId}`, async () => {
-															return await speakerClient.setSpeakerPriority({
-																committeeSlug: slug,
-																meetingId,
-																speakerId: speaker.speakerId,
-																priority: !speaker.priority
-															});
-														})}
-													disabled={speakerActionPending !== ''}
+													class="btn btn-sm btn-success whitespace-nowrap"
+													data-testid="manage-end-current-speaker"
+													data-testid-group="manage-speakers-quick-button"
+													title="End current speech"
+													aria-label="End current speech"
+													onclick={endCurrentSpeaker}
+													disabled={speakerActionPending !== '' || !activeSpeaker()}
 												>
-													{speaker.priority ? 'Priority On' : 'Give Priority'}
+													<LegacyIcon name="check-circle" class="ui-icon--left" />
+													End Speech
 												</button>
+											{:else if nextWaitingSpeaker()}
 												<button
-													class="btn btn-ghost btn-xs"
-													title="Start"
+													class="btn btn-sm btn-primary whitespace-nowrap"
+													data-testid="manage-start-next-speaker"
+													data-testid-group="manage-speakers-quick-button"
+													title="Start next speaker"
+													aria-label="Start next speaker"
 													onclick={() =>
-														runSpeakerAction(`start-${speaker.speakerId}`, async () => {
+														runSpeakerAction('start-next', async () => {
+															const next = nextWaitingSpeaker();
+															if (!next) {
+																throw new Error('No waiting speaker is available.');
+															}
 															return await speakerClient.setSpeakerSpeaking({
 																committeeSlug: slug,
 																meetingId,
-																speakerId: speaker.speakerId
+																speakerId: next.speakerId
 															});
 														})}
-													disabled={speakerActionPending !== ''}
+													disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
 												>
-													Start
-												</button>
-											{/if}
-											{#if speaker.state !== 'DONE'}
-												<button
-													class="btn btn-ghost btn-xs text-error"
-													title="Remove"
-													onclick={() =>
-														runSpeakerAction(`remove-${speaker.speakerId}`, async () => {
-															return await speakerClient.removeSpeaker({
-																committeeSlug: slug,
-																meetingId,
-																speakerId: speaker.speakerId
-															});
-														})}
-													disabled={speakerActionPending !== ''}
-												>
-													Remove
+													<LegacyIcon name="arrow-forward" class="ui-icon--left" />
+													Start Next
 												</button>
 											{/if}
 										</div>
+										<button
+											type="button"
+											class="btn btn-sm btn-ghost whitespace-nowrap"
+											data-manage-speakers-reset-scroll
+											data-testid="manage-speakers-reset-scroll"
+											title="Scroll to active position"
+											aria-label="Scroll to active position"
+											onclick={scrollToInitialSpeaker}
+										>
+											<LegacyIcon name="history" class="ui-icon--left" />
+											Scroll Position
+										</button>
 									</div>
-								</div>
-							{/each}
-						</div>
-					{:else}
-						<p class="text-base-content/70">No speakers are queued for the active agenda point.</p>
-					{/if}
-				</div>
-			</AppCard>
-		</div>
-
-		<AppCard title="Current Agenda Point">
-			{#if moderationState.data.activeAgendaPoint}
-				<p class="font-medium">
-					{moderationState.data.activeAgendaPoint.displayNumber}
-					{#if moderationState.data.activeAgendaPoint.title}
-						: {moderationState.data.activeAgendaPoint.title}
-					{/if}
-				</p>
-			{:else}
-				<p class="text-base-content/70">No agenda point is currently active.</p>
-			{/if}
-		</AppCard>
-
-		<AppCard title="Agenda Management">
-			<div class="space-y-4">
-				<div id="agenda-point-list-container" class="space-y-4">
-					<form
-						class="grid gap-3 md:grid-cols-[minmax(0,1fr)_16rem_auto]"
-						data-testid="manage-agenda-add-form"
-						onsubmit={(event) => {
-							event.preventDefault();
-							createAgendaPoint();
-						}}
-					>
-						<input
-							class="input input-bordered"
-							name="title"
-							placeholder="Add an agenda point"
-							bind:value={agendaTitle}
-							bind:this={agendaTitleInput}
-							onkeydown={handleAgendaTitleKeydown}
-						/>
-						<select id="ap_parent_id" class="select select-bordered" bind:value={agendaParentId}>
-							<option value="">Top-level point</option>
-							{#each agendaState.data ?? [] as point}
-								<option value={point.agendaPointId}>{point.title}</option>
-							{/each}
-						</select>
-						<button
-							class="btn btn-primary"
-							type="submit"
-							disabled={creatingAgenda || agendaTitle.trim().length === 0}
-						>
-							{#if creatingAgenda}
-								<span class="loading loading-spinner loading-xs"></span>
-							{/if}
-							Add Agenda Point
-						</button>
-					</form>
-
-					<button
-						type="button"
-						class="btn btn-outline btn-sm"
-						data-manage-dialog-open
-						aria-controls="moderate-agenda-import-dialog"
-						onclick={openAgendaImportDialog}
-					>
-						Import Agenda
-					</button>
-
-					{#if agendaState.loading}
-						<AppSpinner label="Loading agenda" />
-					{:else if agendaState.error}
-						<AppAlert message={agendaState.error} />
-					{:else}
-						<div class="space-y-2" id="manage-agenda-list">
-							{#snippet agendaRows(points: AgendaPointRecord[], depth: number)}
-								{#each points as point, index}
 									<div
-										class="rounded-box border border-base-300 bg-base-100 px-3 py-3"
-										data-testid="manage-agenda-point-card"
-										data-agenda-active={point.isActive ? 'true' : 'false'}
+										class="live-speakers-list-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
+										data-manage-speakers-viewport
+										data-testid="manage-speakers-viewport"
 									>
-										<div class="flex flex-wrap items-start justify-between gap-3">
-											<div class="min-w-0" style={`padding-left: ${depth * 1.25}rem`}>
-												<div class="flex flex-wrap items-center gap-2">
-													<span class="font-medium">{point.displayNumber}</span>
-													{#if point.title}
-														<span>{point.title}</span>
-													{:else}
-														<span class="text-base-content/60">Untitled</span>
-													{/if}
-													{#if point.parentId}
-														<span class="badge badge-outline badge-sm">Child</span>
-													{/if}
-													{#if point.isActive}
-														<span class="badge badge-primary badge-sm" data-testid="manage-agenda-active-badge"
-															>Active</span
-														>
-													{/if}
-												</div>
-												<div class="mt-1 text-sm text-base-content/70">
-													Position {point.position.toString()}
-													{#if point.genderQuotation}
-														• Gender quotation
-													{/if}
-													{#if point.firstSpeakerQuotation}
-														• First speaker quotation
-													{/if}
-												</div>
-											</div>
-
-											<div class="flex flex-wrap gap-2">
-												<button
-													class="btn btn-ghost btn-xs"
-													title={point.isActive ? 'Deactivate agenda point' : 'Activate agenda point'}
-													type="button"
-													onclick={() => activateAgendaPoint(point.agendaPointId, point.isActive)}
-													disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}
+										<ul class="list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1 live-speaker-list" data-testid="live-speakers-active-list">
+											{#each speakerState.data.speakers as speaker}
+												<li
+													class="list-row min-w-0 items-center gap-3"
+													data-testid="live-speaker-item"
+													data-speaker-state={speaker.state.toLowerCase()}
+													data-manage-scroll-anchor={isInitialScrollSpeaker(speaker.speakerId) ? 'true' : 'false'}
 												>
-													{point.isActive ? 'Deactivate' : 'Activate'}
-												</button>
-												{#if !point.parentId}
-													<button
-														class="btn btn-ghost btn-xs"
-														title="Move up"
-														type="button"
-														onclick={() => moveAgendaPoint(point.agendaPointId, 'up')}
-														disabled={index === 0 || isAgendaBusy(`move-${point.agendaPointId}-up`)}
-													>
-														Up
-													</button>
-													<button
-														class="btn btn-ghost btn-xs"
-														title="Move down"
-														type="button"
-														onclick={() => moveAgendaPoint(point.agendaPointId, 'down')}
-														disabled={
-															index === points.length - 1 || isAgendaBusy(`move-${point.agendaPointId}-down`)
-														}
-													>
-														Down
-													</button>
-												{/if}
-												<button
-													class="btn btn-ghost btn-xs text-error"
-													title="Delete agenda point"
-													type="button"
-													onclick={() => deleteAgendaPoint(point.agendaPointId)}
-													disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}
-												>
-													Delete
-												</button>
-												<a
-													class="btn btn-ghost btn-xs"
-													href="/committee/{slug}/meeting/{meetingId}/agenda-point/{point.agendaPointId}/tools"
-												>
-													Tools
-												</a>
-											</div>
-										</div>
-									</div>
-
-									{#if point.subPoints.length}
-										{@render agendaRows(point.subPoints, depth + 1)}
-									{/if}
-								{/each}
-							{/snippet}
-
-							{#if agendaState.data?.length}
-								{@render agendaRows(agendaState.data, 0)}
-							{:else}
-								<p class="text-base-content/70">No agenda points have been created yet.</p>
-							{/if}
-						</div>
-					{/if}
-				</div>
-			</div>
-		</AppCard>
-
-		<dialog id="moderate-agenda-import-dialog" class="modal" open={agendaImportOpen}>
-			<div class="modal-box w-11/12 max-w-5xl">
-				<div class="mb-4 flex items-center justify-between gap-2">
-					<h3 class="text-lg font-semibold">Import Agenda</h3>
-					<button class="btn btn-sm btn-circle btn-ghost" type="button" onclick={closeAgendaImportDialog}
-						>✕</button
-					>
-				</div>
-
-				<div class="space-y-4">
-					{#if agendaImportWarning}
-						<AppAlert message={agendaImportWarning} />
-					{/if}
-
-					{#if agendaImportStep === 'source'}
-						<div class="space-y-3" data-agenda-import-panel="1">
-							<label class="label p-0 text-sm font-medium" for="agenda-import-source">
-								Agenda Source
-							</label>
-							<textarea
-								id="agenda-import-source"
-								class="textarea textarea-bordered min-h-40 w-full"
-								bind:value={agendaImportSource}
-								placeholder="TOP1 Opening&#10;TOP2 Reports"
-							></textarea>
-							<div class="flex flex-wrap items-center gap-2">
-								<input
-									type="file"
-									class="file-input file-input-bordered file-input-sm max-w-full"
-									accept=".txt,.md,text/plain,text/markdown"
-									data-agenda-import-file
-									onchange={handleAgendaImportFile}
-								/>
-								<button type="button" class="btn btn-sm btn-outline" onclick={extractAgendaImport}>
-									Extract Agenda
-								</button>
-							</div>
-						</div>
-					{:else if agendaImportStep === 'correction'}
-						<div class="space-y-4" data-agenda-import-panel="2">
-							<form id="agenda-import-correction-form" class="space-y-4">
-								<div class="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
-									<ul class="space-y-2" data-agenda-import-lines>
-										{#each agendaImportLines as line, index}
-											<li>
-												<input type="hidden" name="line_no" value={line.lineNo} />
-												<input type="hidden" name="line_text" value={line.text} />
-												<input type="hidden" name="line_state" value={line.state} data-import-line-state />
-												<button
-													type="button"
-													class="w-full cursor-pointer rounded-box border px-3 py-2 text-left"
-													data-import-line-row
-													data-state={line.state}
-													onclick={() => toggleAgendaImportLine(index)}
-												>
-													<div class="flex items-center gap-3">
-														<span class="w-16 text-sm font-medium" data-import-line-prefix
-															>{importPrefix(agendaImportLines, index)}</span
-														>
-														<span>{line.text}</span>
+													<div class="w-16 shrink-0 text-center font-semibold text-base-content/70">
+														{#if speaker.state === 'SPEAKING'}
+															<span class="font-mono text-xs whitespace-nowrap text-base-content/70" data-speaking-since={String(speakingSinceMs[speaker.speakerId] ?? '')}>{speakingTimerLabel(speaker.speakerId)}</span>
+														{:else if speaker.state === 'WAITING'}
+															{waitingDisplayNumber(speaker.speakerId)}
+														{:else}
+															&nbsp;
+														{/if}
 													</div>
-												</button>
-											</li>
-										{/each}
-									</ul>
-								</div>
-								<div class="flex flex-wrap gap-2">
-									<button type="button" class="btn btn-sm btn-ghost" onclick={() => (agendaImportStep = 'source')}
-										>Back</button
-									>
-									<button type="button" class="btn btn-sm btn-outline" onclick={generateAgendaDiff}>
-										Generate Diff
-									</button>
-								</div>
-							</form>
-						</div>
-					{:else}
-						<div class="space-y-4" data-agenda-import-panel="3">
-							<h4 class="text-base font-semibold">Agenda Diff</h4>
-							<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-3">
-								<div class="space-y-2 text-sm">
-									{#each buildImportedAgenda(agendaImportLines) as point}
-										<div>
-											<div class="font-medium">{point.title}</div>
-											{#each point.children as child}
-												<div class="pl-4 text-base-content/70">{child}</div>
+													<div class="list-col-grow min-w-0">
+														<div class="flex min-w-0 items-center gap-2">
+															<div class="truncate font-semibold" data-testid="live-speaker-name">{speaker.fullName}</div>
+															<div class="flex shrink-0 flex-wrap items-center gap-1">
+																{#if speaker.speakerType === 'ropm'}
+																	<span class="tooltip tooltip-right" data-tip="Point of order">
+																		<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
+																	</span>
+																{/if}
+																{#if speaker.quoted}
+																	<span class="tooltip tooltip-right" data-tip="Quoted">
+																		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																	</span>
+																{/if}
+																{#if speaker.firstSpeaker}
+																	<span class="tooltip tooltip-right" data-tip="First speaker">
+																		<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
+																	</span>
+																{/if}
+																{#if speaker.priority}
+																	<span class="tooltip tooltip-right" data-tip="Priority">
+																		<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
+																	</span>
+																	<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
+																{/if}
+															</div>
+														</div>
+													</div>
+													{#if speaker.state === 'SPEAKING'}
+														<div class="shrink-0 self-center">
+															<span class="inline-flex h-9 w-9 items-center justify-center text-info/80" data-testid="live-speaker-speaking-indicator" aria-hidden="true">
+																<LegacyIcon name="mic" class="h-5 w-5" />
+															</span>
+														</div>
+													{:else if speaker.state === 'WAITING'}
+														<div class="shrink-0 self-center">
+															<div class="join join-horizontal">
+																<button
+																	type="button"
+																	class="join-item btn btn-sm btn-square tooltip tooltip-left"
+																	title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+																	aria-label={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+																	data-tip={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+																	onclick={() =>
+																		runSpeakerAction(`priority-${speaker.speakerId}`, async () =>
+																			await speakerClient.setSpeakerPriority({
+																				committeeSlug: slug,
+																				meetingId,
+																				speakerId: speaker.speakerId,
+																				priority: !speaker.priority
+																			})
+																		)}
+																	disabled={speakerActionPending !== ''}
+																>
+																	<LegacyIcon name={speaker.priority ? 'star' : 'star-outline'} />
+																</button>
+																<button
+																	type="button"
+																	class="join-item btn btn-sm btn-square tooltip tooltip-left"
+																	title="Start"
+																	aria-label="Start"
+																	data-tip="Start"
+																	onclick={() =>
+																		runSpeakerAction(`start-${speaker.speakerId}`, async () =>
+																			await speakerClient.setSpeakerSpeaking({
+																				committeeSlug: slug,
+																				meetingId,
+																				speakerId: speaker.speakerId
+																			})
+																		)}
+																	disabled={speakerActionPending !== ''}
+																>
+																	<LegacyIcon name="arrow-forward" />
+																</button>
+																<button
+																	type="button"
+																	class="join-item btn btn-sm btn-error btn-square tooltip tooltip-left"
+																	title="Remove"
+																	aria-label="Remove"
+																	data-tip="Remove"
+																	onclick={() =>
+																		runSpeakerAction(`remove-${speaker.speakerId}`, async () =>
+																			await speakerClient.removeSpeaker({
+																				committeeSlug: slug,
+																				meetingId,
+																				speakerId: speaker.speakerId
+																			})
+																		)}
+																	disabled={speakerActionPending !== ''}
+																>
+																	<LegacyIcon name="trash" />
+																</button>
+															</div>
+														</div>
+													{/if}
+												</li>
 											{/each}
-										</div>
-									{/each}
-								</div>
-							</div>
-							<div class="flex flex-wrap gap-2">
-								<button type="button" class="btn btn-sm btn-ghost" onclick={() => (agendaImportStep = 'correction')}
-									>Back</button
-								>
-								<button type="button" class="btn btn-sm btn-outline" onclick={closeAgendaImportDialog}>
-									Deny
-								</button>
-								<button
-									type="button"
-									class="btn btn-sm btn-primary"
-									onclick={applyAgendaImport}
-									disabled={agendaImportBusy}
-								>
-									Accept
-								</button>
-							</div>
-						</div>
-					{/if}
-				</div>
-			</div>
-			<form method="dialog" class="modal-backdrop">
-				<button type="button" onclick={closeAgendaImportDialog}>close</button>
-			</form>
-		</dialog>
-
-		<AppCard title="Votes">
-			{#if votesState.loading}
-				<AppSpinner label="Loading votes" />
-			{:else if votesState.error}
-				<AppAlert message={votesState.error} />
-			{:else if votesState.data}
-				<div class="space-y-4" id="moderate-votes-panel">
-					{#if !votesState.data.hasActiveAgendaPoint}
-						<p class="text-base-content/70">No active agenda point.</p>
-					{:else}
-						<p class="text-sm text-base-content/70">
-							Active agenda point: {votesState.data.activeAgendaPointTitle || 'Current item'}
-						</p>
-
-						<div class="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-							<div class="rounded-box border border-base-300 bg-base-100 p-4">
-								<div class="mb-3">
-									<h3 class="font-semibold">Create Draft Vote</h3>
-									<p class="text-sm text-base-content/70">
-										Create a draft, then open it when the chair is ready.
-									</p>
-								</div>
-
-								<div class="space-y-3">
-									<input
-										class="input input-bordered w-full"
-										placeholder="Vote name"
-										bind:value={voteName}
-										bind:this={voteNameInput}
-									/>
-
-									<div class="grid gap-3 sm:grid-cols-3">
-										<select class="select select-bordered" bind:value={voteVisibility}>
-											<option value="open">Open</option>
-											<option value="secret">Secret</option>
-										</select>
-										<input
-											class="input input-bordered"
-											type="number"
-											min="1"
-											bind:value={voteMinSelections}
-											placeholder="Min"
-										/>
-										<input
-											class="input input-bordered"
-											type="number"
-											min="1"
-											bind:value={voteMaxSelections}
-											placeholder="Max"
-										/>
-									</div>
-
-									<textarea
-										class="textarea textarea-bordered min-h-32 w-full"
-										bind:value={voteOptionsText}
-										placeholder="One option per line"
-									></textarea>
-
-									<button
-										class="btn btn-primary"
-										onclick={createVote}
-										disabled={creatingVote || !canCreateVote()}
-									>
-										{#if creatingVote}
-											<span class="loading loading-spinner loading-xs"></span>
-										{/if}
-										Create Draft Vote
-									</button>
-								</div>
-							</div>
-
-							<div class="rounded-box border border-base-300 bg-base-100 p-4">
-								<h3 class="mb-3 font-semibold">Vote Status</h3>
-								{#if votesState.data.activeVote}
-									<div class="space-y-2">
-										<div class="flex flex-wrap items-center gap-2">
-											<span class="font-medium">{votesState.data.activeVote.name}</span>
-											<span class="badge badge-primary">{votesState.data.activeVote.state}</span>
-										</div>
-										{#if votesState.data.activeVoteStats}
-											<p class="text-sm text-base-content/70">
-												{votesState.data.activeVoteStats.castCount.toString()} of
-												{votesState.data.activeVoteStats.eligibleCount.toString()} eligible voters
-												have cast ballots.
-											</p>
-										{/if}
-										<button
-											class="btn btn-secondary btn-sm"
-											onclick={() => closeVote(votesState.data?.activeVote?.voteId ?? '')}
-											disabled={
-												!votesState.data.activeVote ||
-												voteActionPending !== '' ||
-												votesState.data.activeVote.voteId.length === 0
-											}
-										>
-											Close Vote
-										</button>
-									</div>
-								{:else if lastClosedVote}
-									<div class="space-y-3">
-										<div class="flex flex-wrap items-center gap-2">
-											<span class="font-medium">{lastClosedVote.vote.name}</span>
-											<span class="badge badge-outline">{lastClosedVote.outcome}</span>
-										</div>
-										{#if lastClosedVote.tally.length}
-											<div class="space-y-2">
-												<p class="text-sm font-medium">Final Tallies</p>
-												{#each lastClosedVote.tally as entry}
-													<div class="flex items-center justify-between text-sm">
-														<span>{entry.label}</span>
-														<span>{entry.count.toString()}</span>
-													</div>
-												{/each}
-											</div>
-										{/if}
-										<button
-											class="btn btn-outline btn-sm"
-											onclick={() => lastClosedVote && archiveVote(lastClosedVote.vote.voteId)}
-											disabled={voteActionPending !== ''}
-										>
-											Archive Vote
-										</button>
+										</ul>
 									</div>
 								{:else}
-									<p class="text-sm text-base-content/70">
-										No vote is currently open for the active agenda point.
-									</p>
+									<div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-testid="manage-speakers-quick-controls">
+										<div class="flex flex-wrap items-center gap-2">
+											{#if activeSpeaker()}
+												<button
+													class="btn btn-sm btn-success whitespace-nowrap"
+													data-testid="manage-end-current-speaker"
+													data-testid-group="manage-speakers-quick-button"
+													title="End current speech"
+													aria-label="End current speech"
+													onclick={endCurrentSpeaker}
+													disabled={speakerActionPending !== '' || !activeSpeaker()}
+												>
+													<LegacyIcon name="check-circle" class="ui-icon--left" />
+													End Speech
+												</button>
+											{:else if nextWaitingSpeaker()}
+												<button
+													class="btn btn-sm btn-primary whitespace-nowrap"
+													data-testid="manage-start-next-speaker"
+													data-testid-group="manage-speakers-quick-button"
+													title="Start next speaker"
+													aria-label="Start next speaker"
+													onclick={() =>
+														runSpeakerAction('start-next', async () => {
+															const next = nextWaitingSpeaker();
+															if (!next) {
+																throw new Error('No waiting speaker is available.');
+															}
+															return await speakerClient.setSpeakerSpeaking({
+																committeeSlug: slug,
+																meetingId,
+																speakerId: next.speakerId
+															});
+														})}
+													disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
+												>
+													<LegacyIcon name="arrow-forward" class="ui-icon--left" />
+													Start Next
+												</button>
+											{/if}
+										</div>
+									</div>
+									<p class="text-sm text-base-content/70">No speakers are queued right now.</p>
 								{/if}
 							</div>
 						</div>
+					</section>
 
-						<div class="space-y-3">
-							<h3 class="font-semibold">Vote Definitions</h3>
-							{#if votesState.data.votes.length}
-								<div class="space-y-3">
-									{#each votesState.data.votes as vote}
-										<div class="rounded-box border border-base-300 bg-base-100 p-4">
-											<div class="flex flex-wrap items-start justify-between gap-3">
-												<div class="space-y-1">
-													<div class="flex flex-wrap items-center gap-2">
-														<span class="font-medium">{vote.name}</span>
-														<span class="badge badge-outline">{vote.state}</span>
-														<span class="badge badge-ghost">{vote.visibility}</span>
-													</div>
-													<p class="text-sm text-base-content/70">
-														{vote.minSelections.toString()} to {vote.maxSelections.toString()} selections
-													</p>
-													<p class="text-sm text-base-content/70">
-														{vote.options.map((option) => option.label).join(' • ')}
-													</p>
-												</div>
-
-												<div class="flex flex-wrap gap-2">
-													{#if vote.state === 'draft'}
-														<button
-															class="btn btn-primary btn-xs"
-															onclick={() => openVote(vote.voteId)}
-															disabled={voteActionPending !== ''}
-														>
-															Open Vote
-														</button>
-													{/if}
-													{#if vote.state === 'closed'}
-														<button
-															class="btn btn-outline btn-xs"
-															onclick={() => archiveVote(vote.voteId)}
-															disabled={voteActionPending !== ''}
-														>
-															Archive Vote
-														</button>
-													{/if}
+					<section
+						id="moderate-attendees-card"
+						class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none"
+					>
+						<div class="card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4">
+							<div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+								<h2 class="text-lg font-semibold">Add Speaker</h2>
+								<div class="join min-w-0 w-full max-w-full sm:w-auto sm:min-w-[24rem]">
+									<input
+										class="input input-bordered input-sm join-item min-w-0 flex-1"
+										type="text"
+										id="speaker-add-search-input"
+										name="q"
+										placeholder="Search name or number"
+										bind:value={speakerSearch}
+										bind:this={searchInput}
+										onkeydown={handleSpeakerSearchEnter}
+									/>
+									<button
+										type="button"
+										class="btn btn-sm btn-square btn-ghost join-item border-base-300"
+										title="Open add-speaker help"
+										aria-label="Open add-speaker help"
+										onclick={() => openDocs('03-chairperson/05-speakers-moderator-and-quotation')}
+									>
+										<LegacyIcon name="help" />
+									</button>
+								</div>
+							</div>
+							<div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto pr-1">
+								<div id="speaker-add-candidates-container" class="space-y-2">
+									{#each sortedCandidates().slice(0, 8) as attendee}
+										<div class="flex flex-wrap items-center justify-between gap-3 rounded-box border border-base-300 bg-base-100 px-3 py-3" data-testid="manage-speaker-candidate-card">
+											<div>
+												<div class="font-medium">{attendee.fullName}</div>
+												<div class="text-sm text-base-content/70">
+													#{attendee.attendeeNumber.toString()}
+													{#if attendee.isGuest} • Guest{/if}
+													{#if attendee.quoted} • Quoted{/if}
 												</div>
 											</div>
-
-											{#if vote.state === 'draft'}
-												<div class="mt-4 space-y-3 rounded-box border border-base-300 bg-base-200/40 p-3">
-													<input class="input input-bordered w-full" bind:value={vote.name} />
-													<div class="grid gap-3 sm:grid-cols-3">
-														<select class="select select-bordered" bind:value={vote.visibility}>
-															<option value="open">Open</option>
-															<option value="secret">Secret</option>
-														</select>
-													<input
-														class="input input-bordered"
-														type="number"
-														min="1"
-														bind:value={draftMinSelections[vote.voteId]}
-													/>
-													<input
-														class="input input-bordered"
-														type="number"
-														min="1"
-														bind:value={draftMaxSelections[vote.voteId]}
-													/>
-													</div>
-													<textarea
-														class="textarea textarea-bordered min-h-28 w-full"
-														bind:value={draftOptionTexts[vote.voteId]}
-													></textarea>
-													<div class="flex justify-end">
-														<button
-															class="btn btn-outline btn-sm"
-															onclick={() => saveDraftVote(vote)}
-															disabled={voteActionPending !== ''}
-														>
-															Save Draft
-														</button>
-													</div>
-												</div>
-											{/if}
+											<div class="join join-horizontal">
+												<button
+													class="join-item btn btn-sm btn-square tooltip tooltip-left"
+													title="Add regular speech"
+													aria-label="Add regular speech"
+													data-tip="Add regular speech"
+													onclick={() => addCandidate(attendee.attendeeId, 'regular')}
+													disabled={speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'regular')}
+												>
+													<LegacyIcon name="person-raised" />
+												</button>
+												<button
+													class="join-item btn btn-sm btn-square btn-warning tooltip tooltip-left"
+													title="Add Point of Order (PO) speech"
+													aria-label="Add Point of Order (PO) speech"
+													data-tip="Add Point of Order (PO) speech"
+													onclick={() => addCandidate(attendee.attendeeId, 'ropm')}
+													disabled={speakerActionPending !== '' || hasOpenSpeaker(attendee.attendeeId, 'ropm')}
+												>
+													<LegacyIcon name="scale" />
+												</button>
+											</div>
 										</div>
 									{/each}
+									{#if sortedCandidates().length === 0}
+										<p class="text-sm text-base-content/70">No matching attendees found.</p>
+									{/if}
 								</div>
-							{:else}
-								<p class="text-sm text-base-content/70">
-									No votes have been defined for the active agenda point yet.
-								</p>
-							{/if}
+							</div>
 						</div>
-					{/if}
+					</section>
 				</div>
-			{/if}
-		</AppCard>
+			</div>
+		</div>
+
 	{/if}
 </div>

@@ -2,7 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { sessionClient } from '$lib/api/index.js';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
-	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 
@@ -33,55 +32,48 @@
 	}
 </script>
 
-<div class="flex min-h-[60vh] items-center justify-center">
-	<div class="w-full max-w-sm">
-		<AppCard title="Sign In">
-			{#if errorMsg}
-				<AppAlert message={errorMsg} />
-			{/if}
+{#if errorMsg}
+	<AppAlert message={errorMsg} />
+{/if}
 
-			{#if session.passwordEnabled}
-				<form onsubmit={handleLogin} class="flex flex-col gap-4">
-					<label class="form-control">
-						<div class="label"><span class="label-text">Username</span></div>
-						<input
-							type="text"
-							name="username"
-							class="input input-bordered"
-							bind:value={username}
-							autocomplete="username"
-							required
-						/>
-					</label>
+<div class="w-full h-full flex justify-center align-center">
+	<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4 gap-2">
+		<legend class="fieldset-legend">Login</legend>
+		{#if session.passwordEnabled}
+			<form method="POST" action="/login" class="flex flex-col gap-2" onsubmit={handleLogin}>
+				<label class="label">Username:</label>
+				<input
+					type="text"
+					name="username"
+					id="username"
+					class="input"
+					value={username}
+					placeholder="Username:"
+					oninput={(event) => {
+						username = (event.currentTarget as HTMLInputElement).value;
+					}}
+					required
+				/>
 
-					<label class="form-control">
-						<div class="label"><span class="label-text">Password</span></div>
-						<input
-							type="password"
-							name="password"
-							class="input input-bordered"
-							bind:value={password}
-							autocomplete="current-password"
-							required
-						/>
-					</label>
+				<label class="label">Password:</label>
+				<input
+					type="password"
+					name="password"
+					id="password"
+					class="input"
+					value={password}
+					placeholder="Password:"
+					oninput={(event) => {
+						password = (event.currentTarget as HTMLInputElement).value;
+					}}
+					required
+				/>
 
-					<button type="submit" class="btn btn-primary" disabled={loading}>
-						{#if loading}
-							<span class="loading loading-spinner loading-sm"></span>
-						{/if}
-						Sign In
-					</button>
-				</form>
-			{/if}
-
-			{#if session.oauthEnabled}
-				<a class="btn btn-outline" href="/oauth/start?target=user">Sign in with OAuth</a>
-			{/if}
-
-			{#if !session.passwordEnabled && !session.oauthEnabled}
-				<AppAlert message="No login method is currently enabled." />
-			{/if}
-		</AppCard>
-	</div>
+				<button class="btn btn-neutral mt-2" disabled={loading}>Login</button>
+			</form>
+		{/if}
+		{#if session.oauthEnabled}
+			<a class="btn btn-outline mt-1" href="/oauth/start?target=user">Login with OAuth</a>
+		{/if}
+	</fieldset>
 </div>

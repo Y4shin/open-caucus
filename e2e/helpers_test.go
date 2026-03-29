@@ -17,6 +17,7 @@ import (
 	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
 	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
 	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	docsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1/docsv1connect"
 	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
 	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
 	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
@@ -24,6 +25,7 @@ import (
 	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
+	"github.com/Y4shin/conference-tool/internal/handlers"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
@@ -34,6 +36,7 @@ import (
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
+	"github.com/Y4shin/conference-tool/internal/routes"
 	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
 	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
@@ -58,6 +61,119 @@ type testServer struct {
 	*httptest.Server
 	repo    repository.Repository
 	storage storage.Service
+}
+
+func shouldServeLegacyManageUtilityRoute(r *http.Request) bool {
+	path := r.URL.Path
+	if !strings.HasPrefix(path, "/committee/") {
+		return false
+	}
+	if r.Method == http.MethodGet {
+		if strings.HasSuffix(path, "/moderate/join-qr") {
+			return true
+		}
+		if strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/recovery") {
+			return true
+		}
+		return false
+	}
+	if r.Method != http.MethodPost {
+		return false
+	}
+	switch {
+	case strings.HasSuffix(path, "/attendee/create"):
+		return true
+	case strings.HasSuffix(path, "/attendee/self-signup"):
+		return true
+	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/delete"):
+		return true
+	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/chair"):
+		return true
+	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/quoted"):
+		return true
+	default:
+		return false
+	}
+}
+
+func shouldServeLegacyVoteRoute(r *http.Request) bool {
+	path := r.URL.Path
+	if !strings.HasPrefix(path, "/committee/") {
+		return false
+	}
+
+	if r.Method == http.MethodGet {
+		return strings.HasSuffix(path, "/votes/partial") || strings.HasSuffix(path, "/votes/live/partial")
+	}
+	if r.Method != http.MethodPost {
+		return false
+	}
+
+	switch {
+	case strings.HasSuffix(path, "/votes/create"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/update-draft"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/open"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/close"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/archive"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/cast/register"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/open"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/secret"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/open"):
+		return true
+	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/secret"):
+		return true
+	default:
+		return false
+	}
+}
+
+func shouldServeLegacyAgendaImportRoute(r *http.Request) bool {
+	path := r.URL.Path
+	if !strings.HasPrefix(path, "/committee/") {
+		return false
+	}
+
+	if r.Method == http.MethodGet && strings.HasSuffix(path, "/moderate/agenda") {
+		return true
+	}
+	if r.Method != http.MethodPost {
+		return false
+	}
+
+	switch {
+	case strings.Contains(path, "/agenda/import/"):
+		return true
+	case strings.Contains(path, "/agenda-point/") && strings.HasSuffix(path, "/move-up"):
+		return true
+	case strings.Contains(path, "/agenda-point/") && strings.HasSuffix(path, "/move-down"):
+		return true
+	default:
+		return false
+	}
+}
+
+func shouldServeLegacyAttendeeLoginSecretRoute(r *http.Request) bool {
+	if !strings.HasPrefix(r.URL.Path, "/committee/") {
+		return false
+	}
+	if !strings.HasSuffix(r.URL.Path, "/attendee-login") {
+		return false
+	}
+	if r.Method == http.MethodPost {
+		return true
+	}
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		return false
+	}
+	return strings.TrimSpace(r.URL.Query().Get("secret")) != ""
 }
 
 // newTestServer boots a full HTTP server with an in-memory SQLite database,
@@ -106,7 +222,6 @@ func newTestServer(t *testing.T) *testServer {
 		SessionManager: sessionMgr,
 		AuthConfig:     authCfg,
 	}
-
 	apiMux := http.NewServeMux()
 
 	sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
@@ -163,17 +278,15 @@ func newTestServer(t *testing.T) *testServer {
 	)
 	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
 
-	apiMux.Handle("POST /committee/{slug}/meetings", mw.Get("session")(apihttp.NewCommitteeMeetingCreateHandler(repo)))
-	apiMux.Handle("DELETE /committee/{slug}/meetings/{meetingId}", mw.Get("session")(apihttp.NewCommitteeMeetingDeleteHandler(repo)))
-	apiMux.Handle("POST /committee/{slug}/meetings/{meetingId}/active", mw.Get("session")(apihttp.NewCommitteeMeetingActivateHandler(repo)))
+	docsAPIPath, docsAPIHandler := docsv1connect.NewDocsServiceHandler(
+		apiconnect.NewDocsHandler(docsService),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(docsAPIPath, docsAPIHandler)
+
 	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
 		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
 	)
-	apiMux.Handle("GET /blobs/{blobId}/download", apihttp.NewBlobDownloadHandler(repo, store))
-	apiMux.Handle("POST /votes/verify/open", apihttp.NewVerifyOpenVoteReceiptHandler(repo))
-	apiMux.Handle("POST /votes/verify/secret", apihttp.NewVerifySecretVoteReceiptHandler(repo))
-	apiMux.Handle("GET /docs/page/{docPath...}", apihttp.NewDocsPageHandler(docsService))
-	apiMux.Handle("GET /docs/search", apihttp.NewDocsSearchHandler(docsService))
 	apiMux.Handle("GET /docs/assets/{assetPath...}", apihttp.NewDocsAssetHandler(docsService))
 
 	spaHandler := webassets.NewSPAHandler()
@@ -195,6 +308,8 @@ func newTestServer(t *testing.T) *testServer {
 			apihttp.NewOAuthCallbackHandler(oauthH).ServeHTTP(w, r)
 		case r.URL.Path == "/docs/assets" || strings.HasPrefix(r.URL.Path, "/docs/assets/"):
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
+		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
+			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:
 			spaHandler.ServeHTTP(w, r)
 		default:
@@ -220,6 +335,78 @@ func newTestServer(t *testing.T) *testServer {
 	// Seed the default admin account so adminLogin() always works
 	result.seedAdminAccount(t, testAdminUsername, testAdminPassword)
 
+	return result
+}
+
+// newLegacyTestServer boots the legacy HTMX/Templ server with the same in-memory
+// backing services so browser parity tests can compare the old and new UIs.
+func newLegacyTestServer(t *testing.T) *testServer {
+	t.Helper()
+
+	repo, err := sqlite.New(":memory:")
+	if err != nil {
+		t.Fatalf("create repo: %v", err)
+	}
+	if err := repo.MigrateUp(); err != nil {
+		t.Fatalf("migrate: %v", err)
+	}
+
+	secret := []byte(testSecret)
+	sessionMgr := session.NewManager(repo, secret)
+	authCfg := &config.AuthConfig{
+		PasswordEnabled:       true,
+		OAuthEnabled:          false,
+		OAuthProvisioningMode: "preprovisioned",
+		OAuthGroupsClaim:      "groups",
+		OAuthUsernameClaims:   []string{"preferred_username", "email", "sub"},
+		OAuthFullNameClaims:   []string{"name", "preferred_username", "email"},
+		OAuthStateTTLSeconds:  300,
+	}
+	oauthSvc, err := oauth.New(context.Background(), oauth.Config{Enabled: false}, secret)
+	if err != nil {
+		t.Fatalf("create oauth service: %v", err)
+	}
+	mw := middleware.NewRegistry(sessionMgr, repo, authCfg.PasswordEnabled)
+	b := broker.NewMemoryBroker()
+	store := storage.NewMemStorage()
+
+	if err := locale.LoadTranslations(); err != nil {
+		t.Fatalf("load translations: %v", err)
+	}
+	docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
+	if err != nil {
+		t.Fatalf("load embedded docs: %v", err)
+	}
+
+	h := &handlers.Handler{
+		Broker:         b,
+		Repository:     repo,
+		Storage:        store,
+		SessionManager: sessionMgr,
+		AuthConfig:     authCfg,
+		OAuthService:   oauthSvc,
+		DocsService:    docsService,
+	}
+
+	legacyHandler := locale.NewMiddleware(
+		routes.NewRouter(h, mw).RegisterRoutes(),
+		locale.Config{
+			Default:   "en",
+			Supported: []string{"en"},
+		},
+	)
+
+	ts := httptest.NewServer(legacyHandler)
+
+	t.Cleanup(func() {
+		ts.Close()
+		b.Shutdown()
+		_ = docsService.Close()
+		repo.Close()
+	})
+
+	result := &testServer{Server: ts, repo: repo, storage: store}
+	result.seedAdminAccount(t, testAdminUsername, testAdminPassword)
 	return result
 }
 

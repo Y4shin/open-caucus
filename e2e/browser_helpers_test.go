@@ -11,6 +11,11 @@ import (
 	playwright "github.com/playwright-community/playwright-go"
 )
 
+const (
+	defaultE2ETimeoutMs           = 10000
+	defaultE2ENavigationTimeoutMs = 15000
+)
+
 // newPage launches a Chromium browser, creates an isolated browser context, and
 // returns a new page. All resources are registered with t.Cleanup.
 // If the Playwright driver or Chromium browser is not installed the test is
@@ -41,6 +46,8 @@ func newPage(t *testing.T) playwright.Page {
 		t.Fatalf("new browser context: %v", err)
 	}
 	t.Cleanup(func() { ctx.Close() })
+	ctx.SetDefaultTimeout(defaultE2ETimeoutMs)
+	ctx.SetDefaultNavigationTimeout(defaultE2ENavigationTimeoutMs)
 
 	page, err := ctx.NewPage()
 	if err != nil {
@@ -63,7 +70,7 @@ func gotoAndWaitForInput(t *testing.T, page playwright.Page, url, selector strin
 			continue
 		}
 		if err := page.Locator(selector).First().WaitFor(playwright.LocatorWaitForOptions{
-			Timeout: playwright.Float(10000),
+			Timeout: playwright.Float(defaultE2ETimeoutMs),
 		}); err != nil {
 			lastErr = fmt.Errorf("wait for %s on %s: %w", selector, url, err)
 			continue
@@ -122,19 +129,12 @@ func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username,
 func openModerateLeftTab(t *testing.T, page playwright.Page, tabName string) {
 	t.Helper()
 	controls := page.Locator("#moderate-left-controls")
-	if count, err := controls.Count(); err == nil && count == 0 {
-		return
-	}
 	if err := controls.WaitFor(); err != nil {
 		t.Fatalf("wait moderate left controls: %v", err)
 	}
 	tab := page.Locator("#moderate-left-controls [data-moderate-left-tab='" + tabName + "']")
-	count, err := tab.Count()
-	if err != nil {
-		t.Fatalf("count moderate left tab %q: %v", tabName, err)
-	}
-	if count == 0 {
-		return
+	if err := tab.First().WaitFor(); err != nil {
+		t.Fatalf("wait moderate left tab %q: %v", tabName, err)
 	}
 	panel := page.Locator("#moderate-left-panel-" + tabName)
 	if visible, err := panel.IsVisible(); err == nil && visible {
@@ -154,7 +154,7 @@ func openModerateAgendaEditor(t *testing.T, page playwright.Page) {
 	t.Helper()
 	openModerateLeftTab(t, page, "agenda")
 	if err := page.Locator("#agenda-point-list-container").First().WaitFor(playwright.LocatorWaitForOptions{
-		Timeout: playwright.Float(30000),
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
 	}); err == nil {
 		return
 	}

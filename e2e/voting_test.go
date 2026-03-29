@@ -6,12 +6,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	connect "connectrpc.com/connect"
 	playwright "github.com/playwright-community/playwright-go"
+
+	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
+	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 )
 
 func openModerateVotesPanel(t *testing.T, page playwright.Page) playwright.Locator {
@@ -78,6 +83,19 @@ func waitPageContainsText(t *testing.T, page playwright.Page, contains string) {
 		}
 		return strings.Contains(text, contains), nil
 	}, fmt.Sprintf("page to contain text %q", contains))
+}
+
+func verifySecretReceiptViaConnect(t *testing.T, baseURL string, voteID int64, receiptToken string) (*votesv1.VerifySecretReceiptResponse, error) {
+	t.Helper()
+	client := votesv1connect.NewVoteServiceClient(&http.Client{}, baseURL+"/api")
+	resp, err := client.VerifySecretReceipt(context.Background(), connect.NewRequest(&votesv1.VerifySecretReceiptRequest{
+		VoteId:       strconv.FormatInt(voteID, 10),
+		ReceiptToken: receiptToken,
+	}))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Msg, nil
 }
 
 func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, visibility string, minSelections, maxSelections int) {
@@ -680,15 +698,15 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 		t.Fatalf("expected register-cast rejection during counting, got: %s", registerBody)
 	}
 
-	verifyStatusCounting, verifyBodyCounting := postJSONFromPage(t, moderatorPage,
-		ts.URL+"/api/votes/verify/secret",
-		map[string]any{"vote_id": voteID, "receipt_token": "secret-r1"},
-	)
-	if verifyStatusCounting != 409 {
-		t.Fatalf("expected verify/secret during counting to return 409, got %d (body=%s)", verifyStatusCounting, verifyBodyCounting)
+	_, verifyErrCounting := verifySecretReceiptViaConnect(t, ts.URL, voteID, "secret-r1")
+	if verifyErrCounting == nil {
+		t.Fatal("expected verify secret receipt during counting to fail")
 	}
-	if !strings.Contains(strings.ToLower(verifyBodyCounting), "counting") {
-		t.Fatalf("expected counting error in verify/secret response, got: %s", verifyBodyCounting)
+	if connect.CodeOf(verifyErrCounting) != connect.CodeFailedPrecondition {
+		t.Fatalf("expected verify secret receipt during counting to return failed precondition, got %v", connect.CodeOf(verifyErrCounting))
+	}
+	if !strings.Contains(strings.ToLower(verifyErrCounting.Error()), "counting") {
+		t.Fatalf("expected counting error in verify secret receipt response, got: %v", verifyErrCounting)
 	}
 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
@@ -720,15 +738,12 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	}, "secret vote to close after counting completion")
 	archiveVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 
-	verifyStatusClosed, verifyBodyClosed := postJSONFromPage(t, moderatorPage,
-		ts.URL+"/api/votes/verify/secret",
-		map[string]any{"vote_id": voteID, "receipt_token": "secret-r1"},
-	)
-	if verifyStatusClosed != 200 {
-		t.Fatalf("expected verify/secret after close/archive to return 200, got %d (body=%s)", verifyStatusClosed, verifyBodyClosed)
+	verifyClosed, verifyErrClosed := verifySecretReceiptViaConnect(t, ts.URL, voteID, "secret-r1")
+	if verifyErrClosed != nil {
+		t.Fatalf("expected verify secret receipt after close/archive to return success, got %v", verifyErrClosed)
 	}
-	if !strings.Contains(verifyBodyClosed, "secret-r1") {
-		t.Fatalf("expected receipt token in verify/secret success response, got: %s", verifyBodyClosed)
+	if verifyClosed.GetReceiptToken() != "secret-r1" {
+		t.Fatalf("expected receipt token in verify secret receipt success response, got: %q", verifyClosed.GetReceiptToken())
 	}
 }
 

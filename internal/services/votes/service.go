@@ -3,9 +3,11 @@ package voteservice
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 
 	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
 	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
@@ -446,6 +448,59 @@ func (s *Service) SubmitBallot(ctx context.Context, committeeSlug, meetingIDStr,
 	}
 }
 
+func (s *Service) VerifyOpenReceipt(ctx context.Context, voteIDStr, receiptToken, attendeeIDStr string) (*votesv1.VerifyOpenReceiptResponse, error) {
+	voteID, err := strconv.ParseInt(voteIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid vote id")
+	}
+
+	verification, err := s.repo.VerifyOpenBallotByReceipt(ctx, voteID, receiptToken)
+	if err != nil {
+		return nil, mapVerifyError(err)
+	}
+
+	if attendeeIDStr != "" {
+		attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+		if err != nil {
+			return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+		}
+		if verification.AttendeeID != attendeeID {
+			return nil, apierrors.New(apierrors.KindNotFound, "ballot not found for attendee")
+		}
+	}
+
+	return &votesv1.VerifyOpenReceiptResponse{
+		VoteId:          strconv.FormatInt(verification.VoteDefinitionID, 10),
+		VoteName:        verification.VoteName,
+		AttendeeId:      strconv.FormatInt(verification.AttendeeID, 10),
+		AttendeeNumber:  strconv.FormatInt(verification.AttendeeNumber, 10),
+		ReceiptToken:    verification.ReceiptToken,
+		ChoiceLabels:    verification.ChoiceLabels,
+		ChoiceOptionIds: formatInt64Slice(verification.ChoiceOptionIDs),
+	}, nil
+}
+
+func (s *Service) VerifySecretReceipt(ctx context.Context, voteIDStr, receiptToken string) (*votesv1.VerifySecretReceiptResponse, error) {
+	voteID, err := strconv.ParseInt(voteIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid vote id")
+	}
+
+	verification, err := s.repo.VerifySecretBallotByReceipt(ctx, voteID, receiptToken)
+	if err != nil {
+		return nil, mapVerifyError(err)
+	}
+
+	return &votesv1.VerifySecretReceiptResponse{
+		VoteId:                 strconv.FormatInt(verification.VoteDefinitionID, 10),
+		VoteName:               verification.VoteName,
+		ReceiptToken:           verification.ReceiptToken,
+		EncryptedCommitmentB64: base64.StdEncoding.EncodeToString(verification.EncryptedCommitment),
+		CommitmentCipher:       verification.CommitmentCipher,
+		CommitmentVersion:      verification.CommitmentVersion,
+	}, nil
+}
+
 func (s *Service) resolveAttendeeForBallot(ctx context.Context, meetingID int64, onBehalfOfIDStr string) (int64, error) {
 	if onBehalfOfIDStr != "" {
 		id, err := strconv.ParseInt(onBehalfOfIDStr, 10, 64)
@@ -469,6 +524,19 @@ func (s *Service) resolveAttendeeForBallot(ctx context.Context, meetingID int64,
 	}
 
 	return 0, apierrors.New(apierrors.KindNotFound, "no attendee record found for the current session")
+}
+
+func formatInt64Slice(values []int64) []string {
+	if len(values) == 0 {
+		return nil
+	}
+
+	formatted := make([]string, 0, len(values))
+	for _, value := range values {
+		formatted = append(formatted, strconv.FormatInt(value, 10))
+	}
+
+	return formatted
 }
 
 func (s *Service) callerAttendeeID(ctx context.Context, meetingID int64) int64 {
@@ -516,6 +584,23 @@ func (s *Service) publishVotesUpdated(meetingID int64) {
 		Data:      []byte(`{"type":"votes.updated"}`),
 		MeetingID: &mid,
 	})
+}
+
+func mapVerifyError(err error) error {
+	if err == nil {
+		return nil
+	}
+	msg := err.Error()
+	switch {
+	case strings.Contains(strings.ToLower(msg), "not found"):
+		return apierrors.New(apierrors.KindNotFound, msg)
+	case strings.Contains(strings.ToLower(msg), "counting"):
+		return apierrors.New(apierrors.KindConflict, msg)
+	case strings.Contains(strings.ToLower(msg), "invalid"):
+		return apierrors.New(apierrors.KindInvalidArgument, msg)
+	default:
+		return apierrors.New(apierrors.KindInvalidArgument, msg)
+	}
 }
 
 func toVoteDefinitionRecord(v *model.VoteDefinition, opts []*model.VoteOption) *votesv1.VoteDefinitionRecord {

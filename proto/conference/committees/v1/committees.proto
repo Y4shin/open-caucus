@@ -9,6 +9,9 @@ import "conference/common/v1/common.proto";
 service CommitteeService {
   rpc ListMyCommittees(ListMyCommitteesRequest) returns (ListMyCommitteesResponse);
   rpc GetCommitteeOverview(GetCommitteeOverviewRequest) returns (GetCommitteeOverviewResponse);
+  rpc CreateMeeting(CreateMeetingRequest) returns (CreateMeetingResponse);
+  rpc DeleteMeeting(DeleteMeetingRequest) returns (DeleteMeetingResponse);
+  rpc ToggleMeetingActive(ToggleMeetingActiveRequest) returns (ToggleMeetingActiveResponse);
 }
 
 message CommitteeListItem {
@@ -42,4 +45,34 @@ message GetCommitteeOverviewRequest {
 
 message GetCommitteeOverviewResponse {
   CommitteeOverview overview = 1;
+}
+
+message CreateMeetingRequest {
+  string committee_slug = 1;
+  string name = 2;
+  string description = 3;
+}
+
+message CreateMeetingResponse {
+  conference.common.v1.MeetingReference meeting = 1;
+}
+
+message DeleteMeetingRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message DeleteMeetingResponse {
+  string meeting_id = 1;
+  bool deleted = 2;
+}
+
+message ToggleMeetingActiveRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+}
+
+message ToggleMeetingActiveResponse {
+  string meeting_id = 1;
+  bool active = 2;
 }

@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/committees/v1/committees.proto.
  */
 export const file_conference_committees_v1_committees: GenFile = /*@__PURE__*/
-  fileDesc("Ciljb25mZXJlbmNlL2NvbW1pdHRlZXMvdjEvY29tbWl0dGVlcy5wcm90bxIYY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxIoMBChFDb21taXR0ZWVMaXN0SXRlbRI7Cgljb21taXR0ZWUYASABKAsyKC5jb25mZXJlbmNlLmNvbW1vbi52MS5Db21taXR0ZWVSZWZlcmVuY2USFQoNbWVldGluZ19jb3VudBgCIAEoBRIaChJoYXNfYWN0aXZlX21lZXRpbmcYAyABKAgikgEKGENvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI3CgdtZWV0aW5nGAEgASgLMiYuY29uZmVyZW5jZS5jb21tb24udjEuTWVldGluZ1JlZmVyZW5jZRIUCgxjYW5fbW9kZXJhdGUYAiABKAgSEAoIY2FuX2pvaW4YAyABKAgSFQoNY2FuX3ZpZXdfbGl2ZRgEIAEoCCLOAQoRQ29tbWl0dGVlT3ZlcnZpZXcSOwoJY29tbWl0dGVlGAEgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQ29tbWl0dGVlUmVmZXJlbmNlEkQKCG1lZXRpbmdzGAIgAygLMjIuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI2CgxjYXBhYmlsaXRpZXMYAyADKAsyIC5jb25mZXJlbmNlLmNvbW1vbi52MS5DYXBhYmlsaXR5IhkKF0xpc3RNeUNvbW1pdHRlZXNSZXF1ZXN0IlsKGExpc3RNeUNvbW1pdHRlZXNSZXNwb25zZRI/Cgpjb21taXR0ZWVzGAEgAygLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZUxpc3RJdGVtIjUKG0dldENvbW1pdHRlZU92ZXJ2aWV3UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCSJdChxHZXRDb21taXR0ZWVPdmVydmlld1Jlc3BvbnNlEj0KCG92ZXJ2aWV3GAEgASgLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3MpUCChBDb21taXR0ZWVTZXJ2aWNlEnkKEExpc3RNeUNvbW1pdHRlZXMSMS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTGlzdE15Q29tbWl0dGVlc1JlcXVlc3QaMi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTGlzdE15Q29tbWl0dGVlc1Jlc3BvbnNlEoUBChRHZXRDb21taXR0ZWVPdmVydmlldxI1LmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5HZXRDb21taXR0ZWVPdmVydmlld1JlcXVlc3QaNi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuR2V0Q29tbWl0dGVlT3ZlcnZpZXdSZXNwb25zZUJQWk5naXRodWIuY29tL1k0c2hpbi9jb25mZXJlbmNlLXRvb2wvZ2VuL2dvL2NvbmZlcmVuY2UvY29tbWl0dGVlcy92MTtjb21taXR0ZWVzdjFiBnByb3RvMw", [file_conference_common_v1_common]);
+  fileDesc("Ciljb25mZXJlbmNlL2NvbW1pdHRlZXMvdjEvY29tbWl0dGVlcy5wcm90bxIYY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxIoMBChFDb21taXR0ZWVMaXN0SXRlbRI7Cgljb21taXR0ZWUYASABKAsyKC5jb25mZXJlbmNlLmNvbW1vbi52MS5Db21taXR0ZWVSZWZlcmVuY2USFQoNbWVldGluZ19jb3VudBgCIAEoBRIaChJoYXNfYWN0aXZlX21lZXRpbmcYAyABKAgikgEKGENvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI3CgdtZWV0aW5nGAEgASgLMiYuY29uZmVyZW5jZS5jb21tb24udjEuTWVldGluZ1JlZmVyZW5jZRIUCgxjYW5fbW9kZXJhdGUYAiABKAgSEAoIY2FuX2pvaW4YAyABKAgSFQoNY2FuX3ZpZXdfbGl2ZRgEIAEoCCLOAQoRQ29tbWl0dGVlT3ZlcnZpZXcSOwoJY29tbWl0dGVlGAEgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQ29tbWl0dGVlUmVmZXJlbmNlEkQKCG1lZXRpbmdzGAIgAygLMjIuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI2CgxjYXBhYmlsaXRpZXMYAyADKAsyIC5jb25mZXJlbmNlLmNvbW1vbi52MS5DYXBhYmlsaXR5IhkKF0xpc3RNeUNvbW1pdHRlZXNSZXF1ZXN0IlsKGExpc3RNeUNvbW1pdHRlZXNSZXNwb25zZRI/Cgpjb21taXR0ZWVzGAEgAygLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZUxpc3RJdGVtIjUKG0dldENvbW1pdHRlZU92ZXJ2aWV3UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCSJdChxHZXRDb21taXR0ZWVPdmVydmlld1Jlc3BvbnNlEj0KCG92ZXJ2aWV3GAEgASgLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3IlEKFENyZWF0ZU1lZXRpbmdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkiUAoVQ3JlYXRlTWVldGluZ1Jlc3BvbnNlEjcKB21lZXRpbmcYASABKAsyJi5jb25mZXJlbmNlLmNvbW1vbi52MS5NZWV0aW5nUmVmZXJlbmNlIkIKFERlbGV0ZU1lZXRpbmdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiPAoVRGVsZXRlTWVldGluZ1Jlc3BvbnNlEhIKCm1lZXRpbmdfaWQYASABKAkSDwoHZGVsZXRlZBgCIAEoCCJIChpUb2dnbGVNZWV0aW5nQWN0aXZlUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIkEKG1RvZ2dsZU1lZXRpbmdBY3RpdmVSZXNwb25zZRISCgptZWV0aW5nX2lkGAEgASgJEg4KBmFjdGl2ZRgCIAEoCDL+BAoQQ29tbWl0dGVlU2VydmljZRJ5ChBMaXN0TXlDb21taXR0ZWVzEjEuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkxpc3RNeUNvbW1pdHRlZXNSZXF1ZXN0GjIuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkxpc3RNeUNvbW1pdHRlZXNSZXNwb25zZRKFAQoUR2V0Q29tbWl0dGVlT3ZlcnZpZXcSNS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuR2V0Q29tbWl0dGVlT3ZlcnZpZXdSZXF1ZXN0GjYuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkdldENvbW1pdHRlZU92ZXJ2aWV3UmVzcG9uc2UScAoNQ3JlYXRlTWVldGluZxIuLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5DcmVhdGVNZWV0aW5nUmVxdWVzdBovLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5DcmVhdGVNZWV0aW5nUmVzcG9uc2UScAoNRGVsZXRlTWVldGluZxIuLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5EZWxldGVNZWV0aW5nUmVxdWVzdBovLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5EZWxldGVNZWV0aW5nUmVzcG9uc2USggEKE1RvZ2dsZU1lZXRpbmdBY3RpdmUSNC5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuVG9nZ2xlTWVldGluZ0FjdGl2ZVJlcXVlc3QaNS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuVG9nZ2xlTWVldGluZ0FjdGl2ZVJlc3BvbnNlQlBaTmdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9jb21taXR0ZWVzL3YxO2NvbW1pdHRlZXN2MWIGcHJvdG8z", [file_conference_common_v1_common]);
 
 /**
  * @generated from message conference.committees.v1.CommitteeListItem
@@ -165,6 +165,138 @@ export const GetCommitteeOverviewResponseSchema: GenMessage<GetCommitteeOverview
   messageDesc(file_conference_committees_v1_committees, 6);
 
 /**
+ * @generated from message conference.committees.v1.CreateMeetingRequest
+ */
+export type CreateMeetingRequest = Message<"conference.committees.v1.CreateMeetingRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.CreateMeetingRequest.
+ * Use `create(CreateMeetingRequestSchema)` to create a new message.
+ */
+export const CreateMeetingRequestSchema: GenMessage<CreateMeetingRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 7);
+
+/**
+ * @generated from message conference.committees.v1.CreateMeetingResponse
+ */
+export type CreateMeetingResponse = Message<"conference.committees.v1.CreateMeetingResponse"> & {
+  /**
+   * @generated from field: conference.common.v1.MeetingReference meeting = 1;
+   */
+  meeting?: MeetingReference;
+};
+
+/**
+ * Describes the message conference.committees.v1.CreateMeetingResponse.
+ * Use `create(CreateMeetingResponseSchema)` to create a new message.
+ */
+export const CreateMeetingResponseSchema: GenMessage<CreateMeetingResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 8);
+
+/**
+ * @generated from message conference.committees.v1.DeleteMeetingRequest
+ */
+export type DeleteMeetingRequest = Message<"conference.committees.v1.DeleteMeetingRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.DeleteMeetingRequest.
+ * Use `create(DeleteMeetingRequestSchema)` to create a new message.
+ */
+export const DeleteMeetingRequestSchema: GenMessage<DeleteMeetingRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 9);
+
+/**
+ * @generated from message conference.committees.v1.DeleteMeetingResponse
+ */
+export type DeleteMeetingResponse = Message<"conference.committees.v1.DeleteMeetingResponse"> & {
+  /**
+   * @generated from field: string meeting_id = 1;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: bool deleted = 2;
+   */
+  deleted: boolean;
+};
+
+/**
+ * Describes the message conference.committees.v1.DeleteMeetingResponse.
+ * Use `create(DeleteMeetingResponseSchema)` to create a new message.
+ */
+export const DeleteMeetingResponseSchema: GenMessage<DeleteMeetingResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 10);
+
+/**
+ * @generated from message conference.committees.v1.ToggleMeetingActiveRequest
+ */
+export type ToggleMeetingActiveRequest = Message<"conference.committees.v1.ToggleMeetingActiveRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.ToggleMeetingActiveRequest.
+ * Use `create(ToggleMeetingActiveRequestSchema)` to create a new message.
+ */
+export const ToggleMeetingActiveRequestSchema: GenMessage<ToggleMeetingActiveRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 11);
+
+/**
+ * @generated from message conference.committees.v1.ToggleMeetingActiveResponse
+ */
+export type ToggleMeetingActiveResponse = Message<"conference.committees.v1.ToggleMeetingActiveResponse"> & {
+  /**
+   * @generated from field: string meeting_id = 1;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: bool active = 2;
+   */
+  active: boolean;
+};
+
+/**
+ * Describes the message conference.committees.v1.ToggleMeetingActiveResponse.
+ * Use `create(ToggleMeetingActiveResponseSchema)` to create a new message.
+ */
+export const ToggleMeetingActiveResponseSchema: GenMessage<ToggleMeetingActiveResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 12);
+
+/**
  * @generated from service conference.committees.v1.CommitteeService
  */
 export const CommitteeService: GenService<{
@@ -183,6 +315,30 @@ export const CommitteeService: GenService<{
     methodKind: "unary";
     input: typeof GetCommitteeOverviewRequestSchema;
     output: typeof GetCommitteeOverviewResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.CreateMeeting
+   */
+  createMeeting: {
+    methodKind: "unary";
+    input: typeof CreateMeetingRequestSchema;
+    output: typeof CreateMeetingResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.DeleteMeeting
+   */
+  deleteMeeting: {
+    methodKind: "unary";
+    input: typeof DeleteMeetingRequestSchema;
+    output: typeof DeleteMeetingResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.ToggleMeetingActive
+   */
+  toggleMeetingActive: {
+    methodKind: "unary";
+    input: typeof ToggleMeetingActiveRequestSchema;
+    output: typeof ToggleMeetingActiveResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_conference_committees_v1_committees, 0);

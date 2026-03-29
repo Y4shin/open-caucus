@@ -245,7 +245,7 @@ func (s *Service) resolveCurrentDoc(ctx context.Context, ap *model.AgendaPoint) 
 		Filename:    blob.Filename,
 		Label:       label,
 		ContentType: blob.ContentType,
-		DownloadUrl: fmt.Sprintf("/api/blobs/%d/download", blob.ID),
+		DownloadUrl: fmt.Sprintf("/blobs/%d/download", blob.ID),
 	}, nil
 }
 

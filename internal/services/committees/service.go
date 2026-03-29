@@ -4,10 +4,11 @@ import (
 	"context"
 	"strconv"
 
-	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
 	committeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1"
+	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
 	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
 	"github.com/Y4shin/conference-tool/internal/repository"
+	"github.com/Y4shin/conference-tool/internal/repository/model"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
@@ -49,8 +50,8 @@ func (s *Service) ListMyCommittees(ctx context.Context) (*committeesv1.ListMyCom
 		}
 
 		items = append(items, &committeesv1.CommitteeListItem{
-			Committee:       ref,
-			MeetingCount:    int32(count),
+			Committee:        ref,
+			MeetingCount:     int32(count),
 			HasActiveMeeting: c.CurrentMeetingID != nil,
 		})
 	}
@@ -105,6 +106,7 @@ func (s *Service) GetCommitteeOverview(ctx context.Context, slug string) (*commi
 			CommitteeSlug: slug,
 			Name:          m.Name,
 			SignupOpen:    m.SignupOpen,
+			Description:   m.Description,
 		}
 		overviewMeetings = append(overviewMeetings, &committeesv1.CommitteeOverviewMeeting{
 			Meeting:     meetingRef,
@@ -127,4 +129,105 @@ func (s *Service) GetCommitteeOverview(ctx context.Context, slug string) (*commi
 	}
 
 	return &committeesv1.GetCommitteeOverviewResponse{Overview: overview}, nil
+}
+
+func (s *Service) CreateMeeting(ctx context.Context, slug, name, description string) (*committeesv1.CreateMeetingResponse, error) {
+	committee, err := s.requireCommitteeManager(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	if name == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "meeting name is required")
+	}
+	if err := s.repo.CreateMeeting(ctx, committee.ID, name, description, "", false); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to create meeting", err)
+	}
+
+	meetings, err := s.repo.ListMeetingsForCommittee(ctx, slug, 1, 0)
+	if err != nil || len(meetings) == 0 {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load created meeting", err)
+	}
+
+	return &committeesv1.CreateMeetingResponse{
+		Meeting: &commonv1.MeetingReference{
+			MeetingId:     strconv.FormatInt(meetings[0].ID, 10),
+			CommitteeSlug: slug,
+			Name:          meetings[0].Name,
+			SignupOpen:    meetings[0].SignupOpen,
+			Description:   meetings[0].Description,
+		},
+	}, nil
+}
+
+func (s *Service) DeleteMeeting(ctx context.Context, slug, meetingIDStr string) (*committeesv1.DeleteMeetingResponse, error) {
+	if _, err := s.requireCommitteeManager(ctx, slug); err != nil {
+		return nil, err
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := s.repo.DeleteMeeting(ctx, meetingID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to delete meeting", err)
+	}
+
+	return &committeesv1.DeleteMeetingResponse{
+		MeetingId: meetingIDStr,
+		Deleted:   true,
+	}, nil
+}
+
+func (s *Service) ToggleMeetingActive(ctx context.Context, slug, meetingIDStr string) (*committeesv1.ToggleMeetingActiveResponse, error) {
+	committee, err := s.requireCommitteeManager(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	var newActiveMeetingID *int64
+	if committee.CurrentMeetingID == nil || *committee.CurrentMeetingID != meetingID {
+		newActiveMeetingID = &meetingID
+	}
+
+	if err := s.repo.SetActiveMeeting(ctx, slug, newActiveMeetingID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set active meeting", err)
+	}
+
+	return &committeesv1.ToggleMeetingActiveResponse{
+		MeetingId: meetingIDStr,
+		Active:    newActiveMeetingID != nil,
+	}, nil
+}
+
+func (s *Service) requireCommitteeManager(ctx context.Context, slug string) (*model.Committee, error) {
+	sd, ok := session.GetSession(ctx)
+	if !ok || sd == nil || sd.IsExpired() || !sd.IsAccountSession() || sd.AccountID == nil {
+		return nil, apierrors.New(apierrors.KindUnauthenticated, "account session required")
+	}
+	accountID := *sd.AccountID
+
+	committee, err := s.repo.GetCommitteeBySlug(ctx, slug)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "committee not found")
+	}
+
+	account, _ := s.repo.GetAccountByID(ctx, accountID)
+	if account != nil && account.IsAdmin {
+		return committee, nil
+	}
+
+	membership, err := s.repo.GetUserMembershipByAccountIDAndSlug(ctx, accountID, slug)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindPermissionDenied, "not a member of this committee")
+	}
+	if membership.Role != "chairperson" {
+		return nil, apierrors.New(apierrors.KindPermissionDenied, "chairperson role required")
+	}
+
+	return committee, nil
 }

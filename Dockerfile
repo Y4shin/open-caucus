@@ -24,7 +24,7 @@ COPY . .
 RUN --mount=type=cache,target=/root/.npm \
     npm run build:css
 RUN --mount=type=cache,target=/root/.npm \
-    cd web && npx buf generate --template ../buf.gen.yaml
+    PATH="/src/web/node_modules/.bin:$PATH" ./web/node_modules/.bin/buf generate --template buf.gen.yaml
 RUN --mount=type=cache,target=/root/.npm \
     cd web && npm run build
 RUN --mount=type=cache,target=/go/pkg/mod \
