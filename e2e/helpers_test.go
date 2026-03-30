@@ -291,6 +291,17 @@ func newTestServer(t *testing.T) *testServer {
 
 	spaHandler := webassets.NewSPAHandler()
 
+	legacyH := &handlers.Handler{
+		Broker:         b,
+		Repository:     repo,
+		Storage:        store,
+		SessionManager: sessionMgr,
+		AuthConfig:     authCfg,
+		OAuthService:   oauthSvc,
+		DocsService:    docsService,
+	}
+	legacyVoteRouter := routes.NewRouter(legacyH, mw).RegisterRoutes()
+
 	appHandler := mw.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasPrefix(r.URL.Path, "/api/"):
@@ -310,6 +321,8 @@ func newTestServer(t *testing.T) *testServer {
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
 		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
 			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
+		case shouldServeLegacyVoteRoute(r), shouldServeLegacyAttendeeLoginSecretRoute(r), shouldServeLegacyManageUtilityRoute(r):
+			legacyVoteRouter.ServeHTTP(w, r)
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:
 			spaHandler.ServeHTTP(w, r)
 		default:
