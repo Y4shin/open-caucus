@@ -213,15 +213,15 @@ func TestModerateSettingsTab_UIParityWithLegacy(t *testing.T) {
 		locatorOuterHTML(t, newBrowserPage, "#meeting-settings-container"),
 		locatorOuterHTML(t, legacyBrowserPage, "#meeting-settings-container"),
 	)
-	if err := newBrowserPage.Locator("[data-moderate-settings-tab='agenda']").First().Click(); err != nil {
-		t.Fatalf("open new moderate agenda settings tab: %v", err)
-	}
-	if err := legacyBrowserPage.Locator("[data-moderate-settings-tab='agenda']").First().Click(); err != nil {
-		t.Fatalf("open legacy moderate agenda settings tab: %v", err)
-	}
-	assertEqualHTML(t, "speaker settings container",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-speaker-settings-container"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-speaker-settings-container"),
+	compareFragmentAfterAction(
+		t,
+		"speaker settings container",
+		newBrowserPage,
+		legacyBrowserPage,
+		"#moderate-speaker-settings-container",
+		func(page playwright.Page) error {
+			return page.Locator("[data-moderate-settings-tab='agenda']").First().Click()
+		},
 	)
 }
 

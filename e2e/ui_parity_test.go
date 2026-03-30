@@ -279,6 +279,26 @@ func assertEqualHTML(t *testing.T, label, got, want string) {
 	}
 }
 
+func compareFragmentAfterAction(
+	t *testing.T,
+	label string,
+	newPage, legacyPage playwright.Page,
+	fragmentSelector string,
+	action func(page playwright.Page) error,
+) {
+	t.Helper()
+	if err := action(newPage); err != nil {
+		t.Fatalf("%s action on new: %v", label, err)
+	}
+	if err := action(legacyPage); err != nil {
+		t.Fatalf("%s action on legacy: %v", label, err)
+	}
+	assertEqualHTML(t, label,
+		locatorOuterHTML(t, newPage, fragmentSelector),
+		locatorOuterHTML(t, legacyPage, fragmentSelector),
+	)
+}
+
 func TestLoginPage_UIParityWithLegacy(t *testing.T) {
 	newTS := newTestServer(t)
 	legacyTS := newLegacyTestServer(t)

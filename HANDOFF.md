@@ -14,27 +14,27 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A00` is complete locally and ready to be checkpointed as the baseline commit.
+`A01` is complete locally and ready to be checkpointed.
 
 Included changes:
 
-- fixed the extended parity tests in `e2e/ui_parity_extended_test.go`
-- updated the committee, live, join, and moderate SPA routes to close the known legacy-parity gaps
-- added `ui-parity-expansion-plan.md`
-- added the atomic-task execution model and queue to the parity plan
-- refreshed this handoff for commit-per-task execution
+- added `compareFragmentAfterAction(...)` in `e2e/ui_parity_test.go`
+- adopted the helper in `TestModerateSettingsTab_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 
 Verification already completed successfully from this working tree state:
 
-- `nix develop -c bash -lc 'cd web && npm run build'`
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateSettingsTab_UIParityWithLegacy"`
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"`
-- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...`
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestSpeakersList_OneNonDoneEntryPerType"`
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestAttachments_UploadWithoutLabel_ShowsFilename"`
 
-## Baseline Status
+Full-suite note:
 
-The worktree is currently dirty only because it contains the verified `A00` baseline changes that are about to be committed.
-
-After the baseline commit lands, the next task should be `A01`.
+- Two separate full-E2E runs ended with unrelated timeouts outside the `A01` change set:
+  - `TestSpeakersList_OneNonDoneEntryPerType`
+  - `TestAttachments_UploadWithoutLabel_ShowsFilename`
+- Both passed immediately when rerun as focused tests.
+- The parity suite was fully green after the helper change.
 
 ## Atomic Task Queue
 
@@ -84,14 +84,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A01`.
+Start with `A02`.
 
-Definition of done for `A01`:
+Definition of done for `A02`:
 
-- add a small helper for post-action fragment parity comparisons
-- keep the task limited to helper extraction plus any minimal adoption needed to prove it
+- add live-page parity coverage for an active speaker state
+- keep the change limited to one new parity scenario and any minimal helper reuse needed
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at the next atomic task after the helper lands
+- update this handoff to point at `A03` next
 
 ## Files Most Likely To Matter Next
 
