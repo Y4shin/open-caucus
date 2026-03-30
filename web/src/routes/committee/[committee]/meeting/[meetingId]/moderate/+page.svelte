@@ -533,6 +533,7 @@
 			legacyVotesPanelHTML = await response.text();
 			legacyVotesPanelAgendaPointId = activeAgendaPointId;
 			await tick();
+			normalizeLegacyVoteOptionPlaceholders();
 			const host = document.getElementById('moderate-votes-panel-host');
 			const htmx = (window as typeof window & { htmx?: { process?: (node: Element) => void } }).htmx;
 			if (host && typeof htmx?.process === 'function') {
@@ -720,13 +721,7 @@
 	}
 
 	function waitingDisplayNumber(speakerId: string) {
-		let index = 0;
-		for (const speaker of speakerState.data?.speakers ?? []) {
-			if (speaker.state !== 'WAITING') continue;
-			index += 1;
-			if (speaker.speakerId === speakerId) return index;
-		}
-		return 0;
+		return speakerState.data?.speakers.find((speaker) => speaker.speakerId === speakerId)?.orderPosition ?? 0;
 	}
 
 	function formatElapsed(totalMs: number) {
@@ -740,6 +735,19 @@
 		const since = speakingSinceMs[speakerId];
 		if (since == null) return '00:00';
 		return formatElapsed(nowMs - since);
+	}
+
+	function speakerHasBadges(speaker: SpeakerQueueView['speakers'][number]) {
+		return speaker.speakerType === 'ropm' || speaker.quoted || speaker.firstSpeaker || speaker.priority;
+	}
+
+	function normalizeLegacyVoteOptionPlaceholders() {
+		const panel = document.getElementById('moderate-votes-panel');
+		if (!panel) return;
+		const inputs = panel.querySelectorAll<HTMLInputElement>('[data-vote-option-input]');
+		for (const [index, input] of inputs.entries()) {
+			input.placeholder = `Choice ${index + 1}`;
+		}
 	}
 
 	function scrollToInitialSpeaker() {
@@ -2025,27 +2033,37 @@
 									<div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-testid="manage-speakers-quick-controls">
 										<div class="flex flex-wrap items-center gap-2">
 											{#if activeSpeaker()}
-												<button
-													class="btn btn-sm btn-success whitespace-nowrap"
-													data-testid="manage-end-current-speaker"
-													data-testid-group="manage-speakers-quick-button"
-													title="End current speech"
-													aria-label="End current speech"
-													onclick={endCurrentSpeaker}
-													disabled={speakerActionPending !== '' || !activeSpeaker()}
+												<form
+													class="inline"
+													hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${activeSpeaker()?.speakerId ?? ''}/end`}
+													hx-target="#speakers-list-container"
+													hx-swap="outerHTML"
+													onsubmit={(event) => {
+														event.preventDefault();
+														void endCurrentSpeaker();
+													}}
 												>
-													<LegacyIcon name="check-circle" class="ui-icon--left" />
-													End Speech
-												</button>
+													<button
+														type="submit"
+														class="btn btn-sm btn-success whitespace-nowrap"
+														data-testid="manage-end-current-speaker"
+														data-testid-group="manage-speakers-quick-button"
+														title="End current speech"
+														aria-label="End current speech"
+														disabled={speakerActionPending !== '' || !activeSpeaker()}
+													>
+														<LegacyIcon name="check-circle" class="ui-icon--left" />End Speech
+													</button>
+												</form>
 											{:else if nextWaitingSpeaker()}
-												<button
-													class="btn btn-sm btn-primary whitespace-nowrap"
-													data-testid="manage-start-next-speaker"
-													data-testid-group="manage-speakers-quick-button"
-													title="Start next speaker"
-													aria-label="Start next speaker"
-													onclick={() =>
-														runSpeakerAction('start-next', async () => {
+												<form
+													class="inline"
+													hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${nextWaitingSpeaker()?.speakerId ?? ''}/start`}
+													hx-target="#speakers-list-container"
+													hx-swap="outerHTML"
+													onsubmit={(event) => {
+														event.preventDefault();
+														void runSpeakerAction('start-next', async () => {
 															const next = nextWaitingSpeaker();
 															if (!next) {
 																throw new Error('No waiting speaker is available.');
@@ -2055,12 +2073,21 @@
 																meetingId,
 																speakerId: next.speakerId
 															});
-														})}
-													disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
+														});
+													}}
 												>
-													<LegacyIcon name="arrow-forward" class="ui-icon--left" />
-													Start Next
-												</button>
+													<button
+														type="submit"
+														class="btn btn-sm btn-primary whitespace-nowrap"
+														data-testid="manage-start-next-speaker"
+														data-testid-group="manage-speakers-quick-button"
+														title="Start next speaker"
+														aria-label="Start next speaker"
+														disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
+													>
+														<LegacyIcon name="arrow-forward" class="ui-icon--left" />Start Next Speaker
+													</button>
+												</form>
 											{/if}
 										</div>
 										<button
@@ -2072,35 +2099,31 @@
 											aria-label="Scroll to active position"
 											onclick={scrollToInitialSpeaker}
 										>
-											<LegacyIcon name="history" class="ui-icon--left" />
-											Scroll Position
+											<LegacyIcon name="history" class="ui-icon--left" />Scroll To Active Position
 										</button>
 									</div>
-									<div
-										class="live-speakers-list-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
-										data-manage-speakers-viewport
-										data-testid="manage-speakers-viewport"
-									>
-										<ul class="list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1 live-speaker-list" data-testid="live-speakers-active-list">
-											{#each speakerState.data.speakers as speaker}
-												<li
-													class="list-row min-w-0 items-center gap-3"
-													data-testid="live-speaker-item"
-													data-speaker-state={speaker.state.toLowerCase()}
-													data-manage-scroll-anchor={isInitialScrollSpeaker(speaker.speakerId) ? 'true' : 'false'}
-												>
-													<div class="w-16 shrink-0 text-center font-semibold text-base-content/70">
-														{#if speaker.state === 'SPEAKING'}
-															<span class="font-mono text-xs whitespace-nowrap text-base-content/70" data-speaking-since={String(speakingSinceMs[speaker.speakerId] ?? '')}>{speakingTimerLabel(speaker.speakerId)}</span>
-														{:else if speaker.state === 'WAITING'}
-															{waitingDisplayNumber(speaker.speakerId)}
-														{:else}
-															&nbsp;
-														{/if}
-													</div>
-													<div class="list-col-grow min-w-0">
-														<div class="flex min-w-0 items-center gap-2">
-															<div class="truncate font-semibold" data-testid="live-speaker-name">{speaker.fullName}</div>
+									<ul class="list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1 live-speaker-list" data-initial-scroll-top="0" data-manage-speakers-viewport data-testid="manage-speakers-viewport">
+										{#each speakerState.data.speakers as speaker}
+											<li
+												class="list-row min-w-0 items-center gap-3"
+												data-testid="live-speaker-item"
+												data-speaker-state={speaker.state.toLowerCase()}
+												data-speaker-mine="false"
+												data-manage-scroll-anchor={isInitialScrollSpeaker(speaker.speakerId) ? 'true' : 'false'}
+											>
+												<div class="w-16 shrink-0 text-center font-semibold text-base-content/70">
+													{#if speaker.state === 'SPEAKING'}
+														<span class="font-mono text-xs whitespace-nowrap text-base-content/70" data-speaking-since={String(speakingSinceMs[speaker.speakerId] ?? '')}>{speakingTimerLabel(speaker.speakerId)}</span>
+													{:else if speaker.state === 'WAITING'}
+														{waitingDisplayNumber(speaker.speakerId)}
+													{:else}
+														&nbsp;
+													{/if}
+												</div>
+												<div class="list-col-grow min-w-0">
+													<div class="flex min-w-0 items-center gap-2">
+														<div class="truncate font-semibold" data-testid="live-speaker-name">{speaker.fullName}</div>
+														{#if speakerHasBadges(speaker)}
 															<div class="flex shrink-0 flex-wrap items-center gap-1">
 																{#if speaker.speakerType === 'ropm'}
 																	<span class="tooltip tooltip-right" data-tip="Point of order">
@@ -2124,79 +2147,91 @@
 																	<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
 																{/if}
 															</div>
+														{/if}
+													</div>
+												</div>
+												{#if speaker.state === 'SPEAKING'}
+													<div class="shrink-0 self-center">
+														<span class="inline-flex h-9 w-9 items-center justify-center text-info/80" data-testid="live-speaker-speaking-indicator" aria-hidden="true">
+															<LegacyIcon name="mic" class="h-5 w-5" />
+														</span>
+													</div>
+												{:else if speaker.state === 'WAITING'}
+													<div class="shrink-0 self-center">
+														<div class="join join-horizontal">
+															<button
+																type="button"
+																class="join-item btn btn-sm btn-square tooltip tooltip-left"
+																title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+																aria-label={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+																data-tip={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+																hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${speaker.speakerId}/priority`}
+																hx-target="#speakers-list-container"
+																hx-swap="outerHTML"
+																hx-confirm=""
+																onclick={() =>
+																	void runSpeakerAction(`priority-${speaker.speakerId}`, async () =>
+																		await speakerClient.setSpeakerPriority({
+																			committeeSlug: slug,
+																			meetingId,
+																			speakerId: speaker.speakerId,
+																			priority: !speaker.priority
+																		})
+																	)}
+																disabled={speakerActionPending !== ''}
+															>
+																<LegacyIcon name={speaker.priority ? 'star' : 'star-outline'} />
+															</button>
+															<button
+																type="button"
+																class="join-item btn btn-sm btn-square tooltip tooltip-left"
+																title="Start"
+																aria-label="Start"
+																data-tip="Start"
+																hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${speaker.speakerId}/start`}
+																hx-target="#speakers-list-container"
+																hx-swap="outerHTML"
+																hx-confirm=""
+																onclick={() =>
+																	void runSpeakerAction(`start-${speaker.speakerId}`, async () =>
+																		await speakerClient.setSpeakerSpeaking({
+																			committeeSlug: slug,
+																			meetingId,
+																			speakerId: speaker.speakerId
+																		})
+																	)}
+																disabled={speakerActionPending !== ''}
+															>
+																<LegacyIcon name="arrow-forward" />
+															</button>
+															<button
+																type="button"
+																class="join-item btn btn-sm btn-square tooltip tooltip-left join-item btn btn-sm btn-error btn-square tooltip tooltip-left"
+																title="Remove"
+																aria-label="Remove"
+																data-tip="Remove"
+																hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${speaker.speakerId}/remove`}
+																hx-target="#speakers-list-container"
+																hx-swap="outerHTML"
+																hx-confirm="Remove this speaker?"
+																onclick={() =>
+																	void runSpeakerAction(`remove-${speaker.speakerId}`, async () =>
+																		await speakerClient.removeSpeaker({
+																			committeeSlug: slug,
+																			meetingId,
+																			speakerId: speaker.speakerId
+																		})
+																	)}
+																disabled={speakerActionPending !== ''}
+															>
+																<LegacyIcon name="trash" />
+															</button>
 														</div>
 													</div>
-													{#if speaker.state === 'SPEAKING'}
-														<div class="shrink-0 self-center">
-															<span class="inline-flex h-9 w-9 items-center justify-center text-info/80" data-testid="live-speaker-speaking-indicator" aria-hidden="true">
-																<LegacyIcon name="mic" class="h-5 w-5" />
-															</span>
-														</div>
-													{:else if speaker.state === 'WAITING'}
-														<div class="shrink-0 self-center">
-															<div class="join join-horizontal">
-																<button
-																	type="button"
-																	class="join-item btn btn-sm btn-square tooltip tooltip-left"
-																	title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-																	aria-label={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-																	data-tip={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-																	onclick={() =>
-																		runSpeakerAction(`priority-${speaker.speakerId}`, async () =>
-																			await speakerClient.setSpeakerPriority({
-																				committeeSlug: slug,
-																				meetingId,
-																				speakerId: speaker.speakerId,
-																				priority: !speaker.priority
-																			})
-																		)}
-																	disabled={speakerActionPending !== ''}
-																>
-																	<LegacyIcon name={speaker.priority ? 'star' : 'star-outline'} />
-																</button>
-																<button
-																	type="button"
-																	class="join-item btn btn-sm btn-square tooltip tooltip-left"
-																	title="Start"
-																	aria-label="Start"
-																	data-tip="Start"
-																	onclick={() =>
-																		runSpeakerAction(`start-${speaker.speakerId}`, async () =>
-																			await speakerClient.setSpeakerSpeaking({
-																				committeeSlug: slug,
-																				meetingId,
-																				speakerId: speaker.speakerId
-																			})
-																		)}
-																	disabled={speakerActionPending !== ''}
-																>
-																	<LegacyIcon name="arrow-forward" />
-																</button>
-																<button
-																	type="button"
-																	class="join-item btn btn-sm btn-error btn-square tooltip tooltip-left"
-																	title="Remove"
-																	aria-label="Remove"
-																	data-tip="Remove"
-																	onclick={() =>
-																		runSpeakerAction(`remove-${speaker.speakerId}`, async () =>
-																			await speakerClient.removeSpeaker({
-																				committeeSlug: slug,
-																				meetingId,
-																				speakerId: speaker.speakerId
-																			})
-																		)}
-																	disabled={speakerActionPending !== ''}
-																>
-																	<LegacyIcon name="trash" />
-																</button>
-															</div>
-														</div>
-													{/if}
-												</li>
-											{/each}
-										</ul>
-									</div>
+												{/if}
+											</li>
+										{/each}
+									</ul>
 								{:else}
 									<div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-testid="manage-speakers-quick-controls">
 										<div class="flex flex-wrap items-center gap-2">

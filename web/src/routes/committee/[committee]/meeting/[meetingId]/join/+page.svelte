@@ -14,6 +14,7 @@
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
 	const liveHref = $derived(`/committee/${slug}/meeting/${meetingId}`);
+	const joinHref = $derived(`/committee/${slug}/meeting/${meetingId}/join`);
 	const attendeeLoginHref = $derived(`/committee/${slug}/meeting/${meetingId}/attendee-login`);
 	const prefilledMeetingSecret = $derived(page.url.searchParams.get('meeting_secret') ?? '');
 
@@ -123,6 +124,8 @@
 							<span class="font-medium">{joinState.data.currentAttendee?.fullName}</span>.
 						</p>
 						<form
+							action={joinHref}
+							method="POST"
 							onsubmit={(event) => {
 								event.preventDefault();
 								goto(liveHref);
@@ -136,6 +139,8 @@
 						<h3>Sign Up for This Meeting</h3>
 						<p>You are logged in as a committee member.</p>
 						<form
+							action={joinHref}
+							method="POST"
 							onsubmit={(event) => {
 								event.preventDefault();
 								void handleSelfSignup();

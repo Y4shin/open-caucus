@@ -47,6 +47,7 @@ func TestCommitteeActiveMeetingCard_UIParityWithLegacy(t *testing.T) {
 	for _, ts := range []*testServer{newTS, legacyTS} {
 		ts.seedCommittee(t, "Test Committee", "test")
 		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedUser(t, "test", "member1", "pass123", "Member One", "member")
 		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
 		meetingID, err := strconv.ParseInt(ts.getMeetingID(t, "test", "Board Meeting"), 10, 64)
 		if err != nil {
@@ -60,8 +61,8 @@ func TestCommitteeActiveMeetingCard_UIParityWithLegacy(t *testing.T) {
 	newBrowserPage := newPage(t)
 	legacyBrowserPage := newPage(t)
 
-	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
-	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+	userLogin(t, newBrowserPage, newTS.URL, "test", "member1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "member1", "pass123")
 
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test", "[data-testid='committee-active-meeting-card']")
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test", "[data-testid='committee-active-meeting-card']")
@@ -103,8 +104,8 @@ func TestModerateAgendaEditor_UIParityWithLegacy(t *testing.T) {
 	openModerateAgendaEditor(t, legacyBrowserPage)
 
 	assertEqualStringSlices(t, "agenda point list items",
-		locatorAllOuterHTML(t, newBrowserPage, "#agenda-point-list-container li"),
-		locatorAllOuterHTML(t, legacyBrowserPage, "#agenda-point-list-container li"),
+		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-agenda-point-card']"),
+		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-agenda-point-card']"),
 	)
 }
 
@@ -156,7 +157,8 @@ func TestModerateVotesPanel_UIParityWithLegacy(t *testing.T) {
 		ts.seedCommittee(t, "Test Committee", "test")
 		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
 		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
-		ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
 	}
 
 	newBrowserPage := newPage(t)
@@ -168,8 +170,11 @@ func TestModerateVotesPanel_UIParityWithLegacy(t *testing.T) {
 	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
 	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
 
-	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#moderate-votes-panel")
-	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-votes-panel")
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#moderate-left-controls")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-left-controls")
+
+	openModerateLeftTab(t, newBrowserPage, "tools")
+	openModerateLeftTab(t, legacyBrowserPage, "tools")
 
 	assertEqualHTML(t, "moderate votes panel (empty)",
 		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel"),
@@ -208,6 +213,12 @@ func TestModerateSettingsTab_UIParityWithLegacy(t *testing.T) {
 		locatorOuterHTML(t, newBrowserPage, "#meeting-settings-container"),
 		locatorOuterHTML(t, legacyBrowserPage, "#meeting-settings-container"),
 	)
+	if err := newBrowserPage.Locator("[data-moderate-settings-tab='agenda']").First().Click(); err != nil {
+		t.Fatalf("open new moderate agenda settings tab: %v", err)
+	}
+	if err := legacyBrowserPage.Locator("[data-moderate-settings-tab='agenda']").First().Click(); err != nil {
+		t.Fatalf("open legacy moderate agenda settings tab: %v", err)
+	}
 	assertEqualHTML(t, "speaker settings container",
 		locatorOuterHTML(t, newBrowserPage, "#moderate-speaker-settings-container"),
 		locatorOuterHTML(t, legacyBrowserPage, "#moderate-speaker-settings-container"),
@@ -355,9 +366,9 @@ func TestMeetingJoinFullForm_UIParityWithLegacy(t *testing.T) {
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/join", "main")
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/join", "main")
 
-	assertEqualHTML(t, "join page main content",
-		locatorOuterHTML(t, newBrowserPage, "main"),
-		locatorOuterHTML(t, legacyBrowserPage, "main"),
+	assertEqualHTML(t, "join page form content",
+		locatorOuterHTML(t, newBrowserPage, "main form"),
+		locatorOuterHTML(t, legacyBrowserPage, "main form"),
 	)
 }
 
@@ -385,8 +396,8 @@ func TestAttendeeLoginFullForm_UIParityWithLegacy(t *testing.T) {
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/attendee-login", "main form")
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/attendee-login", "main form")
 
-	assertEqualHTML(t, "attendee login full main content",
-		locatorOuterHTML(t, newBrowserPage, "main"),
-		locatorOuterHTML(t, legacyBrowserPage, "main"),
+	assertEqualHTML(t, "attendee login form content",
+		locatorOuterHTML(t, newBrowserPage, "main form"),
+		locatorOuterHTML(t, legacyBrowserPage, "main form"),
 	)
 }
