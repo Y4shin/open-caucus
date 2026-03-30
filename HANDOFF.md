@@ -14,27 +14,30 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` is complete locally and ready to be checkpointed.
+`A01`, `A02`, and `A03` are complete locally and ready to be checkpointed.
 
-Included changes:
+### A01 — post-action parity helper
 
 - added `compareFragmentAfterAction(...)` in `e2e/ui_parity_test.go`
 - adopted the helper in `TestModerateSettingsTab_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 
-Verification already completed successfully from this working tree state:
+### A02 — live parity: active speaker state
 
-- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateSettingsTab_UIParityWithLegacy"`
-- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"`
-- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestSpeakersList_OneNonDoneEntryPerType"`
-- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestAttachments_UploadWithoutLabel_ShowsFilename"`
+- added `TestLiveActiveSpeaker_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- added `normalizeSpeakingSinceAttr` helper (strips `data-speaking-since` value and timer text) for cross-format normalization (Go Unix seconds vs JS `Date.now()` ms)
+- fixed stale SPA build: rebuilt `internal/web/build/` to include `data-manage-scroll-anchor` attribute added in a prior SPA commit
 
-Full-suite note:
+### A03 — live parity: completed speaker state
 
-- Two separate full-E2E runs ended with unrelated timeouts outside the `A01` change set:
-  - `TestSpeakersList_OneNonDoneEntryPerType`
-  - `TestAttachments_UploadWithoutLabel_ShowsFilename`
-- Both passed immediately when rerun as focused tests.
-- The parity suite was fully green after the helper change.
+- added `TestLiveCompletedSpeaker_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- fixed SPA `waitingDisplayNumber` bug in `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte`: `SpeakerSummary` proto lacks `order_position`, so the old `speaker.orderPosition ?? 0` always returned 0; replaced with explicit 1-indexed counting over WAITING speakers (matches the moderate page approach)
+- rebuilt SPA after the fix; `internal/web/build/` updated
+
+Verification completed (2026-03-30):
+
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestLiveActiveSpeaker_UIParityWithLegacy|TestLiveCompletedSpeaker_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — all 22 PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — all PASS
 
 ## Atomic Task Queue
 
@@ -84,14 +87,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A02`.
+Start with `A04`.
 
-Definition of done for `A02`:
+Definition of done for `A04`:
 
-- add live-page parity coverage for an active speaker state
-- keep the change limited to one new parity scenario and any minimal helper reuse needed
+- add moderate-page parity coverage for an open vote panel (a motion that is currently open for voting)
+- keep the change limited to one new parity scenario and any minimal helpers needed
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A03` next
+- update this handoff to point at `A05` next
 
 ## Files Most Likely To Matter Next
 

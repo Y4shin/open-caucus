@@ -4,11 +4,31 @@ package e2e_test
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 	"testing"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
+
+// speakingSinceAttrRe matches the data-speaking-since attribute and its value.
+// The attribute value differs between the legacy server (Unix seconds from the DB)
+// and the SPA (milliseconds from Date.now()), so it must be stripped before comparison.
+var speakingSinceAttrRe = regexp.MustCompile(`data-speaking-since="[^"]*"`)
+
+// speakingTimerContentRe matches the text content of a speaking-timer span after its
+// data-speaking-since attribute has been normalized to an empty string. The text is
+// a running clock value ("00:00", "00:01", …) that advances independently in each
+// browser and therefore must not be compared verbatim.
+var speakingTimerContentRe = regexp.MustCompile(`data-speaking-since="">[^<]*<`)
+
+// normalizeSpeakingSinceAttr replaces data-speaking-since attribute values with an
+// empty string and normalizes the associated timer text content to "00:00" so that
+// the active-speaker clock does not cause false parity failures.
+func normalizeSpeakingSinceAttr(html string) string {
+	h := speakingSinceAttrRe.ReplaceAllString(html, `data-speaking-since=""`)
+	return speakingTimerContentRe.ReplaceAllString(h, `data-speaking-since="">00:00<`)
+}
 
 // TestCommitteeMeetingRows_UIParityWithLegacy checks that meeting rows on the
 // committee page render identically for multiple meetings in different states.
@@ -295,6 +315,10 @@ func TestMeetingLiveWithSpeakersInQueue_UIParityWithLegacy(t *testing.T) {
 		a2 := ts.seedAttendee(t, "test", "Board Meeting", "Bob Member", "secret-bob-live")
 		ts.seedSpeaker(t, apID, strconv.FormatInt(a1.ID, 10))
 		ts.seedSpeaker(t, apID, strconv.FormatInt(a2.ID, 10))
+		apIDInt, _ := strconv.ParseInt(apID, 10, 64)
+		if err := ts.repo.RecomputeSpeakerOrder(context.Background(), apIDInt); err != nil {
+			t.Fatalf("recompute speaker order: %v", err)
+		}
 	}
 
 	newBrowserPage := newPage(t)
@@ -399,5 +423,152 @@ func TestAttendeeLoginFullForm_UIParityWithLegacy(t *testing.T) {
 	assertEqualHTML(t, "attendee login form content",
 		locatorOuterHTML(t, newBrowserPage, "main form"),
 		locatorOuterHTML(t, legacyBrowserPage, "main form"),
+	)
+}
+
+// TestLiveActiveSpeaker_UIParityWithLegacy checks the live page speaker list when
+// one speaker is currently in the speaking state (A02).
+func TestLiveActiveSpeaker_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "member1", "pass123", "Member One", "member")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		apIDStr := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apIDStr)
+		meetingIDInt, err := strconv.ParseInt(ts.getMeetingID(t, "test", "Board Meeting"), 10, 64)
+		if err != nil {
+			t.Fatalf("parse meeting id: %v", err)
+		}
+		if err := ts.repo.SetActiveMeeting(context.Background(), "test", &meetingIDInt); err != nil {
+			t.Fatalf("set active meeting: %v", err)
+		}
+		attendee := ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
+		speakerIDStr := ts.seedSpeaker(t, apIDStr, strconv.FormatInt(attendee.ID, 10))
+		speakerID, _ := strconv.ParseInt(speakerIDStr, 10, 64)
+		apID, _ := strconv.ParseInt(apIDStr, 10, 64)
+		if err := ts.repo.SetSpeakerSpeaking(context.Background(), speakerID, apID); err != nil {
+			t.Fatalf("set speaker speaking: %v", err)
+		}
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "member1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "member1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	// Self-signup via join page so the member becomes an attendee and can view the live page.
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/join", "main button")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/join", "main button")
+
+	if err := newBrowserPage.Locator("main button").First().Click(); err != nil {
+		t.Fatalf("self-signup on new: %v", err)
+	}
+	if err := legacyBrowserPage.Locator("main button").First().Click(); err != nil {
+		t.Fatalf("self-signup on legacy: %v", err)
+	}
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID, "#attendee-speakers-list")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID, "#attendee-speakers-list")
+
+	// Wait for the speaking speaker item to appear (SSE-driven).
+	if err := newBrowserPage.Locator("#attendee-speakers-list [data-testid='live-speaker-item'][data-speaker-state='speaking']").First().WaitFor(
+		playwright.LocatorWaitForOptions{Timeout: playwright.Float(defaultE2ETimeoutMs)},
+	); err != nil {
+		t.Fatalf("wait for speaking speaker on new: %v", err)
+	}
+	if err := legacyBrowserPage.Locator("#attendee-speakers-list [data-testid='live-speaker-item'][data-speaker-state='speaking']").First().WaitFor(
+		playwright.LocatorWaitForOptions{Timeout: playwright.Float(defaultE2ETimeoutMs)},
+	); err != nil {
+		t.Fatalf("wait for speaking speaker on legacy: %v", err)
+	}
+
+	// The data-speaking-since attribute value differs between legacy (Unix seconds) and
+	// SPA (milliseconds from Date.now()), so normalize it before comparing.
+	assertEqualHTML(t, "live speakers list with active speaker",
+		normalizeSpeakingSinceAttr(locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list")),
+		normalizeSpeakingSinceAttr(locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list")),
+	)
+}
+
+// TestLiveCompletedSpeaker_UIParityWithLegacy checks the live page speaker list after
+// a speaker has finished speaking — the done speaker must not appear in the active list,
+// and the remaining queued speaker must still be shown (A03).
+func TestLiveCompletedSpeaker_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "member1", "pass123", "Member One", "member")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		apIDStr := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apIDStr)
+		meetingIDInt, err := strconv.ParseInt(ts.getMeetingID(t, "test", "Board Meeting"), 10, 64)
+		if err != nil {
+			t.Fatalf("parse meeting id: %v", err)
+		}
+		if err := ts.repo.SetActiveMeeting(context.Background(), "test", &meetingIDInt); err != nil {
+			t.Fatalf("set active meeting: %v", err)
+		}
+		alice := ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
+		bob := ts.seedAttendee(t, "test", "Board Meeting", "Bob Member", "secret-bob")
+		aliceSpeakerIDStr := ts.seedSpeaker(t, apIDStr, strconv.FormatInt(alice.ID, 10))
+		ts.seedSpeaker(t, apIDStr, strconv.FormatInt(bob.ID, 10))
+		aliceSpeakerID, _ := strconv.ParseInt(aliceSpeakerIDStr, 10, 64)
+		apID, _ := strconv.ParseInt(apIDStr, 10, 64)
+		// Mark Alice as speaking then done; Bob remains waiting.
+		if err := ts.repo.SetSpeakerSpeaking(context.Background(), aliceSpeakerID, apID); err != nil {
+			t.Fatalf("set alice speaking: %v", err)
+		}
+		if err := ts.repo.SetSpeakerDone(context.Background(), aliceSpeakerID); err != nil {
+			t.Fatalf("set alice done: %v", err)
+		}
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "member1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "member1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	// Self-signup via join page so the member becomes an attendee and can view the live page.
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/join", "main button")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/join", "main button")
+
+	if err := newBrowserPage.Locator("main button").First().Click(); err != nil {
+		t.Fatalf("self-signup on new: %v", err)
+	}
+	if err := legacyBrowserPage.Locator("main button").First().Click(); err != nil {
+		t.Fatalf("self-signup on legacy: %v", err)
+	}
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID, "#attendee-speakers-list")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID, "#attendee-speakers-list")
+
+	// Wait for Bob's waiting speaker item (the only active speaker remaining).
+	if err := newBrowserPage.Locator("#attendee-speakers-list [data-testid='live-speaker-item'][data-speaker-state='waiting']").First().WaitFor(
+		playwright.LocatorWaitForOptions{Timeout: playwright.Float(defaultE2ETimeoutMs)},
+	); err != nil {
+		t.Fatalf("wait for waiting speaker on new: %v", err)
+	}
+	if err := legacyBrowserPage.Locator("#attendee-speakers-list [data-testid='live-speaker-item'][data-speaker-state='waiting']").First().WaitFor(
+		playwright.LocatorWaitForOptions{Timeout: playwright.Float(defaultE2ETimeoutMs)},
+	); err != nil {
+		t.Fatalf("wait for waiting speaker on legacy: %v", err)
+	}
+
+	assertEqualHTML(t, "live speakers list after speaker completed",
+		locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list"),
+		locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list"),
 	)
 }

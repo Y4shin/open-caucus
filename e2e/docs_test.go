@@ -37,7 +37,6 @@ func TestDocsElementAndOOBRoute(t *testing.T) {
 	if !strings.Contains(content, "hx-swap-oob=\"outerHTML\"") {
 		t.Fatalf("expected oob docs payload to include hx-swap-oob, got: %s", content)
 	}
-	_ = urlBefore
 }
 
 func TestDocsDirectoryPathResolvesIndexAndShowsExpectedPath(t *testing.T) {

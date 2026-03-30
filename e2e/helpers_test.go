@@ -305,17 +305,6 @@ func newTestServer(t *testing.T) *testServer {
 
 	spaHandler := webassets.NewSPAHandler()
 
-	legacyH := &handlers.Handler{
-		Broker:         b,
-		Repository:     repo,
-		Storage:        store,
-		SessionManager: sessionMgr,
-		AuthConfig:     authCfg,
-		OAuthService:   oauthSvc,
-		DocsService:    docsService,
-	}
-	legacyVoteRouter := routes.NewRouter(legacyH, mw).RegisterRoutes()
-
 	appHandler := mw.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasPrefix(r.URL.Path, "/api/"):

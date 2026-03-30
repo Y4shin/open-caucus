@@ -511,7 +511,14 @@
 	}
 
 	function waitingDisplayNumber(speakerId: string) {
-		return activeSpeakers().find((speaker) => speaker.speakerId === speakerId)?.orderPosition ?? 0;
+		let position = 0;
+		for (const speaker of activeSpeakers()) {
+			if (speaker.state === 'WAITING') {
+				position++;
+				if (speaker.speakerId === speakerId) return position;
+			}
+		}
+		return 0;
 	}
 
 	function formatElapsed(totalMs: number) {
