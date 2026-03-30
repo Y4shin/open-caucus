@@ -21,6 +21,44 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 - added `compareFragmentAfterAction(...)` in `e2e/ui_parity_test.go`
 - adopted the helper in `TestModerateSettingsTab_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 
+### A04 — moderate parity: open vote panel
+
+- added `TestModerateVotesPanelOpen_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- creates a draft vote via UI in each browser, opens it, then compares `#moderate-votes-panel` after removing transient `[data-notification-item]` elements via JS before comparison
+
+### A05 — moderate parity: closed vote results
+
+- added `TestModerateVotesPanelClosed_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- creates and opens a vote, closes it, waits for "Final Tallies" in both panels, removes notifications, then compares `#moderate-votes-panel`
+
+### A06 — moderate attendee parity: add guest
+
+- added `TestModerateAddGuestAttendee_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- adds a guest via the inline form in each browser, waits for card to appear, compares all `[data-testid='manage-attendee-card']` outer HTML
+
+### A07 — moderate attendee parity: remove attendee
+
+- added `TestModerateRemoveAttendee_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds Alice + Bob, removes Bob via remove button in each browser, waits for detach, compares remaining attendee cards
+
+### A08 — attachment parity: populated attachment list
+
+- added `TestAttachmentListPopulated_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- added `locatorAllInnerText` helper in `e2e/ui_parity_test.go`
+- SPA uses `/blobs/:id/download`, legacy uses `/committee/:slug/meeting/:id/blob/:id` — different URL formats; compares `<a>` inner text content instead
+- fixed SPA button text "Set Current" → "Set as Current" in `web/src/routes/committee/[committee]/meeting/[meetingId]/agenda-point/[agendaPointId]/tools/+page.svelte` to match i18n string
+
+### A09 — current-document parity: selected attachment state
+
+- added `TestCurrentDocumentState_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds an active meeting with agenda point, attachment, sets current via repo `SetCurrentAttachment`; member self-signs up and navigates to live page; verifies `[data-testid='live-doc-open-desktop']` and `[data-testid='live-doc-download-desktop']` present in both
+
+Verification completed (2026-03-30):
+
+- all A04-A09 focused tests PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — all 28 PASS
+- full E2E suite PASS (bz95ry5yu background run, prior to A08 SPA fix; parity suite re-verified after fix)
+
 ### A02 — live parity: active speaker state
 
 - added `TestLiveActiveSpeaker_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
@@ -87,14 +125,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A04`.
+Start with `A10`.
 
-Definition of done for `A04`:
+Definition of done for `A10`:
 
-- add moderate-page parity coverage for an open vote panel (a motion that is currently open for voting)
-- keep the change limited to one new parity scenario and any minimal helpers needed
+- add moderate-page parity coverage for creating an agenda point via the UI
+- keep the change limited to one new parity scenario
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A05` next
+- update this handoff to point at `A11` next
 
 ## Files Most Likely To Matter Next
 

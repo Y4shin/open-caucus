@@ -167,6 +167,35 @@ func locatorAllOuterHTML(t *testing.T, page playwright.Page, selector string) []
 	return out
 }
 
+// locatorAllInnerText returns the trimmed innerText of every element matching
+// selector. Useful when comparing visible text content across SPA and legacy
+// pages that render the same data with different HTML structure.
+func locatorAllInnerText(t *testing.T, page playwright.Page, selector string) []string {
+	t.Helper()
+	if err := page.Locator(selector).First().WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait for %s before innerText list: %v", selector, err)
+	}
+	value, err := page.Locator(selector).EvaluateAll(`(elements) => elements.map(el => (el.innerText || '').trim())`, nil)
+	if err != nil {
+		t.Fatalf("read innerText list for %s: %v", selector, err)
+	}
+	items, ok := value.([]interface{})
+	if !ok {
+		t.Fatalf("innerText list for %s was %T, want []interface{}", selector, value)
+	}
+	out := make([]string, 0, len(items))
+	for _, item := range items {
+		raw, ok := item.(string)
+		if !ok {
+			t.Fatalf("innerText list item for %s was %T, want string", selector, item)
+		}
+		out = append(out, raw)
+	}
+	return out
+}
+
 func locatorClosestOuterHTML(t *testing.T, page playwright.Page, selector, closest string) string {
 	t.Helper()
 	if err := page.Locator(selector).First().WaitFor(playwright.LocatorWaitForOptions{

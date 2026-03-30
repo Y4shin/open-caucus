@@ -232,7 +232,7 @@
 											}}
 										>
 											<button class="btn btn-sm" type="submit" disabled={currentAction === `set:${attachment.attachmentId}`}>
-												Set Current
+												Set as Current
 											</button>
 										</form>
 									{/if}
