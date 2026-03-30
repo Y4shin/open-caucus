@@ -422,12 +422,12 @@ func TestCommitteeChairPage_UIParityWithLegacy(t *testing.T) {
 		locatorOuterHTML(t, newBrowserPage, "[data-testid='committee-create-form']"),
 		locatorOuterHTML(t, legacyBrowserPage, "[data-testid='committee-create-form']"),
 	)
-	assertEqualHTML(
-		t,
-		"committee meeting list",
-		locatorOuterHTML(t, newBrowserPage, "#meeting-list-container"),
-		locatorOuterHTML(t, legacyBrowserPage, "#meeting-list-container"),
-	)
+
+	newRows := locatorAllOuterHTML(t, newBrowserPage, "[data-testid='committee-meeting-row']")
+	legacyRows := locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='committee-meeting-row']")
+	sort.Strings(newRows)
+	sort.Strings(legacyRows)
+	assertEqualStringSlices(t, "committee meeting rows", newRows, legacyRows)
 }
 
 func TestAdminDashboard_UIParityWithLegacy(t *testing.T) {

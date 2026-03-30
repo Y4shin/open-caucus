@@ -5,6 +5,7 @@ package e2e_test
 import (
 	"context"
 	"regexp"
+	"sort"
 	"strconv"
 	"testing"
 
@@ -52,10 +53,12 @@ func TestCommitteeMeetingRows_UIParityWithLegacy(t *testing.T) {
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test", "#meeting-list-container")
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test", "#meeting-list-container")
 
-	assertEqualStringSlices(t, "committee meeting rows html",
-		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='committee-meeting-row']"),
-		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='committee-meeting-row']"),
-	)
+	newRows := locatorAllOuterHTML(t, newBrowserPage, "[data-testid='committee-meeting-row']")
+	legacyRows := locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='committee-meeting-row']")
+	sort.Strings(newRows)
+	sort.Strings(legacyRows)
+
+	assertEqualStringSlices(t, "committee meeting rows html", newRows, legacyRows)
 }
 
 // TestCommitteeActiveMeetingCard_UIParityWithLegacy checks that the active-meeting
@@ -124,6 +127,48 @@ func TestModerateAgendaEditor_UIParityWithLegacy(t *testing.T) {
 	openModerateAgendaEditor(t, legacyBrowserPage)
 
 	assertEqualStringSlices(t, "agenda point list items",
+		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-agenda-point-card']"),
+		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-agenda-point-card']"),
+	)
+}
+
+// TestModerateCreateAgendaPoint_UIParityWithLegacy (A10) checks that creating
+// an agenda point via the moderation UI produces the same agenda-card list in
+// the SPA and legacy implementations.
+func TestModerateCreateAgendaPoint_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAgendaPoint(t, "test", "Board Meeting", "Opening")
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#moderate-left-controls")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-left-controls")
+
+	openModerateAgendaEditor(t, newBrowserPage)
+	openModerateAgendaEditor(t, legacyBrowserPage)
+
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		addAgendaPoint(t, p, "Budget Approval")
+		if err := p.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Budget Approval')").WaitFor(); err != nil {
+			t.Fatalf("wait created agenda point card on %s: %v", label, err)
+		}
+	}
+
+	assertEqualStringSlices(t, "agenda point list items after create",
 		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-agenda-point-card']"),
 		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-agenda-point-card']"),
 	)

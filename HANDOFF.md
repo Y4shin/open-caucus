@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01`, `A02`, and `A03` are complete locally and ready to be checkpointed.
+`A01` through `A10` are complete locally.
 
 ### A01 — post-action parity helper
 
@@ -53,6 +53,15 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 - added `TestCurrentDocumentState_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds an active meeting with agenda point, attachment, sets current via repo `SetCurrentAttachment`; member self-signs up and navigates to live page; verifies `[data-testid='live-doc-open-desktop']` and `[data-testid='live-doc-download-desktop']` present in both
 
+### A10 — agenda parity: create agenda point
+
+- added `TestModerateCreateAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds one existing agenda point, creates `Budget Approval` via the moderation UI in each browser, waits for the new card to appear, then compares all `[data-testid='manage-agenda-point-card']` outer HTML
+- aligned `e2e/current_doc_test.go` button selectors from `Set Current` to `Set as Current` so the existing current-document E2E test matches the already-updated UI label
+- stabilized committee-page parity tests against nondeterministic meeting row ordering:
+  - `TestCommitteeMeetingRows_UIParityWithLegacy` now sorts the captured row HTML before comparison
+  - `TestCommitteeChairPage_UIParityWithLegacy` now compares sorted meeting-row HTML instead of the full `#meeting-list-container`
+
 Verification completed (2026-03-30):
 
 - all A04-A09 focused tests PASS
@@ -76,6 +85,12 @@ Verification completed (2026-03-30):
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestLiveActiveSpeaker_UIParityWithLegacy|TestLiveCompletedSpeaker_UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — all 22 PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — all PASS
+
+Verification completed (2026-03-31):
+
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestCommitteeMeetingRows_UIParityWithLegacy|TestCommitteeChairPage_UIParityWithLegacy|TestModerateCreateAgendaPoint_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
 ## Atomic Task Queue
 
@@ -125,14 +140,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A10`.
+Start with `A11`.
 
-Definition of done for `A10`:
+Definition of done for `A11`:
 
-- add moderate-page parity coverage for creating an agenda point via the UI
+- add moderate-page parity coverage for editing an agenda point via the UI
 - keep the change limited to one new parity scenario
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A11` next
+- update this handoff to point at `A12` next
 
 ## Files Most Likely To Matter Next
 
