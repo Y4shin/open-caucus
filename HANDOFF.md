@@ -14,7 +14,9 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10` are complete locally.
+`A01` through `A10` and `A12` are complete locally.
+
+`A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
 ### A01 — post-action parity helper
 
@@ -62,6 +64,11 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
   - `TestCommitteeMeetingRows_UIParityWithLegacy` now sorts the captured row HTML before comparison
   - `TestCommitteeChairPage_UIParityWithLegacy` now compares sorted meeting-row HTML instead of the full `#meeting-list-container`
 
+### A12 — agenda parity: reorder agenda point
+
+- added `TestModerateReorderAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds `First` and `Second`, moves `Second` up via the moderation UI in each browser, waits for it to become the first agenda card, then compares the ordered `[data-testid='manage-agenda-point-card']` outer HTML list
+
 Verification completed (2026-03-30):
 
 - all A04-A09 focused tests PASS
@@ -89,6 +96,12 @@ Verification completed (2026-03-30):
 Verification completed (2026-03-31):
 
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestCommitteeMeetingRows_UIParityWithLegacy|TestCommitteeChairPage_UIParityWithLegacy|TestModerateCreateAgendaPoint_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
+Verification completed (2026-03-31):
+
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateReorderAgendaPoint_UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
@@ -140,14 +153,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A11`.
+Start with `A13`.
 
-Definition of done for `A11`:
+Definition of done for `A13`:
 
-- add moderate-page parity coverage for editing an agenda point via the UI
+- add moderate-page parity coverage for deleting an agenda point via the UI
 - keep the change limited to one new parity scenario
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A12` next
+- update this handoff to point at `A14` next, unless `A11` is explicitly unblocked first
 
 ## Files Most Likely To Matter Next
 
