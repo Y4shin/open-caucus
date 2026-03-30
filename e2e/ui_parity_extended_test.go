@@ -276,6 +276,54 @@ func TestModerateDeleteAgendaPoint_UIParityWithLegacy(t *testing.T) {
 	)
 }
 
+// TestModerateAddSpeaker_UIParityWithLegacy (A14) checks that adding a speaker
+// via the moderation UI produces the same speakers list in the SPA and legacy
+// implementations.
+func TestModerateAddSpeaker_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
+		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#speakers-list-container")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#speakers-list-container")
+
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		openSpeakerAddDialog(t, p)
+		card := speakerCandidateCard(p, "Alice Member")
+		if err := card.WaitFor(); err != nil {
+			t.Fatalf("wait speaker candidate card on %s: %v", label, err)
+		}
+		if err := card.Locator("button[title='Add regular speech']").Click(); err != nil {
+			t.Fatalf("add regular speech on %s: %v", label, err)
+		}
+		if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").WaitFor(); err != nil {
+			t.Fatalf("wait speaker in list on %s: %v", label, err)
+		}
+	}
+
+	assertEqualHTML(t, "speakers list after add",
+		locatorOuterHTML(t, newBrowserPage, "#speakers-list-container"),
+		locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container"),
+	)
+}
+
 // TestModerateAttendeesTab_UIParityWithLegacy checks the attendees panel on the
 // moderation page, including the add-guest form and the list of attendees.
 func TestModerateAttendeesTab_UIParityWithLegacy(t *testing.T) {
@@ -406,6 +454,13 @@ func TestModerateSpeakersWithAttendee_UIParityWithLegacy(t *testing.T) {
 		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
 		attendee := ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
 		ts.seedSpeaker(t, apID, strconv.FormatInt(attendee.ID, 10))
+		apIDInt, err := strconv.ParseInt(apID, 10, 64)
+		if err != nil {
+			t.Fatalf("parse agenda point id: %v", err)
+		}
+		if err := ts.repo.RecomputeSpeakerOrder(context.Background(), apIDInt); err != nil {
+			t.Fatalf("recompute speaker order: %v", err)
+		}
 	}
 
 	newBrowserPage := newPage(t)

@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12` and `A13`, are complete locally.
+`A01` through `A10`, plus `A12`, `A13`, and `A14`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -74,6 +74,16 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 - added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
 
+### A14 — speaker parity: add speaker
+
+- added `TestModerateAddSpeaker_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds an active agenda point and one attendee, adds `Alice Member` via the add-speaker dialog in each browser, waits for the speaker row to appear, then compares `#speakers-list-container`
+- fixed SPA speaker parity mismatches:
+  - `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte` now computes waiting-speaker display numbers by counting WAITING speakers instead of using the unset `orderPosition` field
+  - `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte` and `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte` now use `First Time` to match legacy tooltip text
+  - rebuilt `internal/web/build/`
+- stabilized `TestModerateSpeakersWithAttendee_UIParityWithLegacy` by recomputing speaker order after direct repo seeding so both servers render the same waiting position
+
 Verification completed (2026-03-30):
 
 - all A04-A09 focused tests PASS
@@ -113,6 +123,13 @@ Verification completed (2026-03-31):
 Verification completed (2026-03-31):
 
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateDeleteAgendaPoint_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
+Verification completed (2026-03-31):
+
+- `nix develop -c bash -lc 'cd web && npm run build'` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateAddSpeaker_UIParityWithLegacy|TestModerateSpeakersWithAttendee_UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
@@ -164,14 +181,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A14`.
+Start with `A15`.
 
-Definition of done for `A14`:
+Definition of done for `A15`:
 
-- add moderate-page parity coverage for adding a speaker via the UI
+- add moderate-page parity coverage for starting a speaker via the UI
 - keep the change limited to one new parity scenario
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A15` next, unless `A11` is explicitly unblocked first
+- update this handoff to point at `A16` next, unless `A11` is explicitly unblocked first
 
 ## Files Most Likely To Matter Next
 

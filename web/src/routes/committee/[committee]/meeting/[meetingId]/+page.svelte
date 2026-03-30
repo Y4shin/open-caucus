@@ -843,7 +843,7 @@
 																					</span>
 																				{/if}
 																				{#if speaker.firstSpeaker}
-																					<span class="tooltip tooltip-right" data-tip="First speaker">
+																					<span class="tooltip tooltip-right" data-tip="First Time">
 																						<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
 																					</span>
 																				{/if}
@@ -987,7 +987,7 @@
 																					</span>
 																				{/if}
 																				{#if speaker.firstSpeaker}
-																					<span class="tooltip tooltip-right" data-tip="First speaker">
+																					<span class="tooltip tooltip-right" data-tip="First Time">
 																						<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
 																					</span>
 																				{/if}

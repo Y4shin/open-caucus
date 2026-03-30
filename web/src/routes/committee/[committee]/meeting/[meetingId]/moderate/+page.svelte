@@ -721,7 +721,14 @@
 	}
 
 	function waitingDisplayNumber(speakerId: string) {
-		return speakerState.data?.speakers.find((speaker) => speaker.speakerId === speakerId)?.orderPosition ?? 0;
+		let position = 0;
+		for (const speaker of speakerState.data?.speakers ?? []) {
+			if (speaker.state === 'WAITING') {
+				position++;
+				if (speaker.speakerId === speakerId) return position;
+			}
+		}
+		return 0;
 	}
 
 	function formatElapsed(totalMs: number) {
@@ -2136,7 +2143,7 @@
 																	</span>
 																{/if}
 																{#if speaker.firstSpeaker}
-																	<span class="tooltip tooltip-right" data-tip="First speaker">
+																	<span class="tooltip tooltip-right" data-tip="First Time">
 																		<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
 																	</span>
 																{/if}
