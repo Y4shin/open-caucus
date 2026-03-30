@@ -5,6 +5,8 @@ package e2e_test
 import (
 	"strings"
 	"testing"
+
+	playwright "github.com/playwright-community/playwright-go"
 )
 
 func TestDocsElementAndOOBRoute(t *testing.T) {
@@ -12,22 +14,28 @@ func TestDocsElementAndOOBRoute(t *testing.T) {
 	page := newPage(t)
 	adminLogin(t, page, ts.URL)
 
+	// The SPA renders the DocsOverlay with id="app-docs-target" after JavaScript
+	// executes, so we use a locator to wait for it rather than checking raw HTML.
 	if _, err := page.Goto(ts.URL + "/docs/index"); err != nil {
 		t.Fatalf("goto docs index: %v", err)
 	}
-	// SPA renders the docs overlay as a section with id="app-docs-target"
-	if err := page.Locator("#app-docs-target").WaitFor(); err != nil {
-		t.Fatalf("expected docs overlay to render with id=app-docs-target: %v", err)
+	if err := page.Locator("#app-docs-target[data-docs-open]").First().WaitFor(
+		playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateAttached},
+	); err != nil {
+		t.Fatalf("expected docs element with id=app-docs-target and data-docs-open: %v", err)
 	}
 
-	// Navigate to a different docs path within the same session; the overlay
-	// should remain in the DOM (no full-page reload).
-	urlBefore := page.URL()
-	if _, err := page.Goto(ts.URL + "/docs/index"); err != nil {
-		t.Fatalf("second goto docs index: %v", err)
+	// /docs/oob/ is served by the legacy handler and returns an hx-swap-oob fragment
+	// directly in the response body (not JS-rendered), so page.Content() is correct here.
+	if _, err := page.Goto(ts.URL + "/docs/oob/index"); err != nil {
+		t.Fatalf("goto docs oob index: %v", err)
 	}
-	if err := page.Locator("#app-docs-target").WaitFor(); err != nil {
-		t.Fatalf("expected docs overlay present after re-navigation: %v", err)
+	content, err := page.Content()
+	if err != nil {
+		t.Fatalf("get docs oob content: %v", err)
+	}
+	if !strings.Contains(content, "hx-swap-oob=\"outerHTML\"") {
+		t.Fatalf("expected oob docs payload to include hx-swap-oob, got: %s", content)
 	}
 	_ = urlBefore
 }
@@ -40,21 +48,17 @@ func TestDocsDirectoryPathResolvesIndexAndShowsExpectedPath(t *testing.T) {
 	if _, err := page.Goto(ts.URL + "/docs/03-chairperson"); err != nil {
 		t.Fatalf("goto chairperson docs directory: %v", err)
 	}
-	if err := page.Locator("text=Chairperson").First().WaitFor(); err != nil {
-		t.Fatalf("expected chairperson docs title in overlay: %v", err)
+	// Wait for SPA to render the docs overlay — DocsOverlay renders h2 with the
+	// page title, a "Path: <display>" paragraph, and the "Browse Documentation"
+	// accordion summary.
+	if err := page.Locator("h2:has-text('Chairperson')").First().WaitFor(); err != nil {
+		t.Fatalf("expected chairperson docs title heading: %v", err)
 	}
-	if err := page.Locator("text=Path: Chairperson").WaitFor(); err != nil {
+	if err := page.Locator("p:has-text('Path: Chairperson')").First().WaitFor(); err != nil {
 		t.Fatalf("expected docs path display for directory index: %v", err)
 	}
-	if err := page.Locator("text=Browse Documentation").WaitFor(); err != nil {
+	if err := page.Locator("summary:has-text('Browse Documentation')").First().WaitFor(); err != nil {
 		t.Fatalf("expected docs browse accordion label: %v", err)
-	}
-	content, err := page.Content()
-	if err != nil {
-		t.Fatalf("get docs directory content: %v", err)
-	}
-	if !strings.Contains(content, "Chairperson") {
-		t.Fatalf("expected chairperson docs title in payload, got: %s", content)
 	}
 }
 
@@ -89,7 +93,7 @@ func TestDocsSearchResultNavigatesToDocumentationPage(t *testing.T) {
 	if err := resultLink.Click(); err != nil {
 		t.Fatalf("click docs search result link: %v", err)
 	}
-	if err := page.Locator("h1:has-text('Receipts Vault and Receipt Verification')").WaitFor(); err != nil {
+	if err := page.Locator("h1:has-text('Receipts Vault and Receipt Verification')").First().WaitFor(); err != nil {
 		t.Fatalf("expected docs detail heading after search navigation: %v", err)
 	}
 	if !strings.Contains(page.URL(), "/docs/05-public-verification/01-receipts-vault-and-receipt-verification") {

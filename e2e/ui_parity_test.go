@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	playwright "github.com/playwright-community/playwright-go"
 )
@@ -276,6 +277,26 @@ func assertEqualHTML(t *testing.T, label, got, want string) {
 		}
 		t.Fatalf("%s HTML mismatch at %d:\nnew ctx:    %s\nlegacy ctx: %s\n\nnew:    %s\nlegacy: %s", label, diffAt, got[start:gotEnd], want[start:wantEnd], got, want)
 	}
+}
+
+func compareFragmentAfterAction(
+	t *testing.T,
+	label string,
+	newPage, legacyPage playwright.Page,
+	fragmentSelector string,
+	action func(page playwright.Page) error,
+) {
+	t.Helper()
+	if err := action(newPage); err != nil {
+		t.Fatalf("%s action on new: %v", label, err)
+	}
+	if err := action(legacyPage); err != nil {
+		t.Fatalf("%s action on legacy: %v", label, err)
+	}
+	assertEqualHTML(t, label,
+		locatorOuterHTML(t, newPage, fragmentSelector),
+		locatorOuterHTML(t, legacyPage, fragmentSelector),
+	)
 }
 
 func TestLoginPage_UIParityWithLegacy(t *testing.T) {
@@ -615,6 +636,16 @@ func TestDocsAndReceipts_UIParityWithLegacy(t *testing.T) {
 	if err := legacyBrowserPage.Locator("#app-docs-target #docs-search-results").WaitFor(); err != nil {
 		t.Fatalf("wait for legacy docs search results: %v", err)
 	}
+	// Wait for HTMX transitional classes to settle on the legacy page before comparing.
+	waitUntil(t, 3*time.Second, func() (bool, error) {
+		className, err := legacyBrowserPage.Locator("#app-docs-target #docs-search-results").First().GetAttribute("class")
+		if err != nil {
+			return false, err
+		}
+		return !strings.Contains(className, "htmx-swapping") &&
+			!strings.Contains(className, "htmx-added") &&
+			!strings.Contains(className, "htmx-settling"), nil
+	}, "legacy docs search results HTMX classes to settle")
 	assertEqualHTML(t, "docs search container", locatorOuterHTML(t, newBrowserPage, "#app-docs-target #docs-search-results"), locatorOuterHTML(t, legacyBrowserPage, "#app-docs-target #docs-search-results"))
 
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/receipts", "#receipts-vault-content")

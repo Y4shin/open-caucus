@@ -192,6 +192,7 @@
 											checked={localActiveMeetingId === item.meeting?.meetingId}
 											data-testid="committee-toggle-active"
 											use:legacyAttrs={{
+												checked: localActiveMeetingId === item.meeting?.meetingId,
 												'hx-post': '/committee/' + slug + '/meeting/' + (item.meeting?.meetingId ?? '') + '/activate',
 												'hx-target': '#meeting-list-container',
 												'hx-swap': 'outerHTML',
@@ -209,6 +210,7 @@
 											checked={item.meeting?.signupOpen ?? false}
 											data-testid="committee-toggle-signup-open"
 											use:legacyAttrs={{
+												checked: item.meeting?.signupOpen ?? false,
 												'hx-post': '/committee/' + slug + '/meeting/' + (item.meeting?.meetingId ?? '') + '/signup-open-toggle',
 												'hx-target': '#meeting-list-container',
 												'hx-swap': 'outerHTML',
@@ -279,7 +281,7 @@
 		</div>
 	{:else}
 		<section class="card border border-base-300 bg-base-200 p-4 mt-4" data-testid="committee-active-meeting-card">
-			<h3 class="text-lg font-semibold">Active Meeting</h3>
+			<h3 class="text-lg font-semibold">Current Active Meeting</h3>
 			{#if activeMeetingItem?.meeting}
 				<div class="mt-2">
 					<p class="font-medium" data-testid="committee-active-meeting-name">{activeMeetingItem.meeting.name}</p>
@@ -292,7 +294,7 @@
 					data-testid="committee-join-active-meeting"
 					href={"/committee/" + slug + "/meeting/" + activeMeetingItem.meeting.meetingId + "/join"}
 				>
-					Join Active Meeting
+					Join Meeting
 				</a>
 			{:else}
 				<p class="text-base-content/70">No meeting is currently active.</p>

@@ -58,16 +58,16 @@
         # Build mcp-taskfile-server from source
         mcp-taskfile-server = pkgs.buildGoModule rec {
           pname = "mcp-taskfile-server";
-          version = "main";
+          version = "cd3a424cae340a3b2e6fe355a4296d9e0cb0f30e";
 
           src = pkgs.fetchFromGitHub {
             owner = "rsclarke";
             repo = "mcp-taskfile-server";
             rev = "${version}";
-            hash = "sha256-tCfjlyabjWO5VYhWCIypD84tC65TiJP6vGD/oL+7/+s="; # Will be replaced with actual hash on first build
+            hash = "sha256-vcMyXYmO3ZWv5D2Vs6db23yYxmehZl3+oDOmeV3HfSs=";
           };
 
-          vendorHash = "sha256-c7aWabtrj4sqPExoQS9xVeB2whXvS3iD9Dg3yHd2NGE="; # Will be replaced with actual hash on first build
+          vendorHash = "sha256-nPrCTZro4Hi2JVm/ldf3IwpHCmU2r8Hj315UbJpZecI=";
 
           meta = with pkgs.lib; {
             description = "Model Context Protocol server for Taskfile";

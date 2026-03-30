@@ -511,13 +511,7 @@
 	}
 
 	function waitingDisplayNumber(speakerId: string) {
-		let index = 0;
-		for (const speaker of activeSpeakers()) {
-			if (speaker.state !== 'WAITING') continue;
-			index += 1;
-			if (speaker.speakerId === speakerId) return index;
-		}
-		return 0;
+		return activeSpeakers().find((speaker) => speaker.speakerId === speakerId)?.orderPosition ?? 0;
 	}
 
 	function formatElapsed(totalMs: number) {
@@ -531,6 +525,10 @@
 		const since = speakingSinceMs[speakerId];
 		if (since == null) return '00:00';
 		return formatElapsed(nowMs - since);
+	}
+
+	function speakerHasBadges(speaker: SpeakerQueueView['speakers'][number]) {
+		return speaker.speakerType === 'ropm' || speaker.quoted || speaker.firstSpeaker || speaker.priority || speaker.mine;
 	}
 
 	async function addSelfSpeaker(speakerType: string) {
@@ -808,6 +806,7 @@
 															data-testid="live-speaker-item"
 															data-speaker-state={speaker.state.toLowerCase()}
 															data-speaker-mine={speaker.mine ? 'true' : 'false'}
+															data-manage-scroll-anchor="false"
 														>
 															<div class="w-16 shrink-0 text-center font-semibold text-base-content/70">
 																{#if speaker.state === 'SPEAKING'}
@@ -823,32 +822,36 @@
 															<div class="list-col-grow min-w-0">
 																<div class="flex min-w-0 items-center gap-2">
 																	<div class="truncate font-semibold" data-testid="live-speaker-name">{speaker.fullName}</div>
-																	<div class="flex shrink-0 flex-wrap items-center gap-1">
-																		{#if speaker.speakerType === 'ropm'}
-																			<span class="tooltip tooltip-right" data-tip="Point of order">
-																				<span class="badge badge-warning badge-sm"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
-																			</span>
+																	{#if speakerHasBadges(speaker)}
+																		{#if speakerHasBadges(speaker)}
+																			<div class="flex shrink-0 flex-wrap items-center gap-1">
+																				{#if speaker.speakerType === 'ropm'}
+																					<span class="tooltip tooltip-right" data-tip="Point of order">
+																						<span class="badge badge-warning badge-sm"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
+																					</span>
+																				{/if}
+																				{#if speaker.quoted}
+																					<span class="tooltip tooltip-right" data-tip="Quoted" data-testid="live-speaker-quoted-badge">
+																						<span class="badge badge-info badge-sm"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																					</span>
+																				{/if}
+																				{#if speaker.firstSpeaker}
+																					<span class="tooltip tooltip-right" data-tip="First speaker">
+																						<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
+																					</span>
+																				{/if}
+																				{#if speaker.priority}
+																					<span class="tooltip tooltip-right" data-tip="Priority">
+																						<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
+																					</span>
+																					<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
+																				{/if}
+																				{#if speaker.mine}
+																					<span class="badge badge-primary badge-sm">You</span>
+																				{/if}
+																			</div>
 																		{/if}
-																		{#if speaker.quoted}
-																			<span class="tooltip tooltip-right" data-tip="Quoted" data-testid="live-speaker-quoted-badge">
-																				<span class="badge badge-info badge-sm"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
-																			</span>
-																		{/if}
-																		{#if speaker.firstSpeaker}
-																			<span class="tooltip tooltip-right" data-tip="First speaker">
-																				<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
-																			</span>
-																		{/if}
-																		{#if speaker.priority}
-																			<span class="tooltip tooltip-right" data-tip="Priority">
-																				<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
-																			</span>
-																			<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
-																		{/if}
-																		{#if speaker.mine}
-																			<span class="badge badge-primary badge-sm">You</span>
-																		{/if}
-																	</div>
+																	{/if}
 																</div>
 															</div>
 															{#if speaker.state === 'SPEAKING'}
@@ -948,6 +951,7 @@
 																data-testid="live-speaker-item"
 																data-speaker-state={speaker.state.toLowerCase()}
 																data-speaker-mine={speaker.mine ? 'true' : 'false'}
+																data-manage-scroll-anchor="false"
 															>
 																<div class="w-16 shrink-0 text-center font-semibold text-base-content/70">
 																	{#if speaker.state === 'SPEAKING'}
@@ -963,32 +967,34 @@
 																<div class="list-col-grow min-w-0">
 																	<div class="flex min-w-0 items-center gap-2">
 																		<div class="truncate font-semibold" data-testid="live-speaker-name">{speaker.fullName}</div>
-																		<div class="flex shrink-0 flex-wrap items-center gap-1">
-																			{#if speaker.speakerType === 'ropm'}
-																				<span class="tooltip tooltip-right" data-tip="Point of order">
-																					<span class="badge badge-warning badge-sm"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
-																				</span>
-																			{/if}
-																			{#if speaker.quoted}
-																				<span class="tooltip tooltip-right" data-tip="Quoted" data-testid="live-speaker-quoted-badge">
-																					<span class="badge badge-info badge-sm"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
-																				</span>
-																			{/if}
-																			{#if speaker.firstSpeaker}
-																				<span class="tooltip tooltip-right" data-tip="First speaker">
-																					<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
-																				</span>
-																			{/if}
-																			{#if speaker.priority}
-																				<span class="tooltip tooltip-right" data-tip="Priority">
-																					<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
-																				</span>
-																				<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
-																			{/if}
-																			{#if speaker.mine}
-																				<span class="badge badge-primary badge-sm">You</span>
-																			{/if}
-																		</div>
+																		{#if speakerHasBadges(speaker)}
+																			<div class="flex shrink-0 flex-wrap items-center gap-1">
+																				{#if speaker.speakerType === 'ropm'}
+																					<span class="tooltip tooltip-right" data-tip="Point of order">
+																						<span class="badge badge-warning badge-sm"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
+																					</span>
+																				{/if}
+																				{#if speaker.quoted}
+																					<span class="tooltip tooltip-right" data-tip="Quoted" data-testid="live-speaker-quoted-badge">
+																						<span class="badge badge-info badge-sm"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																					</span>
+																				{/if}
+																				{#if speaker.firstSpeaker}
+																					<span class="tooltip tooltip-right" data-tip="First speaker">
+																						<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
+																					</span>
+																				{/if}
+																				{#if speaker.priority}
+																					<span class="tooltip tooltip-right" data-tip="Priority">
+																						<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
+																					</span>
+																					<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
+																				{/if}
+																				{#if speaker.mine}
+																					<span class="badge badge-primary badge-sm">You</span>
+																				{/if}
+																			</div>
+																		{/if}
 																	</div>
 																</div>
 																{#if speaker.state === 'SPEAKING'}

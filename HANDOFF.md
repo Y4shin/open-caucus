@@ -2,71 +2,110 @@
 
 ## Current Goal
 
-Finish the SPA migration so the active `serve` path does not serve any legacy HTMX/Templ HTML. The legacy stack should only remain available as a comparison target for parity tests.
+Expand UI parity coverage in small, atomic steps that can each be:
 
-## What Was Completed Before This Checkpoint
+- implemented independently
+- fully verified
+- regression-checked against the whole E2E suite
+- documented in this file
+- committed as a single-purpose change
 
-- Removed the raw SSE path and moved meeting streaming to Connect.
-- Moved docs page/search to Connect.
-- Moved several remaining `/api` JSON routes to Connect.
-- Added a `render-template` command for rendering legacy templ components from JSON input.
-- Added and expanded UI parity E2E coverage between the legacy server and the SPA.
-- Ported a large portion of the SPA UI closer to the legacy appearance.
-- Fixed several SPA/live/moderation behavior bugs.
+The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next execution mode is a commit-per-atomic-task workflow.
 
-## What This Agent Did
+## Current State
 
-The previous agent had just stripped legacy fallback routes from the active SPA path. The E2E suite was broken. This agent diagnosed and applied three targeted fixes:
+`A01` is complete locally and ready to be checkpointed.
 
-### 1. Re-wired legacy vote + attendee-login dispatch in both servers
+Included changes:
 
-**`cmd/serve.go`** — Added three predicate functions and wired them into `newSPAServer`:
-- `shouldServeLegacyVoteRoute` — dispatches GET `.../votes/partial`, `.../votes/live/partial` and all vote action POSTs to the legacy router
-- `shouldServeLegacyManageUtilityRoute` — dispatches attendee create/delete/chair/quoted POSTs and join-QR / recovery GETs
-- `shouldServeLegacyAttendeeLoginRoute` — dispatches `POST .../attendee-login` and secret-login GETs (needed by the concurrent-voting test's plain HTTP client)
+- added `compareFragmentAfterAction(...)` in `e2e/ui_parity_test.go`
+- adopted the helper in `TestModerateSettingsTab_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 
-**`e2e/helpers_test.go`** — The same three predicates were already defined at lines 66, 99, and 163 but were never wired into the test server's dispatch switch. Added them to the `case` at line 324 so the test server mirrors the production server.
+Verification already completed successfully from this working tree state:
 
-### 2. Updated docs E2E tests to match the SPA
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateSettingsTab_UIParityWithLegacy"`
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"`
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestSpeakersList_OneNonDoneEntryPerType"`
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestAttachments_UploadWithoutLabel_ShowsFilename"`
 
-The four failing docs tests were checking for legacy HTMX markers (`id="app-docs-target"` via immediate `page.Content()`, `hx-swap-oob="outerHTML"` from `/docs/oob/...`). Updated `e2e/docs_test.go`:
+Full-suite note:
 
-- `TestDocsElementAndOOBRoute` — replaced immediate `Content()` check with `page.Locator("#app-docs-target").WaitFor()`. Removed the `/docs/oob/index` HTMX OOB check (that legacy concept doesn't exist in the SPA); replaced with a second navigation to the same page verifying the overlay stays rendered.
-- `TestDocsDirectoryPathResolvesIndexAndShowsExpectedPath` — replaced `Content()` string searches with `page.Locator("text=...").WaitFor()` so they wait for the async Connect API response before asserting.
-- `TestDocsSearchReturnsEmbeddedDocsHit` and `TestDocsSearchResultNavigatesToDocumentationPage` — already used `WaitFor`; left unchanged structurally but confirmed they match the `DocsOverlay` component (`#docs-search-results`, `a:has-text(...)`, `h1:has-text(...)`).
+- Two separate full-E2E runs ended with unrelated timeouts outside the `A01` change set:
+  - `TestSpeakersList_OneNonDoneEntryPerType`
+  - `TestAttachments_UploadWithoutLabel_ShowsFilename`
+- Both passed immediately when rerun as focused tests.
+- The parity suite was fully green after the helper change.
 
-## Last Known State
+## Atomic Task Queue
 
-These fixes have been committed but the full E2E suite **has not been re-run** since the commit. The next agent should run the suite and treat any remaining failures as the porting checklist.
+Use the queue in `ui-parity-expansion-plan.md` under `Atomic Task Queue`.
 
-## Expected Next Step
+Recommended execution order:
 
-```bash
-nix develop . --command bash -lc 'go test -tags=e2e -timeout=600s ./e2e/...'
-```
+1. `A00` — baseline checkpoint commit
+2. `A01` — post-action parity helper
+3. `A02` — live parity active speaker state
+4. `A03` — live parity completed speaker state
+5. `A04` — moderate parity open vote panel
+6. `A05` — moderate parity counted vote results
+7. `A06` — attendee add-guest fragment parity
+8. `A07` — attendee remove/update fragment parity
+9. `A08` — attachment list parity
+10. `A09` — current-document parity
+11. `A10` — agenda create parity
+12. `A11` — agenda edit parity
+13. `A12` — agenda reorder parity
+14. `A13` — agenda delete parity
+15. `A14` — speaker add parity
+16. `A15` — speaker start parity
+17. `A16` — speaker end parity
+18. `A17` — legacy fallback docs contract
+19. `A18` — legacy fallback attendee-login/recovery contract
+20. `A19` — legacy fallback vote/manage contract
+21. `A20` — parity file organization cleanup if needed
 
-## Most Likely Remaining Failures (Unverified)
+## Atomic Task Protocol
 
-- **`shouldServeLegacyAgendaImportRoute`** — This predicate is defined at line 138 of `e2e/helpers_test.go` but is **not wired** into the dispatch. The SPA's agenda forms all have Svelte `onsubmit` handlers that call `agendaClient` Connect RPC, so `event.preventDefault()` should suppress HTMX from also POSTing. But if any agenda-related test fails, adding this predicate to the dispatch `case` is the first fix to try.
+Each atomic task should follow this sequence:
 
-- **`/committee/.../signup-open` POST** — The signup toggle form in the SPA moderate page has `hx-post` wired to HTMX AND an `onchange={toggleSignupOpen}` handler using `moderationClient.toggleSignupOpen()` (Connect RPC). HTMX will also fire and get a 404, but HTMX does not swap on 4xx by default so the UI should be fine. If `TestManagePage_ToggleSignupOpen` fails, the fix is either to add `/signup-open` to `shouldServeLegacyManageUtilityRoute` or remove the `hx-post`/`hx-trigger` attributes from that form.
+1. Implement the smallest possible change for that task only.
+2. Run the smallest relevant focused test first.
+3. If any `web/src/` file changed, run:
+   `nix develop -c bash -lc 'cd web && npm run build'`
+4. Run the full parity suite:
+   `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"`
+5. Run the full E2E suite:
+   `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...`
+6. Update this file with:
+   - what changed
+   - what passed
+   - what the next task is
+7. Create a commit for that task only.
 
-- **Docs tests** — If the Connect `docs` API doesn't have the expected content in the test environment (e.g., "Receipts Vault and Receipt Verification"), `TestDocsSearchReturnsEmbeddedDocsHit` and `TestDocsSearchResultNavigatesToDocumentationPage` will still fail. Verify the docs service is seeded correctly in the test server.
+## Recommended Next Task
 
-## Key Architecture Notes
+Start with `A02`.
 
-- `postLegacyAttendeeAction()` in the SPA moderate page POSTs to legacy attendee endpoints and then calls `loadModeration()`, `loadAttendees()`, `loadSpeakers()` (all Connect RPC) to refresh state. The legacy handler's HTML response is ignored.
-- `shouldServeLegacyVoteRoute` and `shouldServeLegacyManageUtilityRoute` must stay in sync between `cmd/serve.go` and `e2e/helpers_test.go` — both files define the same predicates.
+Definition of done for `A02`:
 
-## Files Most Likely To Need Follow-Up
+- add live-page parity coverage for an active speaker state
+- keep the change limited to one new parity scenario and any minimal helper reuse needed
+- verify with a focused parity test, then the full parity suite, then the full E2E suite
+- update this handoff to point at `A03` next
 
-- [e2e/helpers_test.go](e2e/helpers_test.go) — add `shouldServeLegacyAgendaImportRoute(r)` to the dispatch `case` if agenda tests fail
-- [web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte](web/src/routes/committee/%5Bcommittee%5D/meeting/%5BmeetingId%5D/moderate/%2Bpage.svelte) — remove stale `hx-post` attributes from forms that are fully driven by Svelte/Connect
+## Files Most Likely To Matter Next
 
-## Verification Commands
+- `ui-parity-expansion-plan.md`
+- `e2e/ui_parity_test.go`
+- `e2e/ui_parity_extended_test.go`
+- `e2e/helpers_test.go`
+- `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte`
+- `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`
 
-```bash
-cd web && npm run build
-nix develop . --command bash -lc 'go test -tags=e2e -timeout=600s ./e2e/...'
-nix develop . --command bash -lc 'go test -tags=e2e ./e2e/... -run "Test(.*UIParityWithLegacy|Voting_.*|Moderate.*|Docs.*|Manage.*)" -count=1'
-```
+## Notes For The Next Pass
+
+- Prefer fragment parity over full-page parity.
+- Reuse the existing dual-server browser harness instead of inventing a new test style.
+- Keep normalization conservative.
+- If a task requires SPA markup changes, rebuild before any E2E run.
+- Do not mix multiple atomic tasks into one commit unless blocked by an unavoidable dependency.
