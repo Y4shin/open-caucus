@@ -222,6 +222,60 @@ func TestModerateReorderAgendaPoint_UIParityWithLegacy(t *testing.T) {
 	)
 }
 
+// TestModerateDeleteAgendaPoint_UIParityWithLegacy (A13) checks that deleting
+// an agenda point via the moderation UI produces the same remaining agenda list
+// in the SPA and legacy implementations.
+func TestModerateDeleteAgendaPoint_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAgendaPoint(t, "test", "Board Meeting", "Keep Me")
+		ts.seedAgendaPoint(t, "test", "Board Meeting", "Delete Me")
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#moderate-left-controls")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-left-controls")
+
+	openModerateAgendaEditor(t, newBrowserPage)
+	openModerateAgendaEditor(t, legacyBrowserPage)
+
+	for _, p := range []playwright.Page{newBrowserPage, legacyBrowserPage} {
+		p.OnDialog(func(d playwright.Dialog) { _ = d.Accept() })
+	}
+
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		card := p.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
+			HasText: "Delete Me",
+		})
+		if err := card.Locator("button[title='Delete agenda point']").Click(); err != nil {
+			t.Fatalf("click delete agenda point on %s: %v", label, err)
+		}
+		if err := p.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Delete Me')").WaitFor(playwright.LocatorWaitForOptions{
+			State: playwright.WaitForSelectorStateDetached,
+		}); err != nil {
+			t.Fatalf("wait deleted agenda point detach on %s: %v", label, err)
+		}
+	}
+
+	assertEqualStringSlices(t, "agenda point list items after delete",
+		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-agenda-point-card']"),
+		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-agenda-point-card']"),
+	)
+}
+
 // TestModerateAttendeesTab_UIParityWithLegacy checks the attendees panel on the
 // moderation page, including the add-guest form and the list of attendees.
 func TestModerateAttendeesTab_UIParityWithLegacy(t *testing.T) {

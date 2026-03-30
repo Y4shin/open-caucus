@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10` and `A12` are complete locally.
+`A01` through `A10`, plus `A12` and `A13`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -69,6 +69,11 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 - added `TestModerateReorderAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `First` and `Second`, moves `Second` up via the moderation UI in each browser, waits for it to become the first agenda card, then compares the ordered `[data-testid='manage-agenda-point-card']` outer HTML list
 
+### A13 — agenda parity: delete agenda point
+
+- added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
+
 Verification completed (2026-03-30):
 
 - all A04-A09 focused tests PASS
@@ -102,6 +107,12 @@ Verification completed (2026-03-31):
 Verification completed (2026-03-31):
 
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateReorderAgendaPoint_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
+Verification completed (2026-03-31):
+
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateDeleteAgendaPoint_UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
@@ -153,14 +164,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A13`.
+Start with `A14`.
 
-Definition of done for `A13`:
+Definition of done for `A14`:
 
-- add moderate-page parity coverage for deleting an agenda point via the UI
+- add moderate-page parity coverage for adding a speaker via the UI
 - keep the change limited to one new parity scenario
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A14` next, unless `A11` is explicitly unblocked first
+- update this handoff to point at `A15` next, unless `A11` is explicitly unblocked first
 
 ## Files Most Likely To Matter Next
 
