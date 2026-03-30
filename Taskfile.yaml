@@ -165,6 +165,12 @@ tasks:
       - go tool cover -html=coverage.out -o coverage.html
       - echo "Coverage report generated at coverage.html"
 
+  test:full:
+    desc: Run all tests including E2E (requires Playwright browsers installed)
+    cmds:
+      - task: test
+      - task: test:e2e
+
   test:e2e:
     desc: Run browser-based end-to-end tests (requires Playwright browsers installed)
     cmds:

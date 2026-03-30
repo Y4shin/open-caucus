@@ -222,6 +222,20 @@ func newTestServer(t *testing.T) *testServer {
 		SessionManager: sessionMgr,
 		AuthConfig:     authCfg,
 	}
+
+	// Legacy handler: still needed for SPA routes that haven't been ported to Connect yet
+	// (vote form endpoints, attendee manage endpoints, docs HTML endpoints).
+	legacyH := &handlers.Handler{
+		Broker:         b,
+		Repository:     repo,
+		Storage:        store,
+		SessionManager: sessionMgr,
+		AuthConfig:     authCfg,
+		OAuthService:   oauthSvc,
+		DocsService:    docsService,
+	}
+	legacyRouter := routes.NewRouter(legacyH, mw).RegisterRoutes()
+
 	apiMux := http.NewServeMux()
 
 	sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
@@ -310,6 +324,24 @@ func newTestServer(t *testing.T) *testServer {
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
 		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
 			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
+		// Legacy HTML endpoints not yet ported to Connect or SPA: vote forms, attendee
+		// manage actions, docs HTML, and attendee-login/recovery routes.
+		case shouldServeLegacyVoteRoute(r):
+			legacyRouter.ServeHTTP(w, r)
+		case shouldServeLegacyManageUtilityRoute(r):
+			legacyRouter.ServeHTTP(w, r)
+		case shouldServeLegacyAgendaImportRoute(r):
+			legacyRouter.ServeHTTP(w, r)
+		case shouldServeLegacyAttendeeLoginSecretRoute(r):
+			legacyRouter.ServeHTTP(w, r)
+		// Legacy docs fragment endpoints: /docs/oob/ (hx-swap-oob HTMX fragments)
+		// and /docs/search (search partial page) are served by the legacy handler
+		// because the existing E2E tests verify the legacy HTML response structure.
+		// All other /docs/ paths (full doc pages) are handled by the SPA.
+		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/docs/oob/"):
+			legacyRouter.ServeHTTP(w, r)
+		case r.Method == http.MethodGet && r.URL.Path == "/docs/search":
+			legacyRouter.ServeHTTP(w, r)
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:
 			spaHandler.ServeHTTP(w, r)
 		default:
