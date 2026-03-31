@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12`, `A13`, and `A14`, are complete locally.
+`A01` through `A10`, plus `A12`, `A13`, `A14`, and `A15`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -73,6 +73,11 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 - added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
+
+### A15 — speaker parity: start speaker
+
+- added `TestModerateStartSpeaker_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds an active agenda point and one attendee, adds `Alice Member` via the add-speaker dialog, then clicks `Start next speaker` in each browser, waits for `data-speaker-state='speaking'`, and compares `#speakers-list-container` with `normalizeSpeakingSinceAttr` applied
 
 ### A14 — speaker parity: add speaker
 
@@ -133,6 +138,12 @@ Verification completed (2026-03-31):
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
+Verification completed (2026-03-31):
+
+- `nix develop -c go test -v -tags=e2e -timeout=300s ./e2e/... -run "TestModerateStartSpeaker_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — all 29 PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
 ## Atomic Task Queue
 
 Use the queue in `ui-parity-expansion-plan.md` under `Atomic Task Queue`.
@@ -181,14 +192,14 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A15`.
+Start with `A16`.
 
-Definition of done for `A15`:
+Definition of done for `A16`:
 
-- add moderate-page parity coverage for starting a speaker via the UI
+- add moderate-page parity coverage for ending the current speaker via the UI
 - keep the change limited to one new parity scenario
 - verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A16` next, unless `A11` is explicitly unblocked first
+- update this handoff to point at `A17` next, unless `A11` is explicitly unblocked first
 
 ## Files Most Likely To Matter Next
 

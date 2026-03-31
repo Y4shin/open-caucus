@@ -1089,3 +1089,68 @@ func TestCurrentDocumentState_UIParityWithLegacy(t *testing.T) {
 		}
 	}
 }
+
+// TestModerateStartSpeaker_UIParityWithLegacy (A15) checks that starting the
+// next speaker via the moderation UI produces the same speakers list in the SPA
+// and legacy implementations.
+func TestModerateStartSpeaker_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
+		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#speakers-list-container")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#speakers-list-container")
+
+	// Add Alice to the speaker queue in each browser.
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		openSpeakerAddDialog(t, p)
+		card := speakerCandidateCard(p, "Alice Member")
+		if err := card.WaitFor(); err != nil {
+			t.Fatalf("wait speaker candidate card on %s: %v", label, err)
+		}
+		if err := card.Locator("button[title='Add regular speech']").Click(); err != nil {
+			t.Fatalf("add regular speech on %s: %v", label, err)
+		}
+		if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('Alice Member')").WaitFor(); err != nil {
+			t.Fatalf("wait speaker in queue on %s: %v", label, err)
+		}
+	}
+
+	// Start the next speaker in each browser.
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		startBtn := p.Locator("#speakers-list-container button[title='Start next speaker']")
+		if err := startBtn.WaitFor(); err != nil {
+			t.Fatalf("wait start-next button on %s: %v", label, err)
+		}
+		if err := startBtn.Click(); err != nil {
+			t.Fatalf("click start-next on %s: %v", label, err)
+		}
+		if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(); err != nil {
+			t.Fatalf("wait for speaking speaker on %s: %v", label, err)
+		}
+	}
+
+	// The data-speaking-since attribute value differs between legacy (Unix seconds) and
+	// SPA (milliseconds from Date.now()), so normalize it before comparing.
+	assertEqualHTML(t, "speakers list after start speaker",
+		normalizeSpeakingSinceAttr(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container")),
+		normalizeSpeakingSinceAttr(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container")),
+	)
+}
