@@ -386,6 +386,34 @@ func (s *Service) DeleteAttachment(ctx context.Context, committeeSlug, meetingID
 	}, nil
 }
 
+func (s *Service) UpdateAgendaPoint(ctx context.Context, committeeSlug, meetingIDStr, agendaPointIDStr, title string) (*agendav1.UpdateAgendaPointResponse, error) {
+	if err := s.requireChairperson(ctx, committeeSlug); err != nil {
+		return nil, err
+	}
+	if title == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "title is required")
+	}
+	meetingID, agendaPointID, err := parseMeetingAndAgendaPointIDs(meetingIDStr, agendaPointIDStr)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := s.loadAgendaPointForMeeting(ctx, meetingID, agendaPointID); err != nil {
+		return nil, err
+	}
+	if err := s.repo.UpdateAgendaPointTitle(ctx, agendaPointID, title); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to update agenda point", err)
+	}
+	ap, err := s.repo.GetAgendaPointByID(ctx, agendaPointID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to reload agenda point", err)
+	}
+	s.publishAgendaUpdated(meetingID)
+	return &agendav1.UpdateAgendaPointResponse{
+		AgendaPoint:      toAgendaPointRecord(ap, "", nil),
+		InvalidatedViews: []string{"live", "moderation"},
+	}, nil
+}
+
 func (s *Service) publishAgendaUpdated(meetingID int64) {
 	mid := meetingID
 	s.broker.Publish(broker.SSEEvent{

@@ -1554,6 +1554,17 @@ func (r *Repository) GetAgendaPointByID(ctx context.Context, id int64) (*model.A
 	return agendaPointFromClient(&ap), nil
 }
 
+// UpdateAgendaPointTitle sets a new title for the given agenda point.
+func (r *Repository) UpdateAgendaPointTitle(ctx context.Context, id int64, title string) error {
+	if err := r.Queries.UpdateAgendaPointTitle(ctx, client.UpdateAgendaPointTitleParams{
+		ID:    id,
+		Title: title,
+	}); err != nil {
+		return fmt.Errorf("update agenda point title: %w", err)
+	}
+	return nil
+}
+
 // DeleteAgendaPoint removes an agenda point by ID.
 func (r *Repository) DeleteAgendaPoint(ctx context.Context, id int64) error {
 	if err := r.Queries.DeleteAgendaPoint(ctx, id); err != nil {

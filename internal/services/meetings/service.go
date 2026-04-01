@@ -2,14 +2,20 @@ package meetingservice
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
+
+	"github.com/skip2/go-qrcode"
 
 	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
 	meetingsv1 "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1"
 	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/model"
+	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
 	"github.com/Y4shin/conference-tool/internal/session"
 )
 
@@ -114,6 +120,55 @@ func (s *Service) GetLiveMeeting(ctx context.Context, committeeSlug, meetingIDSt
 	}
 
 	return &meetingsv1.GetLiveMeetingResponse{Meeting: view}, nil
+}
+
+func (s *Service) GetMeetingJoinQr(ctx context.Context, committeeSlug, meetingIDStr, baseURL string) (*meetingsv1.GetMeetingJoinQrResponse, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
+	}
+
+	committee, err := s.repo.GetCommitteeBySlug(ctx, committeeSlug)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "committee not found")
+	}
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
+	}
+
+	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	if baseURL == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "base url is required")
+	}
+
+	joinURL, err := url.Parse(baseURL + fmt.Sprintf("/committee/%s/meeting/%s/join", committeeSlug, meetingIDStr))
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInvalidArgument, "invalid base url", err)
+	}
+	query := joinURL.Query()
+	query.Set("meeting_secret", meeting.Secret)
+	joinURL.RawQuery = query.Encode()
+	joinURLStr := joinURL.String()
+
+	png, err := qrcode.Encode(joinURLStr, qrcode.Medium, 320)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate join qr code", err)
+	}
+
+	return &meetingsv1.GetMeetingJoinQrResponse{
+		View: &meetingsv1.MeetingJoinQrView{
+			CommitteeSlug: committeeSlug,
+			MeetingId:     meetingIDStr,
+			MeetingName:   meeting.Name,
+			CommitteeName: committee.Name,
+			JoinUrl:       joinURLStr,
+			QrCodeDataUrl: "data:image/png;base64," + base64.StdEncoding.EncodeToString(png),
+		},
+	}, nil
 }
 
 func (s *Service) resolveCurrentAttendee(ctx context.Context, committeeSlug string, meetingID int64) (*commonv1.AttendeeSummary, bool) {

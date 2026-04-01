@@ -9,6 +9,7 @@ import "conference/common/v1/common.proto";
 service MeetingService {
   rpc GetJoinMeeting(GetJoinMeetingRequest) returns (GetJoinMeetingResponse);
   rpc GetLiveMeeting(GetLiveMeetingRequest) returns (GetLiveMeetingResponse);
+  rpc GetMeetingJoinQr(GetMeetingJoinQrRequest) returns (GetMeetingJoinQrResponse);
   rpc SubscribeMeetingEvents(SubscribeMeetingEventsRequest) returns (stream MeetingEvent);
 }
 
@@ -65,6 +66,25 @@ message GetLiveMeetingRequest {
 
 message GetLiveMeetingResponse {
   LiveMeetingView meeting = 1;
+}
+
+message MeetingJoinQrView {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string meeting_name = 3;
+  string committee_name = 4;
+  string join_url = 5;
+  string qr_code_data_url = 6;
+}
+
+message GetMeetingJoinQrRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string base_url = 3;
+}
+
+message GetMeetingJoinQrResponse {
+  MeetingJoinQrView view = 1;
 }
 
 // SubscribeMeetingEvents streams typed invalidation events for a meeting.

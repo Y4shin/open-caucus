@@ -159,6 +159,7 @@ type Repository interface {
 	ListSubAgendaPointsForParent(ctx context.Context, meetingID, parentID int64) ([]*model.AgendaPoint, error)
 	ListSubAgendaPointsForMeeting(ctx context.Context, meetingID int64) ([]*model.AgendaPoint, error)
 	GetAgendaPointByID(ctx context.Context, id int64) (*model.AgendaPoint, error)
+	UpdateAgendaPointTitle(ctx context.Context, id int64, title string) error
 	DeleteAgendaPoint(ctx context.Context, id int64) error
 	MoveAgendaPointUp(ctx context.Context, meetingID, agendaPointID int64) error
 	MoveAgendaPointDown(ctx context.Context, meetingID, agendaPointID int64) error

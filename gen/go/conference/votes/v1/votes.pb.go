@@ -307,6 +307,117 @@ func (x *VoteTallyEntry) GetCount() int64 {
 	return 0
 }
 
+// LiveVoteCardView is one attendee-facing vote card.
+type LiveVoteCardView struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Vote  *VoteDefinitionRecord  `protobuf:"bytes,1,opt,name=vote,proto3" json:"vote,omitempty"`
+	// is_eligible is true when the calling attendee is eligible to vote.
+	IsEligible bool `protobuf:"varint,2,opt,name=is_eligible,json=isEligible,proto3" json:"is_eligible,omitempty"`
+	// already_voted is true when the calling attendee already cast a ballot.
+	AlreadyVoted            bool              `protobuf:"varint,3,opt,name=already_voted,json=alreadyVoted,proto3" json:"already_voted,omitempty"`
+	Stats                   *VoteStats        `protobuf:"bytes,4,opt,name=stats,proto3" json:"stats,omitempty"`
+	HasTimedResults         bool              `protobuf:"varint,5,opt,name=has_timed_results,json=hasTimedResults,proto3" json:"has_timed_results,omitempty"`
+	TimedResults            []*VoteTallyEntry `protobuf:"bytes,6,rep,name=timed_results,json=timedResults,proto3" json:"timed_results,omitempty"`
+	ResultsUntilUnix        int64             `protobuf:"varint,7,opt,name=results_until_unix,json=resultsUntilUnix,proto3" json:"results_until_unix,omitempty"`
+	ResultsRemainingSeconds int64             `protobuf:"varint,8,opt,name=results_remaining_seconds,json=resultsRemainingSeconds,proto3" json:"results_remaining_seconds,omitempty"`
+	ResultsBlockedCounting  bool              `protobuf:"varint,9,opt,name=results_blocked_counting,json=resultsBlockedCounting,proto3" json:"results_blocked_counting,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *LiveVoteCardView) Reset() {
+	*x = LiveVoteCardView{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LiveVoteCardView) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LiveVoteCardView) ProtoMessage() {}
+
+func (x *LiveVoteCardView) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LiveVoteCardView.ProtoReflect.Descriptor instead.
+func (*LiveVoteCardView) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LiveVoteCardView) GetVote() *VoteDefinitionRecord {
+	if x != nil {
+		return x.Vote
+	}
+	return nil
+}
+
+func (x *LiveVoteCardView) GetIsEligible() bool {
+	if x != nil {
+		return x.IsEligible
+	}
+	return false
+}
+
+func (x *LiveVoteCardView) GetAlreadyVoted() bool {
+	if x != nil {
+		return x.AlreadyVoted
+	}
+	return false
+}
+
+func (x *LiveVoteCardView) GetStats() *VoteStats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
+func (x *LiveVoteCardView) GetHasTimedResults() bool {
+	if x != nil {
+		return x.HasTimedResults
+	}
+	return false
+}
+
+func (x *LiveVoteCardView) GetTimedResults() []*VoteTallyEntry {
+	if x != nil {
+		return x.TimedResults
+	}
+	return nil
+}
+
+func (x *LiveVoteCardView) GetResultsUntilUnix() int64 {
+	if x != nil {
+		return x.ResultsUntilUnix
+	}
+	return 0
+}
+
+func (x *LiveVoteCardView) GetResultsRemainingSeconds() int64 {
+	if x != nil {
+		return x.ResultsRemainingSeconds
+	}
+	return 0
+}
+
+func (x *LiveVoteCardView) GetResultsBlockedCounting() bool {
+	if x != nil {
+		return x.ResultsBlockedCounting
+	}
+	return false
+}
+
 // VotesPanelView is the moderator-facing votes panel read model.
 type VotesPanelView struct {
 	state                  protoimpl.MessageState  `protogen:"open.v1"`
@@ -326,7 +437,7 @@ type VotesPanelView struct {
 
 func (x *VotesPanelView) Reset() {
 	*x = VotesPanelView{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[4]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -338,7 +449,7 @@ func (x *VotesPanelView) String() string {
 func (*VotesPanelView) ProtoMessage() {}
 
 func (x *VotesPanelView) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[4]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -351,7 +462,7 @@ func (x *VotesPanelView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VotesPanelView.ProtoReflect.Descriptor instead.
 func (*VotesPanelView) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{4}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *VotesPanelView) GetMeetingId() string {
@@ -427,14 +538,16 @@ type LiveVotePanelView struct {
 	// already_voted is true when the calling attendee already cast a ballot.
 	AlreadyVoted bool `protobuf:"varint,5,opt,name=already_voted,json=alreadyVoted,proto3" json:"already_voted,omitempty"`
 	// is_eligible is true when the calling attendee is eligible to vote.
-	IsEligible    bool `protobuf:"varint,6,opt,name=is_eligible,json=isEligible,proto3" json:"is_eligible,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	IsEligible      bool                `protobuf:"varint,6,opt,name=is_eligible,json=isEligible,proto3" json:"is_eligible,omitempty"`
+	HasActiveAgenda bool                `protobuf:"varint,7,opt,name=has_active_agenda,json=hasActiveAgenda,proto3" json:"has_active_agenda,omitempty"`
+	Votes           []*LiveVoteCardView `protobuf:"bytes,8,rep,name=votes,proto3" json:"votes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *LiveVotePanelView) Reset() {
 	*x = LiveVotePanelView{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[5]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -446,7 +559,7 @@ func (x *LiveVotePanelView) String() string {
 func (*LiveVotePanelView) ProtoMessage() {}
 
 func (x *LiveVotePanelView) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[5]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -459,7 +572,7 @@ func (x *LiveVotePanelView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LiveVotePanelView.ProtoReflect.Descriptor instead.
 func (*LiveVotePanelView) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{5}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LiveVotePanelView) GetMeetingId() string {
@@ -504,6 +617,20 @@ func (x *LiveVotePanelView) GetIsEligible() bool {
 	return false
 }
 
+func (x *LiveVotePanelView) GetHasActiveAgenda() bool {
+	if x != nil {
+		return x.HasActiveAgenda
+	}
+	return false
+}
+
+func (x *LiveVotePanelView) GetVotes() []*LiveVoteCardView {
+	if x != nil {
+		return x.Votes
+	}
+	return nil
+}
+
 type GetVotesPanelRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
@@ -514,7 +641,7 @@ type GetVotesPanelRequest struct {
 
 func (x *GetVotesPanelRequest) Reset() {
 	*x = GetVotesPanelRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[6]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -526,7 +653,7 @@ func (x *GetVotesPanelRequest) String() string {
 func (*GetVotesPanelRequest) ProtoMessage() {}
 
 func (x *GetVotesPanelRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[6]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -539,7 +666,7 @@ func (x *GetVotesPanelRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVotesPanelRequest.ProtoReflect.Descriptor instead.
 func (*GetVotesPanelRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{6}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetVotesPanelRequest) GetCommitteeSlug() string {
@@ -565,7 +692,7 @@ type GetVotesPanelResponse struct {
 
 func (x *GetVotesPanelResponse) Reset() {
 	*x = GetVotesPanelResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[7]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -577,7 +704,7 @@ func (x *GetVotesPanelResponse) String() string {
 func (*GetVotesPanelResponse) ProtoMessage() {}
 
 func (x *GetVotesPanelResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[7]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -590,7 +717,7 @@ func (x *GetVotesPanelResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVotesPanelResponse.ProtoReflect.Descriptor instead.
 func (*GetVotesPanelResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{7}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetVotesPanelResponse) GetView() *VotesPanelView {
@@ -610,7 +737,7 @@ type GetLiveVotePanelRequest struct {
 
 func (x *GetLiveVotePanelRequest) Reset() {
 	*x = GetLiveVotePanelRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[8]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -622,7 +749,7 @@ func (x *GetLiveVotePanelRequest) String() string {
 func (*GetLiveVotePanelRequest) ProtoMessage() {}
 
 func (x *GetLiveVotePanelRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[8]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -635,7 +762,7 @@ func (x *GetLiveVotePanelRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLiveVotePanelRequest.ProtoReflect.Descriptor instead.
 func (*GetLiveVotePanelRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{8}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetLiveVotePanelRequest) GetCommitteeSlug() string {
@@ -661,7 +788,7 @@ type GetLiveVotePanelResponse struct {
 
 func (x *GetLiveVotePanelResponse) Reset() {
 	*x = GetLiveVotePanelResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[9]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -673,7 +800,7 @@ func (x *GetLiveVotePanelResponse) String() string {
 func (*GetLiveVotePanelResponse) ProtoMessage() {}
 
 func (x *GetLiveVotePanelResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[9]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -686,7 +813,7 @@ func (x *GetLiveVotePanelResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLiveVotePanelResponse.ProtoReflect.Descriptor instead.
 func (*GetLiveVotePanelResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{9}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetLiveVotePanelResponse) GetView() *LiveVotePanelView {
@@ -712,7 +839,7 @@ type CreateVoteRequest struct {
 
 func (x *CreateVoteRequest) Reset() {
 	*x = CreateVoteRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[10]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -724,7 +851,7 @@ func (x *CreateVoteRequest) String() string {
 func (*CreateVoteRequest) ProtoMessage() {}
 
 func (x *CreateVoteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[10]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -737,7 +864,7 @@ func (x *CreateVoteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateVoteRequest.ProtoReflect.Descriptor instead.
 func (*CreateVoteRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{10}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateVoteRequest) GetCommitteeSlug() string {
@@ -799,7 +926,7 @@ type CreateVoteResponse struct {
 
 func (x *CreateVoteResponse) Reset() {
 	*x = CreateVoteResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[11]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -811,7 +938,7 @@ func (x *CreateVoteResponse) String() string {
 func (*CreateVoteResponse) ProtoMessage() {}
 
 func (x *CreateVoteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[11]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -824,7 +951,7 @@ func (x *CreateVoteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateVoteResponse.ProtoReflect.Descriptor instead.
 func (*CreateVoteResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{11}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CreateVoteResponse) GetVote() *VoteDefinitionRecord {
@@ -857,7 +984,7 @@ type UpdateVoteDraftRequest struct {
 
 func (x *UpdateVoteDraftRequest) Reset() {
 	*x = UpdateVoteDraftRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[12]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -869,7 +996,7 @@ func (x *UpdateVoteDraftRequest) String() string {
 func (*UpdateVoteDraftRequest) ProtoMessage() {}
 
 func (x *UpdateVoteDraftRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[12]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -882,7 +1009,7 @@ func (x *UpdateVoteDraftRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateVoteDraftRequest.ProtoReflect.Descriptor instead.
 func (*UpdateVoteDraftRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{12}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateVoteDraftRequest) GetCommitteeSlug() string {
@@ -951,7 +1078,7 @@ type UpdateVoteDraftResponse struct {
 
 func (x *UpdateVoteDraftResponse) Reset() {
 	*x = UpdateVoteDraftResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[13]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -963,7 +1090,7 @@ func (x *UpdateVoteDraftResponse) String() string {
 func (*UpdateVoteDraftResponse) ProtoMessage() {}
 
 func (x *UpdateVoteDraftResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[13]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -976,7 +1103,7 @@ func (x *UpdateVoteDraftResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateVoteDraftResponse.ProtoReflect.Descriptor instead.
 func (*UpdateVoteDraftResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{13}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateVoteDraftResponse) GetVote() *VoteDefinitionRecord {
@@ -1004,7 +1131,7 @@ type OpenVoteRequest struct {
 
 func (x *OpenVoteRequest) Reset() {
 	*x = OpenVoteRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[14]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1016,7 +1143,7 @@ func (x *OpenVoteRequest) String() string {
 func (*OpenVoteRequest) ProtoMessage() {}
 
 func (x *OpenVoteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[14]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1029,7 +1156,7 @@ func (x *OpenVoteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OpenVoteRequest.ProtoReflect.Descriptor instead.
 func (*OpenVoteRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{14}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *OpenVoteRequest) GetCommitteeSlug() string {
@@ -1064,7 +1191,7 @@ type OpenVoteResponse struct {
 
 func (x *OpenVoteResponse) Reset() {
 	*x = OpenVoteResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[15]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1076,7 +1203,7 @@ func (x *OpenVoteResponse) String() string {
 func (*OpenVoteResponse) ProtoMessage() {}
 
 func (x *OpenVoteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[15]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1089,7 +1216,7 @@ func (x *OpenVoteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OpenVoteResponse.ProtoReflect.Descriptor instead.
 func (*OpenVoteResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{15}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *OpenVoteResponse) GetVote() *VoteDefinitionRecord {
@@ -1124,7 +1251,7 @@ type CloseVoteRequest struct {
 
 func (x *CloseVoteRequest) Reset() {
 	*x = CloseVoteRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[16]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1136,7 +1263,7 @@ func (x *CloseVoteRequest) String() string {
 func (*CloseVoteRequest) ProtoMessage() {}
 
 func (x *CloseVoteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[16]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1149,7 +1276,7 @@ func (x *CloseVoteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseVoteRequest.ProtoReflect.Descriptor instead.
 func (*CloseVoteRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{16}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CloseVoteRequest) GetCommitteeSlug() string {
@@ -1186,7 +1313,7 @@ type CloseVoteResponse struct {
 
 func (x *CloseVoteResponse) Reset() {
 	*x = CloseVoteResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[17]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1198,7 +1325,7 @@ func (x *CloseVoteResponse) String() string {
 func (*CloseVoteResponse) ProtoMessage() {}
 
 func (x *CloseVoteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[17]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1211,7 +1338,7 @@ func (x *CloseVoteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseVoteResponse.ProtoReflect.Descriptor instead.
 func (*CloseVoteResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{17}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CloseVoteResponse) GetVote() *VoteDefinitionRecord {
@@ -1253,7 +1380,7 @@ type ArchiveVoteRequest struct {
 
 func (x *ArchiveVoteRequest) Reset() {
 	*x = ArchiveVoteRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[18]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1265,7 +1392,7 @@ func (x *ArchiveVoteRequest) String() string {
 func (*ArchiveVoteRequest) ProtoMessage() {}
 
 func (x *ArchiveVoteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[18]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1278,7 +1405,7 @@ func (x *ArchiveVoteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArchiveVoteRequest.ProtoReflect.Descriptor instead.
 func (*ArchiveVoteRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{18}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ArchiveVoteRequest) GetCommitteeSlug() string {
@@ -1312,7 +1439,7 @@ type ArchiveVoteResponse struct {
 
 func (x *ArchiveVoteResponse) Reset() {
 	*x = ArchiveVoteResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[19]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1324,7 +1451,7 @@ func (x *ArchiveVoteResponse) String() string {
 func (*ArchiveVoteResponse) ProtoMessage() {}
 
 func (x *ArchiveVoteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[19]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1337,7 +1464,7 @@ func (x *ArchiveVoteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArchiveVoteResponse.ProtoReflect.Descriptor instead.
 func (*ArchiveVoteResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{19}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ArchiveVoteResponse) GetVote() *VoteDefinitionRecord {
@@ -1368,7 +1495,7 @@ type SubmitBallotRequest struct {
 
 func (x *SubmitBallotRequest) Reset() {
 	*x = SubmitBallotRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[20]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1380,7 +1507,7 @@ func (x *SubmitBallotRequest) String() string {
 func (*SubmitBallotRequest) ProtoMessage() {}
 
 func (x *SubmitBallotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[20]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1393,7 +1520,7 @@ func (x *SubmitBallotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitBallotRequest.ProtoReflect.Descriptor instead.
 func (*SubmitBallotRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{20}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SubmitBallotRequest) GetCommitteeSlug() string {
@@ -1442,7 +1569,7 @@ type SubmitBallotResponse struct {
 
 func (x *SubmitBallotResponse) Reset() {
 	*x = SubmitBallotResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[21]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1454,7 +1581,7 @@ func (x *SubmitBallotResponse) String() string {
 func (*SubmitBallotResponse) ProtoMessage() {}
 
 func (x *SubmitBallotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[21]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1467,7 +1594,7 @@ func (x *SubmitBallotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitBallotResponse.ProtoReflect.Descriptor instead.
 func (*SubmitBallotResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{21}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *SubmitBallotResponse) GetReceiptToken() string {
@@ -1495,7 +1622,7 @@ type VerifyOpenReceiptRequest struct {
 
 func (x *VerifyOpenReceiptRequest) Reset() {
 	*x = VerifyOpenReceiptRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[22]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1507,7 +1634,7 @@ func (x *VerifyOpenReceiptRequest) String() string {
 func (*VerifyOpenReceiptRequest) ProtoMessage() {}
 
 func (x *VerifyOpenReceiptRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[22]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1520,7 +1647,7 @@ func (x *VerifyOpenReceiptRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyOpenReceiptRequest.ProtoReflect.Descriptor instead.
 func (*VerifyOpenReceiptRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{22}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *VerifyOpenReceiptRequest) GetVoteId() string {
@@ -1559,7 +1686,7 @@ type VerifyOpenReceiptResponse struct {
 
 func (x *VerifyOpenReceiptResponse) Reset() {
 	*x = VerifyOpenReceiptResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[23]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1571,7 +1698,7 @@ func (x *VerifyOpenReceiptResponse) String() string {
 func (*VerifyOpenReceiptResponse) ProtoMessage() {}
 
 func (x *VerifyOpenReceiptResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[23]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1584,7 +1711,7 @@ func (x *VerifyOpenReceiptResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyOpenReceiptResponse.ProtoReflect.Descriptor instead.
 func (*VerifyOpenReceiptResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{23}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *VerifyOpenReceiptResponse) GetVoteId() string {
@@ -1646,7 +1773,7 @@ type VerifySecretReceiptRequest struct {
 
 func (x *VerifySecretReceiptRequest) Reset() {
 	*x = VerifySecretReceiptRequest{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[24]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1658,7 +1785,7 @@ func (x *VerifySecretReceiptRequest) String() string {
 func (*VerifySecretReceiptRequest) ProtoMessage() {}
 
 func (x *VerifySecretReceiptRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[24]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1671,7 +1798,7 @@ func (x *VerifySecretReceiptRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifySecretReceiptRequest.ProtoReflect.Descriptor instead.
 func (*VerifySecretReceiptRequest) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{24}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *VerifySecretReceiptRequest) GetVoteId() string {
@@ -1702,7 +1829,7 @@ type VerifySecretReceiptResponse struct {
 
 func (x *VerifySecretReceiptResponse) Reset() {
 	*x = VerifySecretReceiptResponse{}
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[25]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1714,7 +1841,7 @@ func (x *VerifySecretReceiptResponse) String() string {
 func (*VerifySecretReceiptResponse) ProtoMessage() {}
 
 func (x *VerifySecretReceiptResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_votes_v1_votes_proto_msgTypes[25]
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1727,7 +1854,7 @@ func (x *VerifySecretReceiptResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifySecretReceiptResponse.ProtoReflect.Descriptor instead.
 func (*VerifySecretReceiptResponse) Descriptor() ([]byte, []int) {
-	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{25}
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *VerifySecretReceiptResponse) GetVoteId() string {
@@ -1800,7 +1927,18 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\x0eVoteTallyEntry\x12\x1b\n" +
 	"\toption_id\x18\x01 \x01(\tR\boptionId\x12\x14\n" +
 	"\x05label\x18\x02 \x01(\tR\x05label\x12\x14\n" +
-	"\x05count\x18\x03 \x01(\x03R\x05count\"\xa7\x04\n" +
+	"\x05count\x18\x03 \x01(\x03R\x05count\"\xe7\x03\n" +
+	"\x10LiveVoteCardView\x12=\n" +
+	"\x04vote\x18\x01 \x01(\v2).conference.votes.v1.VoteDefinitionRecordR\x04vote\x12\x1f\n" +
+	"\vis_eligible\x18\x02 \x01(\bR\n" +
+	"isEligible\x12#\n" +
+	"\ralready_voted\x18\x03 \x01(\bR\falreadyVoted\x124\n" +
+	"\x05stats\x18\x04 \x01(\v2\x1e.conference.votes.v1.VoteStatsR\x05stats\x12*\n" +
+	"\x11has_timed_results\x18\x05 \x01(\bR\x0fhasTimedResults\x12H\n" +
+	"\rtimed_results\x18\x06 \x03(\v2#.conference.votes.v1.VoteTallyEntryR\ftimedResults\x12,\n" +
+	"\x12results_until_unix\x18\a \x01(\x03R\x10resultsUntilUnix\x12:\n" +
+	"\x19results_remaining_seconds\x18\b \x01(\x03R\x17resultsRemainingSeconds\x128\n" +
+	"\x18results_blocked_counting\x18\t \x01(\bR\x16resultsBlockedCounting\"\xa7\x04\n" +
 	"\x0eVotesPanelView\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12%\n" +
@@ -1812,7 +1950,7 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\vactive_vote\x18\a \x01(\v2).conference.votes.v1.VoteDefinitionRecordR\n" +
 	"activeVote\x12J\n" +
 	"\x11active_vote_stats\x18\b \x01(\v2\x1e.conference.votes.v1.VoteStatsR\x0factiveVoteStats\x12O\n" +
-	"\x11active_vote_tally\x18\t \x03(\v2#.conference.votes.v1.VoteTallyEntryR\x0factiveVoteTally\"\x93\x02\n" +
+	"\x11active_vote_tally\x18\t \x03(\v2#.conference.votes.v1.VoteTallyEntryR\x0factiveVoteTally\"\xfc\x02\n" +
 	"\x11LiveVotePanelView\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12%\n" +
@@ -1822,7 +1960,9 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"activeVote\x12#\n" +
 	"\ralready_voted\x18\x05 \x01(\bR\falreadyVoted\x12\x1f\n" +
 	"\vis_eligible\x18\x06 \x01(\bR\n" +
-	"isEligible\"\\\n" +
+	"isEligible\x12*\n" +
+	"\x11has_active_agenda\x18\a \x01(\bR\x0fhasActiveAgenda\x12;\n" +
+	"\x05votes\x18\b \x03(\v2%.conference.votes.v1.LiveVoteCardViewR\x05votes\"\\\n" +
 	"\x14GetVotesPanelRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
@@ -1951,76 +2091,81 @@ func file_conference_votes_v1_votes_proto_rawDescGZIP() []byte {
 	return file_conference_votes_v1_votes_proto_rawDescData
 }
 
-var file_conference_votes_v1_votes_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_conference_votes_v1_votes_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_conference_votes_v1_votes_proto_goTypes = []any{
 	(*VoteOptionRecord)(nil),            // 0: conference.votes.v1.VoteOptionRecord
 	(*VoteDefinitionRecord)(nil),        // 1: conference.votes.v1.VoteDefinitionRecord
 	(*VoteStats)(nil),                   // 2: conference.votes.v1.VoteStats
 	(*VoteTallyEntry)(nil),              // 3: conference.votes.v1.VoteTallyEntry
-	(*VotesPanelView)(nil),              // 4: conference.votes.v1.VotesPanelView
-	(*LiveVotePanelView)(nil),           // 5: conference.votes.v1.LiveVotePanelView
-	(*GetVotesPanelRequest)(nil),        // 6: conference.votes.v1.GetVotesPanelRequest
-	(*GetVotesPanelResponse)(nil),       // 7: conference.votes.v1.GetVotesPanelResponse
-	(*GetLiveVotePanelRequest)(nil),     // 8: conference.votes.v1.GetLiveVotePanelRequest
-	(*GetLiveVotePanelResponse)(nil),    // 9: conference.votes.v1.GetLiveVotePanelResponse
-	(*CreateVoteRequest)(nil),           // 10: conference.votes.v1.CreateVoteRequest
-	(*CreateVoteResponse)(nil),          // 11: conference.votes.v1.CreateVoteResponse
-	(*UpdateVoteDraftRequest)(nil),      // 12: conference.votes.v1.UpdateVoteDraftRequest
-	(*UpdateVoteDraftResponse)(nil),     // 13: conference.votes.v1.UpdateVoteDraftResponse
-	(*OpenVoteRequest)(nil),             // 14: conference.votes.v1.OpenVoteRequest
-	(*OpenVoteResponse)(nil),            // 15: conference.votes.v1.OpenVoteResponse
-	(*CloseVoteRequest)(nil),            // 16: conference.votes.v1.CloseVoteRequest
-	(*CloseVoteResponse)(nil),           // 17: conference.votes.v1.CloseVoteResponse
-	(*ArchiveVoteRequest)(nil),          // 18: conference.votes.v1.ArchiveVoteRequest
-	(*ArchiveVoteResponse)(nil),         // 19: conference.votes.v1.ArchiveVoteResponse
-	(*SubmitBallotRequest)(nil),         // 20: conference.votes.v1.SubmitBallotRequest
-	(*SubmitBallotResponse)(nil),        // 21: conference.votes.v1.SubmitBallotResponse
-	(*VerifyOpenReceiptRequest)(nil),    // 22: conference.votes.v1.VerifyOpenReceiptRequest
-	(*VerifyOpenReceiptResponse)(nil),   // 23: conference.votes.v1.VerifyOpenReceiptResponse
-	(*VerifySecretReceiptRequest)(nil),  // 24: conference.votes.v1.VerifySecretReceiptRequest
-	(*VerifySecretReceiptResponse)(nil), // 25: conference.votes.v1.VerifySecretReceiptResponse
+	(*LiveVoteCardView)(nil),            // 4: conference.votes.v1.LiveVoteCardView
+	(*VotesPanelView)(nil),              // 5: conference.votes.v1.VotesPanelView
+	(*LiveVotePanelView)(nil),           // 6: conference.votes.v1.LiveVotePanelView
+	(*GetVotesPanelRequest)(nil),        // 7: conference.votes.v1.GetVotesPanelRequest
+	(*GetVotesPanelResponse)(nil),       // 8: conference.votes.v1.GetVotesPanelResponse
+	(*GetLiveVotePanelRequest)(nil),     // 9: conference.votes.v1.GetLiveVotePanelRequest
+	(*GetLiveVotePanelResponse)(nil),    // 10: conference.votes.v1.GetLiveVotePanelResponse
+	(*CreateVoteRequest)(nil),           // 11: conference.votes.v1.CreateVoteRequest
+	(*CreateVoteResponse)(nil),          // 12: conference.votes.v1.CreateVoteResponse
+	(*UpdateVoteDraftRequest)(nil),      // 13: conference.votes.v1.UpdateVoteDraftRequest
+	(*UpdateVoteDraftResponse)(nil),     // 14: conference.votes.v1.UpdateVoteDraftResponse
+	(*OpenVoteRequest)(nil),             // 15: conference.votes.v1.OpenVoteRequest
+	(*OpenVoteResponse)(nil),            // 16: conference.votes.v1.OpenVoteResponse
+	(*CloseVoteRequest)(nil),            // 17: conference.votes.v1.CloseVoteRequest
+	(*CloseVoteResponse)(nil),           // 18: conference.votes.v1.CloseVoteResponse
+	(*ArchiveVoteRequest)(nil),          // 19: conference.votes.v1.ArchiveVoteRequest
+	(*ArchiveVoteResponse)(nil),         // 20: conference.votes.v1.ArchiveVoteResponse
+	(*SubmitBallotRequest)(nil),         // 21: conference.votes.v1.SubmitBallotRequest
+	(*SubmitBallotResponse)(nil),        // 22: conference.votes.v1.SubmitBallotResponse
+	(*VerifyOpenReceiptRequest)(nil),    // 23: conference.votes.v1.VerifyOpenReceiptRequest
+	(*VerifyOpenReceiptResponse)(nil),   // 24: conference.votes.v1.VerifyOpenReceiptResponse
+	(*VerifySecretReceiptRequest)(nil),  // 25: conference.votes.v1.VerifySecretReceiptRequest
+	(*VerifySecretReceiptResponse)(nil), // 26: conference.votes.v1.VerifySecretReceiptResponse
 }
 var file_conference_votes_v1_votes_proto_depIdxs = []int32{
 	0,  // 0: conference.votes.v1.VoteDefinitionRecord.options:type_name -> conference.votes.v1.VoteOptionRecord
-	1,  // 1: conference.votes.v1.VotesPanelView.votes:type_name -> conference.votes.v1.VoteDefinitionRecord
-	1,  // 2: conference.votes.v1.VotesPanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	2,  // 3: conference.votes.v1.VotesPanelView.active_vote_stats:type_name -> conference.votes.v1.VoteStats
-	3,  // 4: conference.votes.v1.VotesPanelView.active_vote_tally:type_name -> conference.votes.v1.VoteTallyEntry
-	1,  // 5: conference.votes.v1.LiveVotePanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	4,  // 6: conference.votes.v1.GetVotesPanelResponse.view:type_name -> conference.votes.v1.VotesPanelView
-	5,  // 7: conference.votes.v1.GetLiveVotePanelResponse.view:type_name -> conference.votes.v1.LiveVotePanelView
-	1,  // 8: conference.votes.v1.CreateVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	1,  // 9: conference.votes.v1.UpdateVoteDraftResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	1,  // 10: conference.votes.v1.OpenVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	2,  // 11: conference.votes.v1.OpenVoteResponse.stats:type_name -> conference.votes.v1.VoteStats
-	1,  // 12: conference.votes.v1.CloseVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	3,  // 13: conference.votes.v1.CloseVoteResponse.tally:type_name -> conference.votes.v1.VoteTallyEntry
-	1,  // 14: conference.votes.v1.ArchiveVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	6,  // 15: conference.votes.v1.VoteService.GetVotesPanel:input_type -> conference.votes.v1.GetVotesPanelRequest
-	8,  // 16: conference.votes.v1.VoteService.GetLiveVotePanel:input_type -> conference.votes.v1.GetLiveVotePanelRequest
-	10, // 17: conference.votes.v1.VoteService.CreateVote:input_type -> conference.votes.v1.CreateVoteRequest
-	12, // 18: conference.votes.v1.VoteService.UpdateVoteDraft:input_type -> conference.votes.v1.UpdateVoteDraftRequest
-	14, // 19: conference.votes.v1.VoteService.OpenVote:input_type -> conference.votes.v1.OpenVoteRequest
-	16, // 20: conference.votes.v1.VoteService.CloseVote:input_type -> conference.votes.v1.CloseVoteRequest
-	18, // 21: conference.votes.v1.VoteService.ArchiveVote:input_type -> conference.votes.v1.ArchiveVoteRequest
-	20, // 22: conference.votes.v1.VoteService.SubmitBallot:input_type -> conference.votes.v1.SubmitBallotRequest
-	22, // 23: conference.votes.v1.VoteService.VerifyOpenReceipt:input_type -> conference.votes.v1.VerifyOpenReceiptRequest
-	24, // 24: conference.votes.v1.VoteService.VerifySecretReceipt:input_type -> conference.votes.v1.VerifySecretReceiptRequest
-	7,  // 25: conference.votes.v1.VoteService.GetVotesPanel:output_type -> conference.votes.v1.GetVotesPanelResponse
-	9,  // 26: conference.votes.v1.VoteService.GetLiveVotePanel:output_type -> conference.votes.v1.GetLiveVotePanelResponse
-	11, // 27: conference.votes.v1.VoteService.CreateVote:output_type -> conference.votes.v1.CreateVoteResponse
-	13, // 28: conference.votes.v1.VoteService.UpdateVoteDraft:output_type -> conference.votes.v1.UpdateVoteDraftResponse
-	15, // 29: conference.votes.v1.VoteService.OpenVote:output_type -> conference.votes.v1.OpenVoteResponse
-	17, // 30: conference.votes.v1.VoteService.CloseVote:output_type -> conference.votes.v1.CloseVoteResponse
-	19, // 31: conference.votes.v1.VoteService.ArchiveVote:output_type -> conference.votes.v1.ArchiveVoteResponse
-	21, // 32: conference.votes.v1.VoteService.SubmitBallot:output_type -> conference.votes.v1.SubmitBallotResponse
-	23, // 33: conference.votes.v1.VoteService.VerifyOpenReceipt:output_type -> conference.votes.v1.VerifyOpenReceiptResponse
-	25, // 34: conference.votes.v1.VoteService.VerifySecretReceipt:output_type -> conference.votes.v1.VerifySecretReceiptResponse
-	25, // [25:35] is the sub-list for method output_type
-	15, // [15:25] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	1,  // 1: conference.votes.v1.LiveVoteCardView.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	2,  // 2: conference.votes.v1.LiveVoteCardView.stats:type_name -> conference.votes.v1.VoteStats
+	3,  // 3: conference.votes.v1.LiveVoteCardView.timed_results:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 4: conference.votes.v1.VotesPanelView.votes:type_name -> conference.votes.v1.VoteDefinitionRecord
+	1,  // 5: conference.votes.v1.VotesPanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	2,  // 6: conference.votes.v1.VotesPanelView.active_vote_stats:type_name -> conference.votes.v1.VoteStats
+	3,  // 7: conference.votes.v1.VotesPanelView.active_vote_tally:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 8: conference.votes.v1.LiveVotePanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	4,  // 9: conference.votes.v1.LiveVotePanelView.votes:type_name -> conference.votes.v1.LiveVoteCardView
+	5,  // 10: conference.votes.v1.GetVotesPanelResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	6,  // 11: conference.votes.v1.GetLiveVotePanelResponse.view:type_name -> conference.votes.v1.LiveVotePanelView
+	1,  // 12: conference.votes.v1.CreateVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	1,  // 13: conference.votes.v1.UpdateVoteDraftResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	1,  // 14: conference.votes.v1.OpenVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	2,  // 15: conference.votes.v1.OpenVoteResponse.stats:type_name -> conference.votes.v1.VoteStats
+	1,  // 16: conference.votes.v1.CloseVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	3,  // 17: conference.votes.v1.CloseVoteResponse.tally:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 18: conference.votes.v1.ArchiveVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	7,  // 19: conference.votes.v1.VoteService.GetVotesPanel:input_type -> conference.votes.v1.GetVotesPanelRequest
+	9,  // 20: conference.votes.v1.VoteService.GetLiveVotePanel:input_type -> conference.votes.v1.GetLiveVotePanelRequest
+	11, // 21: conference.votes.v1.VoteService.CreateVote:input_type -> conference.votes.v1.CreateVoteRequest
+	13, // 22: conference.votes.v1.VoteService.UpdateVoteDraft:input_type -> conference.votes.v1.UpdateVoteDraftRequest
+	15, // 23: conference.votes.v1.VoteService.OpenVote:input_type -> conference.votes.v1.OpenVoteRequest
+	17, // 24: conference.votes.v1.VoteService.CloseVote:input_type -> conference.votes.v1.CloseVoteRequest
+	19, // 25: conference.votes.v1.VoteService.ArchiveVote:input_type -> conference.votes.v1.ArchiveVoteRequest
+	21, // 26: conference.votes.v1.VoteService.SubmitBallot:input_type -> conference.votes.v1.SubmitBallotRequest
+	23, // 27: conference.votes.v1.VoteService.VerifyOpenReceipt:input_type -> conference.votes.v1.VerifyOpenReceiptRequest
+	25, // 28: conference.votes.v1.VoteService.VerifySecretReceipt:input_type -> conference.votes.v1.VerifySecretReceiptRequest
+	8,  // 29: conference.votes.v1.VoteService.GetVotesPanel:output_type -> conference.votes.v1.GetVotesPanelResponse
+	10, // 30: conference.votes.v1.VoteService.GetLiveVotePanel:output_type -> conference.votes.v1.GetLiveVotePanelResponse
+	12, // 31: conference.votes.v1.VoteService.CreateVote:output_type -> conference.votes.v1.CreateVoteResponse
+	14, // 32: conference.votes.v1.VoteService.UpdateVoteDraft:output_type -> conference.votes.v1.UpdateVoteDraftResponse
+	16, // 33: conference.votes.v1.VoteService.OpenVote:output_type -> conference.votes.v1.OpenVoteResponse
+	18, // 34: conference.votes.v1.VoteService.CloseVote:output_type -> conference.votes.v1.CloseVoteResponse
+	20, // 35: conference.votes.v1.VoteService.ArchiveVote:output_type -> conference.votes.v1.ArchiveVoteResponse
+	22, // 36: conference.votes.v1.VoteService.SubmitBallot:output_type -> conference.votes.v1.SubmitBallotResponse
+	24, // 37: conference.votes.v1.VoteService.VerifyOpenReceipt:output_type -> conference.votes.v1.VerifyOpenReceiptResponse
+	26, // 38: conference.votes.v1.VoteService.VerifySecretReceipt:output_type -> conference.votes.v1.VerifySecretReceiptResponse
+	29, // [29:39] is the sub-list for method output_type
+	19, // [19:29] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_conference_votes_v1_votes_proto_init() }
@@ -2034,7 +2179,7 @@ func file_conference_votes_v1_votes_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_votes_v1_votes_proto_rawDesc), len(file_conference_votes_v1_votes_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

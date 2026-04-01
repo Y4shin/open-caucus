@@ -619,6 +619,54 @@ routes:
           type: AgendaPointListPartial
           input_type: AgendaPointListPartialInput
 
+  # Agenda Point List Partial (GET re-renders the full agenda list; used by cancel in edit form)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/list
+    methods:
+      - verb: GET
+        handler: ManageAgendaPointList
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
+  # Agenda Point Edit Form (GET returns an inline edit card)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/edit-form
+    methods:
+      - verb: GET
+        handler: ManageAgendaPointEditForm
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointEditFormPartial
+          input_type: AgendaPointEditFormInput
+
+  # Agenda Point Edit (POST saves the updated title)
+  - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/edit
+    methods:
+      - verb: POST
+        handler: ManageAgendaPointEdit
+        middleware:
+          - session
+          - auth
+          - committee_access
+          - meeting_access
+          - moderate_access
+        template:
+          package: github.com/Y4shin/conference-tool/internal/templates
+          type: AgendaPointListPartial
+          input_type: AgendaPointListPartialInput
+
   # Agenda Point Delete
   - path: /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/delete
     methods:

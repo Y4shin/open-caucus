@@ -32,6 +32,7 @@ const (
 	IconDarkMode     IconName = "dark_mode"
 	IconDescription  IconName = "description"
 	IconDownload     IconName = "download"
+	IconEdit         IconName = "edit"
 )
 
 func iconPath(name IconName) string {
@@ -90,6 +91,8 @@ func iconPath(name IconName) string {
 		return "M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6Zm4 18H6V4h7v5h5v11ZM8 13h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h5v2H8V9Z"
 	case IconDownload:
 		return "M5 20h14v-2H5v2Zm7-18-5.5 5.5 1.41 1.41L11 5.83V16h2V5.83l3.09 3.08 1.41-1.41L12 2Z"
+	case IconEdit:
+		return "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
 	default:
 		return ""
 	}

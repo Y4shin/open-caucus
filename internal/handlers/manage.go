@@ -500,6 +500,88 @@ func (h *Handler) ManageAgendaPointDelete(ctx context.Context, r *http.Request, 
 	return partial, nil, err
 }
 
+// ManageAgendaPointList re-renders the agenda point list partial (used as cancel target).
+func (h *Handler) ManageAgendaPointList(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AgendaPointListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	return partial, nil, err
+}
+
+// ManageAgendaPointEditForm returns an inline edit card for the given agenda point.
+func (h *Handler) ManageAgendaPointEditForm(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AgendaPointEditFormInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+	apID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid agenda point ID")
+	}
+	ap, err := h.Repository.GetAgendaPointByID(ctx, apID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load agenda point: %w", err)
+	}
+	if ap.MeetingID != meetingID {
+		return nil, nil, fmt.Errorf("agenda point does not belong to meeting")
+	}
+	meeting, err := h.Repository.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load meeting: %w", err)
+	}
+	listInput, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	if err != nil {
+		return nil, nil, err
+	}
+	apItem := templates.AgendaPointItem{
+		ID:       ap.ID,
+		IDString: strconv.FormatInt(ap.ID, 10),
+		ParentID: ap.ParentID,
+		Position: ap.Position,
+		Title:    ap.Title,
+		IsActive: meeting.CurrentAgendaPointID != nil && *meeting.CurrentAgendaPointID == ap.ID,
+	}
+	return &templates.AgendaPointEditFormInput{
+		CommitteeSlug: params.Slug,
+		MeetingIDStr:  params.MeetingId,
+		AP:            apItem,
+		ListPostStr:   listInput.AgendaPointEditPostStr(ctx, &apItem),
+		CancelGetStr:  listInput.AgendaPointListGetStr(ctx),
+	}, nil, nil
+}
+
+// ManageAgendaPointEdit saves the updated title for an agenda point.
+func (h *Handler) ManageAgendaPointEdit(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AgendaPointListPartialInput, *routes.ResponseMeta, error) {
+	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid meeting ID")
+	}
+	apID, err := strconv.ParseInt(params.AgendaPointId, 10, 64)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid agenda point ID")
+	}
+	if err := r.ParseForm(); err != nil {
+		return nil, nil, fmt.Errorf("failed to parse form: %w", err)
+	}
+	title := strings.TrimSpace(r.FormValue("title"))
+	if title == "" {
+		partial, loadErr := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+		if loadErr != nil {
+			return nil, nil, loadErr
+		}
+		partial.Error = "Title is required."
+		return partial, nil, nil
+	}
+	if err := h.Repository.UpdateAgendaPointTitle(ctx, apID, title); err != nil {
+		return nil, nil, fmt.Errorf("failed to update agenda point: %w", err)
+	}
+	partial, err := h.loadAgendaPointListPartial(ctx, params.Slug, params.MeetingId, meetingID)
+	h.publishSpeakersUpdated(meetingID)
+	return partial, nil, err
+}
+
 // ManageActivateAgendaPoint sets the meeting's active agenda point.
 func (h *Handler) ManageActivateAgendaPoint(ctx context.Context, r *http.Request, params routes.RouteParams) (*templates.AgendaPointListPartialInput, *routes.ResponseMeta, error) {
 	meetingID, err := strconv.ParseInt(params.MeetingId, 10, 64)

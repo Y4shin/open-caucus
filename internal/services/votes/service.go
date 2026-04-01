@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
 	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
@@ -108,6 +109,7 @@ func (s *Service) GetLiveVotePanel(ctx context.Context, committeeSlug, meetingID
 	if meeting.CurrentAgendaPointID == nil {
 		return &votesv1.GetLiveVotePanelResponse{View: view}, nil
 	}
+	view.HasActiveAgenda = true
 
 	votes, err := s.repo.ListVoteDefinitionsForAgendaPoint(ctx, *meeting.CurrentAgendaPointID)
 	if err != nil {
@@ -115,20 +117,20 @@ func (s *Service) GetLiveVotePanel(ctx context.Context, committeeSlug, meetingID
 	}
 
 	callerAttendeeID := s.callerAttendeeID(ctx, meetingID)
+	now := time.Now()
 
 	for _, v := range votes {
-		if v.State != model.VoteStateOpen {
-			continue
-		}
 		opts, _ := s.repo.ListVoteOptions(ctx, v.ID)
-		view.HasActiveVote = true
-		view.ActiveVote = toVoteDefinitionRecord(v, opts)
+		record := toVoteDefinitionRecord(v, opts)
+		card := &votesv1.LiveVoteCardView{
+			Vote: record,
+		}
 
 		if callerAttendeeID != 0 {
 			if voters, err := s.repo.ListEligibleVoters(ctx, v.ID); err == nil {
 				for _, ev := range voters {
 					if ev.AttendeeID == callerAttendeeID {
-						view.IsEligible = true
+						card.IsEligible = true
 						break
 					}
 				}
@@ -136,13 +138,56 @@ func (s *Service) GetLiveVotePanel(ctx context.Context, committeeSlug, meetingID
 			if casts, err := s.repo.ListVoteCasts(ctx, v.ID); err == nil {
 				for _, c := range casts {
 					if c.AttendeeID == callerAttendeeID {
-						view.AlreadyVoted = true
+						card.AlreadyVoted = true
 						break
 					}
 				}
 			}
 		}
-		break
+
+		if stats, err := s.repo.GetVoteSubmissionStatsLive(ctx, v.ID); err == nil {
+			card.Stats = &votesv1.VoteStats{
+				EligibleCount: stats.EligibleCount,
+				CastCount:     stats.CastCount,
+				BallotCount:   stats.BallotCount,
+			}
+		}
+
+		include := false
+		switch v.State {
+		case model.VoteStateOpen:
+			include = true
+			view.HasActiveVote = true
+			view.ActiveVote = record
+			view.IsEligible = card.IsEligible
+			view.AlreadyVoted = card.AlreadyVoted
+		case model.VoteStateCounting:
+			include = true
+			card.ResultsBlockedCounting = true
+		case model.VoteStateClosed:
+			if v.ClosedAt != nil {
+				until := v.ClosedAt.Add(30 * time.Second)
+				if now.Before(until) {
+					if tallies, err := s.repo.GetVoteTallies(ctx, v.ID); err == nil {
+						card.HasTimedResults = true
+						card.ResultsUntilUnix = until.Unix()
+						card.ResultsRemainingSeconds = int64(until.Sub(now).Seconds()) + 1
+						for _, row := range tallies {
+							card.TimedResults = append(card.TimedResults, &votesv1.VoteTallyEntry{
+								OptionId: strconv.FormatInt(row.OptionID, 10),
+								Label:    row.Label,
+								Count:    row.Count,
+							})
+						}
+						include = true
+					}
+				}
+			}
+		}
+
+		if include {
+			view.Votes = append(view.Votes, card)
+		}
 	}
 
 	return &votesv1.GetLiveVotePanelResponse{View: view}, nil

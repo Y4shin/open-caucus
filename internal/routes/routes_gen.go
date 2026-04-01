@@ -106,6 +106,9 @@ type Handler interface {
 	ManageAttendeeToggleQuoted(ctx context.Context, r *http.Request, params RouteParams) (*templates.ManageAttendeeDependentPartialInput, *ResponseMeta, error)
 	ManageAttendeeRecoveryPage(ctx context.Context, r *http.Request, params RouteParams) (*templates.MeetingAttendeeRecoveryInput, *ResponseMeta, error)
 	ManageAgendaPointCreate(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaPointList(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
+	ManageAgendaPointEditForm(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointEditFormInput, *ResponseMeta, error)
+	ManageAgendaPointEdit(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointDelete(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageActivateAgendaPoint(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
 	ManageAgendaPointMoveUp(ctx context.Context, r *http.Request, params RouteParams) (*templates.AgendaPointListPartialInput, *ResponseMeta, error)
@@ -497,6 +500,27 @@ func (rt *Router) RegisterRoutes() http.Handler {
 	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/create", rt.wrapMiddleware(
 		rt.handleManageAgendaPointCreate,
 		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/create", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/agenda-point/list", rt.wrapMiddleware(
+		rt.handleManageAgendaPointList,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/list", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("GET /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/edit-form", rt.wrapMiddleware(
+		rt.handleManageAgendaPointEditForm,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/edit-form", groups),
+		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
+		false,
+	))
+
+	rt.mux.HandleFunc("POST /committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/edit", rt.wrapMiddleware(
+		rt.handleManageAgendaPointEdit,
+		getMiddlewareForPath("/committee/{slug}/meeting/{meeting_id}/agenda-point/{agenda_point_id}/edit", groups),
 		[]string{"session", "auth", "committee_access", "meeting_access", "moderate_access"},
 		false,
 	))
@@ -1977,6 +2001,98 @@ func (rt *Router) handleManageAgendaPointCreate(w http.ResponseWriter, r *http.R
 	}
 
 	input, meta, err := rt.handler.ManageAgendaPointCreate(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointList(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:      r.PathValue("slug"),
+		MeetingId: r.PathValue("meeting_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointList(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointListPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointEditForm(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointEditForm(r.Context(), r, params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Set cookies and headers
+	if meta != nil {
+		for _, cookie := range meta.Cookies {
+			http.SetCookie(w, cookie)
+		}
+		for key, value := range meta.Headers {
+			w.Header().Set(key, value)
+		}
+	}
+
+	// Handle redirect
+	if meta != nil && meta.Redirect != nil {
+		http.Redirect(w, r, meta.Redirect.Location, meta.Redirect.StatusCode)
+		return
+	}
+
+	templates.AgendaPointEditFormPartial(*input).Render(r.Context(), w)
+}
+func (rt *Router) handleManageAgendaPointEdit(w http.ResponseWriter, r *http.Request) {
+	params := RouteParams{
+		Slug:          r.PathValue("slug"),
+		MeetingId:     r.PathValue("meeting_id"),
+		AgendaPointId: r.PathValue("agenda_point_id"),
+	}
+
+	input, meta, err := rt.handler.ManageAgendaPointEdit(r.Context(), r, params)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

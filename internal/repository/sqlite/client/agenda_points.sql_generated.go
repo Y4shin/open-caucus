@@ -106,6 +106,20 @@ func (q *Queries) CreateSubAgendaPoint(ctx context.Context, arg CreateSubAgendaP
 	return i, err
 }
 
+const updateAgendaPointTitle = `-- name: UpdateAgendaPointTitle :exec
+UPDATE agenda_points SET title = ? WHERE id = ?
+`
+
+type UpdateAgendaPointTitleParams struct {
+	Title string
+	ID    int64
+}
+
+func (q *Queries) UpdateAgendaPointTitle(ctx context.Context, arg UpdateAgendaPointTitleParams) error {
+	_, err := q.db.ExecContext(ctx, updateAgendaPointTitle, arg.Title, arg.ID)
+	return err
+}
+
 const deleteAgendaPoint = `-- name: DeleteAgendaPoint :exec
 DELETE FROM agenda_points WHERE id = ?
 `

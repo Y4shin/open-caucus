@@ -34,6 +34,9 @@ service AgendaService {
 
   // DeleteAttachment removes an attachment and its backing blob.
   rpc DeleteAttachment(DeleteAttachmentRequest) returns (DeleteAttachmentResponse);
+
+  // UpdateAgendaPoint updates the title of an agenda point.
+  rpc UpdateAgendaPoint(UpdateAgendaPointRequest) returns (UpdateAgendaPointResponse);
 }
 
 // AgendaPointRecord is the read model for one agenda point, including its
@@ -169,5 +172,17 @@ message DeleteAttachmentRequest {
 
 message DeleteAttachmentResponse {
   AgendaPointToolsView view = 1;
+  repeated string invalidated_views = 2;
+}
+
+message UpdateAgendaPointRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string agenda_point_id = 3;
+  string title = 4;
+}
+
+message UpdateAgendaPointResponse {
+  AgendaPointRecord agenda_point = 1;
   repeated string invalidated_views = 2;
 }

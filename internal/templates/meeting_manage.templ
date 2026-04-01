@@ -324,6 +324,18 @@ func (i *AgendaPointListPartialInput) AgendaPointCreatePostStr(ctx context.Conte
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointCreateRoute(i.CommitteeSlug, i.IDString).ManageAgendaPointCreatePost(ctx, "")
 }
 
+func (i *AgendaPointListPartialInput) AgendaPointListGetStr(ctx context.Context) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointListRoute(i.CommitteeSlug, i.IDString).ManageAgendaPointListGet(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointEditFormGetStr(ctx context.Context, ap *AgendaPointItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdEditFormRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointEditFormGet(ctx, "")
+}
+
+func (i *AgendaPointListPartialInput) AgendaPointEditPostStr(ctx context.Context, ap *AgendaPointItem) string {
+	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdEditRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointEditPost(ctx, "")
+}
+
 func (i *AgendaPointListPartialInput) AgendaPointDeletePostStr(ctx context.Context, ap *AgendaPointItem) string {
 	return paths.NewCommitteeSlugMeetingMeetingIdAgendaPointAgendaPointIdDeleteRoute(i.CommitteeSlug, i.IDString, ap.IDString).ManageAgendaPointDeletePost(ctx, "")
 }
@@ -1128,6 +1140,65 @@ templ ModerateSpeakerSettingsContent(input SpeakersListPartialInput) {
 	}
 }
 
+// AgendaPointEditFormInput is the input for the per-card inline edit form.
+type AgendaPointEditFormInput struct {
+	CommitteeSlug string
+	MeetingIDStr  string
+	AP            AgendaPointItem
+	ListPostStr   string // POST URL for the edit endpoint (saves to full list)
+	CancelGetStr  string // GET URL for the list partial (cancel restores the list)
+}
+
+// AgendaPointEditFormPartial renders a single agenda-point card in edit mode.
+// Submitting the form POSTs to the edit endpoint and swaps #agenda-point-list-container.
+// Cancelling GETs the full list and swaps #agenda-point-list-container.
+templ AgendaPointEditFormPartial(input AgendaPointEditFormInput) {
+	<div
+		id={ "agenda-point-card-" + input.AP.IDString }
+		class={
+			"card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm",
+			templ.KV("bg-primary/5 border-primary/40", input.AP.IsActive),
+			templ.KV("ml-5", input.AP.ParentID != nil),
+		}
+		data-testid="manage-agenda-point-card"
+	>
+		<form
+			hx-post={ input.ListPostStr }
+			hx-target="#agenda-point-list-container"
+			hx-swap="outerHTML"
+			class="space-y-2"
+			data-testid="manage-agenda-point-edit-form"
+		>
+			<label class="label p-0 text-sm font-medium" for={ "edit-ap-title-" + input.AP.IDString }>
+				{ i18n.T(ctx, "meeting_manage.edit_agenda_point_title") }
+			</label>
+			<input
+				class="input input-bordered input-sm w-full"
+				type="text"
+				id={ "edit-ap-title-" + input.AP.IDString }
+				name="title"
+				value={ input.AP.Title }
+				required
+				autofocus
+			/>
+			<div class="flex gap-2">
+				<button type="submit" class="btn btn-sm btn-primary">
+					{ i18n.T(ctx, "common.save") }
+				</button>
+				<button
+					type="button"
+					class="btn btn-sm btn-ghost"
+					hx-get={ input.CancelGetStr }
+					hx-target="#agenda-point-list-container"
+					hx-swap="outerHTML"
+				>
+					{ i18n.T(ctx, "common.cancel") }
+				</button>
+			</div>
+		</form>
+	</div>
+}
+
 templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 	<div id="agenda-point-list-container" class="space-y-3" data-import-open={ fmt.Sprintf("%t", input.ImportModalOpen()) } data-import-top-prefix={ i18n.T(ctx, "agenda_import.top_prefix") }>
 		@ErrorMessage(input.Error)
@@ -1174,6 +1245,7 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 					<div class="grid gap-3">
 						for _, ap := range input.AgendaPoints {
 							<div
+								id={ "agenda-point-card-" + ap.IDString }
 								class={
 									"card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm",
 									templ.KV("bg-primary/5 border-primary/40", ap.IsActive),
@@ -1250,6 +1322,19 @@ templ AgendaPointListPartial(input AgendaPointListPartialInput) {
 											</button>
 										</form>
 									}
+									<button
+										type="button"
+										class="btn btn-sm btn-square tooltip tooltip-left"
+										data-tip={ i18n.T(ctx, "meeting_manage.edit_agenda_point") }
+										title={ i18n.T(ctx, "meeting_manage.edit_agenda_point") }
+										aria-label={ i18n.T(ctx, "meeting_manage.edit_agenda_point") }
+										hx-get={ input.AgendaPointEditFormGetStr(ctx, &ap) }
+										hx-target={ "#agenda-point-card-" + ap.IDString }
+										hx-swap="outerHTML"
+										data-testid="manage-agenda-point-edit-btn"
+									>
+										@Icon(IconEdit, "", "h-4 w-4")
+									</button>
 									<a
 										href={ input.AgendaPointToolsGet(ctx, &ap) }
 										class="btn btn-sm btn-square tooltip tooltip-left"

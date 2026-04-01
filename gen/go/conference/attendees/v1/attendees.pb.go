@@ -560,6 +560,659 @@ func (x *AttendeeLoginResponse) GetActor() *v1.ActorSummary {
 	return nil
 }
 
+type CreateAttendeeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	FullName      string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	GenderQuoted  bool                   `protobuf:"varint,4,opt,name=gender_quoted,json=genderQuoted,proto3" json:"gender_quoted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateAttendeeRequest) Reset() {
+	*x = CreateAttendeeRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAttendeeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAttendeeRequest) ProtoMessage() {}
+
+func (x *CreateAttendeeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAttendeeRequest.ProtoReflect.Descriptor instead.
+func (*CreateAttendeeRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CreateAttendeeRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *CreateAttendeeRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *CreateAttendeeRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *CreateAttendeeRequest) GetGenderQuoted() bool {
+	if x != nil {
+		return x.GenderQuoted
+	}
+	return false
+}
+
+type CreateAttendeeResponse struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Attendee *AttendeeRecord        `protobuf:"bytes,1,opt,name=attendee,proto3" json:"attendee,omitempty"`
+	// attendee_secret is the per-attendee access code for the created guest.
+	AttendeeSecret string `protobuf:"bytes,2,opt,name=attendee_secret,json=attendeeSecret,proto3" json:"attendee_secret,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CreateAttendeeResponse) Reset() {
+	*x = CreateAttendeeResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateAttendeeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateAttendeeResponse) ProtoMessage() {}
+
+func (x *CreateAttendeeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateAttendeeResponse.ProtoReflect.Descriptor instead.
+func (*CreateAttendeeResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CreateAttendeeResponse) GetAttendee() *AttendeeRecord {
+	if x != nil {
+		return x.Attendee
+	}
+	return nil
+}
+
+func (x *CreateAttendeeResponse) GetAttendeeSecret() string {
+	if x != nil {
+		return x.AttendeeSecret
+	}
+	return ""
+}
+
+type DeleteAttendeeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	AttendeeId    string                 `protobuf:"bytes,3,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAttendeeRequest) Reset() {
+	*x = DeleteAttendeeRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAttendeeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAttendeeRequest) ProtoMessage() {}
+
+func (x *DeleteAttendeeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAttendeeRequest.ProtoReflect.Descriptor instead.
+func (*DeleteAttendeeRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DeleteAttendeeRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *DeleteAttendeeRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *DeleteAttendeeRequest) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+type DeleteAttendeeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteAttendeeResponse) Reset() {
+	*x = DeleteAttendeeResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteAttendeeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteAttendeeResponse) ProtoMessage() {}
+
+func (x *DeleteAttendeeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteAttendeeResponse.ProtoReflect.Descriptor instead.
+func (*DeleteAttendeeResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{12}
+}
+
+type SetChairpersonRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	AttendeeId    string                 `protobuf:"bytes,3,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	IsChair       bool                   `protobuf:"varint,4,opt,name=is_chair,json=isChair,proto3" json:"is_chair,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetChairpersonRequest) Reset() {
+	*x = SetChairpersonRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetChairpersonRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetChairpersonRequest) ProtoMessage() {}
+
+func (x *SetChairpersonRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetChairpersonRequest.ProtoReflect.Descriptor instead.
+func (*SetChairpersonRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SetChairpersonRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *SetChairpersonRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SetChairpersonRequest) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+func (x *SetChairpersonRequest) GetIsChair() bool {
+	if x != nil {
+		return x.IsChair
+	}
+	return false
+}
+
+type SetChairpersonResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attendee      *AttendeeRecord        `protobuf:"bytes,1,opt,name=attendee,proto3" json:"attendee,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetChairpersonResponse) Reset() {
+	*x = SetChairpersonResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetChairpersonResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetChairpersonResponse) ProtoMessage() {}
+
+func (x *SetChairpersonResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetChairpersonResponse.ProtoReflect.Descriptor instead.
+func (*SetChairpersonResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SetChairpersonResponse) GetAttendee() *AttendeeRecord {
+	if x != nil {
+		return x.Attendee
+	}
+	return nil
+}
+
+type SetQuotedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	AttendeeId    string                 `protobuf:"bytes,3,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	Quoted        bool                   `protobuf:"varint,4,opt,name=quoted,proto3" json:"quoted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetQuotedRequest) Reset() {
+	*x = SetQuotedRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetQuotedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetQuotedRequest) ProtoMessage() {}
+
+func (x *SetQuotedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetQuotedRequest.ProtoReflect.Descriptor instead.
+func (*SetQuotedRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SetQuotedRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *SetQuotedRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SetQuotedRequest) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+func (x *SetQuotedRequest) GetQuoted() bool {
+	if x != nil {
+		return x.Quoted
+	}
+	return false
+}
+
+type SetQuotedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attendee      *AttendeeRecord        `protobuf:"bytes,1,opt,name=attendee,proto3" json:"attendee,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetQuotedResponse) Reset() {
+	*x = SetQuotedResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetQuotedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetQuotedResponse) ProtoMessage() {}
+
+func (x *SetQuotedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetQuotedResponse.ProtoReflect.Descriptor instead.
+func (*SetQuotedResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SetQuotedResponse) GetAttendee() *AttendeeRecord {
+	if x != nil {
+		return x.Attendee
+	}
+	return nil
+}
+
+type AttendeeRecoveryView struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	AttendeeId    string                 `protobuf:"bytes,3,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	MeetingName   string                 `protobuf:"bytes,4,opt,name=meeting_name,json=meetingName,proto3" json:"meeting_name,omitempty"`
+	CommitteeName string                 `protobuf:"bytes,5,opt,name=committee_name,json=committeeName,proto3" json:"committee_name,omitempty"`
+	AttendeeName  string                 `protobuf:"bytes,6,opt,name=attendee_name,json=attendeeName,proto3" json:"attendee_name,omitempty"`
+	LoginUrl      string                 `protobuf:"bytes,7,opt,name=login_url,json=loginUrl,proto3" json:"login_url,omitempty"`
+	QrCodeDataUrl string                 `protobuf:"bytes,8,opt,name=qr_code_data_url,json=qrCodeDataUrl,proto3" json:"qr_code_data_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AttendeeRecoveryView) Reset() {
+	*x = AttendeeRecoveryView{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AttendeeRecoveryView) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AttendeeRecoveryView) ProtoMessage() {}
+
+func (x *AttendeeRecoveryView) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AttendeeRecoveryView.ProtoReflect.Descriptor instead.
+func (*AttendeeRecoveryView) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AttendeeRecoveryView) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetMeetingName() string {
+	if x != nil {
+		return x.MeetingName
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetCommitteeName() string {
+	if x != nil {
+		return x.CommitteeName
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetAttendeeName() string {
+	if x != nil {
+		return x.AttendeeName
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetLoginUrl() string {
+	if x != nil {
+		return x.LoginUrl
+	}
+	return ""
+}
+
+func (x *AttendeeRecoveryView) GetQrCodeDataUrl() string {
+	if x != nil {
+		return x.QrCodeDataUrl
+	}
+	return ""
+}
+
+type GetAttendeeRecoveryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	AttendeeId    string                 `protobuf:"bytes,3,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	BaseUrl       string                 `protobuf:"bytes,4,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAttendeeRecoveryRequest) Reset() {
+	*x = GetAttendeeRecoveryRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAttendeeRecoveryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAttendeeRecoveryRequest) ProtoMessage() {}
+
+func (x *GetAttendeeRecoveryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAttendeeRecoveryRequest.ProtoReflect.Descriptor instead.
+func (*GetAttendeeRecoveryRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetAttendeeRecoveryRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *GetAttendeeRecoveryRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *GetAttendeeRecoveryRequest) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+func (x *GetAttendeeRecoveryRequest) GetBaseUrl() string {
+	if x != nil {
+		return x.BaseUrl
+	}
+	return ""
+}
+
+type GetAttendeeRecoveryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	View          *AttendeeRecoveryView  `protobuf:"bytes,1,opt,name=view,proto3" json:"view,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetAttendeeRecoveryResponse) Reset() {
+	*x = GetAttendeeRecoveryResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetAttendeeRecoveryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAttendeeRecoveryResponse) ProtoMessage() {}
+
+func (x *GetAttendeeRecoveryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAttendeeRecoveryResponse.ProtoReflect.Descriptor instead.
+func (*GetAttendeeRecoveryResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GetAttendeeRecoveryResponse) GetView() *AttendeeRecoveryView {
+	if x != nil {
+		return x.View
+	}
+	return nil
+}
+
 var File_conference_attendees_v1_attendees_proto protoreflect.FileDescriptor
 
 const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
@@ -604,13 +1257,72 @@ const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
 	"\x0fattendee_secret\x18\x03 \x01(\tR\x0eattendeeSecret\"\x96\x01\n" +
 	"\x15AttendeeLoginResponse\x12C\n" +
 	"\battendee\x18\x01 \x01(\v2'.conference.attendees.v1.AttendeeRecordR\battendee\x128\n" +
-	"\x05actor\x18\x02 \x01(\v2\".conference.common.v1.ActorSummaryR\x05actor2\xbc\x03\n" +
+	"\x05actor\x18\x02 \x01(\v2\".conference.common.v1.ActorSummaryR\x05actor\"\x9f\x01\n" +
+	"\x15CreateAttendeeRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x1b\n" +
+	"\tfull_name\x18\x03 \x01(\tR\bfullName\x12#\n" +
+	"\rgender_quoted\x18\x04 \x01(\bR\fgenderQuoted\"\x86\x01\n" +
+	"\x16CreateAttendeeResponse\x12C\n" +
+	"\battendee\x18\x01 \x01(\v2'.conference.attendees.v1.AttendeeRecordR\battendee\x12'\n" +
+	"\x0fattendee_secret\x18\x02 \x01(\tR\x0eattendeeSecret\"~\n" +
+	"\x15DeleteAttendeeRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x1f\n" +
+	"\vattendee_id\x18\x03 \x01(\tR\n" +
+	"attendeeId\"\x18\n" +
+	"\x16DeleteAttendeeResponse\"\x99\x01\n" +
+	"\x15SetChairpersonRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x1f\n" +
+	"\vattendee_id\x18\x03 \x01(\tR\n" +
+	"attendeeId\x12\x19\n" +
+	"\bis_chair\x18\x04 \x01(\bR\aisChair\"]\n" +
+	"\x16SetChairpersonResponse\x12C\n" +
+	"\battendee\x18\x01 \x01(\v2'.conference.attendees.v1.AttendeeRecordR\battendee\"\x91\x01\n" +
+	"\x10SetQuotedRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x1f\n" +
+	"\vattendee_id\x18\x03 \x01(\tR\n" +
+	"attendeeId\x12\x16\n" +
+	"\x06quoted\x18\x04 \x01(\bR\x06quoted\"X\n" +
+	"\x11SetQuotedResponse\x12C\n" +
+	"\battendee\x18\x01 \x01(\v2'.conference.attendees.v1.AttendeeRecordR\battendee\"\xb2\x02\n" +
+	"\x14AttendeeRecoveryView\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x1f\n" +
+	"\vattendee_id\x18\x03 \x01(\tR\n" +
+	"attendeeId\x12!\n" +
+	"\fmeeting_name\x18\x04 \x01(\tR\vmeetingName\x12%\n" +
+	"\x0ecommittee_name\x18\x05 \x01(\tR\rcommitteeName\x12#\n" +
+	"\rattendee_name\x18\x06 \x01(\tR\fattendeeName\x12\x1b\n" +
+	"\tlogin_url\x18\a \x01(\tR\bloginUrl\x12'\n" +
+	"\x10qr_code_data_url\x18\b \x01(\tR\rqrCodeDataUrl\"\x9e\x01\n" +
+	"\x1aGetAttendeeRecoveryRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x1f\n" +
+	"\vattendee_id\x18\x03 \x01(\tR\n" +
+	"attendeeId\x12\x19\n" +
+	"\bbase_url\x18\x04 \x01(\tR\abaseUrl\"`\n" +
+	"\x1bGetAttendeeRecoveryResponse\x12A\n" +
+	"\x04view\x18\x01 \x01(\v2-.conference.attendees.v1.AttendeeRecoveryViewR\x04view2\xfc\a\n" +
 	"\x0fAttendeeService\x12n\n" +
 	"\rListAttendees\x12-.conference.attendees.v1.ListAttendeesRequest\x1a..conference.attendees.v1.ListAttendeesResponse\x12e\n" +
 	"\n" +
 	"SelfSignup\x12*.conference.attendees.v1.SelfSignupRequest\x1a+.conference.attendees.v1.SelfSignupResponse\x12b\n" +
 	"\tGuestJoin\x12).conference.attendees.v1.GuestJoinRequest\x1a*.conference.attendees.v1.GuestJoinResponse\x12n\n" +
-	"\rAttendeeLogin\x12-.conference.attendees.v1.AttendeeLoginRequest\x1a..conference.attendees.v1.AttendeeLoginResponseBNZLgithub.com/Y4shin/conference-tool/gen/go/conference/attendees/v1;attendeesv1b\x06proto3"
+	"\rAttendeeLogin\x12-.conference.attendees.v1.AttendeeLoginRequest\x1a..conference.attendees.v1.AttendeeLoginResponse\x12q\n" +
+	"\x0eCreateAttendee\x12..conference.attendees.v1.CreateAttendeeRequest\x1a/.conference.attendees.v1.CreateAttendeeResponse\x12q\n" +
+	"\x0eDeleteAttendee\x12..conference.attendees.v1.DeleteAttendeeRequest\x1a/.conference.attendees.v1.DeleteAttendeeResponse\x12q\n" +
+	"\x0eSetChairperson\x12..conference.attendees.v1.SetChairpersonRequest\x1a/.conference.attendees.v1.SetChairpersonResponse\x12b\n" +
+	"\tSetQuoted\x12).conference.attendees.v1.SetQuotedRequest\x1a*.conference.attendees.v1.SetQuotedResponse\x12\x80\x01\n" +
+	"\x13GetAttendeeRecovery\x123.conference.attendees.v1.GetAttendeeRecoveryRequest\x1a4.conference.attendees.v1.GetAttendeeRecoveryResponseBNZLgithub.com/Y4shin/conference-tool/gen/go/conference/attendees/v1;attendeesv1b\x06proto3"
 
 var (
 	file_conference_attendees_v1_attendees_proto_rawDescOnce sync.Once
@@ -624,38 +1336,63 @@ func file_conference_attendees_v1_attendees_proto_rawDescGZIP() []byte {
 	return file_conference_attendees_v1_attendees_proto_rawDescData
 }
 
-var file_conference_attendees_v1_attendees_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_conference_attendees_v1_attendees_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_conference_attendees_v1_attendees_proto_goTypes = []any{
-	(*AttendeeRecord)(nil),        // 0: conference.attendees.v1.AttendeeRecord
-	(*ListAttendeesRequest)(nil),  // 1: conference.attendees.v1.ListAttendeesRequest
-	(*ListAttendeesResponse)(nil), // 2: conference.attendees.v1.ListAttendeesResponse
-	(*SelfSignupRequest)(nil),     // 3: conference.attendees.v1.SelfSignupRequest
-	(*SelfSignupResponse)(nil),    // 4: conference.attendees.v1.SelfSignupResponse
-	(*GuestJoinRequest)(nil),      // 5: conference.attendees.v1.GuestJoinRequest
-	(*GuestJoinResponse)(nil),     // 6: conference.attendees.v1.GuestJoinResponse
-	(*AttendeeLoginRequest)(nil),  // 7: conference.attendees.v1.AttendeeLoginRequest
-	(*AttendeeLoginResponse)(nil), // 8: conference.attendees.v1.AttendeeLoginResponse
-	(*v1.ActorSummary)(nil),       // 9: conference.common.v1.ActorSummary
+	(*AttendeeRecord)(nil),              // 0: conference.attendees.v1.AttendeeRecord
+	(*ListAttendeesRequest)(nil),        // 1: conference.attendees.v1.ListAttendeesRequest
+	(*ListAttendeesResponse)(nil),       // 2: conference.attendees.v1.ListAttendeesResponse
+	(*SelfSignupRequest)(nil),           // 3: conference.attendees.v1.SelfSignupRequest
+	(*SelfSignupResponse)(nil),          // 4: conference.attendees.v1.SelfSignupResponse
+	(*GuestJoinRequest)(nil),            // 5: conference.attendees.v1.GuestJoinRequest
+	(*GuestJoinResponse)(nil),           // 6: conference.attendees.v1.GuestJoinResponse
+	(*AttendeeLoginRequest)(nil),        // 7: conference.attendees.v1.AttendeeLoginRequest
+	(*AttendeeLoginResponse)(nil),       // 8: conference.attendees.v1.AttendeeLoginResponse
+	(*CreateAttendeeRequest)(nil),       // 9: conference.attendees.v1.CreateAttendeeRequest
+	(*CreateAttendeeResponse)(nil),      // 10: conference.attendees.v1.CreateAttendeeResponse
+	(*DeleteAttendeeRequest)(nil),       // 11: conference.attendees.v1.DeleteAttendeeRequest
+	(*DeleteAttendeeResponse)(nil),      // 12: conference.attendees.v1.DeleteAttendeeResponse
+	(*SetChairpersonRequest)(nil),       // 13: conference.attendees.v1.SetChairpersonRequest
+	(*SetChairpersonResponse)(nil),      // 14: conference.attendees.v1.SetChairpersonResponse
+	(*SetQuotedRequest)(nil),            // 15: conference.attendees.v1.SetQuotedRequest
+	(*SetQuotedResponse)(nil),           // 16: conference.attendees.v1.SetQuotedResponse
+	(*AttendeeRecoveryView)(nil),        // 17: conference.attendees.v1.AttendeeRecoveryView
+	(*GetAttendeeRecoveryRequest)(nil),  // 18: conference.attendees.v1.GetAttendeeRecoveryRequest
+	(*GetAttendeeRecoveryResponse)(nil), // 19: conference.attendees.v1.GetAttendeeRecoveryResponse
+	(*v1.ActorSummary)(nil),             // 20: conference.common.v1.ActorSummary
 }
 var file_conference_attendees_v1_attendees_proto_depIdxs = []int32{
-	0, // 0: conference.attendees.v1.ListAttendeesResponse.attendees:type_name -> conference.attendees.v1.AttendeeRecord
-	0, // 1: conference.attendees.v1.SelfSignupResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	0, // 2: conference.attendees.v1.GuestJoinResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	0, // 3: conference.attendees.v1.AttendeeLoginResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	9, // 4: conference.attendees.v1.AttendeeLoginResponse.actor:type_name -> conference.common.v1.ActorSummary
-	1, // 5: conference.attendees.v1.AttendeeService.ListAttendees:input_type -> conference.attendees.v1.ListAttendeesRequest
-	3, // 6: conference.attendees.v1.AttendeeService.SelfSignup:input_type -> conference.attendees.v1.SelfSignupRequest
-	5, // 7: conference.attendees.v1.AttendeeService.GuestJoin:input_type -> conference.attendees.v1.GuestJoinRequest
-	7, // 8: conference.attendees.v1.AttendeeService.AttendeeLogin:input_type -> conference.attendees.v1.AttendeeLoginRequest
-	2, // 9: conference.attendees.v1.AttendeeService.ListAttendees:output_type -> conference.attendees.v1.ListAttendeesResponse
-	4, // 10: conference.attendees.v1.AttendeeService.SelfSignup:output_type -> conference.attendees.v1.SelfSignupResponse
-	6, // 11: conference.attendees.v1.AttendeeService.GuestJoin:output_type -> conference.attendees.v1.GuestJoinResponse
-	8, // 12: conference.attendees.v1.AttendeeService.AttendeeLogin:output_type -> conference.attendees.v1.AttendeeLoginResponse
-	9, // [9:13] is the sub-list for method output_type
-	5, // [5:9] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	0,  // 0: conference.attendees.v1.ListAttendeesResponse.attendees:type_name -> conference.attendees.v1.AttendeeRecord
+	0,  // 1: conference.attendees.v1.SelfSignupResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	0,  // 2: conference.attendees.v1.GuestJoinResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	0,  // 3: conference.attendees.v1.AttendeeLoginResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	20, // 4: conference.attendees.v1.AttendeeLoginResponse.actor:type_name -> conference.common.v1.ActorSummary
+	0,  // 5: conference.attendees.v1.CreateAttendeeResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	0,  // 6: conference.attendees.v1.SetChairpersonResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	0,  // 7: conference.attendees.v1.SetQuotedResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
+	17, // 8: conference.attendees.v1.GetAttendeeRecoveryResponse.view:type_name -> conference.attendees.v1.AttendeeRecoveryView
+	1,  // 9: conference.attendees.v1.AttendeeService.ListAttendees:input_type -> conference.attendees.v1.ListAttendeesRequest
+	3,  // 10: conference.attendees.v1.AttendeeService.SelfSignup:input_type -> conference.attendees.v1.SelfSignupRequest
+	5,  // 11: conference.attendees.v1.AttendeeService.GuestJoin:input_type -> conference.attendees.v1.GuestJoinRequest
+	7,  // 12: conference.attendees.v1.AttendeeService.AttendeeLogin:input_type -> conference.attendees.v1.AttendeeLoginRequest
+	9,  // 13: conference.attendees.v1.AttendeeService.CreateAttendee:input_type -> conference.attendees.v1.CreateAttendeeRequest
+	11, // 14: conference.attendees.v1.AttendeeService.DeleteAttendee:input_type -> conference.attendees.v1.DeleteAttendeeRequest
+	13, // 15: conference.attendees.v1.AttendeeService.SetChairperson:input_type -> conference.attendees.v1.SetChairpersonRequest
+	15, // 16: conference.attendees.v1.AttendeeService.SetQuoted:input_type -> conference.attendees.v1.SetQuotedRequest
+	18, // 17: conference.attendees.v1.AttendeeService.GetAttendeeRecovery:input_type -> conference.attendees.v1.GetAttendeeRecoveryRequest
+	2,  // 18: conference.attendees.v1.AttendeeService.ListAttendees:output_type -> conference.attendees.v1.ListAttendeesResponse
+	4,  // 19: conference.attendees.v1.AttendeeService.SelfSignup:output_type -> conference.attendees.v1.SelfSignupResponse
+	6,  // 20: conference.attendees.v1.AttendeeService.GuestJoin:output_type -> conference.attendees.v1.GuestJoinResponse
+	8,  // 21: conference.attendees.v1.AttendeeService.AttendeeLogin:output_type -> conference.attendees.v1.AttendeeLoginResponse
+	10, // 22: conference.attendees.v1.AttendeeService.CreateAttendee:output_type -> conference.attendees.v1.CreateAttendeeResponse
+	12, // 23: conference.attendees.v1.AttendeeService.DeleteAttendee:output_type -> conference.attendees.v1.DeleteAttendeeResponse
+	14, // 24: conference.attendees.v1.AttendeeService.SetChairperson:output_type -> conference.attendees.v1.SetChairpersonResponse
+	16, // 25: conference.attendees.v1.AttendeeService.SetQuoted:output_type -> conference.attendees.v1.SetQuotedResponse
+	19, // 26: conference.attendees.v1.AttendeeService.GetAttendeeRecovery:output_type -> conference.attendees.v1.GetAttendeeRecoveryResponse
+	18, // [18:27] is the sub-list for method output_type
+	9,  // [9:18] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_conference_attendees_v1_attendees_proto_init() }
@@ -669,7 +1406,7 @@ func file_conference_attendees_v1_attendees_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_attendees_v1_attendees_proto_rawDesc), len(file_conference_attendees_v1_attendees_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

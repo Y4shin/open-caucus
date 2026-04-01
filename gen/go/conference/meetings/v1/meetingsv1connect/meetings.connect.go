@@ -39,6 +39,9 @@ const (
 	// MeetingServiceGetLiveMeetingProcedure is the fully-qualified name of the MeetingService's
 	// GetLiveMeeting RPC.
 	MeetingServiceGetLiveMeetingProcedure = "/conference.meetings.v1.MeetingService/GetLiveMeeting"
+	// MeetingServiceGetMeetingJoinQrProcedure is the fully-qualified name of the MeetingService's
+	// GetMeetingJoinQr RPC.
+	MeetingServiceGetMeetingJoinQrProcedure = "/conference.meetings.v1.MeetingService/GetMeetingJoinQr"
 	// MeetingServiceSubscribeMeetingEventsProcedure is the fully-qualified name of the MeetingService's
 	// SubscribeMeetingEvents RPC.
 	MeetingServiceSubscribeMeetingEventsProcedure = "/conference.meetings.v1.MeetingService/SubscribeMeetingEvents"
@@ -48,6 +51,7 @@ const (
 type MeetingServiceClient interface {
 	GetJoinMeeting(context.Context, *connect.Request[v1.GetJoinMeetingRequest]) (*connect.Response[v1.GetJoinMeetingResponse], error)
 	GetLiveMeeting(context.Context, *connect.Request[v1.GetLiveMeetingRequest]) (*connect.Response[v1.GetLiveMeetingResponse], error)
+	GetMeetingJoinQr(context.Context, *connect.Request[v1.GetMeetingJoinQrRequest]) (*connect.Response[v1.GetMeetingJoinQrResponse], error)
 	SubscribeMeetingEvents(context.Context, *connect.Request[v1.SubscribeMeetingEventsRequest]) (*connect.ServerStreamForClient[v1.MeetingEvent], error)
 }
 
@@ -74,6 +78,12 @@ func NewMeetingServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(meetingServiceMethods.ByName("GetLiveMeeting")),
 			connect.WithClientOptions(opts...),
 		),
+		getMeetingJoinQr: connect.NewClient[v1.GetMeetingJoinQrRequest, v1.GetMeetingJoinQrResponse](
+			httpClient,
+			baseURL+MeetingServiceGetMeetingJoinQrProcedure,
+			connect.WithSchema(meetingServiceMethods.ByName("GetMeetingJoinQr")),
+			connect.WithClientOptions(opts...),
+		),
 		subscribeMeetingEvents: connect.NewClient[v1.SubscribeMeetingEventsRequest, v1.MeetingEvent](
 			httpClient,
 			baseURL+MeetingServiceSubscribeMeetingEventsProcedure,
@@ -87,6 +97,7 @@ func NewMeetingServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 type meetingServiceClient struct {
 	getJoinMeeting         *connect.Client[v1.GetJoinMeetingRequest, v1.GetJoinMeetingResponse]
 	getLiveMeeting         *connect.Client[v1.GetLiveMeetingRequest, v1.GetLiveMeetingResponse]
+	getMeetingJoinQr       *connect.Client[v1.GetMeetingJoinQrRequest, v1.GetMeetingJoinQrResponse]
 	subscribeMeetingEvents *connect.Client[v1.SubscribeMeetingEventsRequest, v1.MeetingEvent]
 }
 
@@ -100,6 +111,11 @@ func (c *meetingServiceClient) GetLiveMeeting(ctx context.Context, req *connect.
 	return c.getLiveMeeting.CallUnary(ctx, req)
 }
 
+// GetMeetingJoinQr calls conference.meetings.v1.MeetingService.GetMeetingJoinQr.
+func (c *meetingServiceClient) GetMeetingJoinQr(ctx context.Context, req *connect.Request[v1.GetMeetingJoinQrRequest]) (*connect.Response[v1.GetMeetingJoinQrResponse], error) {
+	return c.getMeetingJoinQr.CallUnary(ctx, req)
+}
+
 // SubscribeMeetingEvents calls conference.meetings.v1.MeetingService.SubscribeMeetingEvents.
 func (c *meetingServiceClient) SubscribeMeetingEvents(ctx context.Context, req *connect.Request[v1.SubscribeMeetingEventsRequest]) (*connect.ServerStreamForClient[v1.MeetingEvent], error) {
 	return c.subscribeMeetingEvents.CallServerStream(ctx, req)
@@ -109,6 +125,7 @@ func (c *meetingServiceClient) SubscribeMeetingEvents(ctx context.Context, req *
 type MeetingServiceHandler interface {
 	GetJoinMeeting(context.Context, *connect.Request[v1.GetJoinMeetingRequest]) (*connect.Response[v1.GetJoinMeetingResponse], error)
 	GetLiveMeeting(context.Context, *connect.Request[v1.GetLiveMeetingRequest]) (*connect.Response[v1.GetLiveMeetingResponse], error)
+	GetMeetingJoinQr(context.Context, *connect.Request[v1.GetMeetingJoinQrRequest]) (*connect.Response[v1.GetMeetingJoinQrResponse], error)
 	SubscribeMeetingEvents(context.Context, *connect.Request[v1.SubscribeMeetingEventsRequest], *connect.ServerStream[v1.MeetingEvent]) error
 }
 
@@ -131,6 +148,12 @@ func NewMeetingServiceHandler(svc MeetingServiceHandler, opts ...connect.Handler
 		connect.WithSchema(meetingServiceMethods.ByName("GetLiveMeeting")),
 		connect.WithHandlerOptions(opts...),
 	)
+	meetingServiceGetMeetingJoinQrHandler := connect.NewUnaryHandler(
+		MeetingServiceGetMeetingJoinQrProcedure,
+		svc.GetMeetingJoinQr,
+		connect.WithSchema(meetingServiceMethods.ByName("GetMeetingJoinQr")),
+		connect.WithHandlerOptions(opts...),
+	)
 	meetingServiceSubscribeMeetingEventsHandler := connect.NewServerStreamHandler(
 		MeetingServiceSubscribeMeetingEventsProcedure,
 		svc.SubscribeMeetingEvents,
@@ -143,6 +166,8 @@ func NewMeetingServiceHandler(svc MeetingServiceHandler, opts ...connect.Handler
 			meetingServiceGetJoinMeetingHandler.ServeHTTP(w, r)
 		case MeetingServiceGetLiveMeetingProcedure:
 			meetingServiceGetLiveMeetingHandler.ServeHTTP(w, r)
+		case MeetingServiceGetMeetingJoinQrProcedure:
+			meetingServiceGetMeetingJoinQrHandler.ServeHTTP(w, r)
 		case MeetingServiceSubscribeMeetingEventsProcedure:
 			meetingServiceSubscribeMeetingEventsHandler.ServeHTTP(w, r)
 		default:
@@ -160,6 +185,10 @@ func (UnimplementedMeetingServiceHandler) GetJoinMeeting(context.Context, *conne
 
 func (UnimplementedMeetingServiceHandler) GetLiveMeeting(context.Context, *connect.Request[v1.GetLiveMeetingRequest]) (*connect.Response[v1.GetLiveMeetingResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.meetings.v1.MeetingService.GetLiveMeeting is not implemented"))
+}
+
+func (UnimplementedMeetingServiceHandler) GetMeetingJoinQr(context.Context, *connect.Request[v1.GetMeetingJoinQrRequest]) (*connect.Response[v1.GetMeetingJoinQrResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.meetings.v1.MeetingService.GetMeetingJoinQr is not implemented"))
 }
 
 func (UnimplementedMeetingServiceHandler) SubscribeMeetingEvents(context.Context, *connect.Request[v1.SubscribeMeetingEventsRequest], *connect.ServerStream[v1.MeetingEvent]) error {

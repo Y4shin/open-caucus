@@ -38,6 +38,14 @@ func (h *MeetingHandler) GetLiveMeeting(ctx context.Context, req *connect.Reques
 	return connect.NewResponse(resp), nil
 }
 
+func (h *MeetingHandler) GetMeetingJoinQr(ctx context.Context, req *connect.Request[meetingsv1.GetMeetingJoinQrRequest]) (*connect.Response[meetingsv1.GetMeetingJoinQrResponse], error) {
+	resp, err := h.service.GetMeetingJoinQr(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.BaseUrl)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 // SubscribeMeetingEvents streams typed invalidation events scoped to a meeting.
 // Each MeetingEvent carries a kind that tells the client which view to refetch.
 func (h *MeetingHandler) SubscribeMeetingEvents(

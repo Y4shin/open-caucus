@@ -50,6 +50,9 @@ SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, curre
        current_attachment_id
 FROM agenda_points WHERE id = ?;
 
+-- name: UpdateAgendaPointTitle :exec
+UPDATE agenda_points SET title = ? WHERE id = ?;
+
 -- name: DeleteAgendaPoint :exec
 DELETE FROM agenda_points WHERE id = ?;
 

@@ -90,3 +90,11 @@ func (h *AgendaHandler) DeleteAttachment(ctx context.Context, req *connect.Reque
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (h *AgendaHandler) UpdateAgendaPoint(ctx context.Context, req *connect.Request[agendav1.UpdateAgendaPointRequest]) (*connect.Response[agendav1.UpdateAgendaPointResponse], error) {
+	resp, err := h.service.UpdateAgendaPoint(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AgendaPointId, req.Msg.Title)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

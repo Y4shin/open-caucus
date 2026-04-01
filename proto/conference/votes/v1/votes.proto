@@ -71,6 +71,21 @@ message VoteTallyEntry {
   int64 count = 3;
 }
 
+// LiveVoteCardView is one attendee-facing vote card.
+message LiveVoteCardView {
+  VoteDefinitionRecord vote = 1;
+  // is_eligible is true when the calling attendee is eligible to vote.
+  bool is_eligible = 2;
+  // already_voted is true when the calling attendee already cast a ballot.
+  bool already_voted = 3;
+  VoteStats stats = 4;
+  bool has_timed_results = 5;
+  repeated VoteTallyEntry timed_results = 6;
+  int64 results_until_unix = 7;
+  int64 results_remaining_seconds = 8;
+  bool results_blocked_counting = 9;
+}
+
 // VotesPanelView is the moderator-facing votes panel read model.
 message VotesPanelView {
   string meeting_id = 1;
@@ -95,6 +110,8 @@ message LiveVotePanelView {
   bool already_voted = 5;
   // is_eligible is true when the calling attendee is eligible to vote.
   bool is_eligible = 6;
+  bool has_active_agenda = 7;
+  repeated LiveVoteCardView votes = 8;
 }
 
 message GetVotesPanelRequest {

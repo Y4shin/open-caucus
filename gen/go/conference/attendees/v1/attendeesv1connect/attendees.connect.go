@@ -45,6 +45,21 @@ const (
 	// AttendeeServiceAttendeeLoginProcedure is the fully-qualified name of the AttendeeService's
 	// AttendeeLogin RPC.
 	AttendeeServiceAttendeeLoginProcedure = "/conference.attendees.v1.AttendeeService/AttendeeLogin"
+	// AttendeeServiceCreateAttendeeProcedure is the fully-qualified name of the AttendeeService's
+	// CreateAttendee RPC.
+	AttendeeServiceCreateAttendeeProcedure = "/conference.attendees.v1.AttendeeService/CreateAttendee"
+	// AttendeeServiceDeleteAttendeeProcedure is the fully-qualified name of the AttendeeService's
+	// DeleteAttendee RPC.
+	AttendeeServiceDeleteAttendeeProcedure = "/conference.attendees.v1.AttendeeService/DeleteAttendee"
+	// AttendeeServiceSetChairpersonProcedure is the fully-qualified name of the AttendeeService's
+	// SetChairperson RPC.
+	AttendeeServiceSetChairpersonProcedure = "/conference.attendees.v1.AttendeeService/SetChairperson"
+	// AttendeeServiceSetQuotedProcedure is the fully-qualified name of the AttendeeService's SetQuoted
+	// RPC.
+	AttendeeServiceSetQuotedProcedure = "/conference.attendees.v1.AttendeeService/SetQuoted"
+	// AttendeeServiceGetAttendeeRecoveryProcedure is the fully-qualified name of the AttendeeService's
+	// GetAttendeeRecovery RPC.
+	AttendeeServiceGetAttendeeRecoveryProcedure = "/conference.attendees.v1.AttendeeService/GetAttendeeRecovery"
 )
 
 // AttendeeServiceClient is a client for the conference.attendees.v1.AttendeeService service.
@@ -61,6 +76,21 @@ type AttendeeServiceClient interface {
 	// The response cookie must be stored by the client; subsequent API calls
 	// will carry this cookie to authenticate as the attendee.
 	AttendeeLogin(context.Context, *connect.Request[v1.AttendeeLoginRequest]) (*connect.Response[v1.AttendeeLoginResponse], error)
+	// CreateAttendee creates a guest attendee on behalf of a moderator/chairperson.
+	// Unlike GuestJoin, this does not require signup to be open or a meeting secret.
+	CreateAttendee(context.Context, *connect.Request[v1.CreateAttendeeRequest]) (*connect.Response[v1.CreateAttendeeResponse], error)
+	// DeleteAttendee removes an attendee from a meeting.
+	// Requires chairperson access.
+	DeleteAttendee(context.Context, *connect.Request[v1.DeleteAttendeeRequest]) (*connect.Response[v1.DeleteAttendeeResponse], error)
+	// SetChairperson updates the chairperson flag for an attendee.
+	// Requires chairperson access.
+	SetChairperson(context.Context, *connect.Request[v1.SetChairpersonRequest]) (*connect.Response[v1.SetChairpersonResponse], error)
+	// SetQuoted updates the gender-quotation flag for an attendee.
+	// Requires chairperson access.
+	SetQuoted(context.Context, *connect.Request[v1.SetQuotedRequest]) (*connect.Response[v1.SetQuotedResponse], error)
+	// GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
+	// Requires moderation access for the meeting.
+	GetAttendeeRecovery(context.Context, *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error)
 }
 
 // NewAttendeeServiceClient constructs a client for the conference.attendees.v1.AttendeeService
@@ -98,15 +128,50 @@ func NewAttendeeServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(attendeeServiceMethods.ByName("AttendeeLogin")),
 			connect.WithClientOptions(opts...),
 		),
+		createAttendee: connect.NewClient[v1.CreateAttendeeRequest, v1.CreateAttendeeResponse](
+			httpClient,
+			baseURL+AttendeeServiceCreateAttendeeProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("CreateAttendee")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteAttendee: connect.NewClient[v1.DeleteAttendeeRequest, v1.DeleteAttendeeResponse](
+			httpClient,
+			baseURL+AttendeeServiceDeleteAttendeeProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("DeleteAttendee")),
+			connect.WithClientOptions(opts...),
+		),
+		setChairperson: connect.NewClient[v1.SetChairpersonRequest, v1.SetChairpersonResponse](
+			httpClient,
+			baseURL+AttendeeServiceSetChairpersonProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("SetChairperson")),
+			connect.WithClientOptions(opts...),
+		),
+		setQuoted: connect.NewClient[v1.SetQuotedRequest, v1.SetQuotedResponse](
+			httpClient,
+			baseURL+AttendeeServiceSetQuotedProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("SetQuoted")),
+			connect.WithClientOptions(opts...),
+		),
+		getAttendeeRecovery: connect.NewClient[v1.GetAttendeeRecoveryRequest, v1.GetAttendeeRecoveryResponse](
+			httpClient,
+			baseURL+AttendeeServiceGetAttendeeRecoveryProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("GetAttendeeRecovery")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // attendeeServiceClient implements AttendeeServiceClient.
 type attendeeServiceClient struct {
-	listAttendees *connect.Client[v1.ListAttendeesRequest, v1.ListAttendeesResponse]
-	selfSignup    *connect.Client[v1.SelfSignupRequest, v1.SelfSignupResponse]
-	guestJoin     *connect.Client[v1.GuestJoinRequest, v1.GuestJoinResponse]
-	attendeeLogin *connect.Client[v1.AttendeeLoginRequest, v1.AttendeeLoginResponse]
+	listAttendees       *connect.Client[v1.ListAttendeesRequest, v1.ListAttendeesResponse]
+	selfSignup          *connect.Client[v1.SelfSignupRequest, v1.SelfSignupResponse]
+	guestJoin           *connect.Client[v1.GuestJoinRequest, v1.GuestJoinResponse]
+	attendeeLogin       *connect.Client[v1.AttendeeLoginRequest, v1.AttendeeLoginResponse]
+	createAttendee      *connect.Client[v1.CreateAttendeeRequest, v1.CreateAttendeeResponse]
+	deleteAttendee      *connect.Client[v1.DeleteAttendeeRequest, v1.DeleteAttendeeResponse]
+	setChairperson      *connect.Client[v1.SetChairpersonRequest, v1.SetChairpersonResponse]
+	setQuoted           *connect.Client[v1.SetQuotedRequest, v1.SetQuotedResponse]
+	getAttendeeRecovery *connect.Client[v1.GetAttendeeRecoveryRequest, v1.GetAttendeeRecoveryResponse]
 }
 
 // ListAttendees calls conference.attendees.v1.AttendeeService.ListAttendees.
@@ -129,6 +194,31 @@ func (c *attendeeServiceClient) AttendeeLogin(ctx context.Context, req *connect.
 	return c.attendeeLogin.CallUnary(ctx, req)
 }
 
+// CreateAttendee calls conference.attendees.v1.AttendeeService.CreateAttendee.
+func (c *attendeeServiceClient) CreateAttendee(ctx context.Context, req *connect.Request[v1.CreateAttendeeRequest]) (*connect.Response[v1.CreateAttendeeResponse], error) {
+	return c.createAttendee.CallUnary(ctx, req)
+}
+
+// DeleteAttendee calls conference.attendees.v1.AttendeeService.DeleteAttendee.
+func (c *attendeeServiceClient) DeleteAttendee(ctx context.Context, req *connect.Request[v1.DeleteAttendeeRequest]) (*connect.Response[v1.DeleteAttendeeResponse], error) {
+	return c.deleteAttendee.CallUnary(ctx, req)
+}
+
+// SetChairperson calls conference.attendees.v1.AttendeeService.SetChairperson.
+func (c *attendeeServiceClient) SetChairperson(ctx context.Context, req *connect.Request[v1.SetChairpersonRequest]) (*connect.Response[v1.SetChairpersonResponse], error) {
+	return c.setChairperson.CallUnary(ctx, req)
+}
+
+// SetQuoted calls conference.attendees.v1.AttendeeService.SetQuoted.
+func (c *attendeeServiceClient) SetQuoted(ctx context.Context, req *connect.Request[v1.SetQuotedRequest]) (*connect.Response[v1.SetQuotedResponse], error) {
+	return c.setQuoted.CallUnary(ctx, req)
+}
+
+// GetAttendeeRecovery calls conference.attendees.v1.AttendeeService.GetAttendeeRecovery.
+func (c *attendeeServiceClient) GetAttendeeRecovery(ctx context.Context, req *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error) {
+	return c.getAttendeeRecovery.CallUnary(ctx, req)
+}
+
 // AttendeeServiceHandler is an implementation of the conference.attendees.v1.AttendeeService
 // service.
 type AttendeeServiceHandler interface {
@@ -144,6 +234,21 @@ type AttendeeServiceHandler interface {
 	// The response cookie must be stored by the client; subsequent API calls
 	// will carry this cookie to authenticate as the attendee.
 	AttendeeLogin(context.Context, *connect.Request[v1.AttendeeLoginRequest]) (*connect.Response[v1.AttendeeLoginResponse], error)
+	// CreateAttendee creates a guest attendee on behalf of a moderator/chairperson.
+	// Unlike GuestJoin, this does not require signup to be open or a meeting secret.
+	CreateAttendee(context.Context, *connect.Request[v1.CreateAttendeeRequest]) (*connect.Response[v1.CreateAttendeeResponse], error)
+	// DeleteAttendee removes an attendee from a meeting.
+	// Requires chairperson access.
+	DeleteAttendee(context.Context, *connect.Request[v1.DeleteAttendeeRequest]) (*connect.Response[v1.DeleteAttendeeResponse], error)
+	// SetChairperson updates the chairperson flag for an attendee.
+	// Requires chairperson access.
+	SetChairperson(context.Context, *connect.Request[v1.SetChairpersonRequest]) (*connect.Response[v1.SetChairpersonResponse], error)
+	// SetQuoted updates the gender-quotation flag for an attendee.
+	// Requires chairperson access.
+	SetQuoted(context.Context, *connect.Request[v1.SetQuotedRequest]) (*connect.Response[v1.SetQuotedResponse], error)
+	// GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
+	// Requires moderation access for the meeting.
+	GetAttendeeRecovery(context.Context, *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error)
 }
 
 // NewAttendeeServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -177,6 +282,36 @@ func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.Handl
 		connect.WithSchema(attendeeServiceMethods.ByName("AttendeeLogin")),
 		connect.WithHandlerOptions(opts...),
 	)
+	attendeeServiceCreateAttendeeHandler := connect.NewUnaryHandler(
+		AttendeeServiceCreateAttendeeProcedure,
+		svc.CreateAttendee,
+		connect.WithSchema(attendeeServiceMethods.ByName("CreateAttendee")),
+		connect.WithHandlerOptions(opts...),
+	)
+	attendeeServiceDeleteAttendeeHandler := connect.NewUnaryHandler(
+		AttendeeServiceDeleteAttendeeProcedure,
+		svc.DeleteAttendee,
+		connect.WithSchema(attendeeServiceMethods.ByName("DeleteAttendee")),
+		connect.WithHandlerOptions(opts...),
+	)
+	attendeeServiceSetChairpersonHandler := connect.NewUnaryHandler(
+		AttendeeServiceSetChairpersonProcedure,
+		svc.SetChairperson,
+		connect.WithSchema(attendeeServiceMethods.ByName("SetChairperson")),
+		connect.WithHandlerOptions(opts...),
+	)
+	attendeeServiceSetQuotedHandler := connect.NewUnaryHandler(
+		AttendeeServiceSetQuotedProcedure,
+		svc.SetQuoted,
+		connect.WithSchema(attendeeServiceMethods.ByName("SetQuoted")),
+		connect.WithHandlerOptions(opts...),
+	)
+	attendeeServiceGetAttendeeRecoveryHandler := connect.NewUnaryHandler(
+		AttendeeServiceGetAttendeeRecoveryProcedure,
+		svc.GetAttendeeRecovery,
+		connect.WithSchema(attendeeServiceMethods.ByName("GetAttendeeRecovery")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.attendees.v1.AttendeeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AttendeeServiceListAttendeesProcedure:
@@ -187,6 +322,16 @@ func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.Handl
 			attendeeServiceGuestJoinHandler.ServeHTTP(w, r)
 		case AttendeeServiceAttendeeLoginProcedure:
 			attendeeServiceAttendeeLoginHandler.ServeHTTP(w, r)
+		case AttendeeServiceCreateAttendeeProcedure:
+			attendeeServiceCreateAttendeeHandler.ServeHTTP(w, r)
+		case AttendeeServiceDeleteAttendeeProcedure:
+			attendeeServiceDeleteAttendeeHandler.ServeHTTP(w, r)
+		case AttendeeServiceSetChairpersonProcedure:
+			attendeeServiceSetChairpersonHandler.ServeHTTP(w, r)
+		case AttendeeServiceSetQuotedProcedure:
+			attendeeServiceSetQuotedHandler.ServeHTTP(w, r)
+		case AttendeeServiceGetAttendeeRecoveryProcedure:
+			attendeeServiceGetAttendeeRecoveryHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -210,4 +355,24 @@ func (UnimplementedAttendeeServiceHandler) GuestJoin(context.Context, *connect.R
 
 func (UnimplementedAttendeeServiceHandler) AttendeeLogin(context.Context, *connect.Request[v1.AttendeeLoginRequest]) (*connect.Response[v1.AttendeeLoginResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.AttendeeLogin is not implemented"))
+}
+
+func (UnimplementedAttendeeServiceHandler) CreateAttendee(context.Context, *connect.Request[v1.CreateAttendeeRequest]) (*connect.Response[v1.CreateAttendeeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.CreateAttendee is not implemented"))
+}
+
+func (UnimplementedAttendeeServiceHandler) DeleteAttendee(context.Context, *connect.Request[v1.DeleteAttendeeRequest]) (*connect.Response[v1.DeleteAttendeeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.DeleteAttendee is not implemented"))
+}
+
+func (UnimplementedAttendeeServiceHandler) SetChairperson(context.Context, *connect.Request[v1.SetChairpersonRequest]) (*connect.Response[v1.SetChairpersonResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.SetChairperson is not implemented"))
+}
+
+func (UnimplementedAttendeeServiceHandler) SetQuoted(context.Context, *connect.Request[v1.SetQuotedRequest]) (*connect.Response[v1.SetQuotedResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.SetQuoted is not implemented"))
+}
+
+func (UnimplementedAttendeeServiceHandler) GetAttendeeRecovery(context.Context, *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.GetAttendeeRecovery is not implemented"))
 }

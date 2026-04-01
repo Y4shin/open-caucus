@@ -3,10 +3,16 @@ package attendeeservice
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/skip2/go-qrcode"
 
 	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
 	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
@@ -223,6 +229,166 @@ func generateSecret() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// CreateAttendee creates a guest attendee on behalf of a moderator/chairperson.
+func (s *Service) CreateAttendee(ctx context.Context, committeeSlug, meetingIDStr, fullName string, genderQuoted bool) (*attendeesv1.CreateAttendeeResponse, error) {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
+		return nil, err
+	}
+	if fullName == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "full name is required")
+	}
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	secret, err := generateSecret()
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate attendee secret", err)
+	}
+	attendee, err := s.repo.CreateAttendee(ctx, meetingID, nil, fullName, secret, genderQuoted)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to create attendee", err)
+	}
+	s.publishAttendeesChanged(meetingID)
+	return &attendeesv1.CreateAttendeeResponse{
+		Attendee:       toAttendeeRecord(attendee, 0),
+		AttendeeSecret: secret,
+	}, nil
+}
+
+// DeleteAttendee removes an attendee from a meeting.
+func (s *Service) DeleteAttendee(ctx context.Context, committeeSlug, meetingIDStr, attendeeIDStr string) (*attendeesv1.DeleteAttendeeResponse, error) {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
+		return nil, err
+	}
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+	}
+	if err := s.repo.DeleteAttendee(ctx, attendeeID); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to delete attendee", err)
+	}
+	s.publishAttendeesChanged(meetingID)
+	return &attendeesv1.DeleteAttendeeResponse{}, nil
+}
+
+// SetChairperson updates the chairperson flag for an attendee.
+func (s *Service) SetChairperson(ctx context.Context, committeeSlug, meetingIDStr, attendeeIDStr string, isChair bool) (*attendeesv1.SetChairpersonResponse, error) {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
+		return nil, err
+	}
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+	}
+	if err := s.repo.SetAttendeeIsChair(ctx, attendeeID, isChair); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to update chairperson status", err)
+	}
+	attendee, err := s.repo.GetAttendeeByID(ctx, attendeeID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to reload attendee", err)
+	}
+	s.publishAttendeesChanged(meetingID)
+	return &attendeesv1.SetChairpersonResponse{Attendee: toAttendeeRecord(attendee, 0)}, nil
+}
+
+// SetQuoted updates the gender-quotation flag for an attendee.
+func (s *Service) SetQuoted(ctx context.Context, committeeSlug, meetingIDStr, attendeeIDStr string, quoted bool) (*attendeesv1.SetQuotedResponse, error) {
+	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
+		return nil, err
+	}
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+	}
+	if err := s.repo.SetAttendeeQuoted(ctx, attendeeID, quoted); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to update quoted status", err)
+	}
+	attendee, err := s.repo.GetAttendeeByID(ctx, attendeeID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to reload attendee", err)
+	}
+	s.publishAttendeesChanged(meetingID)
+	return &attendeesv1.SetQuotedResponse{Attendee: toAttendeeRecord(attendee, 0)}, nil
+}
+
+func (s *Service) GetAttendeeRecovery(ctx context.Context, committeeSlug, meetingIDStr, attendeeIDStr, baseURL string) (*attendeesv1.GetAttendeeRecoveryResponse, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
+	}
+
+	committee, err := s.repo.GetCommitteeBySlug(ctx, committeeSlug)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "committee not found")
+	}
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
+	}
+	attendee, err := s.repo.GetAttendeeByID(ctx, attendeeID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "attendee not found")
+	}
+	if attendee.MeetingID != meetingID {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "attendee does not belong to meeting")
+	}
+	if attendee.UserID != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "recovery link is only available for guests")
+	}
+
+	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	if baseURL == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "base url is required")
+	}
+
+	loginURL, err := url.Parse(baseURL + fmt.Sprintf("/committee/%s/meeting/%s/attendee-login", committeeSlug, meetingIDStr))
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInvalidArgument, "invalid base url", err)
+	}
+	query := loginURL.Query()
+	query.Set("secret", attendee.Secret)
+	loginURL.RawQuery = query.Encode()
+	loginURLStr := loginURL.String()
+
+	png, err := qrcode.Encode(loginURLStr, qrcode.Medium, 320)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate attendee recovery qr code", err)
+	}
+
+	return &attendeesv1.GetAttendeeRecoveryResponse{
+		View: &attendeesv1.AttendeeRecoveryView{
+			CommitteeSlug: committeeSlug,
+			MeetingId:     meetingIDStr,
+			AttendeeId:    attendeeIDStr,
+			MeetingName:   meeting.Name,
+			CommitteeName: committee.Name,
+			AttendeeName:  attendee.FullName,
+			LoginUrl:      loginURLStr,
+			QrCodeDataUrl: "data:image/png;base64," + base64.StdEncoding.EncodeToString(png),
+		},
+	}, nil
 }
 
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {

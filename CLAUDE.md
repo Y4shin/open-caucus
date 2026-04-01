@@ -235,9 +235,32 @@ The project uses three `go:generate` directives:
 
 ## Important Patterns
 
+### SPA Architecture Rule: No Legacy HTML Proxying
+
+**CRITICAL**: The SPA (`web/`) must never proxy or embed HTML fragments from the legacy
+HTMX/Templ handler. All UI must be implemented natively in Svelte using Connect (gRPC-web)
+API calls. Violations are forbidden even as a temporary workaround.
+
+This means:
+- The SPA must **never** fetch HTML from legacy routes (`/votes/partial`, `/agenda-point/{id}/edit-form`, etc.) and inject it with `{@html ...}`
+- The SPA must **never** use `hx-get` to load HTML fragments from the legacy handler
+- The SPA must **never** call legacy HTTP form endpoints (`postLegacyAttendeeAction` pattern)
+- In `e2e/helpers_test.go`, `newTestServer()` must **never** proxy requests to `legacyRouter` for routes that the SPA should handle natively — `shouldServeLegacy*` proxy functions must be removed as routes are ported
+
+The legacy HTMX/Templ handler exists solely for UI parity comparison tests. Once all parity
+tests are replaced by native implementations, the legacy handler will be removed entirely.
+
+When adding new features to the SPA:
+1. Add a Connect RPC to the appropriate proto service
+2. Run `buf generate` to generate Go + TypeScript bindings
+3. Implement the RPC in the Go service and Connect handler
+4. Call the RPC from the Svelte component
+
 ### HTMX Usage
 
-**Rule**: Use HTMX for all dynamic interactions. A page should never do a full reload unless the user explicitly navigates to a different page (e.g., clicks a nav link or follows an anchor).
+**Rule**: Use HTMX for all dynamic interactions **in the legacy HTMX/Templ layer only**.
+A page should never do a full reload unless the user explicitly navigates to a different
+page (e.g., clicks a nav link or follows an anchor).
 
 - Form submissions that create, update, or delete data must use `hx-post`/`hx-put`/`hx-delete` and swap only the affected region (list, row, section) — not the full page
 - Use `hx-target` + `hx-swap` to update only the changed part of the DOM in response to a form submit

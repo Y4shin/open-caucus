@@ -52,3 +52,43 @@ func (h *AttendeeHandler) AttendeeLogin(ctx context.Context, req *connect.Reques
 	addCookie(connectResp, cookie)
 	return connectResp, nil
 }
+
+func (h *AttendeeHandler) CreateAttendee(ctx context.Context, req *connect.Request[attendeesv1.CreateAttendeeRequest]) (*connect.Response[attendeesv1.CreateAttendeeResponse], error) {
+	resp, err := h.service.CreateAttendee(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.FullName, req.Msg.GenderQuoted)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AttendeeHandler) DeleteAttendee(ctx context.Context, req *connect.Request[attendeesv1.DeleteAttendeeRequest]) (*connect.Response[attendeesv1.DeleteAttendeeResponse], error) {
+	resp, err := h.service.DeleteAttendee(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AttendeeId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AttendeeHandler) SetChairperson(ctx context.Context, req *connect.Request[attendeesv1.SetChairpersonRequest]) (*connect.Response[attendeesv1.SetChairpersonResponse], error) {
+	resp, err := h.service.SetChairperson(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AttendeeId, req.Msg.IsChair)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AttendeeHandler) SetQuoted(ctx context.Context, req *connect.Request[attendeesv1.SetQuotedRequest]) (*connect.Response[attendeesv1.SetQuotedResponse], error) {
+	resp, err := h.service.SetQuoted(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AttendeeId, req.Msg.Quoted)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *AttendeeHandler) GetAttendeeRecovery(ctx context.Context, req *connect.Request[attendeesv1.GetAttendeeRecoveryRequest]) (*connect.Response[attendeesv1.GetAttendeeRecoveryResponse], error) {
+	resp, err := h.service.GetAttendeeRecovery(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.AttendeeId, req.Msg.BaseUrl)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

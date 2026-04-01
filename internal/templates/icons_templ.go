@@ -40,6 +40,7 @@ const (
 	IconDarkMode     IconName = "dark_mode"
 	IconDescription  IconName = "description"
 	IconDownload     IconName = "download"
+	IconEdit         IconName = "edit"
 )
 
 func iconPath(name IconName) string {
@@ -98,6 +99,8 @@ func iconPath(name IconName) string {
 		return "M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6Zm4 18H6V4h7v5h5v11ZM8 13h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h5v2H8V9Z"
 	case IconDownload:
 		return "M5 20h14v-2H5v2Zm7-18-5.5 5.5 1.41 1.41L11 5.83V16h2V5.83l3.09 3.08 1.41-1.41L12 2Z"
+	case IconEdit:
+		return "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
 	default:
 		return ""
 	}
@@ -170,7 +173,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(iconViewBox(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 122, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 125, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -183,7 +186,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(iconPath(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 127, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 130, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -219,7 +222,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(iconViewBox(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 132, Col: 30}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 135, Col: 30}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -232,7 +235,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 135, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 138, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -245,7 +248,7 @@ func Icon(name IconName, label string, class ...string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(iconPath(name))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 138, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 141, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -288,7 +291,7 @@ func IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide stri
 		var templ_7745c5c3_Var12 templ.SafeURL
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinURLErrs(href)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 144, Col: 15}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 147, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -306,7 +309,7 @@ func IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide stri
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 146, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 149, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -332,7 +335,7 @@ func IconLabelLink(href templ.SafeURL, icon IconName, text string, iconSide stri
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 150, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 153, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -394,7 +397,7 @@ func IconLabelButton(icon IconName, text string, iconSide string, disabled bool)
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 158, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 161, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -420,7 +423,7 @@ func IconLabelButton(icon IconName, text string, iconSide string, disabled bool)
 			var templ_7745c5c3_Var17 string
 			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(text)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 162, Col: 36}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `icons.templ`, Line: 165, Col: 36}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 			if templ_7745c5c3_Err != nil {

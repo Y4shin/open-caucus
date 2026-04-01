@@ -22,6 +22,26 @@ service AttendeeService {
   // The response cookie must be stored by the client; subsequent API calls
   // will carry this cookie to authenticate as the attendee.
   rpc AttendeeLogin(AttendeeLoginRequest) returns (AttendeeLoginResponse);
+
+  // CreateAttendee creates a guest attendee on behalf of a moderator/chairperson.
+  // Unlike GuestJoin, this does not require signup to be open or a meeting secret.
+  rpc CreateAttendee(CreateAttendeeRequest) returns (CreateAttendeeResponse);
+
+  // DeleteAttendee removes an attendee from a meeting.
+  // Requires chairperson access.
+  rpc DeleteAttendee(DeleteAttendeeRequest) returns (DeleteAttendeeResponse);
+
+  // SetChairperson updates the chairperson flag for an attendee.
+  // Requires chairperson access.
+  rpc SetChairperson(SetChairpersonRequest) returns (SetChairpersonResponse);
+
+  // SetQuoted updates the gender-quotation flag for an attendee.
+  // Requires chairperson access.
+  rpc SetQuoted(SetQuotedRequest) returns (SetQuotedResponse);
+
+  // GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
+  // Requires moderation access for the meeting.
+  rpc GetAttendeeRecovery(GetAttendeeRecoveryRequest) returns (GetAttendeeRecoveryResponse);
 }
 
 // AttendeeRecord is the canonical attendee read model for both moderator and
@@ -81,4 +101,69 @@ message AttendeeLoginRequest {
 message AttendeeLoginResponse {
   AttendeeRecord attendee = 1;
   conference.common.v1.ActorSummary actor = 2;
+}
+
+message CreateAttendeeRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string full_name = 3;
+  bool gender_quoted = 4;
+}
+
+message CreateAttendeeResponse {
+  AttendeeRecord attendee = 1;
+  // attendee_secret is the per-attendee access code for the created guest.
+  string attendee_secret = 2;
+}
+
+message DeleteAttendeeRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string attendee_id = 3;
+}
+
+message DeleteAttendeeResponse {}
+
+message SetChairpersonRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string attendee_id = 3;
+  bool is_chair = 4;
+}
+
+message SetChairpersonResponse {
+  AttendeeRecord attendee = 1;
+}
+
+message SetQuotedRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string attendee_id = 3;
+  bool quoted = 4;
+}
+
+message SetQuotedResponse {
+  AttendeeRecord attendee = 1;
+}
+
+message AttendeeRecoveryView {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string attendee_id = 3;
+  string meeting_name = 4;
+  string committee_name = 5;
+  string attendee_name = 6;
+  string login_url = 7;
+  string qr_code_data_url = 8;
+}
+
+message GetAttendeeRecoveryRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string attendee_id = 3;
+  string base_url = 4;
+}
+
+message GetAttendeeRecoveryResponse {
+  AttendeeRecoveryView view = 1;
 }
