@@ -63,119 +63,6 @@ type testServer struct {
 	storage storage.Service
 }
 
-func shouldServeLegacyManageUtilityRoute(r *http.Request) bool {
-	path := r.URL.Path
-	if !strings.HasPrefix(path, "/committee/") {
-		return false
-	}
-	if r.Method == http.MethodGet {
-		if strings.HasSuffix(path, "/moderate/join-qr") {
-			return true
-		}
-		if strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/recovery") {
-			return true
-		}
-		return false
-	}
-	if r.Method != http.MethodPost {
-		return false
-	}
-	switch {
-	case strings.HasSuffix(path, "/attendee/create"):
-		return true
-	case strings.HasSuffix(path, "/attendee/self-signup"):
-		return true
-	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/delete"):
-		return true
-	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/chair"):
-		return true
-	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/quoted"):
-		return true
-	default:
-		return false
-	}
-}
-
-func shouldServeLegacyVoteRoute(r *http.Request) bool {
-	path := r.URL.Path
-	if !strings.HasPrefix(path, "/committee/") {
-		return false
-	}
-
-	if r.Method == http.MethodGet {
-		return strings.HasSuffix(path, "/votes/partial") || strings.HasSuffix(path, "/votes/live/partial")
-	}
-	if r.Method != http.MethodPost {
-		return false
-	}
-
-	switch {
-	case strings.HasSuffix(path, "/votes/create"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/update-draft"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/open"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/close"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/archive"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/cast/register"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/open"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/secret"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/open"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/secret"):
-		return true
-	default:
-		return false
-	}
-}
-
-func shouldServeLegacyAgendaImportRoute(r *http.Request) bool {
-	path := r.URL.Path
-	if !strings.HasPrefix(path, "/committee/") {
-		return false
-	}
-
-	if r.Method == http.MethodGet && strings.HasSuffix(path, "/moderate/agenda") {
-		return true
-	}
-	if r.Method != http.MethodPost {
-		return false
-	}
-
-	switch {
-	case strings.Contains(path, "/agenda/import/"):
-		return true
-	case strings.Contains(path, "/agenda-point/") && strings.HasSuffix(path, "/move-up"):
-		return true
-	case strings.Contains(path, "/agenda-point/") && strings.HasSuffix(path, "/move-down"):
-		return true
-	default:
-		return false
-	}
-}
-
-func shouldServeLegacyAttendeeLoginSecretRoute(r *http.Request) bool {
-	if !strings.HasPrefix(r.URL.Path, "/committee/") {
-		return false
-	}
-	if !strings.HasSuffix(r.URL.Path, "/attendee-login") {
-		return false
-	}
-	if r.Method == http.MethodPost {
-		return true
-	}
-	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		return false
-	}
-	return strings.TrimSpace(r.URL.Query().Get("secret")) != ""
-}
-
 // newTestServer boots a full HTTP server with an in-memory SQLite database,
 // mirroring the wiring in cmd/serve.go.
 func newTestServer(t *testing.T) *testServer {
@@ -223,8 +110,8 @@ func newTestServer(t *testing.T) *testServer {
 		AuthConfig:     authCfg,
 	}
 
-	// Legacy handler: still needed for SPA routes that haven't been ported to Connect yet
-	// (vote form endpoints, attendee manage endpoints, docs HTML endpoints).
+	// Legacy handler: still needed only for docs HTML fragment endpoints that the
+	// contract/parity tests compare directly (`/docs/oob/...`, `/docs/search`).
 	legacyH := &handlers.Handler{
 		Broker:         b,
 		Repository:     repo,
@@ -306,6 +193,40 @@ func newTestServer(t *testing.T) *testServer {
 	spaHandler := webassets.NewSPAHandler()
 
 	appHandler := mw.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		isCommitteeVoteRoute := strings.HasPrefix(path, "/committee/") && func() bool {
+			if r.Method == http.MethodGet {
+				return strings.HasSuffix(path, "/votes/partial") || strings.HasSuffix(path, "/votes/live/partial")
+			}
+			if r.Method != http.MethodPost {
+				return false
+			}
+			switch {
+			case strings.HasSuffix(path, "/votes/create"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/update-draft"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/open"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/close"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/archive"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/cast/register"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/open"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/secret"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/open"):
+				return true
+			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/secret"):
+				return true
+			default:
+				return false
+			}
+		}()
+
 		switch {
 		case strings.HasPrefix(r.URL.Path, "/api/"):
 			http.StripPrefix("/api", apiMux).ServeHTTP(w, r)
@@ -324,20 +245,14 @@ func newTestServer(t *testing.T) *testServer {
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
 		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
 			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
-		// Legacy HTML endpoints not yet ported to Connect or SPA: vote forms, attendee
-		// manage actions, docs HTML, and attendee-login/recovery routes.
-		case shouldServeLegacyVoteRoute(r):
+		// Vote HTML endpoints are still operationally legacy-backed in the new test
+		// server. The native moderate page uses Connect data for first render, but
+		// vote form posts and the live page's post-close results flow still rely on
+		// these HTMX fragments.
+		case isCommitteeVoteRoute:
 			legacyRouter.ServeHTTP(w, r)
-		case shouldServeLegacyManageUtilityRoute(r):
-			legacyRouter.ServeHTTP(w, r)
-		case shouldServeLegacyAgendaImportRoute(r):
-			legacyRouter.ServeHTTP(w, r)
-		case shouldServeLegacyAttendeeLoginSecretRoute(r):
-			legacyRouter.ServeHTTP(w, r)
-		// Legacy docs fragment endpoints: /docs/oob/ (hx-swap-oob HTMX fragments)
-		// and /docs/search (search partial page) are served by the legacy handler
-		// because the existing E2E tests verify the legacy HTML response structure.
-		// All other /docs/ paths (full doc pages) are handled by the SPA.
+		// Legacy docs fragment endpoints stay proxied because the existing E2E
+		// contract tests assert the exact legacy HTML fragment structure.
 		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/docs/oob/"):
 			legacyRouter.ServeHTTP(w, r)
 		case r.Method == http.MethodGet && r.URL.Path == "/docs/search":

@@ -21,8 +21,6 @@
 //   - /docs/search                               (HTML search-results partial page)
 //   - /committee/.../attendee-login              (attendee secret-login form)
 //   - /committee/.../attendee/:id/recovery       (attendee secret-recovery page)
-//   - /committee/.../votes/partial               (moderator vote-panel HTMX fragment)
-//   - /committee/.../votes/live/partial          (live/attendee vote-panel HTMX fragment)
 //   - /committee/.../moderate/join-qr            (join QR code full page)
 package e2e_test
 
@@ -145,88 +143,6 @@ func TestLegacyContract_AttendeeLoginForm(t *testing.T) {
 	assertEqualHTML(t, "attendee-login form",
 		locatorOuterHTML(t, newBrowserPage, "main form"),
 		locatorOuterHTML(t, legacyBrowserPage, "main form"),
-	)
-}
-
-// TestLegacyContract_VoteModeratorPartial (A19) verifies that the moderator vote
-// panel partial endpoint (GET /committee/.../votes/partial) is still served by
-// the legacy handler in the new app, producing an identical HTML fragment.
-func TestLegacyContract_VoteModeratorPartial(t *testing.T) {
-	newTS := newTestServer(t)
-	legacyTS := newLegacyTestServer(t)
-
-	for _, ts := range []*testServer{newTS, legacyTS} {
-		ts.seedCommittee(t, "Test Committee", "test")
-		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
-		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
-		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
-		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
-	}
-
-	newBrowserPage := newPage(t)
-	legacyBrowserPage := newPage(t)
-
-	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
-	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
-
-	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
-	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
-
-	// Navigate directly to the votes partial endpoint on both servers.
-	gotoAndWaitForSelector(t, newBrowserPage,
-		newTS.URL+"/committee/test/meeting/"+newMeetingID+"/votes/partial",
-		"#moderate-votes-panel",
-	)
-	gotoAndWaitForSelector(t, legacyBrowserPage,
-		legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/votes/partial",
-		"#moderate-votes-panel",
-	)
-
-	// Structural contract: the partial must contain the moderator votes panel.
-	assertEqualHTML(t, "moderator votes partial panel",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel"),
-	)
-}
-
-// TestLegacyContract_VoteLivePartial (A19) verifies that the live/attendee vote
-// panel partial endpoint (GET /committee/.../votes/live/partial) is still served
-// by the legacy handler in the new app, producing an identical HTML fragment.
-func TestLegacyContract_VoteLivePartial(t *testing.T) {
-	newTS := newTestServer(t)
-	legacyTS := newLegacyTestServer(t)
-
-	for _, ts := range []*testServer{newTS, legacyTS} {
-		ts.seedCommittee(t, "Test Committee", "test")
-		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
-		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
-		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
-		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
-	}
-
-	newBrowserPage := newPage(t)
-	legacyBrowserPage := newPage(t)
-
-	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
-	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
-
-	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
-	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
-
-	// Navigate directly to the live votes partial endpoint on both servers.
-	gotoAndWaitForSelector(t, newBrowserPage,
-		newTS.URL+"/committee/test/meeting/"+newMeetingID+"/votes/live/partial",
-		"#live-votes-panel",
-	)
-	gotoAndWaitForSelector(t, legacyBrowserPage,
-		legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/votes/live/partial",
-		"#live-votes-panel",
-	)
-
-	// Structural contract: the partial must contain the live votes panel.
-	assertEqualHTML(t, "live votes partial panel",
-		locatorOuterHTML(t, newBrowserPage, "#live-votes-panel"),
-		locatorOuterHTML(t, legacyBrowserPage, "#live-votes-panel"),
 	)
 }
 

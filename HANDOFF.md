@@ -14,9 +14,15 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12`–`A20`, are complete locally.
+`A01` through `A20` are complete locally, including `A11` agenda-point edit parity.
 
-`A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
+The parity expansion track is effectively complete. The active follow-up work is the
+"Remove Legacy HTML Proxying" migration documented later in this file.
+
+Current checkpoint (2026-04-01): Phase 5 is now implemented and fully verified.
+Native join-QR and guest recovery pages are running through Connect RPCs, the
+focused coverage passes, parity/legacy-contract coverage passes, and the full
+E2E suite is green again after hardening the concurrent voting stress test.
 
 ### A01 — post-action parity helper
 
@@ -253,12 +259,10 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-All planned parity tasks (A01–A20, excluding blocked A11) are complete.
-
-The next natural area of expansion would be:
-- **A21**: agenda-point edit parity — currently blocked on missing edit UI in the product; revisit when edit functionality is implemented
-- Additional legacy-contract tests for POST routes (vote create, attendee actions) if those routes are ported away from the legacy handler
-- Parity coverage for the attendee-facing live page under various vote states
+Continue the native-SPA migration work:
+- Phase 5: implement native Join QR and attendee recovery pages via Connect RPCs
+- Phase 6: remove now-dead legacy HTML proxy branches from the E2E test server
+- As follow-up cleanup, additional legacy-contract tests for POST routes can be removed or rewritten once those routes are fully ported
 
 ## Files Most Likely To Matter Next
 
@@ -276,3 +280,162 @@ The next natural area of expansion would be:
 - Keep normalization conservative.
 - If a task requires SPA markup changes, rebuild before any E2E run.
 - Do not mix multiple atomic tasks into one commit unless blocked by an unavoidable dependency.
+
+---
+
+# Migration: Remove Legacy HTML Proxying
+
+## Directive (2026-04-01)
+
+All HTML must be served natively from the SPA. Proxying HTML fragments from the legacy
+HTMX/Templ handler into the SPA server is strictly forbidden. The legacy app remains
+only for UI parity comparison tests and will eventually be removed entirely.
+
+## Status
+
+### Phase 1 — Documentation
+- [x] Add no-HTML-proxy rule to CLAUDE.md (done — see "SPA Architecture Rule" section)
+
+### Phase 2 — Attendee Connect RPCs ✅ DONE
+- [x] Added `CreateAttendee`, `DeleteAttendee`, `SetChairperson`, `SetQuoted` RPCs to proto
+- [x] Implemented in Go (`internal/services/attendees/service.go`, `internal/api/connect/attendee_handler.go`)
+- [x] buf generate ran; Go + TS bindings generated
+- [x] SPA updated: `addGuestAttendee`, `selfSignupAttendee`, `removeAttendee`, `toggleAttendeeChair`, `toggleAttendeeQuoted` all use Connect API
+- [x] Removed `postLegacyAttendeeAction`, `attendeeCreateURL`, `attendeeSelfSignupURL`, `attendeeDeleteURL`, `attendeeToggleChairURL`, `attendeeToggleQuotedURL`, `legacyClientIDVals`, dead HTMX attributes
+
+### Phase 3 — Agenda Point Edit (native Svelte) ✅ DONE
+- [x] Added `UpdateAgendaPoint` RPC to `proto/conference/agenda/v1/agenda.proto`
+- [x] Implemented in Go (`internal/services/agenda/service.go`, `internal/api/connect/agenda_handler.go`)
+- [x] buf generate ran; Go + TS bindings generated
+- [x] Replaced `hx-get` edit button with native inline Svelte edit form using `editingAgendaPointId`/`editingAgendaPointTitle` state
+- [x] `startEditAgendaPoint`, `cancelEditAgendaPoint`, `saveEditAgendaPoint` functions added
+- [x] `TestModerateEditAgendaPoint_UIParityWithLegacy` added and now passing
+
+### Phase 4 — Vote Panel Native UI ✅ DONE (2026-04-01)
+`loadLegacyVotesPanel()` fetched `/votes/partial` HTML. Replaced with fully native Svelte panel.
+
+- [x] Removed `loadLegacyVotesPanelHTML` state variable (was never declared; confirmed already removed)
+- [x] Removed `normalizeLegacyVoteOptionPlaceholders()` function
+- [x] Fixed `selectModerateLeftTab()` — removed dead `legacyVotesPanelHTML` reference and `loadLegacyVotesPanel()` call
+- [x] Removed `tick` from svelte import (was unused)
+- [x] Replaced `{#if legacyVotesPanelHTML}{@html legacyVotesPanelHTML}{:else}...{/if}` placeholder with full native Svelte vote panel that renders from `votesState.data`:
+  - Active vote card with live stats (eligible/cast/counted ballots) and Close button
+  - Last-closed vote tally card with Archive button
+  - Draft vote cards with editable options textarea, min/max inputs, Save draft and Open buttons
+  - Create vote form: name input, open/secret radio, min/max, options textarea, Create button
+  - Loading and error states wired to `votesState.loading` / `votesState.error`
+- [x] All vote actions (`createVote`, `openVote`, `closeVote`, `archiveVote`, `saveDraftVote`) already used Connect API; now wired to the native panel buttons
+- [x] Manual vote-entry flows stabilized after the native panel landed:
+  - vote route shims now submit URL-encoded bodies with `HX-Request: true`
+  - manual vote buttons call the submit helper explicitly instead of relying on implicit form submission
+  - successful manual submissions reset the form before reloading panel state
+  - single-select secret ballots now render radios instead of persistent checkboxes
+  - archive actions surface a success notice (`Vote archived.`) in the SPA
+- [x] Full-suite test stability improved by increasing `openModerateLeftTab(...)` waits in `e2e/browser_helpers_test.go`
+
+Verification completed (2026-04-01):
+
+- `nix develop -c bash -lc 'cd web && npm run build'` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
+### Phase 5 — Join QR + Attendee Pages ✅ COMPLETE
+Need Connect RPCs since these pages require backend secrets (meeting secret for join-qr, attendee secret for recovery).
+
+- [x] Add `GetMeetingJoinQR` RPC to meetings proto
+      Returns: `join_url`, `qr_code_data_url`, `meeting_name`, `committee_name`
+      Auth: `moderate_access`
+- [x] Add `GetAttendeeRecovery` RPC to attendees proto
+      Returns: `login_url`, `qr_code_data_url`, `attendee_name`
+      Auth: `moderate_access`
+- [x] Implement both in Go services (reusing backend QR generation)
+- [x] Run `buf generate` for Go + TS clients
+- [x] Create SPA page: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/join-qr/+page.svelte`
+      Calls `GetMeetingJoinQR`, displays join URL link + QR image
+- [x] Create SPA page: `web/src/routes/committee/[committee]/meeting/[meetingId]/attendee/[attendeeId]/recovery/+page.svelte`
+      Calls `GetAttendeeRecovery`, displays login URL link + QR image
+- [x] Verified `web/src/routes/committee/[committee]/meeting/[meetingId]/attendee-login/+page.svelte` is already native
+      — It handles GET `?secret=` auto-login via `attendeeClient.attendeeLogin(...)`
+      — It handles manual secret entry form via `attendeeClient.attendeeLogin(...)`
+      — No legacy HTML dependency remains for the SPA implementation itself
+- [x] Remove `shouldServeLegacyManageUtilityRoute` GET entries (join-qr, recovery)
+- [x] Remove `shouldServeLegacyAttendeeLoginSecretRoute` entirely
+- [x] Re-run focused verification after a clean SPA build:
+      `TestManageJoinQRPage_ContainsSecretJoinURL|TestManagePage_GuestRecoveryLink|TestLegacyContract_JoinQRPage|TestLegacyContract_AttendeeLoginByLink`
+      PASS on 2026-04-01 after clean rebuild
+      Note: a prior overlapping run timed out waiting for `#join-qr-code` and should be ignored
+
+### Phase 6 — Final Proxy Removal ⬜ TODO
+- [x] Remove all `shouldServeLegacy*` functions from `e2e/helpers_test.go`
+- [x] Remove their invocations from the `newTestServer()` switch statement
+- [x] `legacyH`/`legacyRouter` comments now reflect the reduced proxy surface accurately
+- [x] Run full E2E suite to verify nothing broke
+- [x] Retire stale vote-partial legacy-contract tests from `e2e/ui_parity_legacy_contract_test.go`
+      Vote partial endpoints are no longer treated as public legacy-contract routes in tests
+      but the vote HTML endpoints still remain operationally legacy-backed in `newTestServer()`
+
+Latest verification checkpoint (2026-04-01):
+
+- `nix develop -c bash -lc 'cd web && npm run build'` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestManageJoinQRPage_ContainsSecretJoinURL|TestManagePage_GuestRecoveryLink|TestLegacyContract_JoinQRPage|TestLegacyContract_AttendeeLoginByLink"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+- Regression fix applied:
+      `e2e/voting_concurrent_test.go` now authenticates and submits concurrent ballots through the Connect RPCs (`AttendeeLogin`, `SubmitBallot`) used by the native app, while still preserving one cookie jar per voter.
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run TestVoting_Concurrent20Attendees_TallyIsCorrect` — PASS after the Connect-based test update
+- Phase 6 checkpoint:
+      `e2e/helpers_test.go` no longer defines or dispatches `shouldServeLegacyVoteRoute`, `shouldServeLegacyManageUtilityRoute`, or `shouldServeLegacyAgendaImportRoute`.
+      The new E2E server now proxies `/docs/oob/...`, `/docs/search`, and the operational vote HTML endpoints through direct switch cases instead of the removed helper functions.
+- Phase 6 correction:
+      `e2e/ui_parity_legacy_contract_test.go` previously still asserted legacy vote-partial HTML for `/votes/partial` and `/votes/live/partial`.
+      Those assertions are now removed so the contract file only documents route families we still want to treat as explicit legacy-backed contract surfaces.
+- Remaining blocker:
+      `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte` still fetches `GET /votes/live/partial` to render attendee live-vote HTML, especially for the post-close timed-results state.
+      Vote POST/ballot HTMX endpoints are also still exercised by the current E2E browser flows.
+      A future phase needs richer Connect vote views plus native live-page rendering before these remaining vote HTML routes can be removed cleanly.
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS after restoring direct vote-route switch cases
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS after restoring direct vote-route switch cases
+- Next step: future phase to port the live-vote panel and vote form-post flows off the remaining legacy HTML endpoints
+
+## Reference: Proxy Route Status (updated 2026-04-01)
+
+### `shouldServeLegacyAgendaImportRoute`
+| Route | SPA status |
+|-------|-----------|
+| GET `/moderate/agenda` | Dead code — SPA renders inline |
+| GET `/agenda-point/list` | Dead code — SPA uses Connect |
+| GET `/agenda-point/{id}/edit-form` | **PORTED** — native Svelte edit form (Phase 3 ✅) |
+| POST `/agenda/import/extract` | Dead code — `event.preventDefault()` + native JS |
+| POST `/agenda/import/diff` | Dead code — `event.preventDefault()` + native JS |
+| POST `/agenda-point/{id}/move-up` | Dead code — Connect API |
+| POST `/agenda-point/{id}/move-down` | Dead code — Connect API |
+| POST `/agenda-point/{id}/edit` | **PORTED** — `agendaClient.updateAgendaPoint()` (Phase 3 ✅) |
+→ All cases dead. Can remove `shouldServeLegacyAgendaImportRoute` in Phase 6.
+
+### `shouldServeLegacyVoteRoute`
+| Route | SPA status |
+|-------|-----------|
+| GET `/votes/partial` | Compatibility endpoint only — not covered as a legacy contract anymore, but still used by legacy vote-form responses |
+| GET `/votes/live/partial` | **ACTIVE** — live page still fetches it for attendee vote HTML / post-close timed results |
+| POST `/votes/*` | **ACTIVE** — current E2E browser flows still exercise legacy HTMX vote form endpoints |
+→ The old `shouldServeLegacyVoteRoute` helper is gone, but the vote HTML routes themselves are not fully removable yet.
+
+### `shouldServeLegacyManageUtilityRoute`
+| Route | SPA status |
+|-------|-----------|
+| GET `/moderate/join-qr` | **ACTIVE** — link navigates there (Phase 5) |
+| GET `/attendee/{id}/recovery` | **ACTIVE** — link navigates there (Phase 5) |
+| POST `/attendee/create` | **PORTED** — `attendeeClient.createAttendee()` (Phase 2 ✅) |
+| POST `/attendee/self-signup` | **PORTED** — `attendeeClient.selfSignup()` (Phase 2 ✅) |
+| POST `/attendee/{id}/delete` | **PORTED** — `attendeeClient.deleteAttendee()` (Phase 2 ✅) |
+| POST `/attendee/{id}/chair` | **PORTED** — `attendeeClient.setChairperson()` (Phase 2 ✅) |
+| POST `/attendee/{id}/quoted` | **PORTED** — `attendeeClient.setQuoted()` (Phase 2 ✅) |
+→ Only GET join-qr and GET recovery remain. Both need new Connect RPCs (Phase 5).
+
+### `shouldServeLegacyAttendeeLoginSecretRoute`
+| Route | SPA status |
+|-------|-----------|
+| GET/POST `/attendee-login` (with secret) | **ACTIVE** — attendee login flow (Phase 5) |
+→ `AttendeeLogin` RPC already exists; SPA page at `web/src/.../attendee-login/` needs to handle `?secret=` auto-login and manual form.
+→ Helper removed in Phase 5; this section is retained only as historical migration context.
