@@ -390,13 +390,26 @@ Latest verification checkpoint (2026-04-01):
 - Phase 6 correction:
       `e2e/ui_parity_legacy_contract_test.go` previously still asserted legacy vote-partial HTML for `/votes/partial` and `/votes/live/partial`.
       Those assertions are now removed so the contract file only documents route families we still want to treat as explicit legacy-backed contract surfaces.
-- Remaining blocker:
-      `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte` still fetches `GET /votes/live/partial` to render attendee live-vote HTML, especially for the post-close timed-results state.
-      Vote POST/ballot HTMX endpoints are also still exercised by the current E2E browser flows.
-      A future phase needs richer Connect vote views plus native live-page rendering before these remaining vote HTML routes can be removed cleanly.
+- Live-vote migration status (2026-04-01, paused mid-step; not committed yet):
+      The attendee live-vote panel is now rendered natively in `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte` from Connect data instead of calling `loadLegacyLiveVotesPanel()`.
+      `proto/conference/votes/v1/votes.proto` now includes `LiveVoteCardView` plus `LiveVotePanelView.has_active_agenda` / `votes`; the generated Go/TS bindings were regenerated in-place.
+      `internal/services/votes/service.go` now returns open votes, counting votes, and recently-closed timed-result cards through `GetLiveVotePanel`.
+      `internal/api/connect/votes_handler_test.go` was expanded to cover the richer live panel states, including timed closed results and counting.
+      The visible page no longer injects legacy vote HTML, but a hidden `liveVotesTemplateHTML()` placeholder and legacy-style HTMX attributes were intentionally restored only for parity/OOB markup compatibility inside the speakers container.
+      Important local constraint: the worktree still contains unrelated in-flight edits in other files; this step stayed isolated to vote-panel files plus `HANDOFF.md`.
+- Current verification for the paused live-vote step:
+      `nix develop -c bash -lc 'PATH="$PATH:$PWD/web/node_modules/.bin" buf generate --template buf.gen.yaml --path proto/conference/votes/v1/votes.proto .'` — PASS
+      `nix develop -c go test ./internal/api/connect -run 'TestVoteService_GetLiveVotePanel_AndSubmitBallot|TestVoteService_GetLiveVotePanel_IncludesClosedTimedResultsAndCountingState'` — PASS
+      `nix develop -c bash -lc 'cd web && npm run build'` — PASS after the latest live-page changes; `internal/web/build` written
+      `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run 'TestVoting_OpenVote_ModeratorAndAttendeeHappyPath_HTMX|TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards|TestVoting_LivePanelUpdatesViaSSEOnVoteOpen|TestVoting_DuplicateSecretSubmissionRejected'` — PASS after rebuilding
+      `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run 'TestMeetingLive_UIParityWithLegacy'` — PASS after rebuilding
+- Still pending before this step can be committed:
+      Re-run `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run '.*UIParityWithLegacy|TestLegacyContract'` from the latest build
+      Re-run `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...`
+      If both pass, update this section again and commit the isolated live-vote migration step
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS after restoring direct vote-route switch cases
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS after restoring direct vote-route switch cases
-- Next step: future phase to port the live-vote panel and vote form-post flows off the remaining legacy HTML endpoints
+- Next step after the paused verification: finish the broad-suite re-check for the native live-vote panel, then move on to porting the remaining vote form-post endpoints off the legacy HTML routes
 
 ## Reference: Proxy Route Status (updated 2026-04-01)
 
@@ -417,9 +430,10 @@ Latest verification checkpoint (2026-04-01):
 | Route | SPA status |
 |-------|-----------|
 | GET `/votes/partial` | Compatibility endpoint only — not covered as a legacy contract anymore, but still used by legacy vote-form responses |
-| GET `/votes/live/partial` | **ACTIVE** — live page still fetches it for attendee vote HTML / post-close timed results |
+| GET `/votes/live/partial` | **IN TRANSITION** — visible attendee panel now renders natively from `GetLiveVotePanel`, but a hidden compatibility template + legacy-style HTMX attrs still reference this URL until broad-suite re-verification is complete |
 | POST `/votes/*` | **ACTIVE** — current E2E browser flows still exercise legacy HTMX vote form endpoints |
 → The old `shouldServeLegacyVoteRoute` helper is gone, but the vote HTML routes themselves are not fully removable yet.
+→ Current migration focus: finish verifying the native attendee panel migration, then port the remaining vote POST / ballot flows so the vote HTML routes can be removed cleanly.
 
 ### `shouldServeLegacyManageUtilityRoute`
 | Route | SPA status |
