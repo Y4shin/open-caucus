@@ -19,14 +19,14 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 The parity expansion track is effectively complete. The active follow-up work is the
 "Remove Legacy HTML Proxying" migration documented later in this file.
 
-Current checkpoint (2026-04-01): the migration has moved beyond the old
-vote/manage/login proxy-removal notes below. Production `cmd/serve.go` no
-longer routes vote, attendee-management, join-QR, recovery, or attendee-login
-requests through the legacy router; those flows are served natively by the SPA
-and Connect APIs. The remaining cleanup work is now docs-specific: remove the
-docs-only legacy assumptions from the E2E server/tests and delete the stale
-`hx-get="/docs/oob/..."` attribute that still hangs off the moderate agenda
-help button.
+Current checkpoint (2026-04-02): the docs-only legacy proxy cleanup is
+complete and verified. `newTestServer()` no longer proxies `/docs/oob/...` or
+`GET /docs/search`, the docs legacy-contract tests were removed, the stale
+moderate agenda-help `hx-get="/docs/oob/..."` attribute is gone, and the docs
+search page now tracks the actual URL search string in the SPA. The parity
+suite now normalizes the legacy-only hidden live-vote compat template and stale
+docs help attrs instead of reintroducing proxy-era markup, and the full E2E
+suite is green again.
 
 ### A01 — post-action parity helper
 
@@ -263,11 +263,11 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Continue the legacy-proxy cleanup with the docs routes:
-- remove the docs switch cases from `e2e/helpers_test.go` so `/docs/search` behaves like production SPA routing again
-- retire or rewrite the docs-only entries in `e2e/ui_parity_legacy_contract_test.go`
-- remove the stale `hx-get="/docs/oob/..."` / `hx-swap="none"` attrs from the moderate agenda help button
-- keep an eye on the unrelated dirty `e2e/voting_test.go` change; do not overwrite it unless the current task truly requires it
+The legacy HTML proxy-removal migration is at a clean checkpoint. If a new
+agent picks up from here, start from the next product request instead of
+continuing this migration. Keep an eye on the unrelated dirty
+`e2e/voting_test.go` change and do not overwrite it unless a future task truly
+requires touching that file.
 
 ## Files Most Likely To Matter Next
 
@@ -417,21 +417,42 @@ Note for the next agent:
 
 - There is an unrelated dirty working-tree change in `e2e/voting_test.go`. Leave it alone unless the docs cleanup truly requires touching that file.
 
+### Phase 8 — Docs Legacy Proxy Cleanup ✅ COMPLETE
+
+- [x] Remove the docs proxy cases from `newTestServer()` in `e2e/helpers_test.go`
+- [x] Stop documenting docs routes as intentional legacy-contract surfaces in `e2e/ui_parity_legacy_contract_test.go`
+- [x] Remove the direct `/docs/oob/index` assertion from `e2e/docs_test.go`
+- [x] Keep docs route coverage via native docs page tests plus `TestDocsAndReceipts_UIParityWithLegacy`
+- [x] Remove the stale `hx-get="/docs/oob/..." hx-swap="none"` attribute from the moderate agenda help button
+- [x] Update `web/src/routes/docs/search/+page.svelte` so the native search page tracks `page.url.search`
+- [x] Normalize legacy-only live-vote compat/template markup and stale docs help attrs in parity comparisons instead of restoring old proxy-era HTML
+- [x] Narrow the open-vote panel parity assertion to stable subregions/text so native and legacy implementations can differ internally without hiding user-visible regressions
+
+Focused verification completed (2026-04-02):
+
+- `nix develop -c bash -lc 'cd web && npm run build'` — PASS
+- `nix develop -c go test -v ./internal/api/connect -run "TestDocsServiceSearch|TestDocsServiceGetPage"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestDocs|TestDocsAndReceipts_UIParityWithLegacy|TestLegacyContract_Attendee|TestLegacyContract_JoinQRPage"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateHelpButton_OpensAgendaDocumentation"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestMeetingLiveWithSpeakersInQueue_UIParityWithLegacy|TestMeetingModerate_UIParityWithLegacy|TestLiveActiveSpeaker_UIParityWithLegacy|TestLiveCompletedSpeaker_UIParityWithLegacy|TestModerateVotesPanelOpen_UIParityWithLegacy|TestMeetingLive_UIParityWithLegacy"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
+Notes for the next agent:
+
+- The unrelated dirty working-tree change in `e2e/voting_test.go` still exists. Leave it alone unless a future task actually needs that file.
+- This migration no longer has an active blocker; the remaining legacy app is only needed for standalone UI parity comparison tests.
+
 ## Remaining Work
 
-### Remaining legacy assumptions
+### Current status
 
-- `e2e/helpers_test.go` still proxies only `/docs/oob/...` and `GET /docs/search` to the legacy router. This no longer matches production `cmd/serve.go`, which serves those URLs through the SPA shell.
-- `e2e/ui_parity_legacy_contract_test.go` still documents docs fragment/search routes as intentionally legacy-backed. That should be removed or rewritten once the E2E server stops proxying them.
-- `e2e/docs_test.go` still has one direct `/docs/oob/index` assertion that expects raw `hx-swap-oob` HTML.
-- `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte` still includes a stale `hx-get="/docs/oob/..." hx-swap="none"` help-button attribute even though the button already does native `goto('/docs/...')`.
+- No active blocker remains in the legacy HTML proxy-removal migration.
 
 ### Suggested next sequence
 
-1. Remove the docs proxy cases from `newTestServer()` in `e2e/helpers_test.go`.
-2. Convert docs tests to native SPA behavior checks instead of raw legacy fragment checks.
-3. Remove the stale moderate-page docs `hx-get` attribute.
-4. Re-run:
+1. Start from the next user/product request rather than continuing proxy-removal work.
+2. If you need a fresh regression checkpoint later, re-run:
    - `nix develop -c bash -lc 'cd web && npm run build'`
-   - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestDocs|TestLegacyContract|TestMeetingLive_UIParityWithLegacy"`
+   - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"`
    - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...`

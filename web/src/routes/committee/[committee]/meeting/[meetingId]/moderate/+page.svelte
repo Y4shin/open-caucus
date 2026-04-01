@@ -1719,7 +1719,7 @@
 								<div class="mb-3 flex items-center justify-between gap-2">
 									<h2 class="text-lg font-semibold">Agenda Points</h2>
 									<div class="flex items-center gap-2">
-										<button type="button" class="btn btn-sm btn-square btn-ghost" title="Open agenda help" aria-label="Open agenda help" hx-get="/docs/oob/03-chairperson/03-agenda-management-and-import?heading=agenda-routes" hx-swap="none" onclick={() => openDocsWithHeading('03-chairperson/03-agenda-management-and-import', 'agenda-routes')}><LegacyIcon name="help" class="h-4 w-4" /></button>
+										<button type="button" class="btn btn-sm btn-square btn-ghost" title="Open agenda help" aria-label="Open agenda help" onclick={() => openDocsWithHeading('03-chairperson/03-agenda-management-and-import', 'agenda-routes')}><LegacyIcon name="help" class="h-4 w-4" /></button>
 										<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda" data-manage-dialog-open aria-controls="moderate-agenda-edit-dialog" title="Edit agenda" aria-label="Edit agenda" onclick={openAgendaEditDialog}><LegacyIcon name="settings" class="h-4 w-4" /></button>
 									</div>
 								</div>

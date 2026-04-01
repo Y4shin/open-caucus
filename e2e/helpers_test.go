@@ -110,19 +110,6 @@ func newTestServer(t *testing.T) *testServer {
 		AuthConfig:     authCfg,
 	}
 
-	// Legacy handler: still needed only for docs HTML fragment endpoints that the
-	// contract/parity tests compare directly (`/docs/oob/...`, `/docs/search`).
-	legacyH := &handlers.Handler{
-		Broker:         b,
-		Repository:     repo,
-		Storage:        store,
-		SessionManager: sessionMgr,
-		AuthConfig:     authCfg,
-		OAuthService:   oauthSvc,
-		DocsService:    docsService,
-	}
-	legacyRouter := routes.NewRouter(legacyH, mw).RegisterRoutes()
-
 	apiMux := http.NewServeMux()
 
 	sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
@@ -211,12 +198,6 @@ func newTestServer(t *testing.T) *testServer {
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
 		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
 			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
-		// Legacy docs fragment endpoints stay proxied because the existing E2E
-		// contract tests assert the exact legacy HTML fragment structure.
-		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/docs/oob/"):
-			legacyRouter.ServeHTTP(w, r)
-		case r.Method == http.MethodGet && r.URL.Path == "/docs/search":
-			legacyRouter.ServeHTTP(w, r)
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:
 			spaHandler.ServeHTTP(w, r)
 		default:

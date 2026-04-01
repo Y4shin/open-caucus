@@ -53,8 +53,11 @@
 	});
 
 	$effect(() => {
+		const currentSearch = page.url.search;
+		const currentQuery = page.url.searchParams.get('q') ?? '';
+		void currentSearch;
 		loadDocsShell();
-		loadSearch();
+		loadSearch(currentQuery);
 	});
 
 	$effect(() => {
@@ -77,11 +80,11 @@
 		}
 	}
 
-	async function loadSearch() {
+	async function loadSearch(searchQuery: string) {
 		searchState.loading = true;
 		searchState.error = '';
 		try {
-			const response = await docsClient.search({ query, limit: 10 });
+			const response = await docsClient.search({ query: searchQuery, limit: 10 });
 			searchState.data = (response.hits ?? []) as SearchHit[];
 		} catch (err) {
 			searchState.error = getDisplayError(err, 'Failed to search documentation.');

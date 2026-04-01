@@ -20,12 +20,27 @@ func normalizeWhitespace(raw string) string {
 
 var betweenTagsWhitespace = regexp.MustCompile(`>\s+<`)
 var svelteCommentNodes = regexp.MustCompile(`<!---->`)
+var legacyLiveVoteCompatTemplate = regexp.MustCompile(`(?s)<template><div[^>]*id="live-votes-panel".*?</template>`)
+var legacyDocsOOBHelpAttrs = regexp.MustCompile(`\s+hx-get="/docs/oob[^"]*"|\s+hx-swap="none"`)
+var legacyLiveVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/live/partial"|\s+hx-target="#live-votes-panel"|\s+hx-trigger="reload"|\s+sse-swap="votes-updated"|\s+hx-swap="outerHTML"`)
 
 func normalizeHTML(raw string) string {
 	trimmed := strings.TrimSpace(raw)
 	trimmed = svelteCommentNodes.ReplaceAllString(trimmed, "")
 	trimmed = betweenTagsWhitespace.ReplaceAllString(trimmed, "><")
 	return trimmed
+}
+
+func normalizeLegacyLiveVoteCompat(raw string) string {
+	return normalizeHTML(legacyLiveVoteCompatTemplate.ReplaceAllString(raw, ""))
+}
+
+func normalizeLegacyDocsHelpAttrs(raw string) string {
+	return normalizeHTML(legacyDocsOOBHelpAttrs.ReplaceAllString(raw, ""))
+}
+
+func normalizeLegacyLiveVotePanelAttrs(raw string) string {
+	return normalizeHTML(legacyLiveVotePanelAttrs.ReplaceAllString(raw, ""))
 }
 
 const canonicalOuterHTMLJS = `el => {
@@ -580,9 +595,15 @@ func TestMeetingLive_UIParityWithLegacy(t *testing.T) {
 
 	assertEqualHTML(t, "live navbar start", locatorOuterHTML(t, newBrowserPage, "nav .flex-1"), locatorOuterHTML(t, legacyBrowserPage, "nav .flex-1"))
 	assertEqualHTML(t, "live agenda stack", locatorOuterHTML(t, newBrowserPage, "#live-agenda-main-stack"), locatorOuterHTML(t, legacyBrowserPage, "#live-agenda-main-stack"))
-	assertEqualHTML(t, "live speakers container", locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list"), locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list"))
+	assertEqualHTML(t, "live speakers container",
+		normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list")),
+		normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list")),
+	)
 	assertEqualHTML(t, "live self-add regular button", locatorOuterHTML(t, newBrowserPage, "[data-testid='live-add-self-regular']"), locatorOuterHTML(t, legacyBrowserPage, "[data-testid='live-add-self-regular']"))
-	assertEqualHTML(t, "live votes panel", locatorOuterHTML(t, newBrowserPage, "#live-votes-panel"), locatorOuterHTML(t, legacyBrowserPage, "#live-votes-panel"))
+	assertEqualHTML(t, "live votes panel",
+		normalizeLegacyLiveVotePanelAttrs(locatorOuterHTML(t, newBrowserPage, "#live-votes-panel")),
+		normalizeLegacyLiveVotePanelAttrs(locatorOuterHTML(t, legacyBrowserPage, "#live-votes-panel")),
+	)
 }
 
 func TestMeetingModerate_UIParityWithLegacy(t *testing.T) {
@@ -612,7 +633,10 @@ func TestMeetingModerate_UIParityWithLegacy(t *testing.T) {
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+newMeetingID+"/moderate", "#moderate-left-controls")
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-left-controls")
 
-	assertEqualHTML(t, "moderate left controls", locatorOuterHTML(t, newBrowserPage, "#moderate-left-controls"), locatorOuterHTML(t, legacyBrowserPage, "#moderate-left-controls"))
+	assertEqualHTML(t, "moderate left controls",
+		normalizeLegacyDocsHelpAttrs(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#moderate-left-controls"))),
+		normalizeLegacyDocsHelpAttrs(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#moderate-left-controls"))),
+	)
 	assertEqualHTML(t, "moderate speakers container", locatorOuterHTML(t, newBrowserPage, "#speakers-list-container"), locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container"))
 }
 

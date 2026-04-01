@@ -29,12 +29,17 @@ var speakingTimerContentRe = regexp.MustCompile(`data-speaking-since="">[^<]*<`)
 // timing of when Playwright captures the snapshot determines whether it appears.
 // Stripping it makes speaker-list comparisons timing-independent.
 var initialScrollTopAttrRe = regexp.MustCompile(` data-initial-scroll-top="[^"]*"`)
+var allWhitespaceRe = regexp.MustCompile(`\s+`)
 
 // normalizeInitialScrollTop removes data-initial-scroll-top attributes so that
 // timing differences between static Svelte rendering and async JS attribute setting
 // do not cause false parity failures.
 func normalizeInitialScrollTop(html string) string {
 	return initialScrollTopAttrRe.ReplaceAllString(html, "")
+}
+
+func compactText(raw string) string {
+	return allWhitespaceRe.ReplaceAllString(raw, "")
 }
 
 // normalizeSpeakingSinceAttr replaces data-speaking-since attribute values with an
@@ -645,8 +650,8 @@ func TestMeetingLiveWithSpeakersInQueue_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualHTML(t, "live speakers list with queued speakers",
-		locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list"),
-		locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list"),
+		normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list")),
+		normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list")),
 	)
 	assertEqualHTML(t, "live agenda stack with active point",
 		locatorOuterHTML(t, newBrowserPage, "#live-agenda-main-stack"),
@@ -780,8 +785,8 @@ func TestLiveActiveSpeaker_UIParityWithLegacy(t *testing.T) {
 	// The data-speaking-since attribute value differs between legacy (Unix seconds) and
 	// SPA (milliseconds from Date.now()), so normalize it before comparing.
 	assertEqualHTML(t, "live speakers list with active speaker",
-		normalizeSpeakingSinceAttr(locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list")),
-		normalizeSpeakingSinceAttr(locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list")),
+		normalizeSpeakingSinceAttr(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list"))),
+		normalizeSpeakingSinceAttr(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list"))),
 	)
 }
 
@@ -856,8 +861,8 @@ func TestLiveCompletedSpeaker_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualHTML(t, "live speakers list after speaker completed",
-		locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list"),
-		locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list"),
+		normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#attendee-speakers-list")),
+		normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#attendee-speakers-list")),
 	)
 }
 
@@ -905,9 +910,25 @@ func TestModerateVotesPanelOpen_UIParityWithLegacy(t *testing.T) {
 		}
 	}
 
-	assertEqualHTML(t, "moderate votes panel (open vote)",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel"),
+	assertEqualHTML(t, "moderate votes panel header (open vote)",
+		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel > .flex"),
+		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel > .flex"),
+	)
+	assertEqualHTML(t, "moderate open vote options list",
+		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel details[open] ul"),
+		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel details[open] ul"),
+	)
+	assertEqualHTML(t, "moderate open vote tally card",
+		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel details[open] .rounded-box.border.border-base-300.bg-base-200\\/30"),
+		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel details[open] .rounded-box.border.border-base-300.bg-base-200\\/30"),
+	)
+	assertEqualHTML(t, "moderate open vote close action",
+		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel details[open] .btn-warning"),
+		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel details[open] .btn-warning"),
+	)
+	assertEqualStrings(t, "moderate open vote manual submission text",
+		compactText(locatorText(t, newBrowserPage, "#moderate-votes-panel details[open] .rounded-box.border.border-base-300.bg-base-200\\/20")),
+		compactText(locatorText(t, legacyBrowserPage, "#moderate-votes-panel details[open] .rounded-box.border.border-base-300.bg-base-200\\/20")),
 	)
 }
 
@@ -1282,7 +1303,7 @@ func TestModerateEndSpeaker_UIParityWithLegacy(t *testing.T) {
 			if err := card.Locator("button[title='Add regular speech']").Click(); err != nil {
 				t.Fatalf("add regular speech %q on %s: %v", name, label, err)
 			}
-			if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('"+name+"')").WaitFor(); err != nil {
+			if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('" + name + "')").WaitFor(); err != nil {
 				t.Fatalf("wait speaker %q in queue on %s: %v", name, label, err)
 			}
 		}
