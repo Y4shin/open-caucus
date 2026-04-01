@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12`–`A18`, are complete locally.
+`A01` through `A10`, plus `A12`–`A19`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -73,6 +73,16 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 - added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
+
+### A19 — legacy fallback contract: vote partials and join-qr routes
+
+- extended `e2e/ui_parity_legacy_contract_test.go` with three vote/manage legacy contract tests
+- added `TestLegacyContract_VoteModeratorPartial`: both servers return identical `#moderate-votes-panel` for `GET /committee/.../votes/partial`
+- added `TestLegacyContract_VoteLivePartial`: both servers return identical `#live-votes-panel` for `GET /committee/.../votes/live/partial`
+- added `TestLegacyContract_JoinQRPage`: both servers serve the join-qr full page with a non-empty `#join-qr-code` img src
+- updated file header to document these three route families as legacy-backed
+
+Verification (2026-03-31): all 3 new tests PASS; full E2E suite PASS (all tests).
 
 ### A18 — legacy fallback contract: attendee-login/recovery routes
 
@@ -234,15 +244,16 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A19`.
+Start with `A20`.
 
-Definition of done for `A19`:
+Definition of done for `A20`:
 
-- extend `e2e/ui_parity_legacy_contract_test.go` with vote-form and manage-utility legacy contract tests
-- document vote partial routes (`/votes/partial`, `/votes/live/partial`) and at least one manage-utility route as still legacy-backed
-- verify both servers return identical HTML fragments for these routes
-- verify with a focused test, then the full suite, then the full E2E suite
-- update this handoff to point at `A20` next
+- review all parity test files (`e2e/ui_parity_test.go`, `e2e/ui_parity_extended_test.go`, `e2e/ui_parity_legacy_contract_test.go`) for organizational improvements
+- if the files have grown large or have structural issues, split or reorganize as needed
+- ensure test names and comments accurately reflect what they test
+- no functional test changes — pure organization and documentation pass
+- verify with the full E2E suite after any reorganization
+- update this handoff to record what (if anything) was done or skipped
 
 ## Files Most Likely To Matter Next
 

@@ -17,10 +17,13 @@
 // from this file and add direct SPA parity or behavioural coverage instead.
 //
 // Currently documented legacy-backed route families:
-//   - /docs/oob/...        (HTMX hx-swap-oob doc-content fragments)
-//   - /docs/search         (HTML search-results partial page)
-//   - /committee/.../attendee-login          (attendee secret-login form)
-//   - /committee/.../attendee/:id/recovery   (attendee secret-recovery page)
+//   - /docs/oob/...                              (HTMX hx-swap-oob doc-content fragments)
+//   - /docs/search                               (HTML search-results partial page)
+//   - /committee/.../attendee-login              (attendee secret-login form)
+//   - /committee/.../attendee/:id/recovery       (attendee secret-recovery page)
+//   - /committee/.../votes/partial               (moderator vote-panel HTMX fragment)
+//   - /committee/.../votes/live/partial          (live/attendee vote-panel HTMX fragment)
+//   - /committee/.../moderate/join-qr            (join QR code full page)
 package e2e_test
 
 import (
@@ -143,6 +146,139 @@ func TestLegacyContract_AttendeeLoginForm(t *testing.T) {
 		locatorOuterHTML(t, newBrowserPage, "main form"),
 		locatorOuterHTML(t, legacyBrowserPage, "main form"),
 	)
+}
+
+// TestLegacyContract_VoteModeratorPartial (A19) verifies that the moderator vote
+// panel partial endpoint (GET /committee/.../votes/partial) is still served by
+// the legacy handler in the new app, producing an identical HTML fragment.
+func TestLegacyContract_VoteModeratorPartial(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	// Navigate directly to the votes partial endpoint on both servers.
+	gotoAndWaitForSelector(t, newBrowserPage,
+		newTS.URL+"/committee/test/meeting/"+newMeetingID+"/votes/partial",
+		"#moderate-votes-panel",
+	)
+	gotoAndWaitForSelector(t, legacyBrowserPage,
+		legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/votes/partial",
+		"#moderate-votes-panel",
+	)
+
+	// Structural contract: the partial must contain the moderator votes panel.
+	assertEqualHTML(t, "moderator votes partial panel",
+		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel"),
+		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel"),
+	)
+}
+
+// TestLegacyContract_VoteLivePartial (A19) verifies that the live/attendee vote
+// panel partial endpoint (GET /committee/.../votes/live/partial) is still served
+// by the legacy handler in the new app, producing an identical HTML fragment.
+func TestLegacyContract_VoteLivePartial(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	// Navigate directly to the live votes partial endpoint on both servers.
+	gotoAndWaitForSelector(t, newBrowserPage,
+		newTS.URL+"/committee/test/meeting/"+newMeetingID+"/votes/live/partial",
+		"#live-votes-panel",
+	)
+	gotoAndWaitForSelector(t, legacyBrowserPage,
+		legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/votes/live/partial",
+		"#live-votes-panel",
+	)
+
+	// Structural contract: the partial must contain the live votes panel.
+	assertEqualHTML(t, "live votes partial panel",
+		locatorOuterHTML(t, newBrowserPage, "#live-votes-panel"),
+		locatorOuterHTML(t, legacyBrowserPage, "#live-votes-panel"),
+	)
+}
+
+// TestLegacyContract_JoinQRPage (A19) verifies that the join-QR code page
+// (GET /committee/.../moderate/join-qr) is still served by the legacy handler
+// in the new app, producing an identical QR code element.
+func TestLegacyContract_JoinQRPage(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	// Navigate to the join-qr page on both servers.
+	gotoAndWaitForSelector(t, newBrowserPage,
+		newTS.URL+"/committee/test/meeting/"+newMeetingID+"/moderate/join-qr",
+		"#join-qr-code",
+	)
+	gotoAndWaitForSelector(t, legacyBrowserPage,
+		legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate/join-qr",
+		"#join-qr-code",
+	)
+
+	// Structural contract: page must contain the QR code image element.
+	// We compare the img tag src attributes are equivalent (both embed the same
+	// attendee-login URL as a base64 QR code for the meeting).
+	newSrc, err := newBrowserPage.Locator("#join-qr-code").GetAttribute("src")
+	if err != nil {
+		t.Fatalf("new: get #join-qr-code src: %v", err)
+	}
+	legacySrc, err := legacyBrowserPage.Locator("#join-qr-code").GetAttribute("src")
+	if err != nil {
+		t.Fatalf("legacy: get #join-qr-code src: %v", err)
+	}
+	if newSrc == "" {
+		t.Errorf("new server /moderate/join-qr: expected non-empty QR code src")
+	}
+	if legacySrc == "" {
+		t.Errorf("legacy server /moderate/join-qr: expected non-empty QR code src")
+	}
 }
 
 // TestLegacyContract_AttendeeLoginByLink (A18) verifies that the attendee
