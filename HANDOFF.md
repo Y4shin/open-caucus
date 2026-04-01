@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12`–`A19`, are complete locally.
+`A01` through `A10`, plus `A12`–`A20`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -73,6 +73,15 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 - added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
+
+### A20 — parity file organization review
+
+- reviewed all three parity test files for structural issues
+- `e2e/ui_parity_test.go` (684 lines): core helpers + basic page-level tests — well-structured, no action needed
+- `e2e/ui_parity_extended_test.go` (1256 lines): feature-level tests with good section comments — navigable as-is; splitting would create import/build-tag boilerplate without real gain
+- `e2e/ui_parity_legacy_contract_test.go` (333 lines): explicit legacy-contract documentation — purpose-built and appropriately scoped
+- no structural changes made; all test names and comments accurately reflect their content
+- no E2E run needed (no code changes)
 
 ### A19 — legacy fallback contract: vote partials and join-qr routes
 
@@ -244,16 +253,12 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A20`.
+All planned parity tasks (A01–A20, excluding blocked A11) are complete.
 
-Definition of done for `A20`:
-
-- review all parity test files (`e2e/ui_parity_test.go`, `e2e/ui_parity_extended_test.go`, `e2e/ui_parity_legacy_contract_test.go`) for organizational improvements
-- if the files have grown large or have structural issues, split or reorganize as needed
-- ensure test names and comments accurately reflect what they test
-- no functional test changes — pure organization and documentation pass
-- verify with the full E2E suite after any reorganization
-- update this handoff to record what (if anything) was done or skipped
+The next natural area of expansion would be:
+- **A21**: agenda-point edit parity — currently blocked on missing edit UI in the product; revisit when edit functionality is implemented
+- Additional legacy-contract tests for POST routes (vote create, attendee actions) if those routes are ported away from the legacy handler
+- Parity coverage for the attendee-facing live page under various vote states
 
 ## Files Most Likely To Matter Next
 
