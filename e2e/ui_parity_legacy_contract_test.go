@@ -19,6 +19,8 @@
 // Currently documented legacy-backed route families:
 //   - /docs/oob/...        (HTMX hx-swap-oob doc-content fragments)
 //   - /docs/search         (HTML search-results partial page)
+//   - /committee/.../attendee-login          (attendee secret-login form)
+//   - /committee/.../attendee/:id/recovery   (attendee secret-recovery page)
 package e2e_test
 
 import (
@@ -106,4 +108,90 @@ func TestLegacyContract_DocsSearchPartial(t *testing.T) {
 		locatorOuterHTML(t, newBrowserPage, "#docs-search-results"),
 		locatorOuterHTML(t, legacyBrowserPage, "#docs-search-results"),
 	)
+}
+
+// TestLegacyContract_AttendeeLoginForm (A18) verifies that the attendee secret-login
+// form page (GET /committee/.../attendee-login) is still served by the legacy handler
+// in the new app, producing an identical form to the standalone legacy server.
+func TestLegacyContract_AttendeeLoginForm(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	// The attendee-login GET page is public (no auth required).
+	gotoAndWaitForSelector(t, newBrowserPage,
+		newTS.URL+"/committee/test/meeting/"+newMeetingID+"/attendee-login",
+		"input[name=secret]",
+	)
+	gotoAndWaitForSelector(t, legacyBrowserPage,
+		legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/attendee-login",
+		"input[name=secret]",
+	)
+
+	// Parity contract: both servers must return the same login form.
+	assertEqualHTML(t, "attendee-login form",
+		locatorOuterHTML(t, newBrowserPage, "main form"),
+		locatorOuterHTML(t, legacyBrowserPage, "main form"),
+	)
+}
+
+// TestLegacyContract_AttendeeLoginByLink (A18) verifies that the attendee
+// login-by-link variant (GET /committee/.../attendee-login?secret=<valid>) is
+// still served by the legacy handler in the new app. A valid secret triggers an
+// immediate redirect to the live meeting page; both servers must redirect to the
+// same path.
+func TestLegacyContract_AttendeeLoginByLink(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
+	}
+
+	newMeetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	// A GET with a valid ?secret= param logs in the attendee and redirects to the
+	// live meeting page. Wait for the live page to appear after the redirect.
+	expectedNewPath := newTS.URL + "/committee/test/meeting/" + newMeetingID
+	expectedLegacyPath := legacyTS.URL + "/committee/test/meeting/" + legacyMeetingID
+
+	if _, err := newBrowserPage.Goto(newTS.URL + "/committee/test/meeting/" + newMeetingID + "/attendee-login?secret=secret-alice"); err != nil {
+		t.Fatalf("goto attendee-login?secret on new: %v", err)
+	}
+	if err := newBrowserPage.WaitForURL(expectedNewPath); err != nil {
+		t.Fatalf("new: expected redirect to live page at %s: %v", expectedNewPath, err)
+	}
+
+	if _, err := legacyBrowserPage.Goto(legacyTS.URL + "/committee/test/meeting/" + legacyMeetingID + "/attendee-login?secret=secret-alice"); err != nil {
+		t.Fatalf("goto attendee-login?secret on legacy: %v", err)
+	}
+	if err := legacyBrowserPage.WaitForURL(expectedLegacyPath); err != nil {
+		t.Fatalf("legacy: expected redirect to live page at %s: %v", expectedLegacyPath, err)
+	}
+
+	// Both servers must land on the live page (same path structure).
+	newFinalPath := newBrowserPage.URL()
+	legacyFinalPath := legacyBrowserPage.URL()
+	if newFinalPath != expectedNewPath {
+		t.Errorf("new: unexpected final URL after login-by-link: got %s, want %s", newFinalPath, expectedNewPath)
+	}
+	if legacyFinalPath != expectedLegacyPath {
+		t.Errorf("legacy: unexpected final URL after login-by-link: got %s, want %s", legacyFinalPath, expectedLegacyPath)
+	}
 }

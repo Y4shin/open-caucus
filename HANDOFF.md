@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12`–`A17`, are complete locally.
+`A01` through `A10`, plus `A12`–`A18`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -73,6 +73,13 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 - added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
+
+### A18 — legacy fallback contract: attendee-login/recovery routes
+
+- extended `e2e/ui_parity_legacy_contract_test.go` with attendee-login contract tests
+- added `TestLegacyContract_AttendeeLoginForm`: both servers return the same `<form>` for `GET /committee/.../attendee-login`
+- added `TestLegacyContract_AttendeeLoginByLink`: both servers redirect to the live meeting page when `GET /committee/.../attendee-login?secret=<valid>`
+- updated file header to document these routes as legacy-backed
 
 ### A17 — legacy fallback contract: docs routes
 
@@ -173,6 +180,12 @@ Verification completed (2026-04-01):
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — all 32 PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
+Verification completed (2026-04-01):
+
+- `nix develop -c go test -v -tags=e2e -timeout=300s ./e2e/... -run "TestLegacyContract_Attendee"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — all 34 PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
 ## Atomic Task Queue
 
 Use the queue in `ui-parity-expansion-plan.md` under `Atomic Task Queue`.
@@ -221,15 +234,15 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A18`.
+Start with `A19`.
 
-Definition of done for `A18`:
+Definition of done for `A19`:
 
-- extend `e2e/ui_parity_legacy_contract_test.go` with attendee-login and recovery route contracts
-- document `/committee/:slug/meeting/:id/attendee-login` and the recovery path as still legacy-backed
-- verify both servers return identical responses for these routes
+- extend `e2e/ui_parity_legacy_contract_test.go` with vote-form and manage-utility legacy contract tests
+- document vote partial routes (`/votes/partial`, `/votes/live/partial`) and at least one manage-utility route as still legacy-backed
+- verify both servers return identical HTML fragments for these routes
 - verify with a focused test, then the full suite, then the full E2E suite
-- update this handoff to point at `A19` next
+- update this handoff to point at `A20` next
 
 ## Files Most Likely To Matter Next
 
