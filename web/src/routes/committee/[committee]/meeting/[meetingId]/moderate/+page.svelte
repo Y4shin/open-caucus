@@ -1989,10 +1989,10 @@
 												<p class="text-sm text-base-content/70">No files have been uploaded yet.</p>
 											</div>
 											<div id="moderate-votes-panel-host">
-												<div id="moderate-votes-panel" class="space-y-4" hx-get={`/committee/${slug}/meeting/${meetingId}/votes/partial`} hx-trigger="reload" hx-swap="outerHTML" data-choice-label="Choice">
+												<div id="moderate-votes-panel" class="space-y-4" data-choice-label="Choice">
 													<div class="flex items-center justify-between gap-2">
 														<h3 class="text-base font-semibold">Votes</h3>
-														<button type="button" class="btn btn-xs btn-outline" hx-get={`/committee/${slug}/meeting/${meetingId}/votes/partial`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={(event) => { event.preventDefault(); void loadVotes(); }}>Refresh</button>
+														<button type="button" class="btn btn-xs btn-outline" onclick={(event) => { event.preventDefault(); void loadVotes(); }}>Refresh</button>
 													</div>
 													{#if votesState.loading && !votesState.data}
 														<AppSpinner label="Loading votes" />
@@ -2004,7 +2004,7 @@
 														<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={createVoteDetailsOpen} ontoggle={(event) => { createVoteDetailsOpen = (event.currentTarget as HTMLDetailsElement).open; }}>
 															<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
 															<div class="collapse-content">
-																<form class="grid gap-2 md:grid-cols-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/create`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={submitCreateVoteForm}>
+																<form class="grid gap-2 md:grid-cols-2" onsubmit={submitCreateVoteForm}>
 																	<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required />
 																	<select class="select select-bordered select-sm" name="visibility">
 																		<option value="open">Open</option>
@@ -2087,12 +2087,12 @@
 
 																			{#if vote.state === 'draft'}
 																				<div class="flex flex-wrap gap-2">
-																					<button type="button" class="btn btn-sm btn-success" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/open`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await openVote(vote.voteId); }}>Open Vote</button>
+																					<button type="button" class="btn btn-sm btn-success" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await openVote(vote.voteId); }}>Open Vote</button>
 																				</div>
 																				<details class="collapse collapse-arrow border border-base-300 bg-base-200/30">
 																					<summary class="collapse-title text-sm">Edit Draft</summary>
 																					<div class="collapse-content">
-																						<form class="grid gap-2 md:grid-cols-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/update-draft`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitUpdateDraftVoteForm(event, vote.voteId)}>
+																						<form class="grid gap-2 md:grid-cols-2" onsubmit={async (event) => await submitUpdateDraftVoteForm(event, vote.voteId)}>
 																							<input class="input input-bordered input-sm md:col-span-2" name="name" value={vote.name} required />
 																							<select class="select select-bordered select-sm" name="visibility">
 																								<option value="open" selected={vote.visibility === 'open'}>Open</option>
@@ -2121,7 +2121,7 @@
 
 																			{#if vote.state === 'open' || vote.state === 'counting'}
 																				<div class="flex flex-wrap gap-2">
-																					<button type="button" class="btn btn-sm btn-warning" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/close`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await closeVote(vote.voteId); }}>Close Vote</button>
+																					<button type="button" class="btn btn-sm btn-warning" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await closeVote(vote.voteId); }}>Close Vote</button>
 																				</div>
 																			{/if}
 
@@ -2231,7 +2231,7 @@
 
 																			{#if vote.state === 'closed'}
 																				<div class="flex flex-wrap gap-2">
-																					<button type="button" class="btn btn-sm btn-outline" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/archive`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await archiveVote(vote.voteId); }}>Archive Vote</button>
+																					<button type="button" class="btn btn-sm btn-outline" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await archiveVote(vote.voteId); }}>Archive Vote</button>
 																				</div>
 																			{/if}
 

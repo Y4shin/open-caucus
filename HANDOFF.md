@@ -19,14 +19,13 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 The parity expansion track is effectively complete. The active follow-up work is the
 "Remove Legacy HTML Proxying" migration documented later in this file.
 
-Current checkpoint (2026-04-02): the docs-only legacy proxy cleanup is
-complete and verified. `newTestServer()` no longer proxies `/docs/oob/...` or
-`GET /docs/search`, the docs legacy-contract tests were removed, the stale
-moderate agenda-help `hx-get="/docs/oob/..."` attribute is gone, and the docs
-search page now tracks the actual URL search string in the SPA. The parity
-suite now normalizes the legacy-only hidden live-vote compat template and stale
-docs help attrs instead of reintroducing proxy-era markup, and the full E2E
-suite is green again.
+Current checkpoint (2026-04-02): the legacy HTML proxy-removal migration is at
+another clean verified checkpoint. The docs-only proxy cleanup remains complete,
+and the native moderate vote panel no longer carries stale `hx-get`/`hx-post`
+attrs that pointed at `/votes/partial`. Parity now also normalizes the
+legacy-only moderate vote-panel HTMX wiring so comparisons stay focused on
+user-visible HTML rather than old implementation details. Full parity and full
+E2E are green after this cleanup.
 
 ### A01 — post-action parity helper
 
@@ -442,6 +441,20 @@ Notes for the next agent:
 
 - The unrelated dirty working-tree change in `e2e/voting_test.go` still exists. Leave it alone unless a future task actually needs that file.
 - This migration no longer has an active blocker; the remaining legacy app is only needed for standalone UI parity comparison tests.
+
+### Phase 9 — Native Moderate Vote Panel Attr Cleanup ✅ COMPLETE
+
+- [x] Remove stale `/votes/partial` HTMX attrs from the native moderate vote panel container, refresh button, and create/open/update/close/archive vote controls in `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`
+- [x] Keep the native vote-panel behavior driven solely by the existing Svelte/Connect handlers (`loadVotes`, `submitCreateVoteForm`, `openVote`, `submitUpdateDraftVoteForm`, `closeVote`, `archiveVote`)
+- [x] Normalize legacy-only moderate vote-panel HTMX attrs in parity helpers so panel comparisons keep checking visible UI, not old transport wiring
+- [x] Extend the open-vote parity normalization to the panel header refresh button after the first full-suite regression exposed that remaining legacy-only attr mismatch
+
+Verification completed (2026-04-02):
+
+- `nix develop -c bash -lc 'cd web && npm run build'` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateVotesPanel_UIParityWithLegacy|TestModerateVotesPanelOpen_UIParityWithLegacy|TestModerateVotesPanelClosed_UIParityWithLegacy|TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards|TestVoting_OpenVote_ModeratorAndAttendeeHappyPath"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
 ## Remaining Work
 

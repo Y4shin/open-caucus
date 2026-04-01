@@ -23,6 +23,7 @@ var svelteCommentNodes = regexp.MustCompile(`<!---->`)
 var legacyLiveVoteCompatTemplate = regexp.MustCompile(`(?s)<template><div[^>]*id="live-votes-panel".*?</template>`)
 var legacyDocsOOBHelpAttrs = regexp.MustCompile(`\s+hx-get="/docs/oob[^"]*"|\s+hx-swap="none"`)
 var legacyLiveVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/live/partial"|\s+hx-target="#live-votes-panel"|\s+hx-trigger="reload"|\s+sse-swap="votes-updated"|\s+hx-swap="outerHTML"`)
+var legacyModerateVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/partial"|\s+hx-post="/committee/[^"]*/votes(?:/[^"]*)?"|\s+hx-target="#moderate-votes-panel"|\s+hx-trigger="reload"|\s+hx-swap="outerHTML"`)
 
 func normalizeHTML(raw string) string {
 	trimmed := strings.TrimSpace(raw)
@@ -41,6 +42,10 @@ func normalizeLegacyDocsHelpAttrs(raw string) string {
 
 func normalizeLegacyLiveVotePanelAttrs(raw string) string {
 	return normalizeHTML(legacyLiveVotePanelAttrs.ReplaceAllString(raw, ""))
+}
+
+func normalizeLegacyModerateVotePanelAttrs(raw string) string {
+	return normalizeHTML(legacyModerateVotePanelAttrs.ReplaceAllString(raw, ""))
 }
 
 const canonicalOuterHTMLJS = `el => {

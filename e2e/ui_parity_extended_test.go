@@ -483,8 +483,8 @@ func TestModerateVotesPanel_UIParityWithLegacy(t *testing.T) {
 	openModerateLeftTab(t, legacyBrowserPage, "tools")
 
 	assertEqualHTML(t, "moderate votes panel (empty)",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel"),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel")),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel")),
 	)
 }
 
@@ -911,8 +911,8 @@ func TestModerateVotesPanelOpen_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualHTML(t, "moderate votes panel header (open vote)",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel > .flex"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel > .flex"),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel > .flex")),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel > .flex")),
 	)
 	assertEqualHTML(t, "moderate open vote options list",
 		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel details[open] ul"),
@@ -923,8 +923,8 @@ func TestModerateVotesPanelOpen_UIParityWithLegacy(t *testing.T) {
 		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel details[open] .rounded-box.border.border-base-300.bg-base-200\\/30"),
 	)
 	assertEqualHTML(t, "moderate open vote close action",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel details[open] .btn-warning"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel details[open] .btn-warning"),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel details[open] .btn-warning")),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel details[open] .btn-warning")),
 	)
 	assertEqualStrings(t, "moderate open vote manual submission text",
 		compactText(locatorText(t, newBrowserPage, "#moderate-votes-panel details[open] .rounded-box.border.border-base-300.bg-base-200\\/20")),
@@ -982,8 +982,8 @@ func TestModerateVotesPanelClosed_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualHTML(t, "moderate votes panel (closed vote with tallies)",
-		locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel"),
-		locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel"),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, newBrowserPage, "#moderate-votes-panel")),
+		normalizeLegacyModerateVotePanelAttrs(locatorOuterHTML(t, legacyBrowserPage, "#moderate-votes-panel")),
 	)
 }
 
