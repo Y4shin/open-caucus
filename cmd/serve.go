@@ -17,8 +17,6 @@ import (
 	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
-	"github.com/Y4shin/conference-tool/internal/handlers"
-	"github.com/Y4shin/conference-tool/internal/routes"
 	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
 	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
@@ -48,101 +46,6 @@ var serveCmd = &cobra.Command{
 	},
 }
 
-// shouldServeLegacyVoteRoute returns true for vote-related routes that still
-// use the legacy HTMX/Templ HTML rendering while the Svelte vote panel is
-// being ported.
-func shouldServeLegacyVoteRoute(r *http.Request) bool {
-	path := r.URL.Path
-	if !strings.HasPrefix(path, "/committee/") {
-		return false
-	}
-	if r.Method == http.MethodGet {
-		return strings.HasSuffix(path, "/votes/partial") || strings.HasSuffix(path, "/votes/live/partial")
-	}
-	if r.Method != http.MethodPost {
-		return false
-	}
-	switch {
-	case strings.HasSuffix(path, "/votes/create"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/update-draft"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/open"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/close"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/archive"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/cast/register"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/open"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/secret"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/open"):
-		return true
-	case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/secret"):
-		return true
-	default:
-		return false
-	}
-}
-
-// shouldServeLegacyManageUtilityRoute returns true for attendee-management POST
-// actions and the join-QR / recovery GET endpoints that still use the legacy
-// HTMX/Templ HTML rendering.
-func shouldServeLegacyManageUtilityRoute(r *http.Request) bool {
-	path := r.URL.Path
-	if !strings.HasPrefix(path, "/committee/") {
-		return false
-	}
-	if r.Method == http.MethodGet {
-		if strings.HasSuffix(path, "/moderate/join-qr") {
-			return true
-		}
-		if strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/recovery") {
-			return true
-		}
-		return false
-	}
-	if r.Method != http.MethodPost {
-		return false
-	}
-	switch {
-	case strings.HasSuffix(path, "/attendee/create"):
-		return true
-	case strings.HasSuffix(path, "/attendee/self-signup"):
-		return true
-	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/delete"):
-		return true
-	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/chair"):
-		return true
-	case strings.Contains(path, "/attendee/") && strings.HasSuffix(path, "/quoted"):
-		return true
-	default:
-		return false
-	}
-}
-
-// shouldServeLegacyAttendeeLoginRoute returns true for the attendee secret-login
-// endpoint so plain HTTP clients (e.g. concurrent test helpers) can authenticate
-// without a browser.
-func shouldServeLegacyAttendeeLoginRoute(r *http.Request) bool {
-	if !strings.HasPrefix(r.URL.Path, "/committee/") {
-		return false
-	}
-	if !strings.HasSuffix(r.URL.Path, "/attendee-login") {
-		return false
-	}
-	if r.Method == http.MethodPost {
-		return true
-	}
-	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		return false
-	}
-	return strings.TrimSpace(r.URL.Query().Get("secret")) != ""
-}
-
 func newSPAServer(rt *serveRuntime) http.Handler {
 	spaHandler := webassets.NewSPAHandler()
 	apiMux := newAPIMux(rt)
@@ -152,17 +55,6 @@ func newSPAServer(rt *serveRuntime) http.Handler {
 		SessionManager: rt.sessionManager,
 		AuthConfig:     rt.cfg.Auth,
 	}
-
-	legacyH := &handlers.Handler{
-		Broker:         rt.broker,
-		Repository:     rt.repo,
-		Storage:        rt.store,
-		SessionManager: rt.sessionManager,
-		AuthConfig:     rt.cfg.Auth,
-		OAuthService:   rt.oauthService,
-		DocsService:    rt.docsService,
-	}
-	legacyVoteRouter := routes.NewRouter(legacyH, rt.middleware).RegisterRoutes()
 
 	return rt.middleware.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
@@ -191,9 +83,6 @@ func newSPAServer(rt *serveRuntime) http.Handler {
 			return
 		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
 			apihttp.NewBlobDownloadHandler(rt.repo, rt.store).ServeHTTP(w, r)
-			return
-		case shouldServeLegacyVoteRoute(r), shouldServeLegacyAttendeeLoginRoute(r), shouldServeLegacyManageUtilityRoute(r):
-			legacyVoteRouter.ServeHTTP(w, r)
 			return
 		case r.Method == http.MethodGet || r.Method == http.MethodHead:
 			spaHandler.ServeHTTP(w, r)

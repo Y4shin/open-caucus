@@ -19,10 +19,14 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 The parity expansion track is effectively complete. The active follow-up work is the
 "Remove Legacy HTML Proxying" migration documented later in this file.
 
-Current checkpoint (2026-04-01): Phase 5 is now implemented and fully verified.
-Native join-QR and guest recovery pages are running through Connect RPCs, the
-focused coverage passes, parity/legacy-contract coverage passes, and the full
-E2E suite is green again after hardening the concurrent voting stress test.
+Current checkpoint (2026-04-01): the migration has moved beyond the old
+vote/manage/login proxy-removal notes below. Production `cmd/serve.go` no
+longer routes vote, attendee-management, join-QR, recovery, or attendee-login
+requests through the legacy router; those flows are served natively by the SPA
+and Connect APIs. The remaining cleanup work is now docs-specific: remove the
+docs-only legacy assumptions from the E2E server/tests and delete the stale
+`hx-get="/docs/oob/..."` attribute that still hangs off the moderate agenda
+help button.
 
 ### A01 — post-action parity helper
 
@@ -259,10 +263,11 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Continue the native-SPA migration work:
-- Phase 5: implement native Join QR and attendee recovery pages via Connect RPCs
-- Phase 6: remove now-dead legacy HTML proxy branches from the E2E test server
-- As follow-up cleanup, additional legacy-contract tests for POST routes can be removed or rewritten once those routes are fully ported
+Continue the legacy-proxy cleanup with the docs routes:
+- remove the docs switch cases from `e2e/helpers_test.go` so `/docs/search` behaves like production SPA routing again
+- retire or rewrite the docs-only entries in `e2e/ui_parity_legacy_contract_test.go`
+- remove the stale `hx-get="/docs/oob/..."` / `hx-swap="none"` attrs from the moderate agenda help button
+- keep an eye on the unrelated dirty `e2e/voting_test.go` change; do not overwrite it unless the current task truly requires it
 
 ## Files Most Likely To Matter Next
 
@@ -366,14 +371,13 @@ Need Connect RPCs since these pages require backend secrets (meeting secret for 
       PASS on 2026-04-01 after clean rebuild
       Note: a prior overlapping run timed out waiting for `#join-qr-code` and should be ignored
 
-### Phase 6 — Final Proxy Removal ⬜ TODO
+### Phase 6 — Final Proxy Removal ✅ COMPLETE
 - [x] Remove all `shouldServeLegacy*` functions from `e2e/helpers_test.go`
 - [x] Remove their invocations from the `newTestServer()` switch statement
 - [x] `legacyH`/`legacyRouter` comments now reflect the reduced proxy surface accurately
 - [x] Run full E2E suite to verify nothing broke
 - [x] Retire stale vote-partial legacy-contract tests from `e2e/ui_parity_legacy_contract_test.go`
       Vote partial endpoints are no longer treated as public legacy-contract routes in tests
-      but the vote HTML endpoints still remain operationally legacy-backed in `newTestServer()`
 
 Latest verification checkpoint (2026-04-01):
 
@@ -386,7 +390,6 @@ Latest verification checkpoint (2026-04-01):
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run TestVoting_Concurrent20Attendees_TallyIsCorrect` — PASS after the Connect-based test update
 - Phase 6 checkpoint:
       `e2e/helpers_test.go` no longer defines or dispatches `shouldServeLegacyVoteRoute`, `shouldServeLegacyManageUtilityRoute`, or `shouldServeLegacyAgendaImportRoute`.
-      The new E2E server now proxies `/docs/oob/...`, `/docs/search`, and the operational vote HTML endpoints through direct switch cases instead of the removed helper functions.
 - Phase 6 correction:
       `e2e/ui_parity_legacy_contract_test.go` previously still asserted legacy vote-partial HTML for `/votes/partial` and `/votes/live/partial`.
       Those assertions are now removed so the contract file only documents route families we still want to treat as explicit legacy-backed contract surfaces.
@@ -398,32 +401,37 @@ Verification completed (2026-04-01) — all phases committed:
 
 All changes committed as of commit e4c36f6 (test) and 573595e (SPA) and afae851 (backend).
 
+### Phase 7 — Production Server Proxy Cleanup ✅ COMPLETE
+
+- [x] Remove the stale legacy-router fallback from `cmd/serve.go`
+- [x] Delete the now-dead `shouldServeLegacyVoteRoute`, `shouldServeLegacyManageUtilityRoute`, and `shouldServeLegacyAttendeeLoginRoute` helpers
+- [x] Keep `/api/*`, docs assets, blob downloads, OAuth, locale switch, and SPA GET routing unchanged
+- [x] Verify the production server still covers the native attendee-login, join, join-QR, recovery, and vote flows
+
+Verification completed (2026-04-01):
+
+- `nix develop -c go test ./cmd/...` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestAttendeeLogin_|TestMeetingJoinSubmit_CreatesAttendeeSession|TestManageJoinQRPage_ContainsSecretJoinURL|TestManagePage_GuestRecoveryLink|TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards"` — PASS
+
+Note for the next agent:
+
+- There is an unrelated dirty working-tree change in `e2e/voting_test.go`. Leave it alone unless the docs cleanup truly requires touching that file.
+
 ## Remaining Work
 
-### Remaining legacy HTML routes in `e2e/helpers_test.go`
+### Remaining legacy assumptions
 
-The `newTestServer()` function still has direct switch cases proxying vote HTML routes to `legacyRouter`:
-- `GET /votes/partial` — used by legacy vote-form responses (not SPA)
-- `GET /votes/live/partial` — live attendee panel now native, but OOB compatibility template still references this URL
-- `POST /votes/*` — vote form-post endpoints still served by legacy handler
+- `e2e/helpers_test.go` still proxies only `/docs/oob/...` and `GET /docs/search` to the legacy router. This no longer matches production `cmd/serve.go`, which serves those URLs through the SPA shell.
+- `e2e/ui_parity_legacy_contract_test.go` still documents docs fragment/search routes as intentionally legacy-backed. That should be removed or rewritten once the E2E server stops proxying them.
+- `e2e/docs_test.go` still has one direct `/docs/oob/index` assertion that expects raw `hx-swap-oob` HTML.
+- `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte` still includes a stale `hx-get="/docs/oob/..." hx-swap="none"` help-button attribute even though the button already does native `goto('/docs/...')`.
 
-These can be removed when:
-1. The hidden `liveVotesTemplateHTML()` OOB compatibility shim in the live page is removed
-2. All vote form-post E2E tests (`TestVoting_OpenVote_ModeratorAndAttendeeHappyPath_HTMX`) are ported to Connect API
+### Suggested next sequence
 
-### Remaining `legacyRouter` uses
-- `/docs/oob/...` and `/docs/search` — intentionally legacy-backed until docs UI is ported to SPA
-
-## Reference: Proxy Route Status (final, 2026-04-01)
-
-### Vote routes (still legacy-backed in E2E server)
-| Route | SPA status |
-|-------|-----------|
-| GET `/votes/partial` | Legacy-backed compat; not used by SPA — can remove when all `TestVoting_*_HTMX` tests gone |
-| GET `/votes/live/partial` | Attendee panel is native; hidden OOB template still references URL |
-| POST `/votes/*` | `TestVoting_OpenVote_ModeratorAndAttendeeHappyPath_HTMX` still exercises these |
-
-### All other proxied routes — PORTED ✅
-All attendee management, agenda edit, join-qr, recovery, and attendee-login routes
-are now served natively by the SPA via Connect API. The `shouldServeLegacy*`
-helper functions were removed in commit 73bd13c.
+1. Remove the docs proxy cases from `newTestServer()` in `e2e/helpers_test.go`.
+2. Convert docs tests to native SPA behavior checks instead of raw legacy fragment checks.
+3. Remove the stale moderate-page docs `hx-get` attribute.
+4. Re-run:
+   - `nix develop -c bash -lc 'cd web && npm run build'`
+   - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestDocs|TestLegacyContract|TestMeetingLive_UIParityWithLegacy"`
+   - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...`
