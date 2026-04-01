@@ -2269,7 +2269,7 @@
 								<div class="mb-3 flex items-center justify-between gap-2">
 									<h2 class="text-lg font-semibold">Attendees</h2>
 									<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
-										<form hx-post={`/committee/${slug}/meeting/${meetingId}/signup-open`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-trigger="change" class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
+										<form class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
 											<label class="label cursor-pointer justify-start gap-3 " for="manage_signup_open">
 												{#if moderationState.data.attendees?.signupOpen}
 													<input checked class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
@@ -2279,15 +2279,15 @@
 												<span>Guest signup</span>
 											</label>
 										</form>
-										<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/self-signup`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
+										<form class="inline-flex" data-testid="manage-self-signup-form" onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
 											<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Sign yourself up" title="Sign yourself up" aria-label="Sign yourself up" disabled={attendeeActionPending !== ''}><LegacyIcon name="person-raised" class="h-4 w-4" /></button>
 										</form>
 										<a href={manageJoinQrURL()} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR"><LegacyIcon name="qr-code" class="h-4 w-4" /></a>
 									</div>
 								</div>
-								<div id="attendee-list-container" hx-swap="outerHTML" sse-swap="manage-attendee-list-updated">
+								<div id="attendee-list-container" sse-swap="manage-attendee-list-updated">
 									<div class="mb-4">
-										<form class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/create`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-on::after-request={"if(event.detail.successful){ this.reset(); var speakerSearch=document.getElementById('speaker-add-search-input') || document.getElementById('moderate-speaker-search'); if(speakerSearch && window.htmx){ htmx.trigger(speakerSearch,'search'); } }"} onsubmit={addGuestAttendee}>
+										<form class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" onsubmit={addGuestAttendee}>
 											<div class="w-full min-w-0 flex-1">
 												<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
 												<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder="Display name" required disabled={attendeeActionPending !== ''} />
@@ -2333,21 +2333,21 @@
 																	{#if attendee.isGuest}
 																		<a href={attendeeRecoveryURL(attendee.attendeeId)} class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link"><LegacyIcon name="history" class="h-4 w-4" /></a>
 																	{/if}
-																	<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/${attendee.attendeeId}/delete`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-confirm="Remove this attendee?" onsubmit={async (event) => { event.preventDefault(); await removeAttendee(attendee.attendeeId, attendee.fullName); }}>
+																	<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await removeAttendee(attendee.attendeeId, attendee.fullName); }}>
 																		<button type="submit" class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Remove attendee" title="Remove attendee" aria-label="Remove attendee" disabled={attendeeActionPending !== ''}><LegacyIcon name="trash" class="h-4 w-4" /></button>
 																	</form>
 																</div>
 															</div>
 														</div>
 														<div class="flex items-center justify-between gap-3">
-															<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/${attendee.attendeeId}/chair`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-trigger="change">
+															<form class="inline-flex">
 																<label class="label cursor-pointer justify-start gap-2 p-0">
 																	<input class={attendee.isChair ? 'toggle toggle-sm toggle-primary' : 'toggle toggle-sm'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await toggleAttendeeChair(attendee); }} />
 																	<span class="text-xs leading-none">Chairperson</span>
 																</label>
 															</form>
 															{#if attendee.isGuest}
-																<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/${attendee.attendeeId}/quoted`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-trigger="change">
+																<form class="inline-flex">
 																	<label class="label cursor-pointer justify-start gap-2 p-0">
 																		<input class={attendee.quoted ? 'toggle toggle-sm toggle-info' : 'toggle toggle-sm'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await toggleAttendeeQuoted(attendee); }} />
 																		<span class="text-xs leading-none">FLINTA*</span>

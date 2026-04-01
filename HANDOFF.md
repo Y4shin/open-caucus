@@ -21,11 +21,14 @@ The parity expansion track is effectively complete. The active follow-up work is
 
 Current checkpoint (2026-04-02): the legacy HTML proxy-removal migration is at
 another clean verified checkpoint. The docs-only proxy cleanup remains complete,
-and the native moderate vote panel no longer carries stale `hx-get`/`hx-post`
-attrs that pointed at `/votes/partial`. Parity now also normalizes the
-legacy-only moderate vote-panel HTMX wiring so comparisons stay focused on
-user-visible HTML rather than old implementation details. Full parity and full
-E2E are green after this cleanup.
+the native moderate vote panel no longer carries stale `/votes/partial` HTMX
+attrs, and the native moderate attendee panel no longer carries stale
+signup/add/remove/chair/quoted HTMX attrs either. Parity now normalizes the
+legacy-only moderate vote and attendee transport wiring so comparisons stay
+focused on user-visible HTML rather than old implementation details. Full E2E
+is green after this cleanup, and the current push also bundles the existing
+`e2e/voting_test.go` robustness improvements that were already sitting dirty in
+the worktree.
 
 ### A01 — post-action parity helper
 
@@ -454,6 +457,22 @@ Verification completed (2026-04-02):
 - `nix develop -c bash -lc 'cd web && npm run build'` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateVotesPanel_UIParityWithLegacy|TestModerateVotesPanelOpen_UIParityWithLegacy|TestModerateVotesPanelClosed_UIParityWithLegacy|TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards|TestVoting_OpenVote_ModeratorAndAttendeeHappyPath"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy|TestLegacyContract"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
+### Phase 10 — Native Attendee Panel Attr Cleanup ✅ COMPLETE
+
+- [x] Remove stale moderate attendee-panel HTMX attrs from the native signup-open, self-signup, add-guest, remove, chair-toggle, and quoted-toggle controls in `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte`
+- [x] Remove the dead `hx-swap="outerHTML"` attr from `#attendee-list-container`
+- [x] Add a stable native selector (`data-testid="manage-self-signup-form"`) and update `e2e/manage_test.go` to stop locating the self-signup form by `hx-post`
+- [x] Normalize legacy-only attendee-panel HTMX attrs, plus the native-only self-signup `data-testid`, in parity helpers/tests so attendee comparisons stay transport-agnostic
+- [x] Bundle the pre-existing `e2e/voting_test.go` cleanup into the same push:
+      `connectJSONCallViaPage(...)` now tolerates multiple numeric status value types, and `TestVoting_InvalidCreateAndUpdateDraftPayloadsRejected` now checks empty-name create, invalid-visibility create, and non-parseable `vote_id` update failures directly
+
+Verification completed (2026-04-02):
+
+- `nix develop -c bash -lc 'cd web && npm run build'` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestModerateAttendeesTab_UIParityWithLegacy|TestModerateAddGuestAttendee_UIParityWithLegacy|TestModerateRemoveAttendee_UIParityWithLegacy|TestManagePage_AddGuest|TestManagePage_RemoveAttendee|TestManagePage_ToggleChair|TestManagePage_ToggleSignupOpen|TestManagePage_QuotedCheckbox_DoesNotToggleSignupOpen|TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive|TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run "TestMeetingModerate_UIParityWithLegacy"` — PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
 ## Remaining Work

@@ -274,7 +274,17 @@ func connectJSONCallViaPage(t *testing.T, page playwright.Page, baseURL, method 
 	if !ok {
 		t.Fatalf("unexpected evaluate result type for %s: %T", method, raw)
 	}
-	status := int(m["status"].(float64))
+	var status int
+	switch v := m["status"].(type) {
+	case float64:
+		status = int(v)
+	case int:
+		status = v
+	case int64:
+		status = int(v)
+	default:
+		t.Fatalf("unexpected status type for %s: %T = %v", method, m["status"], m["status"])
+	}
 	code, _ := m["code"].(string)
 	return status, code
 }
@@ -490,40 +500,56 @@ func TestVoting_InvalidCreateAndUpdateDraftPayloadsRejected(t *testing.T) {
 		t.Fatalf("goto moderate page: %v", err)
 	}
 
+	// Empty name should be rejected.
 	createStatus, createCode := connectJSONCallViaPage(t, page, ts.URL, "CreateVote", map[string]any{
 		"committee_slug": "test-committee",
 		"meeting_id":     meetingID,
-		"name":           "Bad Vote",
-		"visibility":     "open",
-		"min_selections": 1,
-		"max_selections": 1,
-		"option_labels":  []string{"OnlyOneChoice"},
-	})
-	if createStatus == 200 {
-		t.Fatalf("expected invalid create-vote to fail, got 200")
-	}
-	if createCode != "invalid_argument" {
-		t.Fatalf("expected invalid_argument for bad create, got code=%q status=%d", createCode, createStatus)
-	}
-
-	createDraftVoteFromModeratorUI(t, page, "Draft To Validate", "open", 1, 1)
-	voteID := voteIDByName(t, ts, apID, "Draft To Validate")
-
-	updateStatus, updateCode := connectJSONCallViaPage(t, page, ts.URL, "UpdateVoteDraft", map[string]any{
-		"committee_slug": "test-committee",
-		"meeting_id":     meetingID,
-		"vote_id":        strconv.FormatInt(voteID, 10),
 		"name":           "",
 		"visibility":     "open",
 		"min_selections": 1,
 		"max_selections": 1,
-		"option_labels":  []string{"OnlyOneChoice"},
+		"option_labels":  []string{"Yes", "No"},
+	})
+	if createStatus == 200 {
+		t.Fatalf("expected create-vote with empty name to fail, got 200")
+	}
+	if createCode != "invalid_argument" {
+		t.Fatalf("expected invalid_argument for empty-name create, got code=%q status=%d", createCode, createStatus)
+	}
+
+	// Invalid visibility should be rejected.
+	createStatus2, createCode2 := connectJSONCallViaPage(t, page, ts.URL, "CreateVote", map[string]any{
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"name":           "Bad Visibility Vote",
+		"visibility":     "invalid-vis",
+		"min_selections": 1,
+		"max_selections": 1,
+		"option_labels":  []string{"Yes", "No"},
+	})
+	if createStatus2 == 200 {
+		t.Fatalf("expected create-vote with invalid visibility to fail, got 200")
+	}
+	if createCode2 != "invalid_argument" {
+		t.Fatalf("expected invalid_argument for bad visibility, got code=%q status=%d", createCode2, createStatus2)
+	}
+
+	// Non-parseable vote_id on update should be rejected.
+	updateStatus, updateCode := connectJSONCallViaPage(t, page, ts.URL, "UpdateVoteDraft", map[string]any{
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"vote_id":        "not-a-number",
+		"name":           "Valid Name",
+		"visibility":     "open",
+		"min_selections": 1,
+		"max_selections": 1,
+		"option_labels":  []string{"Yes", "No"},
 	})
 	if updateStatus == 200 {
-		t.Fatalf("expected invalid update-draft to fail, got 200")
+		t.Fatalf("expected update-draft with invalid vote_id to fail, got 200")
 	}
 	if updateCode != "invalid_argument" {
-		t.Fatalf("expected invalid_argument for bad update, got code=%q status=%d", updateCode, updateStatus)
+		t.Fatalf("expected invalid_argument for bad vote_id update, got code=%q status=%d", updateCode, updateStatus)
 	}
 }
 

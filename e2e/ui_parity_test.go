@@ -24,6 +24,7 @@ var legacyLiveVoteCompatTemplate = regexp.MustCompile(`(?s)<template><div[^>]*id
 var legacyDocsOOBHelpAttrs = regexp.MustCompile(`\s+hx-get="/docs/oob[^"]*"|\s+hx-swap="none"`)
 var legacyLiveVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/live/partial"|\s+hx-target="#live-votes-panel"|\s+hx-trigger="reload"|\s+sse-swap="votes-updated"|\s+hx-swap="outerHTML"`)
 var legacyModerateVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/partial"|\s+hx-post="/committee/[^"]*/votes(?:/[^"]*)?"|\s+hx-target="#moderate-votes-panel"|\s+hx-trigger="reload"|\s+hx-swap="outerHTML"`)
+var legacyModerateAttendeePanelAttrs = regexp.MustCompile(`\s+hx-(?:post|target|swap|vals|trigger|confirm|on::after-request)="[^"]*"|\s+data-testid="manage-self-signup-form"`)
 
 func normalizeHTML(raw string) string {
 	trimmed := strings.TrimSpace(raw)
@@ -46,6 +47,18 @@ func normalizeLegacyLiveVotePanelAttrs(raw string) string {
 
 func normalizeLegacyModerateVotePanelAttrs(raw string) string {
 	return normalizeHTML(legacyModerateVotePanelAttrs.ReplaceAllString(raw, ""))
+}
+
+func normalizeLegacyModerateAttendeePanelAttrs(raw string) string {
+	return normalizeHTML(legacyModerateAttendeePanelAttrs.ReplaceAllString(raw, ""))
+}
+
+func normalizeHTMLSlice(raw []string, normalize func(string) string) []string {
+	next := make([]string, 0, len(raw))
+	for _, item := range raw {
+		next = append(next, normalize(item))
+	}
+	return next
 }
 
 const canonicalOuterHTMLJS = `el => {
@@ -639,8 +652,8 @@ func TestMeetingModerate_UIParityWithLegacy(t *testing.T) {
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-left-controls")
 
 	assertEqualHTML(t, "moderate left controls",
-		normalizeLegacyDocsHelpAttrs(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#moderate-left-controls"))),
-		normalizeLegacyDocsHelpAttrs(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#moderate-left-controls"))),
+		normalizeLegacyModerateAttendeePanelAttrs(normalizeLegacyDocsHelpAttrs(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, newBrowserPage, "#moderate-left-controls")))),
+		normalizeLegacyModerateAttendeePanelAttrs(normalizeLegacyDocsHelpAttrs(normalizeLegacyLiveVoteCompat(locatorOuterHTML(t, legacyBrowserPage, "#moderate-left-controls")))),
 	)
 	assertEqualHTML(t, "moderate speakers container", locatorOuterHTML(t, newBrowserPage, "#speakers-list-container"), locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container"))
 }

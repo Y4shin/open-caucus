@@ -445,12 +445,12 @@ func TestModerateAttendeesTab_UIParityWithLegacy(t *testing.T) {
 	openModerateLeftTab(t, legacyBrowserPage, "attendees")
 
 	assertEqualHTML(t, "manage add-guest form",
-		locatorOuterHTML(t, newBrowserPage, "[data-testid='manage-add-guest-form']"),
-		locatorOuterHTML(t, legacyBrowserPage, "[data-testid='manage-add-guest-form']"),
+		normalizeLegacyModerateAttendeePanelAttrs(locatorOuterHTML(t, newBrowserPage, "[data-testid='manage-add-guest-form']")),
+		normalizeLegacyModerateAttendeePanelAttrs(locatorOuterHTML(t, legacyBrowserPage, "[data-testid='manage-add-guest-form']")),
 	)
 	assertEqualStringSlices(t, "manage attendee cards",
-		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-attendee-card']"),
-		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-attendee-card']"),
+		normalizeHTMLSlice(locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-attendee-card']"), normalizeLegacyModerateAttendeePanelAttrs),
+		normalizeHTMLSlice(locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-attendee-card']"), normalizeLegacyModerateAttendeePanelAttrs),
 	)
 }
 
@@ -1024,8 +1024,8 @@ func TestModerateAddGuestAttendee_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualStringSlices(t, "attendee cards after adding guest",
-		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-attendee-card']"),
-		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-attendee-card']"),
+		normalizeHTMLSlice(locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-attendee-card']"), normalizeLegacyModerateAttendeePanelAttrs),
+		normalizeHTMLSlice(locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-attendee-card']"), normalizeLegacyModerateAttendeePanelAttrs),
 	)
 }
 
@@ -1080,8 +1080,8 @@ func TestModerateRemoveAttendee_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualStringSlices(t, "attendee cards after removing guest",
-		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-attendee-card']"),
-		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-attendee-card']"),
+		normalizeHTMLSlice(locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-attendee-card']"), normalizeLegacyModerateAttendeePanelAttrs),
+		normalizeHTMLSlice(locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-attendee-card']"), normalizeLegacyModerateAttendeePanelAttrs),
 	)
 }
 

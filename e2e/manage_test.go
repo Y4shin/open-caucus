@@ -80,7 +80,7 @@ func submitAddGuestWithQuoted(t *testing.T, page playwright.Page, fullName strin
 func submitSelfSignup(t *testing.T, page playwright.Page) bool {
 	t.Helper()
 	openModerateLeftTab(t, page, "attendees")
-	form := page.Locator("#attendee-list-container form[hx-post*='/attendee/self-signup']")
+	form := page.Locator("#attendee-list-container [data-testid='manage-self-signup-form']")
 	count, err := form.Count()
 	if err != nil {
 		t.Fatalf("count self-signup forms: %v", err)
