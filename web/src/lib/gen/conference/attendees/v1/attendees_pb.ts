@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/attendees/v1/attendees.proto.
  */
 export const file_conference_attendees_v1_attendees: GenFile = /*@__PURE__*/
-  fileDesc("Cidjb25mZXJlbmNlL2F0dGVuZGVlcy92MS9hdHRlbmRlZXMucHJvdG8SF2NvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxIpMBCg5BdHRlbmRlZVJlY29yZBITCgthdHRlbmRlZV9pZBgBIAEoCRIRCglmdWxsX25hbWUYAiABKAkSFwoPYXR0ZW5kZWVfbnVtYmVyGAMgASgDEhAKCGlzX2NoYWlyGAQgASgIEhAKCGlzX2d1ZXN0GAUgASgIEg4KBnF1b3RlZBgGIAEoCBIMCgRtaW5lGAcgASgIIkIKFExpc3RBdHRlbmRlZXNSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUwoVTGlzdEF0dGVuZGVlc1Jlc3BvbnNlEjoKCWF0dGVuZGVlcxgBIAMoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkIj8KEVNlbGZTaWdudXBSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiaAoSU2VsZlNpZ251cFJlc3BvbnNlEjkKCGF0dGVuZGVlGAEgASgLMicuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVSZWNvcmQSFwoPYWxyZWFkeV9leGlzdGVkGAIgASgIIoABChBHdWVzdEpvaW5SZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhYKDm1lZXRpbmdfc2VjcmV0GAQgASgJEhUKDWdlbmRlcl9xdW90ZWQYBSABKAgiZwoRR3Vlc3RKb2luUmVzcG9uc2USOQoIYXR0ZW5kZWUYASABKAsyJy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZVJlY29yZBIXCg9hdHRlbmRlZV9zZWNyZXQYAiABKAkiWwoUQXR0ZW5kZWVMb2dpblJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hdHRlbmRlZV9zZWNyZXQYAyABKAkihQEKFUF0dGVuZGVlTG9naW5SZXNwb25zZRI5CghhdHRlbmRlZRgBIAEoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkEjEKBWFjdG9yGAIgASgLMiIuY29uZmVyZW5jZS5jb21tb24udjEuQWN0b3JTdW1tYXJ5MrwDCg9BdHRlbmRlZVNlcnZpY2USbgoNTGlzdEF0dGVuZGVlcxItLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkxpc3RBdHRlbmRlZXNSZXF1ZXN0Gi4uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuTGlzdEF0dGVuZGVlc1Jlc3BvbnNlEmUKClNlbGZTaWdudXASKi5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5TZWxmU2lnbnVwUmVxdWVzdBorLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLlNlbGZTaWdudXBSZXNwb25zZRJiCglHdWVzdEpvaW4SKS5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5HdWVzdEpvaW5SZXF1ZXN0GiouY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuR3Vlc3RKb2luUmVzcG9uc2USbgoNQXR0ZW5kZWVMb2dpbhItLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlTG9naW5SZXF1ZXN0Gi4uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVMb2dpblJlc3BvbnNlQk5aTGdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9hdHRlbmRlZXMvdjE7YXR0ZW5kZWVzdjFiBnByb3RvMw", [file_conference_common_v1_common]);
+  fileDesc("Cidjb25mZXJlbmNlL2F0dGVuZGVlcy92MS9hdHRlbmRlZXMucHJvdG8SF2NvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxIpMBCg5BdHRlbmRlZVJlY29yZBITCgthdHRlbmRlZV9pZBgBIAEoCRIRCglmdWxsX25hbWUYAiABKAkSFwoPYXR0ZW5kZWVfbnVtYmVyGAMgASgDEhAKCGlzX2NoYWlyGAQgASgIEhAKCGlzX2d1ZXN0GAUgASgIEg4KBnF1b3RlZBgGIAEoCBIMCgRtaW5lGAcgASgIIkIKFExpc3RBdHRlbmRlZXNSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUwoVTGlzdEF0dGVuZGVlc1Jlc3BvbnNlEjoKCWF0dGVuZGVlcxgBIAMoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkIj8KEVNlbGZTaWdudXBSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiaAoSU2VsZlNpZ251cFJlc3BvbnNlEjkKCGF0dGVuZGVlGAEgASgLMicuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVSZWNvcmQSFwoPYWxyZWFkeV9leGlzdGVkGAIgASgIIoABChBHdWVzdEpvaW5SZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSEQoJZnVsbF9uYW1lGAMgASgJEhYKDm1lZXRpbmdfc2VjcmV0GAQgASgJEhUKDWdlbmRlcl9xdW90ZWQYBSABKAgiZwoRR3Vlc3RKb2luUmVzcG9uc2USOQoIYXR0ZW5kZWUYASABKAsyJy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZVJlY29yZBIXCg9hdHRlbmRlZV9zZWNyZXQYAiABKAkiWwoUQXR0ZW5kZWVMb2dpblJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIXCg9hdHRlbmRlZV9zZWNyZXQYAyABKAkihQEKFUF0dGVuZGVlTG9naW5SZXNwb25zZRI5CghhdHRlbmRlZRgBIAEoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkEjEKBWFjdG9yGAIgASgLMiIuY29uZmVyZW5jZS5jb21tb24udjEuQWN0b3JTdW1tYXJ5Im0KFUNyZWF0ZUF0dGVuZGVlUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhEKCWZ1bGxfbmFtZRgDIAEoCRIVCg1nZW5kZXJfcXVvdGVkGAQgASgIImwKFkNyZWF0ZUF0dGVuZGVlUmVzcG9uc2USOQoIYXR0ZW5kZWUYASABKAsyJy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZVJlY29yZBIXCg9hdHRlbmRlZV9zZWNyZXQYAiABKAkiWAoVRGVsZXRlQXR0ZW5kZWVSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSEwoLYXR0ZW5kZWVfaWQYAyABKAkiGAoWRGVsZXRlQXR0ZW5kZWVSZXNwb25zZSJqChVTZXRDaGFpcnBlcnNvblJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRITCgthdHRlbmRlZV9pZBgDIAEoCRIQCghpc19jaGFpchgEIAEoCCJTChZTZXRDaGFpcnBlcnNvblJlc3BvbnNlEjkKCGF0dGVuZGVlGAEgASgLMicuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuQXR0ZW5kZWVSZWNvcmQiYwoQU2V0UXVvdGVkUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhMKC2F0dGVuZGVlX2lkGAMgASgJEg4KBnF1b3RlZBgEIAEoCCJOChFTZXRRdW90ZWRSZXNwb25zZRI5CghhdHRlbmRlZRgBIAEoCzInLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlUmVjb3JkIskBChRBdHRlbmRlZVJlY292ZXJ5VmlldxIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhMKC2F0dGVuZGVlX2lkGAMgASgJEhQKDG1lZXRpbmdfbmFtZRgEIAEoCRIWCg5jb21taXR0ZWVfbmFtZRgFIAEoCRIVCg1hdHRlbmRlZV9uYW1lGAYgASgJEhEKCWxvZ2luX3VybBgHIAEoCRIYChBxcl9jb2RlX2RhdGFfdXJsGAggASgJIm8KGkdldEF0dGVuZGVlUmVjb3ZlcnlSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSEwoLYXR0ZW5kZWVfaWQYAyABKAkSEAoIYmFzZV91cmwYBCABKAkiWgobR2V0QXR0ZW5kZWVSZWNvdmVyeVJlc3BvbnNlEjsKBHZpZXcYASABKAsyLS5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZVJlY292ZXJ5VmlldzL8BwoPQXR0ZW5kZWVTZXJ2aWNlEm4KDUxpc3RBdHRlbmRlZXMSLS5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5MaXN0QXR0ZW5kZWVzUmVxdWVzdBouLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkxpc3RBdHRlbmRlZXNSZXNwb25zZRJlCgpTZWxmU2lnbnVwEiouY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuU2VsZlNpZ251cFJlcXVlc3QaKy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5TZWxmU2lnbnVwUmVzcG9uc2USYgoJR3Vlc3RKb2luEikuY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuR3Vlc3RKb2luUmVxdWVzdBoqLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkd1ZXN0Sm9pblJlc3BvbnNlEm4KDUF0dGVuZGVlTG9naW4SLS5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5BdHRlbmRlZUxvZ2luUmVxdWVzdBouLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkF0dGVuZGVlTG9naW5SZXNwb25zZRJxCg5DcmVhdGVBdHRlbmRlZRIuLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkNyZWF0ZUF0dGVuZGVlUmVxdWVzdBovLmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkNyZWF0ZUF0dGVuZGVlUmVzcG9uc2UScQoORGVsZXRlQXR0ZW5kZWUSLi5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5EZWxldGVBdHRlbmRlZVJlcXVlc3QaLy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5EZWxldGVBdHRlbmRlZVJlc3BvbnNlEnEKDlNldENoYWlycGVyc29uEi4uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuU2V0Q2hhaXJwZXJzb25SZXF1ZXN0Gi8uY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuU2V0Q2hhaXJwZXJzb25SZXNwb25zZRJiCglTZXRRdW90ZWQSKS5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5TZXRRdW90ZWRSZXF1ZXN0GiouY29uZmVyZW5jZS5hdHRlbmRlZXMudjEuU2V0UXVvdGVkUmVzcG9uc2USgAEKE0dldEF0dGVuZGVlUmVjb3ZlcnkSMy5jb25mZXJlbmNlLmF0dGVuZGVlcy52MS5HZXRBdHRlbmRlZVJlY292ZXJ5UmVxdWVzdBo0LmNvbmZlcmVuY2UuYXR0ZW5kZWVzLnYxLkdldEF0dGVuZGVlUmVjb3ZlcnlSZXNwb25zZUJOWkxnaXRodWIuY29tL1k0c2hpbi9jb25mZXJlbmNlLXRvb2wvZ2VuL2dvL2NvbmZlcmVuY2UvYXR0ZW5kZWVzL3YxO2F0dGVuZGVlc3YxYgZwcm90bzM", [file_conference_common_v1_common]);
 
 /**
  * AttendeeRecord is the canonical attendee read model for both moderator and
@@ -264,6 +264,301 @@ export const AttendeeLoginResponseSchema: GenMessage<AttendeeLoginResponse> = /*
   messageDesc(file_conference_attendees_v1_attendees, 8);
 
 /**
+ * @generated from message conference.attendees.v1.CreateAttendeeRequest
+ */
+export type CreateAttendeeRequest = Message<"conference.attendees.v1.CreateAttendeeRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string full_name = 3;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: bool gender_quoted = 4;
+   */
+  genderQuoted: boolean;
+};
+
+/**
+ * Describes the message conference.attendees.v1.CreateAttendeeRequest.
+ * Use `create(CreateAttendeeRequestSchema)` to create a new message.
+ */
+export const CreateAttendeeRequestSchema: GenMessage<CreateAttendeeRequest> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 9);
+
+/**
+ * @generated from message conference.attendees.v1.CreateAttendeeResponse
+ */
+export type CreateAttendeeResponse = Message<"conference.attendees.v1.CreateAttendeeResponse"> & {
+  /**
+   * @generated from field: conference.attendees.v1.AttendeeRecord attendee = 1;
+   */
+  attendee?: AttendeeRecord;
+
+  /**
+   * attendee_secret is the per-attendee access code for the created guest.
+   *
+   * @generated from field: string attendee_secret = 2;
+   */
+  attendeeSecret: string;
+};
+
+/**
+ * Describes the message conference.attendees.v1.CreateAttendeeResponse.
+ * Use `create(CreateAttendeeResponseSchema)` to create a new message.
+ */
+export const CreateAttendeeResponseSchema: GenMessage<CreateAttendeeResponse> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 10);
+
+/**
+ * @generated from message conference.attendees.v1.DeleteAttendeeRequest
+ */
+export type DeleteAttendeeRequest = Message<"conference.attendees.v1.DeleteAttendeeRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string attendee_id = 3;
+   */
+  attendeeId: string;
+};
+
+/**
+ * Describes the message conference.attendees.v1.DeleteAttendeeRequest.
+ * Use `create(DeleteAttendeeRequestSchema)` to create a new message.
+ */
+export const DeleteAttendeeRequestSchema: GenMessage<DeleteAttendeeRequest> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 11);
+
+/**
+ * @generated from message conference.attendees.v1.DeleteAttendeeResponse
+ */
+export type DeleteAttendeeResponse = Message<"conference.attendees.v1.DeleteAttendeeResponse"> & {
+};
+
+/**
+ * Describes the message conference.attendees.v1.DeleteAttendeeResponse.
+ * Use `create(DeleteAttendeeResponseSchema)` to create a new message.
+ */
+export const DeleteAttendeeResponseSchema: GenMessage<DeleteAttendeeResponse> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 12);
+
+/**
+ * @generated from message conference.attendees.v1.SetChairpersonRequest
+ */
+export type SetChairpersonRequest = Message<"conference.attendees.v1.SetChairpersonRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string attendee_id = 3;
+   */
+  attendeeId: string;
+
+  /**
+   * @generated from field: bool is_chair = 4;
+   */
+  isChair: boolean;
+};
+
+/**
+ * Describes the message conference.attendees.v1.SetChairpersonRequest.
+ * Use `create(SetChairpersonRequestSchema)` to create a new message.
+ */
+export const SetChairpersonRequestSchema: GenMessage<SetChairpersonRequest> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 13);
+
+/**
+ * @generated from message conference.attendees.v1.SetChairpersonResponse
+ */
+export type SetChairpersonResponse = Message<"conference.attendees.v1.SetChairpersonResponse"> & {
+  /**
+   * @generated from field: conference.attendees.v1.AttendeeRecord attendee = 1;
+   */
+  attendee?: AttendeeRecord;
+};
+
+/**
+ * Describes the message conference.attendees.v1.SetChairpersonResponse.
+ * Use `create(SetChairpersonResponseSchema)` to create a new message.
+ */
+export const SetChairpersonResponseSchema: GenMessage<SetChairpersonResponse> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 14);
+
+/**
+ * @generated from message conference.attendees.v1.SetQuotedRequest
+ */
+export type SetQuotedRequest = Message<"conference.attendees.v1.SetQuotedRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string attendee_id = 3;
+   */
+  attendeeId: string;
+
+  /**
+   * @generated from field: bool quoted = 4;
+   */
+  quoted: boolean;
+};
+
+/**
+ * Describes the message conference.attendees.v1.SetQuotedRequest.
+ * Use `create(SetQuotedRequestSchema)` to create a new message.
+ */
+export const SetQuotedRequestSchema: GenMessage<SetQuotedRequest> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 15);
+
+/**
+ * @generated from message conference.attendees.v1.SetQuotedResponse
+ */
+export type SetQuotedResponse = Message<"conference.attendees.v1.SetQuotedResponse"> & {
+  /**
+   * @generated from field: conference.attendees.v1.AttendeeRecord attendee = 1;
+   */
+  attendee?: AttendeeRecord;
+};
+
+/**
+ * Describes the message conference.attendees.v1.SetQuotedResponse.
+ * Use `create(SetQuotedResponseSchema)` to create a new message.
+ */
+export const SetQuotedResponseSchema: GenMessage<SetQuotedResponse> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 16);
+
+/**
+ * @generated from message conference.attendees.v1.AttendeeRecoveryView
+ */
+export type AttendeeRecoveryView = Message<"conference.attendees.v1.AttendeeRecoveryView"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string attendee_id = 3;
+   */
+  attendeeId: string;
+
+  /**
+   * @generated from field: string meeting_name = 4;
+   */
+  meetingName: string;
+
+  /**
+   * @generated from field: string committee_name = 5;
+   */
+  committeeName: string;
+
+  /**
+   * @generated from field: string attendee_name = 6;
+   */
+  attendeeName: string;
+
+  /**
+   * @generated from field: string login_url = 7;
+   */
+  loginUrl: string;
+
+  /**
+   * @generated from field: string qr_code_data_url = 8;
+   */
+  qrCodeDataUrl: string;
+};
+
+/**
+ * Describes the message conference.attendees.v1.AttendeeRecoveryView.
+ * Use `create(AttendeeRecoveryViewSchema)` to create a new message.
+ */
+export const AttendeeRecoveryViewSchema: GenMessage<AttendeeRecoveryView> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 17);
+
+/**
+ * @generated from message conference.attendees.v1.GetAttendeeRecoveryRequest
+ */
+export type GetAttendeeRecoveryRequest = Message<"conference.attendees.v1.GetAttendeeRecoveryRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string attendee_id = 3;
+   */
+  attendeeId: string;
+
+  /**
+   * @generated from field: string base_url = 4;
+   */
+  baseUrl: string;
+};
+
+/**
+ * Describes the message conference.attendees.v1.GetAttendeeRecoveryRequest.
+ * Use `create(GetAttendeeRecoveryRequestSchema)` to create a new message.
+ */
+export const GetAttendeeRecoveryRequestSchema: GenMessage<GetAttendeeRecoveryRequest> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 18);
+
+/**
+ * @generated from message conference.attendees.v1.GetAttendeeRecoveryResponse
+ */
+export type GetAttendeeRecoveryResponse = Message<"conference.attendees.v1.GetAttendeeRecoveryResponse"> & {
+  /**
+   * @generated from field: conference.attendees.v1.AttendeeRecoveryView view = 1;
+   */
+  view?: AttendeeRecoveryView;
+};
+
+/**
+ * Describes the message conference.attendees.v1.GetAttendeeRecoveryResponse.
+ * Use `create(GetAttendeeRecoveryResponseSchema)` to create a new message.
+ */
+export const GetAttendeeRecoveryResponseSchema: GenMessage<GetAttendeeRecoveryResponse> = /*@__PURE__*/
+  messageDesc(file_conference_attendees_v1_attendees, 19);
+
+/**
  * @generated from service conference.attendees.v1.AttendeeService
  */
 export const AttendeeService: GenService<{
@@ -310,6 +605,61 @@ export const AttendeeService: GenService<{
     methodKind: "unary";
     input: typeof AttendeeLoginRequestSchema;
     output: typeof AttendeeLoginResponseSchema;
+  },
+  /**
+   * CreateAttendee creates a guest attendee on behalf of a moderator/chairperson.
+   * Unlike GuestJoin, this does not require signup to be open or a meeting secret.
+   *
+   * @generated from rpc conference.attendees.v1.AttendeeService.CreateAttendee
+   */
+  createAttendee: {
+    methodKind: "unary";
+    input: typeof CreateAttendeeRequestSchema;
+    output: typeof CreateAttendeeResponseSchema;
+  },
+  /**
+   * DeleteAttendee removes an attendee from a meeting.
+   * Requires chairperson access.
+   *
+   * @generated from rpc conference.attendees.v1.AttendeeService.DeleteAttendee
+   */
+  deleteAttendee: {
+    methodKind: "unary";
+    input: typeof DeleteAttendeeRequestSchema;
+    output: typeof DeleteAttendeeResponseSchema;
+  },
+  /**
+   * SetChairperson updates the chairperson flag for an attendee.
+   * Requires chairperson access.
+   *
+   * @generated from rpc conference.attendees.v1.AttendeeService.SetChairperson
+   */
+  setChairperson: {
+    methodKind: "unary";
+    input: typeof SetChairpersonRequestSchema;
+    output: typeof SetChairpersonResponseSchema;
+  },
+  /**
+   * SetQuoted updates the gender-quotation flag for an attendee.
+   * Requires chairperson access.
+   *
+   * @generated from rpc conference.attendees.v1.AttendeeService.SetQuoted
+   */
+  setQuoted: {
+    methodKind: "unary";
+    input: typeof SetQuotedRequestSchema;
+    output: typeof SetQuotedResponseSchema;
+  },
+  /**
+   * GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
+   * Requires moderation access for the meeting.
+   *
+   * @generated from rpc conference.attendees.v1.AttendeeService.GetAttendeeRecovery
+   */
+  getAttendeeRecovery: {
+    methodKind: "unary";
+    input: typeof GetAttendeeRecoveryRequestSchema;
+    output: typeof GetAttendeeRecoveryResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_conference_attendees_v1_attendees, 0);

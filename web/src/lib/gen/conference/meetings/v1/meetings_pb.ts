@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/meetings/v1/meetings.proto.
  */
 export const file_conference_meetings_v1_meetings: GenFile = /*@__PURE__*/
-  fileDesc("CiVjb25mZXJlbmNlL21lZXRpbmdzL3YxL21lZXRpbmdzLnByb3RvEhZjb25mZXJlbmNlLm1lZXRpbmdzLnYxIoIBChdKb2luTWVldGluZ0NhcGFiaWxpdGllcxIXCg9jYW5fc2VsZl9zaWdudXAYASABKAgSFgoOY2FuX2d1ZXN0X2pvaW4YAiABKAgSFgoOYWxyZWFkeV9qb2luZWQYAyABKAgSHgoWY2FuX3VzZV9hdHRlbmRlZV9sb2dpbhgEIAEoCCKIAgoPSm9pbk1lZXRpbmdWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEhMKC3NpZ251cF9vcGVuGAUgASgIEj8KEGN1cnJlbnRfYXR0ZW5kZWUYBiABKAsyJS5jb25mZXJlbmNlLmNvbW1vbi52MS5BdHRlbmRlZVN1bW1hcnkSRQoMY2FwYWJpbGl0aWVzGAcgASgLMi8uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5Kb2luTWVldGluZ0NhcGFiaWxpdGllcyJDChVHZXRKb2luTWVldGluZ1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCSJSChZHZXRKb2luTWVldGluZ1Jlc3BvbnNlEjgKB21lZXRpbmcYASABKAsyJy5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkpvaW5NZWV0aW5nVmlldyKuAQoXTGl2ZU1lZXRpbmdDYXBhYmlsaXRpZXMSFwoPY2FuX3NlbGZfc2lnbnVwGAEgASgIEh4KFmNhbl9hZGRfcmVndWxhcl9zcGVlY2gYAiABKAgSJQodY2FuX2FkZF9wb2ludF9vZl9vcmRlcl9zcGVlY2gYAyABKAgSEAoIY2FuX3ZvdGUYBCABKAgSIQoZY2FuX3ZpZXdfY3VycmVudF9kb2N1bWVudBgFIAEoCCKKAwoPTGl2ZU1lZXRpbmdWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEg8KB3ZlcnNpb24YBSABKAQSRQoTYWN0aXZlX2FnZW5kYV9wb2ludBgGIAEoCzIoLmNvbmZlcmVuY2UuY29tbW9uLnYxLkFnZW5kYVBvaW50U3VtbWFyeRI2CghzcGVha2VycxgHIAMoCzIkLmNvbmZlcmVuY2UuY29tbW9uLnYxLlNwZWFrZXJTdW1tYXJ5EkYKEGN1cnJlbnRfZG9jdW1lbnQYCCABKAsyLC5jb25mZXJlbmNlLmNvbW1vbi52MS5DdXJyZW50RG9jdW1lbnRTdW1tYXJ5EkUKDGNhcGFiaWxpdGllcxgJIAEoCzIvLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTGl2ZU1lZXRpbmdDYXBhYmlsaXRpZXMiQwoVR2V0TGl2ZU1lZXRpbmdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUgoWR2V0TGl2ZU1lZXRpbmdSZXNwb25zZRI4CgdtZWV0aW5nGAEgASgLMicuY29uZmVyZW5jZS5tZWV0aW5ncy52MS5MaXZlTWVldGluZ1ZpZXciSwodU3Vic2NyaWJlTWVldGluZ0V2ZW50c1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCSJGCgxNZWV0aW5nRXZlbnQSNgoEa2luZBgBIAEoDjIoLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTWVldGluZ0V2ZW50S2luZCr+AQoQTWVldGluZ0V2ZW50S2luZBIiCh5NRUVUSU5HX0VWRU5UX0tJTkRfVU5TUEVDSUZJRUQQABInCiNNRUVUSU5HX0VWRU5UX0tJTkRfU1BFQUtFUlNfVVBEQVRFRBABEiQKIE1FRVRJTkdfRVZFTlRfS0lORF9WT1RFU19VUERBVEVEEAISJQohTUVFVElOR19FVkVOVF9LSU5EX0FHRU5EQV9VUERBVEVEEAMSKAokTUVFVElOR19FVkVOVF9LSU5EX0FUVEVOREVFU19VUERBVEVEEAQSJgoiTUVFVElOR19FVkVOVF9LSU5EX01FRVRJTkdfVVBEQVRFRBAFMusCCg5NZWV0aW5nU2VydmljZRJvCg5HZXRKb2luTWVldGluZxItLmNvbmZlcmVuY2UubWVldGluZ3MudjEuR2V0Sm9pbk1lZXRpbmdSZXF1ZXN0Gi4uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5HZXRKb2luTWVldGluZ1Jlc3BvbnNlEm8KDkdldExpdmVNZWV0aW5nEi0uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5HZXRMaXZlTWVldGluZ1JlcXVlc3QaLi5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkdldExpdmVNZWV0aW5nUmVzcG9uc2USdwoWU3Vic2NyaWJlTWVldGluZ0V2ZW50cxI1LmNvbmZlcmVuY2UubWVldGluZ3MudjEuU3Vic2NyaWJlTWVldGluZ0V2ZW50c1JlcXVlc3QaJC5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLk1lZXRpbmdFdmVudDABQkxaSmdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS9tZWV0aW5ncy92MTttZWV0aW5nc3YxYgZwcm90bzM", [file_conference_common_v1_common]);
+  fileDesc("CiVjb25mZXJlbmNlL21lZXRpbmdzL3YxL21lZXRpbmdzLnByb3RvEhZjb25mZXJlbmNlLm1lZXRpbmdzLnYxIoIBChdKb2luTWVldGluZ0NhcGFiaWxpdGllcxIXCg9jYW5fc2VsZl9zaWdudXAYASABKAgSFgoOY2FuX2d1ZXN0X2pvaW4YAiABKAgSFgoOYWxyZWFkeV9qb2luZWQYAyABKAgSHgoWY2FuX3VzZV9hdHRlbmRlZV9sb2dpbhgEIAEoCCKIAgoPSm9pbk1lZXRpbmdWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEhMKC3NpZ251cF9vcGVuGAUgASgIEj8KEGN1cnJlbnRfYXR0ZW5kZWUYBiABKAsyJS5jb25mZXJlbmNlLmNvbW1vbi52MS5BdHRlbmRlZVN1bW1hcnkSRQoMY2FwYWJpbGl0aWVzGAcgASgLMi8uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5Kb2luTWVldGluZ0NhcGFiaWxpdGllcyJDChVHZXRKb2luTWVldGluZ1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCSJSChZHZXRKb2luTWVldGluZ1Jlc3BvbnNlEjgKB21lZXRpbmcYASABKAsyJy5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkpvaW5NZWV0aW5nVmlldyKuAQoXTGl2ZU1lZXRpbmdDYXBhYmlsaXRpZXMSFwoPY2FuX3NlbGZfc2lnbnVwGAEgASgIEh4KFmNhbl9hZGRfcmVndWxhcl9zcGVlY2gYAiABKAgSJQodY2FuX2FkZF9wb2ludF9vZl9vcmRlcl9zcGVlY2gYAyABKAgSEAoIY2FuX3ZvdGUYBCABKAgSIQoZY2FuX3ZpZXdfY3VycmVudF9kb2N1bWVudBgFIAEoCCKKAwoPTGl2ZU1lZXRpbmdWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEg8KB3ZlcnNpb24YBSABKAQSRQoTYWN0aXZlX2FnZW5kYV9wb2ludBgGIAEoCzIoLmNvbmZlcmVuY2UuY29tbW9uLnYxLkFnZW5kYVBvaW50U3VtbWFyeRI2CghzcGVha2VycxgHIAMoCzIkLmNvbmZlcmVuY2UuY29tbW9uLnYxLlNwZWFrZXJTdW1tYXJ5EkYKEGN1cnJlbnRfZG9jdW1lbnQYCCABKAsyLC5jb25mZXJlbmNlLmNvbW1vbi52MS5DdXJyZW50RG9jdW1lbnRTdW1tYXJ5EkUKDGNhcGFiaWxpdGllcxgJIAEoCzIvLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTGl2ZU1lZXRpbmdDYXBhYmlsaXRpZXMiQwoVR2V0TGl2ZU1lZXRpbmdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUgoWR2V0TGl2ZU1lZXRpbmdSZXNwb25zZRI4CgdtZWV0aW5nGAEgASgLMicuY29uZmVyZW5jZS5tZWV0aW5ncy52MS5MaXZlTWVldGluZ1ZpZXcimQEKEU1lZXRpbmdKb2luUXJWaWV3EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSFAoMbWVldGluZ19uYW1lGAMgASgJEhYKDmNvbW1pdHRlZV9uYW1lGAQgASgJEhAKCGpvaW5fdXJsGAUgASgJEhgKEHFyX2NvZGVfZGF0YV91cmwYBiABKAkiVwoXR2V0TWVldGluZ0pvaW5RclJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIQCghiYXNlX3VybBgDIAEoCSJTChhHZXRNZWV0aW5nSm9pblFyUmVzcG9uc2USNwoEdmlldxgBIAEoCzIpLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTWVldGluZ0pvaW5RclZpZXciSwodU3Vic2NyaWJlTWVldGluZ0V2ZW50c1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCSJGCgxNZWV0aW5nRXZlbnQSNgoEa2luZBgBIAEoDjIoLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTWVldGluZ0V2ZW50S2luZCr+AQoQTWVldGluZ0V2ZW50S2luZBIiCh5NRUVUSU5HX0VWRU5UX0tJTkRfVU5TUEVDSUZJRUQQABInCiNNRUVUSU5HX0VWRU5UX0tJTkRfU1BFQUtFUlNfVVBEQVRFRBABEiQKIE1FRVRJTkdfRVZFTlRfS0lORF9WT1RFU19VUERBVEVEEAISJQohTUVFVElOR19FVkVOVF9LSU5EX0FHRU5EQV9VUERBVEVEEAMSKAokTUVFVElOR19FVkVOVF9LSU5EX0FUVEVOREVFU19VUERBVEVEEAQSJgoiTUVFVElOR19FVkVOVF9LSU5EX01FRVRJTkdfVVBEQVRFRBAFMuIDCg5NZWV0aW5nU2VydmljZRJvCg5HZXRKb2luTWVldGluZxItLmNvbmZlcmVuY2UubWVldGluZ3MudjEuR2V0Sm9pbk1lZXRpbmdSZXF1ZXN0Gi4uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5HZXRKb2luTWVldGluZ1Jlc3BvbnNlEm8KDkdldExpdmVNZWV0aW5nEi0uY29uZmVyZW5jZS5tZWV0aW5ncy52MS5HZXRMaXZlTWVldGluZ1JlcXVlc3QaLi5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkdldExpdmVNZWV0aW5nUmVzcG9uc2USdQoQR2V0TWVldGluZ0pvaW5RchIvLmNvbmZlcmVuY2UubWVldGluZ3MudjEuR2V0TWVldGluZ0pvaW5RclJlcXVlc3QaMC5jb25mZXJlbmNlLm1lZXRpbmdzLnYxLkdldE1lZXRpbmdKb2luUXJSZXNwb25zZRJ3ChZTdWJzY3JpYmVNZWV0aW5nRXZlbnRzEjUuY29uZmVyZW5jZS5tZWV0aW5ncy52MS5TdWJzY3JpYmVNZWV0aW5nRXZlbnRzUmVxdWVzdBokLmNvbmZlcmVuY2UubWVldGluZ3MudjEuTWVldGluZ0V2ZW50MAFCTFpKZ2l0aHViLmNvbS9ZNHNoaW4vY29uZmVyZW5jZS10b29sL2dlbi9nby9jb25mZXJlbmNlL21lZXRpbmdzL3YxO21lZXRpbmdzdjFiBnByb3RvMw", [file_conference_common_v1_common]);
 
 /**
  * @generated from message conference.meetings.v1.JoinMeetingCapabilities
@@ -266,6 +266,92 @@ export const GetLiveMeetingResponseSchema: GenMessage<GetLiveMeetingResponse> = 
   messageDesc(file_conference_meetings_v1_meetings, 7);
 
 /**
+ * @generated from message conference.meetings.v1.MeetingJoinQrView
+ */
+export type MeetingJoinQrView = Message<"conference.meetings.v1.MeetingJoinQrView"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string meeting_name = 3;
+   */
+  meetingName: string;
+
+  /**
+   * @generated from field: string committee_name = 4;
+   */
+  committeeName: string;
+
+  /**
+   * @generated from field: string join_url = 5;
+   */
+  joinUrl: string;
+
+  /**
+   * @generated from field: string qr_code_data_url = 6;
+   */
+  qrCodeDataUrl: string;
+};
+
+/**
+ * Describes the message conference.meetings.v1.MeetingJoinQrView.
+ * Use `create(MeetingJoinQrViewSchema)` to create a new message.
+ */
+export const MeetingJoinQrViewSchema: GenMessage<MeetingJoinQrView> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 8);
+
+/**
+ * @generated from message conference.meetings.v1.GetMeetingJoinQrRequest
+ */
+export type GetMeetingJoinQrRequest = Message<"conference.meetings.v1.GetMeetingJoinQrRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string base_url = 3;
+   */
+  baseUrl: string;
+};
+
+/**
+ * Describes the message conference.meetings.v1.GetMeetingJoinQrRequest.
+ * Use `create(GetMeetingJoinQrRequestSchema)` to create a new message.
+ */
+export const GetMeetingJoinQrRequestSchema: GenMessage<GetMeetingJoinQrRequest> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 9);
+
+/**
+ * @generated from message conference.meetings.v1.GetMeetingJoinQrResponse
+ */
+export type GetMeetingJoinQrResponse = Message<"conference.meetings.v1.GetMeetingJoinQrResponse"> & {
+  /**
+   * @generated from field: conference.meetings.v1.MeetingJoinQrView view = 1;
+   */
+  view?: MeetingJoinQrView;
+};
+
+/**
+ * Describes the message conference.meetings.v1.GetMeetingJoinQrResponse.
+ * Use `create(GetMeetingJoinQrResponseSchema)` to create a new message.
+ */
+export const GetMeetingJoinQrResponseSchema: GenMessage<GetMeetingJoinQrResponse> = /*@__PURE__*/
+  messageDesc(file_conference_meetings_v1_meetings, 10);
+
+/**
  * SubscribeMeetingEvents streams typed invalidation events for a meeting.
  * Each message indicates which view(s) have changed; the client should
  * refetch the relevant typed RPC for the indicated kind.
@@ -289,7 +375,7 @@ export type SubscribeMeetingEventsRequest = Message<"conference.meetings.v1.Subs
  * Use `create(SubscribeMeetingEventsRequestSchema)` to create a new message.
  */
 export const SubscribeMeetingEventsRequestSchema: GenMessage<SubscribeMeetingEventsRequest> = /*@__PURE__*/
-  messageDesc(file_conference_meetings_v1_meetings, 8);
+  messageDesc(file_conference_meetings_v1_meetings, 11);
 
 /**
  * @generated from message conference.meetings.v1.MeetingEvent
@@ -306,7 +392,7 @@ export type MeetingEvent = Message<"conference.meetings.v1.MeetingEvent"> & {
  * Use `create(MeetingEventSchema)` to create a new message.
  */
 export const MeetingEventSchema: GenMessage<MeetingEvent> = /*@__PURE__*/
-  messageDesc(file_conference_meetings_v1_meetings, 9);
+  messageDesc(file_conference_meetings_v1_meetings, 12);
 
 /**
  * @generated from enum conference.meetings.v1.MeetingEventKind
@@ -368,6 +454,14 @@ export const MeetingService: GenService<{
     methodKind: "unary";
     input: typeof GetLiveMeetingRequestSchema;
     output: typeof GetLiveMeetingResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.meetings.v1.MeetingService.GetMeetingJoinQr
+   */
+  getMeetingJoinQr: {
+    methodKind: "unary";
+    input: typeof GetMeetingJoinQrRequestSchema;
+    output: typeof GetMeetingJoinQrResponseSchema;
   },
   /**
    * @generated from rpc conference.meetings.v1.MeetingService.SubscribeMeetingEvents

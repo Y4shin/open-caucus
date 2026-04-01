@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/votes/v1/votes.proto.
  */
 export const file_conference_votes_v1_votes: GenFile = /*@__PURE__*/
-  fileDesc("Ch9jb25mZXJlbmNlL3ZvdGVzL3YxL3ZvdGVzLnByb3RvEhNjb25mZXJlbmNlLnZvdGVzLnYxIkYKEFZvdGVPcHRpb25SZWNvcmQSEQoJb3B0aW9uX2lkGAEgASgJEg0KBWxhYmVsGAIgASgJEhAKCHBvc2l0aW9uGAMgASgDItkBChRWb3RlRGVmaW5pdGlvblJlY29yZBIPCgd2b3RlX2lkGAEgASgJEhcKD2FnZW5kYV9wb2ludF9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhIKCnZpc2liaWxpdHkYBCABKAkSDQoFc3RhdGUYBSABKAkSFgoObWluX3NlbGVjdGlvbnMYBiABKAMSFgoObWF4X3NlbGVjdGlvbnMYByABKAMSNgoHb3B0aW9ucxgIIAMoCzIlLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZU9wdGlvblJlY29yZCJNCglWb3RlU3RhdHMSFgoOZWxpZ2libGVfY291bnQYASABKAMSEgoKY2FzdF9jb3VudBgCIAEoAxIUCgxiYWxsb3RfY291bnQYAyABKAMiQQoOVm90ZVRhbGx5RW50cnkSEQoJb3B0aW9uX2lkGAEgASgJEg0KBWxhYmVsGAIgASgJEg0KBWNvdW50GAMgASgDIpUDCg5Wb3Rlc1BhbmVsVmlldxISCgptZWV0aW5nX2lkGAEgASgJEhYKDmNvbW1pdHRlZV9zbHVnGAIgASgJEh8KF2hhc19hY3RpdmVfYWdlbmRhX3BvaW50GAMgASgIEh4KFmFjdGl2ZV9hZ2VuZGFfcG9pbnRfaWQYBCABKAkSIQoZYWN0aXZlX2FnZW5kYV9wb2ludF90aXRsZRgFIAEoCRI4CgV2b3RlcxgGIAMoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSPgoLYWN0aXZlX3ZvdGUYByABKAsyKS5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVEZWZpbml0aW9uUmVjb3JkEjkKEWFjdGl2ZV92b3RlX3N0YXRzGAggASgLMh4uY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlU3RhdHMSPgoRYWN0aXZlX3ZvdGVfdGFsbHkYCSADKAsyIy5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVUYWxseUVudHJ5IsQBChFMaXZlVm90ZVBhbmVsVmlldxISCgptZWV0aW5nX2lkGAEgASgJEhYKDmNvbW1pdHRlZV9zbHVnGAIgASgJEhcKD2hhc19hY3RpdmVfdm90ZRgDIAEoCBI+CgthY3RpdmVfdm90ZRgEIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSFQoNYWxyZWFkeV92b3RlZBgFIAEoCBITCgtpc19lbGlnaWJsZRgGIAEoCCJCChRHZXRWb3Rlc1BhbmVsUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIkoKFUdldFZvdGVzUGFuZWxSZXNwb25zZRIxCgR2aWV3GAEgASgLMiMuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3Rlc1BhbmVsVmlldyJFChdHZXRMaXZlVm90ZVBhbmVsUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIlAKGEdldExpdmVWb3RlUGFuZWxSZXNwb25zZRI0CgR2aWV3GAEgASgLMiYuY29uZmVyZW5jZS52b3Rlcy52MS5MaXZlVm90ZVBhbmVsVmlldyKoAQoRQ3JlYXRlVm90ZVJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhIKCnZpc2liaWxpdHkYBCABKAkSFgoObWluX3NlbGVjdGlvbnMYBSABKAMSFgoObWF4X3NlbGVjdGlvbnMYBiABKAMSFQoNb3B0aW9uX2xhYmVscxgHIAMoCSJoChJDcmVhdGVWb3RlUmVzcG9uc2USNwoEdm90ZRgBIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSGQoRaW52YWxpZGF0ZWRfdmlld3MYAiADKAkivgEKFlVwZGF0ZVZvdGVEcmFmdFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIPCgd2b3RlX2lkGAMgASgJEgwKBG5hbWUYBCABKAkSEgoKdmlzaWJpbGl0eRgFIAEoCRIWCg5taW5fc2VsZWN0aW9ucxgGIAEoAxIWCg5tYXhfc2VsZWN0aW9ucxgHIAEoAxIVCg1vcHRpb25fbGFiZWxzGAggAygJIm0KF1VwZGF0ZVZvdGVEcmFmdFJlc3BvbnNlEjcKBHZvdGUYASABKAsyKS5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVEZWZpbml0aW9uUmVjb3JkEhkKEWludmFsaWRhdGVkX3ZpZXdzGAIgAygJIk4KD09wZW5Wb3RlUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEg8KB3ZvdGVfaWQYAyABKAkilQEKEE9wZW5Wb3RlUmVzcG9uc2USNwoEdm90ZRgBIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSLQoFc3RhdHMYAiABKAsyHi5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVTdGF0cxIZChFpbnZhbGlkYXRlZF92aWV3cxgDIAMoCSJPChBDbG9zZVZvdGVSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSDwoHdm90ZV9pZBgDIAEoCSKsAQoRQ2xvc2VWb3RlUmVzcG9uc2USNwoEdm90ZRgBIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSDwoHb3V0Y29tZRgCIAEoCRIyCgV0YWxseRgDIAMoCzIjLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZVRhbGx5RW50cnkSGQoRaW52YWxpZGF0ZWRfdmlld3MYBCADKAkiUQoSQXJjaGl2ZVZvdGVSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSDwoHdm90ZV9pZBgDIAEoCSJpChNBcmNoaXZlVm90ZVJlc3BvbnNlEjcKBHZvdGUYASABKAsyKS5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVEZWZpbml0aW9uUmVjb3JkEhkKEWludmFsaWRhdGVkX3ZpZXdzGAIgAygJIoQBChNTdWJtaXRCYWxsb3RSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSDwoHdm90ZV9pZBgDIAEoCRIbChNzZWxlY3RlZF9vcHRpb25faWRzGAQgAygJEhMKC2F0dGVuZGVlX2lkGAUgASgJIkgKFFN1Ym1pdEJhbGxvdFJlc3BvbnNlEhUKDXJlY2VpcHRfdG9rZW4YASABKAkSGQoRaW52YWxpZGF0ZWRfdmlld3MYAiADKAkiVwoYVmVyaWZ5T3BlblJlY2VpcHRSZXF1ZXN0Eg8KB3ZvdGVfaWQYASABKAkSFQoNcmVjZWlwdF90b2tlbhgCIAEoCRITCgthdHRlbmRlZV9pZBgDIAEoCSK2AQoZVmVyaWZ5T3BlblJlY2VpcHRSZXNwb25zZRIPCgd2b3RlX2lkGAEgASgJEhEKCXZvdGVfbmFtZRgCIAEoCRITCgthdHRlbmRlZV9pZBgDIAEoCRIXCg9hdHRlbmRlZV9udW1iZXIYBCABKAkSFQoNcmVjZWlwdF90b2tlbhgFIAEoCRIVCg1jaG9pY2VfbGFiZWxzGAYgAygJEhkKEWNob2ljZV9vcHRpb25faWRzGAcgAygJIkQKGlZlcmlmeVNlY3JldFJlY2VpcHRSZXF1ZXN0Eg8KB3ZvdGVfaWQYASABKAkSFQoNcmVjZWlwdF90b2tlbhgCIAEoCSKxAQobVmVyaWZ5U2VjcmV0UmVjZWlwdFJlc3BvbnNlEg8KB3ZvdGVfaWQYASABKAkSEQoJdm90ZV9uYW1lGAIgASgJEhUKDXJlY2VpcHRfdG9rZW4YAyABKAkSIAoYZW5jcnlwdGVkX2NvbW1pdG1lbnRfYjY0GAQgASgJEhkKEWNvbW1pdG1lbnRfY2lwaGVyGAUgASgJEhoKEmNvbW1pdG1lbnRfdmVyc2lvbhgGIAEoAzKdCAoLVm90ZVNlcnZpY2USZgoNR2V0Vm90ZXNQYW5lbBIpLmNvbmZlcmVuY2Uudm90ZXMudjEuR2V0Vm90ZXNQYW5lbFJlcXVlc3QaKi5jb25mZXJlbmNlLnZvdGVzLnYxLkdldFZvdGVzUGFuZWxSZXNwb25zZRJvChBHZXRMaXZlVm90ZVBhbmVsEiwuY29uZmVyZW5jZS52b3Rlcy52MS5HZXRMaXZlVm90ZVBhbmVsUmVxdWVzdBotLmNvbmZlcmVuY2Uudm90ZXMudjEuR2V0TGl2ZVZvdGVQYW5lbFJlc3BvbnNlEl0KCkNyZWF0ZVZvdGUSJi5jb25mZXJlbmNlLnZvdGVzLnYxLkNyZWF0ZVZvdGVSZXF1ZXN0GicuY29uZmVyZW5jZS52b3Rlcy52MS5DcmVhdGVWb3RlUmVzcG9uc2USbAoPVXBkYXRlVm90ZURyYWZ0EisuY29uZmVyZW5jZS52b3Rlcy52MS5VcGRhdGVWb3RlRHJhZnRSZXF1ZXN0GiwuY29uZmVyZW5jZS52b3Rlcy52MS5VcGRhdGVWb3RlRHJhZnRSZXNwb25zZRJXCghPcGVuVm90ZRIkLmNvbmZlcmVuY2Uudm90ZXMudjEuT3BlblZvdGVSZXF1ZXN0GiUuY29uZmVyZW5jZS52b3Rlcy52MS5PcGVuVm90ZVJlc3BvbnNlEloKCUNsb3NlVm90ZRIlLmNvbmZlcmVuY2Uudm90ZXMudjEuQ2xvc2VWb3RlUmVxdWVzdBomLmNvbmZlcmVuY2Uudm90ZXMudjEuQ2xvc2VWb3RlUmVzcG9uc2USYAoLQXJjaGl2ZVZvdGUSJy5jb25mZXJlbmNlLnZvdGVzLnYxLkFyY2hpdmVWb3RlUmVxdWVzdBooLmNvbmZlcmVuY2Uudm90ZXMudjEuQXJjaGl2ZVZvdGVSZXNwb25zZRJjCgxTdWJtaXRCYWxsb3QSKC5jb25mZXJlbmNlLnZvdGVzLnYxLlN1Ym1pdEJhbGxvdFJlcXVlc3QaKS5jb25mZXJlbmNlLnZvdGVzLnYxLlN1Ym1pdEJhbGxvdFJlc3BvbnNlEnIKEVZlcmlmeU9wZW5SZWNlaXB0Ei0uY29uZmVyZW5jZS52b3Rlcy52MS5WZXJpZnlPcGVuUmVjZWlwdFJlcXVlc3QaLi5jb25mZXJlbmNlLnZvdGVzLnYxLlZlcmlmeU9wZW5SZWNlaXB0UmVzcG9uc2USeAoTVmVyaWZ5U2VjcmV0UmVjZWlwdBIvLmNvbmZlcmVuY2Uudm90ZXMudjEuVmVyaWZ5U2VjcmV0UmVjZWlwdFJlcXVlc3QaMC5jb25mZXJlbmNlLnZvdGVzLnYxLlZlcmlmeVNlY3JldFJlY2VpcHRSZXNwb25zZUJGWkRnaXRodWIuY29tL1k0c2hpbi9jb25mZXJlbmNlLXRvb2wvZ2VuL2dvL2NvbmZlcmVuY2Uvdm90ZXMvdjE7dm90ZXN2MWIGcHJvdG8z");
+  fileDesc("Ch9jb25mZXJlbmNlL3ZvdGVzL3YxL3ZvdGVzLnByb3RvEhNjb25mZXJlbmNlLnZvdGVzLnYxIkYKEFZvdGVPcHRpb25SZWNvcmQSEQoJb3B0aW9uX2lkGAEgASgJEg0KBWxhYmVsGAIgASgJEhAKCHBvc2l0aW9uGAMgASgDItkBChRWb3RlRGVmaW5pdGlvblJlY29yZBIPCgd2b3RlX2lkGAEgASgJEhcKD2FnZW5kYV9wb2ludF9pZBgCIAEoCRIMCgRuYW1lGAMgASgJEhIKCnZpc2liaWxpdHkYBCABKAkSDQoFc3RhdGUYBSABKAkSFgoObWluX3NlbGVjdGlvbnMYBiABKAMSFgoObWF4X3NlbGVjdGlvbnMYByABKAMSNgoHb3B0aW9ucxgIIAMoCzIlLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZU9wdGlvblJlY29yZCJNCglWb3RlU3RhdHMSFgoOZWxpZ2libGVfY291bnQYASABKAMSEgoKY2FzdF9jb3VudBgCIAEoAxIUCgxiYWxsb3RfY291bnQYAyABKAMiQQoOVm90ZVRhbGx5RW50cnkSEQoJb3B0aW9uX2lkGAEgASgJEg0KBWxhYmVsGAIgASgJEg0KBWNvdW50GAMgASgDIt4CChBMaXZlVm90ZUNhcmRWaWV3EjcKBHZvdGUYASABKAsyKS5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVEZWZpbml0aW9uUmVjb3JkEhMKC2lzX2VsaWdpYmxlGAIgASgIEhUKDWFscmVhZHlfdm90ZWQYAyABKAgSLQoFc3RhdHMYBCABKAsyHi5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVTdGF0cxIZChFoYXNfdGltZWRfcmVzdWx0cxgFIAEoCBI6Cg10aW1lZF9yZXN1bHRzGAYgAygLMiMuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlVGFsbHlFbnRyeRIaChJyZXN1bHRzX3VudGlsX3VuaXgYByABKAMSIQoZcmVzdWx0c19yZW1haW5pbmdfc2Vjb25kcxgIIAEoAxIgChhyZXN1bHRzX2Jsb2NrZWRfY291bnRpbmcYCSABKAgilQMKDlZvdGVzUGFuZWxWaWV3EhIKCm1lZXRpbmdfaWQYASABKAkSFgoOY29tbWl0dGVlX3NsdWcYAiABKAkSHwoXaGFzX2FjdGl2ZV9hZ2VuZGFfcG9pbnQYAyABKAgSHgoWYWN0aXZlX2FnZW5kYV9wb2ludF9pZBgEIAEoCRIhChlhY3RpdmVfYWdlbmRhX3BvaW50X3RpdGxlGAUgASgJEjgKBXZvdGVzGAYgAygLMikuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlRGVmaW5pdGlvblJlY29yZBI+CgthY3RpdmVfdm90ZRgHIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSOQoRYWN0aXZlX3ZvdGVfc3RhdHMYCCABKAsyHi5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVTdGF0cxI+ChFhY3RpdmVfdm90ZV90YWxseRgJIAMoCzIjLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZVRhbGx5RW50cnkilQIKEUxpdmVWb3RlUGFuZWxWaWV3EhIKCm1lZXRpbmdfaWQYASABKAkSFgoOY29tbWl0dGVlX3NsdWcYAiABKAkSFwoPaGFzX2FjdGl2ZV92b3RlGAMgASgIEj4KC2FjdGl2ZV92b3RlGAQgASgLMikuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlRGVmaW5pdGlvblJlY29yZBIVCg1hbHJlYWR5X3ZvdGVkGAUgASgIEhMKC2lzX2VsaWdpYmxlGAYgASgIEhkKEWhhc19hY3RpdmVfYWdlbmRhGAcgASgIEjQKBXZvdGVzGAggAygLMiUuY29uZmVyZW5jZS52b3Rlcy52MS5MaXZlVm90ZUNhcmRWaWV3IkIKFEdldFZvdGVzUGFuZWxSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiSgoVR2V0Vm90ZXNQYW5lbFJlc3BvbnNlEjEKBHZpZXcYASABKAsyIy5jb25mZXJlbmNlLnZvdGVzLnYxLlZvdGVzUGFuZWxWaWV3IkUKF0dldExpdmVWb3RlUGFuZWxSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiUAoYR2V0TGl2ZVZvdGVQYW5lbFJlc3BvbnNlEjQKBHZpZXcYASABKAsyJi5jb25mZXJlbmNlLnZvdGVzLnYxLkxpdmVWb3RlUGFuZWxWaWV3IqgBChFDcmVhdGVWb3RlUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEgwKBG5hbWUYAyABKAkSEgoKdmlzaWJpbGl0eRgEIAEoCRIWCg5taW5fc2VsZWN0aW9ucxgFIAEoAxIWCg5tYXhfc2VsZWN0aW9ucxgGIAEoAxIVCg1vcHRpb25fbGFiZWxzGAcgAygJImgKEkNyZWF0ZVZvdGVSZXNwb25zZRI3CgR2b3RlGAEgASgLMikuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlRGVmaW5pdGlvblJlY29yZBIZChFpbnZhbGlkYXRlZF92aWV3cxgCIAMoCSK+AQoWVXBkYXRlVm90ZURyYWZ0UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEg8KB3ZvdGVfaWQYAyABKAkSDAoEbmFtZRgEIAEoCRISCgp2aXNpYmlsaXR5GAUgASgJEhYKDm1pbl9zZWxlY3Rpb25zGAYgASgDEhYKDm1heF9zZWxlY3Rpb25zGAcgASgDEhUKDW9wdGlvbl9sYWJlbHMYCCADKAkibQoXVXBkYXRlVm90ZURyYWZ0UmVzcG9uc2USNwoEdm90ZRgBIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSGQoRaW52YWxpZGF0ZWRfdmlld3MYAiADKAkiTgoPT3BlblZvdGVSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkSDwoHdm90ZV9pZBgDIAEoCSKVAQoQT3BlblZvdGVSZXNwb25zZRI3CgR2b3RlGAEgASgLMikuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlRGVmaW5pdGlvblJlY29yZBItCgVzdGF0cxgCIAEoCzIeLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZVN0YXRzEhkKEWludmFsaWRhdGVkX3ZpZXdzGAMgAygJIk8KEENsb3NlVm90ZVJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIPCgd2b3RlX2lkGAMgASgJIqwBChFDbG9zZVZvdGVSZXNwb25zZRI3CgR2b3RlGAEgASgLMikuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlRGVmaW5pdGlvblJlY29yZBIPCgdvdXRjb21lGAIgASgJEjIKBXRhbGx5GAMgAygLMiMuY29uZmVyZW5jZS52b3Rlcy52MS5Wb3RlVGFsbHlFbnRyeRIZChFpbnZhbGlkYXRlZF92aWV3cxgEIAMoCSJRChJBcmNoaXZlVm90ZVJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIPCgd2b3RlX2lkGAMgASgJImkKE0FyY2hpdmVWb3RlUmVzcG9uc2USNwoEdm90ZRgBIAEoCzIpLmNvbmZlcmVuY2Uudm90ZXMudjEuVm90ZURlZmluaXRpb25SZWNvcmQSGQoRaW52YWxpZGF0ZWRfdmlld3MYAiADKAkihAEKE1N1Ym1pdEJhbGxvdFJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSEgoKbWVldGluZ19pZBgCIAEoCRIPCgd2b3RlX2lkGAMgASgJEhsKE3NlbGVjdGVkX29wdGlvbl9pZHMYBCADKAkSEwoLYXR0ZW5kZWVfaWQYBSABKAkiSAoUU3VibWl0QmFsbG90UmVzcG9uc2USFQoNcmVjZWlwdF90b2tlbhgBIAEoCRIZChFpbnZhbGlkYXRlZF92aWV3cxgCIAMoCSJXChhWZXJpZnlPcGVuUmVjZWlwdFJlcXVlc3QSDwoHdm90ZV9pZBgBIAEoCRIVCg1yZWNlaXB0X3Rva2VuGAIgASgJEhMKC2F0dGVuZGVlX2lkGAMgASgJIrYBChlWZXJpZnlPcGVuUmVjZWlwdFJlc3BvbnNlEg8KB3ZvdGVfaWQYASABKAkSEQoJdm90ZV9uYW1lGAIgASgJEhMKC2F0dGVuZGVlX2lkGAMgASgJEhcKD2F0dGVuZGVlX251bWJlchgEIAEoCRIVCg1yZWNlaXB0X3Rva2VuGAUgASgJEhUKDWNob2ljZV9sYWJlbHMYBiADKAkSGQoRY2hvaWNlX29wdGlvbl9pZHMYByADKAkiRAoaVmVyaWZ5U2VjcmV0UmVjZWlwdFJlcXVlc3QSDwoHdm90ZV9pZBgBIAEoCRIVCg1yZWNlaXB0X3Rva2VuGAIgASgJIrEBChtWZXJpZnlTZWNyZXRSZWNlaXB0UmVzcG9uc2USDwoHdm90ZV9pZBgBIAEoCRIRCgl2b3RlX25hbWUYAiABKAkSFQoNcmVjZWlwdF90b2tlbhgDIAEoCRIgChhlbmNyeXB0ZWRfY29tbWl0bWVudF9iNjQYBCABKAkSGQoRY29tbWl0bWVudF9jaXBoZXIYBSABKAkSGgoSY29tbWl0bWVudF92ZXJzaW9uGAYgASgDMp0ICgtWb3RlU2VydmljZRJmCg1HZXRWb3Rlc1BhbmVsEikuY29uZmVyZW5jZS52b3Rlcy52MS5HZXRWb3Rlc1BhbmVsUmVxdWVzdBoqLmNvbmZlcmVuY2Uudm90ZXMudjEuR2V0Vm90ZXNQYW5lbFJlc3BvbnNlEm8KEEdldExpdmVWb3RlUGFuZWwSLC5jb25mZXJlbmNlLnZvdGVzLnYxLkdldExpdmVWb3RlUGFuZWxSZXF1ZXN0Gi0uY29uZmVyZW5jZS52b3Rlcy52MS5HZXRMaXZlVm90ZVBhbmVsUmVzcG9uc2USXQoKQ3JlYXRlVm90ZRImLmNvbmZlcmVuY2Uudm90ZXMudjEuQ3JlYXRlVm90ZVJlcXVlc3QaJy5jb25mZXJlbmNlLnZvdGVzLnYxLkNyZWF0ZVZvdGVSZXNwb25zZRJsCg9VcGRhdGVWb3RlRHJhZnQSKy5jb25mZXJlbmNlLnZvdGVzLnYxLlVwZGF0ZVZvdGVEcmFmdFJlcXVlc3QaLC5jb25mZXJlbmNlLnZvdGVzLnYxLlVwZGF0ZVZvdGVEcmFmdFJlc3BvbnNlElcKCE9wZW5Wb3RlEiQuY29uZmVyZW5jZS52b3Rlcy52MS5PcGVuVm90ZVJlcXVlc3QaJS5jb25mZXJlbmNlLnZvdGVzLnYxLk9wZW5Wb3RlUmVzcG9uc2USWgoJQ2xvc2VWb3RlEiUuY29uZmVyZW5jZS52b3Rlcy52MS5DbG9zZVZvdGVSZXF1ZXN0GiYuY29uZmVyZW5jZS52b3Rlcy52MS5DbG9zZVZvdGVSZXNwb25zZRJgCgtBcmNoaXZlVm90ZRInLmNvbmZlcmVuY2Uudm90ZXMudjEuQXJjaGl2ZVZvdGVSZXF1ZXN0GiguY29uZmVyZW5jZS52b3Rlcy52MS5BcmNoaXZlVm90ZVJlc3BvbnNlEmMKDFN1Ym1pdEJhbGxvdBIoLmNvbmZlcmVuY2Uudm90ZXMudjEuU3VibWl0QmFsbG90UmVxdWVzdBopLmNvbmZlcmVuY2Uudm90ZXMudjEuU3VibWl0QmFsbG90UmVzcG9uc2UScgoRVmVyaWZ5T3BlblJlY2VpcHQSLS5jb25mZXJlbmNlLnZvdGVzLnYxLlZlcmlmeU9wZW5SZWNlaXB0UmVxdWVzdBouLmNvbmZlcmVuY2Uudm90ZXMudjEuVmVyaWZ5T3BlblJlY2VpcHRSZXNwb25zZRJ4ChNWZXJpZnlTZWNyZXRSZWNlaXB0Ei8uY29uZmVyZW5jZS52b3Rlcy52MS5WZXJpZnlTZWNyZXRSZWNlaXB0UmVxdWVzdBowLmNvbmZlcmVuY2Uudm90ZXMudjEuVmVyaWZ5U2VjcmV0UmVjZWlwdFJlc3BvbnNlQkZaRGdpdGh1Yi5jb20vWTRzaGluL2NvbmZlcmVuY2UtdG9vbC9nZW4vZ28vY29uZmVyZW5jZS92b3Rlcy92MTt2b3Rlc3YxYgZwcm90bzM");
 
 /**
  * VoteOptionRecord is one selectable choice in a vote.
@@ -158,6 +158,69 @@ export const VoteTallyEntrySchema: GenMessage<VoteTallyEntry> = /*@__PURE__*/
   messageDesc(file_conference_votes_v1_votes, 3);
 
 /**
+ * LiveVoteCardView is one attendee-facing vote card.
+ *
+ * @generated from message conference.votes.v1.LiveVoteCardView
+ */
+export type LiveVoteCardView = Message<"conference.votes.v1.LiveVoteCardView"> & {
+  /**
+   * @generated from field: conference.votes.v1.VoteDefinitionRecord vote = 1;
+   */
+  vote?: VoteDefinitionRecord;
+
+  /**
+   * is_eligible is true when the calling attendee is eligible to vote.
+   *
+   * @generated from field: bool is_eligible = 2;
+   */
+  isEligible: boolean;
+
+  /**
+   * already_voted is true when the calling attendee already cast a ballot.
+   *
+   * @generated from field: bool already_voted = 3;
+   */
+  alreadyVoted: boolean;
+
+  /**
+   * @generated from field: conference.votes.v1.VoteStats stats = 4;
+   */
+  stats?: VoteStats;
+
+  /**
+   * @generated from field: bool has_timed_results = 5;
+   */
+  hasTimedResults: boolean;
+
+  /**
+   * @generated from field: repeated conference.votes.v1.VoteTallyEntry timed_results = 6;
+   */
+  timedResults: VoteTallyEntry[];
+
+  /**
+   * @generated from field: int64 results_until_unix = 7;
+   */
+  resultsUntilUnix: bigint;
+
+  /**
+   * @generated from field: int64 results_remaining_seconds = 8;
+   */
+  resultsRemainingSeconds: bigint;
+
+  /**
+   * @generated from field: bool results_blocked_counting = 9;
+   */
+  resultsBlockedCounting: boolean;
+};
+
+/**
+ * Describes the message conference.votes.v1.LiveVoteCardView.
+ * Use `create(LiveVoteCardViewSchema)` to create a new message.
+ */
+export const LiveVoteCardViewSchema: GenMessage<LiveVoteCardView> = /*@__PURE__*/
+  messageDesc(file_conference_votes_v1_votes, 4);
+
+/**
  * VotesPanelView is the moderator-facing votes panel read model.
  *
  * @generated from message conference.votes.v1.VotesPanelView
@@ -216,7 +279,7 @@ export type VotesPanelView = Message<"conference.votes.v1.VotesPanelView"> & {
  * Use `create(VotesPanelViewSchema)` to create a new message.
  */
 export const VotesPanelViewSchema: GenMessage<VotesPanelView> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 4);
+  messageDesc(file_conference_votes_v1_votes, 5);
 
 /**
  * LiveVotePanelView is the attendee-facing vote panel read model.
@@ -257,6 +320,16 @@ export type LiveVotePanelView = Message<"conference.votes.v1.LiveVotePanelView">
    * @generated from field: bool is_eligible = 6;
    */
   isEligible: boolean;
+
+  /**
+   * @generated from field: bool has_active_agenda = 7;
+   */
+  hasActiveAgenda: boolean;
+
+  /**
+   * @generated from field: repeated conference.votes.v1.LiveVoteCardView votes = 8;
+   */
+  votes: LiveVoteCardView[];
 };
 
 /**
@@ -264,7 +337,7 @@ export type LiveVotePanelView = Message<"conference.votes.v1.LiveVotePanelView">
  * Use `create(LiveVotePanelViewSchema)` to create a new message.
  */
 export const LiveVotePanelViewSchema: GenMessage<LiveVotePanelView> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 5);
+  messageDesc(file_conference_votes_v1_votes, 6);
 
 /**
  * @generated from message conference.votes.v1.GetVotesPanelRequest
@@ -286,7 +359,7 @@ export type GetVotesPanelRequest = Message<"conference.votes.v1.GetVotesPanelReq
  * Use `create(GetVotesPanelRequestSchema)` to create a new message.
  */
 export const GetVotesPanelRequestSchema: GenMessage<GetVotesPanelRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 6);
+  messageDesc(file_conference_votes_v1_votes, 7);
 
 /**
  * @generated from message conference.votes.v1.GetVotesPanelResponse
@@ -303,7 +376,7 @@ export type GetVotesPanelResponse = Message<"conference.votes.v1.GetVotesPanelRe
  * Use `create(GetVotesPanelResponseSchema)` to create a new message.
  */
 export const GetVotesPanelResponseSchema: GenMessage<GetVotesPanelResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 7);
+  messageDesc(file_conference_votes_v1_votes, 8);
 
 /**
  * @generated from message conference.votes.v1.GetLiveVotePanelRequest
@@ -325,7 +398,7 @@ export type GetLiveVotePanelRequest = Message<"conference.votes.v1.GetLiveVotePa
  * Use `create(GetLiveVotePanelRequestSchema)` to create a new message.
  */
 export const GetLiveVotePanelRequestSchema: GenMessage<GetLiveVotePanelRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 8);
+  messageDesc(file_conference_votes_v1_votes, 9);
 
 /**
  * @generated from message conference.votes.v1.GetLiveVotePanelResponse
@@ -342,7 +415,7 @@ export type GetLiveVotePanelResponse = Message<"conference.votes.v1.GetLiveVoteP
  * Use `create(GetLiveVotePanelResponseSchema)` to create a new message.
  */
 export const GetLiveVotePanelResponseSchema: GenMessage<GetLiveVotePanelResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 9);
+  messageDesc(file_conference_votes_v1_votes, 10);
 
 /**
  * @generated from message conference.votes.v1.CreateVoteRequest
@@ -391,7 +464,7 @@ export type CreateVoteRequest = Message<"conference.votes.v1.CreateVoteRequest">
  * Use `create(CreateVoteRequestSchema)` to create a new message.
  */
 export const CreateVoteRequestSchema: GenMessage<CreateVoteRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 10);
+  messageDesc(file_conference_votes_v1_votes, 11);
 
 /**
  * @generated from message conference.votes.v1.CreateVoteResponse
@@ -413,7 +486,7 @@ export type CreateVoteResponse = Message<"conference.votes.v1.CreateVoteResponse
  * Use `create(CreateVoteResponseSchema)` to create a new message.
  */
 export const CreateVoteResponseSchema: GenMessage<CreateVoteResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 11);
+  messageDesc(file_conference_votes_v1_votes, 12);
 
 /**
  * @generated from message conference.votes.v1.UpdateVoteDraftRequest
@@ -465,7 +538,7 @@ export type UpdateVoteDraftRequest = Message<"conference.votes.v1.UpdateVoteDraf
  * Use `create(UpdateVoteDraftRequestSchema)` to create a new message.
  */
 export const UpdateVoteDraftRequestSchema: GenMessage<UpdateVoteDraftRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 12);
+  messageDesc(file_conference_votes_v1_votes, 13);
 
 /**
  * @generated from message conference.votes.v1.UpdateVoteDraftResponse
@@ -487,7 +560,7 @@ export type UpdateVoteDraftResponse = Message<"conference.votes.v1.UpdateVoteDra
  * Use `create(UpdateVoteDraftResponseSchema)` to create a new message.
  */
 export const UpdateVoteDraftResponseSchema: GenMessage<UpdateVoteDraftResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 13);
+  messageDesc(file_conference_votes_v1_votes, 14);
 
 /**
  * @generated from message conference.votes.v1.OpenVoteRequest
@@ -514,7 +587,7 @@ export type OpenVoteRequest = Message<"conference.votes.v1.OpenVoteRequest"> & {
  * Use `create(OpenVoteRequestSchema)` to create a new message.
  */
 export const OpenVoteRequestSchema: GenMessage<OpenVoteRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 14);
+  messageDesc(file_conference_votes_v1_votes, 15);
 
 /**
  * @generated from message conference.votes.v1.OpenVoteResponse
@@ -541,7 +614,7 @@ export type OpenVoteResponse = Message<"conference.votes.v1.OpenVoteResponse"> &
  * Use `create(OpenVoteResponseSchema)` to create a new message.
  */
 export const OpenVoteResponseSchema: GenMessage<OpenVoteResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 15);
+  messageDesc(file_conference_votes_v1_votes, 16);
 
 /**
  * @generated from message conference.votes.v1.CloseVoteRequest
@@ -568,7 +641,7 @@ export type CloseVoteRequest = Message<"conference.votes.v1.CloseVoteRequest"> &
  * Use `create(CloseVoteRequestSchema)` to create a new message.
  */
 export const CloseVoteRequestSchema: GenMessage<CloseVoteRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 16);
+  messageDesc(file_conference_votes_v1_votes, 17);
 
 /**
  * @generated from message conference.votes.v1.CloseVoteResponse
@@ -602,7 +675,7 @@ export type CloseVoteResponse = Message<"conference.votes.v1.CloseVoteResponse">
  * Use `create(CloseVoteResponseSchema)` to create a new message.
  */
 export const CloseVoteResponseSchema: GenMessage<CloseVoteResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 17);
+  messageDesc(file_conference_votes_v1_votes, 18);
 
 /**
  * @generated from message conference.votes.v1.ArchiveVoteRequest
@@ -629,7 +702,7 @@ export type ArchiveVoteRequest = Message<"conference.votes.v1.ArchiveVoteRequest
  * Use `create(ArchiveVoteRequestSchema)` to create a new message.
  */
 export const ArchiveVoteRequestSchema: GenMessage<ArchiveVoteRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 18);
+  messageDesc(file_conference_votes_v1_votes, 19);
 
 /**
  * @generated from message conference.votes.v1.ArchiveVoteResponse
@@ -651,7 +724,7 @@ export type ArchiveVoteResponse = Message<"conference.votes.v1.ArchiveVoteRespon
  * Use `create(ArchiveVoteResponseSchema)` to create a new message.
  */
 export const ArchiveVoteResponseSchema: GenMessage<ArchiveVoteResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 19);
+  messageDesc(file_conference_votes_v1_votes, 20);
 
 /**
  * @generated from message conference.votes.v1.SubmitBallotRequest
@@ -690,7 +763,7 @@ export type SubmitBallotRequest = Message<"conference.votes.v1.SubmitBallotReque
  * Use `create(SubmitBallotRequestSchema)` to create a new message.
  */
 export const SubmitBallotRequestSchema: GenMessage<SubmitBallotRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 20);
+  messageDesc(file_conference_votes_v1_votes, 21);
 
 /**
  * @generated from message conference.votes.v1.SubmitBallotResponse
@@ -714,7 +787,7 @@ export type SubmitBallotResponse = Message<"conference.votes.v1.SubmitBallotResp
  * Use `create(SubmitBallotResponseSchema)` to create a new message.
  */
 export const SubmitBallotResponseSchema: GenMessage<SubmitBallotResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 21);
+  messageDesc(file_conference_votes_v1_votes, 22);
 
 /**
  * @generated from message conference.votes.v1.VerifyOpenReceiptRequest
@@ -741,7 +814,7 @@ export type VerifyOpenReceiptRequest = Message<"conference.votes.v1.VerifyOpenRe
  * Use `create(VerifyOpenReceiptRequestSchema)` to create a new message.
  */
 export const VerifyOpenReceiptRequestSchema: GenMessage<VerifyOpenReceiptRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 22);
+  messageDesc(file_conference_votes_v1_votes, 23);
 
 /**
  * @generated from message conference.votes.v1.VerifyOpenReceiptResponse
@@ -788,7 +861,7 @@ export type VerifyOpenReceiptResponse = Message<"conference.votes.v1.VerifyOpenR
  * Use `create(VerifyOpenReceiptResponseSchema)` to create a new message.
  */
 export const VerifyOpenReceiptResponseSchema: GenMessage<VerifyOpenReceiptResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 23);
+  messageDesc(file_conference_votes_v1_votes, 24);
 
 /**
  * @generated from message conference.votes.v1.VerifySecretReceiptRequest
@@ -810,7 +883,7 @@ export type VerifySecretReceiptRequest = Message<"conference.votes.v1.VerifySecr
  * Use `create(VerifySecretReceiptRequestSchema)` to create a new message.
  */
 export const VerifySecretReceiptRequestSchema: GenMessage<VerifySecretReceiptRequest> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 24);
+  messageDesc(file_conference_votes_v1_votes, 25);
 
 /**
  * @generated from message conference.votes.v1.VerifySecretReceiptResponse
@@ -852,7 +925,7 @@ export type VerifySecretReceiptResponse = Message<"conference.votes.v1.VerifySec
  * Use `create(VerifySecretReceiptResponseSchema)` to create a new message.
  */
 export const VerifySecretReceiptResponseSchema: GenMessage<VerifySecretReceiptResponse> = /*@__PURE__*/
-  messageDesc(file_conference_votes_v1_votes, 25);
+  messageDesc(file_conference_votes_v1_votes, 26);
 
 /**
  * @generated from service conference.votes.v1.VoteService

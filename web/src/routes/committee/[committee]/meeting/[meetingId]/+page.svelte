@@ -12,7 +12,7 @@
 	import type { LiveMeetingView } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
 	import { MeetingEventKind } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
-	import type { LiveVotePanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
+	import type { LiveVoteCardView, LiveVotePanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { saveReceipt } from '$lib/utils/receipts.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
@@ -253,13 +253,11 @@
 	let speakerState = $state(createRemoteState<SpeakerQueueView>());
 	let voteState = $state(createRemoteState<LiveVotePanelView>());
 	let agendaState = $state(createRemoteState<AgendaPointRecord[]>());
-	let legacyLiveVotesPanelHTML = $state('');
 	let actionError = $state('');
 	let addingRegular = $state(false);
 	let addingRopm = $state(false);
 	let submittingVote = $state(false);
 	let selectedOptionIds = $state<string[]>([]);
-	let voteReceipt = $state('');
 	let nowMs = $state(Date.now());
 	let speakingSinceMs = $state<Record<string, number>>({});
 	let canModerate = $state(false);
@@ -272,7 +270,6 @@
 		let cancelled = false;
 		let refreshInterval = 0;
 		let clockInterval = 0;
-		let legacyVotesInterval = 0;
 
 		const waitForSession = async () => {
 			while (!cancelled && !session.loaded) {
@@ -295,7 +292,6 @@
 							break;
 						case MeetingEventKind.VOTES_UPDATED:
 							void loadVotes();
-							void loadLegacyLiveVotesPanel(true);
 							break;
 						case MeetingEventKind.AGENDA_UPDATED:
 						case MeetingEventKind.MEETING_UPDATED:
@@ -310,16 +306,9 @@
 			}
 		};
 
-		const refreshLegacyVotesPanel = () => {
-			if (!document.getElementById('live-votes-panel-host')) return;
-			void loadLegacyLiveVotesPanel(true);
-		};
-
 		clockInterval = window.setInterval(() => {
 			nowMs = Date.now();
 		}, 1000);
-		refreshLegacyVotesPanel();
-		legacyVotesInterval = window.setInterval(refreshLegacyVotesPanel, 1000);
 
 		void (async () => {
 			await waitForSession();
@@ -335,7 +324,6 @@
 				void loadSpeakers();
 				void loadVotes();
 				void loadAgenda();
-				void loadLegacyLiveVotesPanel(true);
 			}, 2000);
 			void subscribeToMeetingEvents();
 		})();
@@ -344,7 +332,6 @@
 			cancelled = true;
 			if (refreshInterval) window.clearInterval(refreshInterval);
 			if (clockInterval) window.clearInterval(clockInterval);
-			if (legacyVotesInterval) window.clearInterval(legacyVotesInterval);
 		};
 	});
 
@@ -370,7 +357,6 @@
 			voteState.data = voteRes.view ?? null;
 			syncSelectedOptionIds();
 			agendaState.data = agendaRes.agendaPoints;
-			void loadLegacyLiveVotesPanel(true);
 			void refreshModerationCapability();
 		} catch (err) {
 			liveState.error = getDisplayError(err, 'Failed to load the live meeting view.');
@@ -425,7 +411,6 @@
 			const res = await voteClient.getLiveVotePanel({ committeeSlug: slug, meetingId });
 			voteState.data = res.view ?? null;
 			syncSelectedOptionIds();
-			void loadLegacyLiveVotesPanel(true);
 		} catch {
 			// Silent refresh
 		}
@@ -449,35 +434,78 @@
 		}
 	}
 
-	async function loadLegacyLiveVotesPanel(force = false) {
-		if (legacyLiveVotesPanelHTML && !force) {
-			return;
+	function visibleLiveVotes() {
+		return (voteState.data?.votes ?? []).filter((vote) => {
+			if (!vote.hasTimedResults) return true;
+			return vote.resultsUntilUnix > 0n && Number(vote.resultsUntilUnix) * 1000 > nowMs;
+		});
+	}
+
+	function activeLiveVoteID() {
+		return voteState.data?.activeVote?.voteId ?? '';
+	}
+
+	function isVoteSelectionActive(vote: LiveVoteCardView, optionId: string) {
+		return vote.vote?.voteId === activeLiveVoteID() && selectedOptionIds.includes(optionId);
+	}
+
+	function voteStateBadgeClass(state: string) {
+		switch (state) {
+			case 'draft':
+				return 'badge badge-neutral badge-sm';
+			case 'open':
+				return 'badge badge-success badge-sm';
+			case 'counting':
+				return 'badge badge-warning badge-sm';
+			case 'closed':
+				return 'badge badge-info badge-sm';
+			case 'archived':
+				return 'badge badge-ghost badge-sm';
+			default:
+				return 'badge badge-sm';
 		}
-		try {
-			const response = await fetch(`/committee/${slug}/meeting/${meetingId}/votes/live/partial`, {
-				headers: {
-					'HX-Request': 'true'
-				},
-				credentials: 'same-origin'
-			});
-			if (!response.ok) {
-				return;
-			}
-			const html = await response.text();
-			legacyLiveVotesPanelHTML = html;
-			requestAnimationFrame(() => {
-				const host = document.getElementById('live-votes-panel-host');
-				const htmx = (window as typeof window & { htmx?: { process?: (node: Element) => void } }).htmx;
-				if (host) {
-					host.innerHTML = html;
-					if (typeof htmx?.process === 'function') {
-						htmx.process(host);
-					}
-				}
-			});
-		} catch {
-			// Silent refresh
+	}
+
+	function voteVisibilityBadgeClass(visibility: string) {
+		if (visibility === 'secret') {
+			return 'badge badge-warning badge-outline badge-sm';
 		}
+		return 'badge badge-primary badge-outline badge-sm';
+	}
+
+	function voteStateLabel(state: string) {
+		switch (state) {
+			case 'draft':
+				return 'Draft';
+			case 'open':
+				return 'Open';
+			case 'counting':
+				return 'Counting';
+			case 'closed':
+				return 'Closed';
+			case 'archived':
+				return 'Archived';
+			default:
+				return state;
+		}
+	}
+
+	function voteVisibilityLabel(visibility: string) {
+		return visibility === 'secret' ? 'Secret' : 'Open';
+	}
+
+	function voteBoundsLabel(vote: LiveVoteCardView) {
+		const minSelections = Number(vote.vote?.minSelections ?? 0n);
+		const maxSelections = Number(vote.vote?.maxSelections ?? 0n);
+		if (minSelections === maxSelections) {
+			return `select exactly ${minSelections}`;
+		}
+		return `select ${minSelections} to ${maxSelections}`;
+	}
+
+	function voteResultsRemaining(vote: LiveVoteCardView) {
+		if (!vote.resultsUntilUnix) return 0;
+		return Math.max(0, Math.ceil((Number(vote.resultsUntilUnix) * 1000 - nowMs) / 1000));
 	}
 
 	function hasWaitingEntry(type: string) {
@@ -595,31 +623,29 @@
 		selectedOptionIds = [...selectedOptionIds, optionId];
 	}
 
-	async function submitBallot() {
-		const activeVote = voteState.data?.activeVote;
-		if (!activeVote || selectedOptionIds.length === 0 || submittingVote) return;
+	async function submitBallot(vote: LiveVoteCardView) {
+		const voteRecord = vote.vote;
+		if (!voteRecord || selectedOptionIds.length === 0 || submittingVote) return;
 
 		submittingVote = true;
 		actionError = '';
-		voteReceipt = '';
 		try {
 			const res = await voteClient.submitBallot({
 				committeeSlug: slug,
 				meetingId,
-				voteId: activeVote.voteId,
+				voteId: voteRecord.voteId,
 				selectedOptionIds
 			});
-			voteReceipt = res.receiptToken;
 			saveReceipt({
-				id: `${activeVote.visibility}:${activeVote.voteId}:${res.receiptToken}`,
-				kind: activeVote.visibility as 'open' | 'secret',
-				voteId: activeVote.voteId,
-				voteName: activeVote.name,
+				id: `${voteRecord.visibility}:${voteRecord.voteId}:${res.receiptToken}`,
+				kind: voteRecord.visibility as 'open' | 'secret',
+				voteId: voteRecord.voteId,
+				voteName: voteRecord.name,
 				receiptToken: res.receiptToken,
-				receipt: `${activeVote.voteId}:${res.receiptToken}`
+				receipt: `${voteRecord.voteId}:${res.receiptToken}`
 			});
 			selectedOptionIds = [];
-			loadVotes();
+			await loadVotes();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to submit your ballot.');
 		} finally {
@@ -1078,12 +1104,116 @@
 
 			<section class="card min-h-0 border border-base-300 bg-base-100 shadow-sm lg:col-span-2">
 				<div class="p-4">
-					<div id="live-votes-panel-host">
-						{#if legacyLiveVotesPanelHTML}
-							{@html legacyLiveVotesPanelHTML}
+					<div
+						id="live-votes-panel"
+						class="space-y-3"
+						sse-swap="votes-updated"
+						hx-get={liveVotesRefreshURL()}
+						hx-trigger="reload"
+						hx-swap="outerHTML"
+					>
+						<div class="flex items-center justify-between gap-2">
+							<h2 class="text-lg font-semibold">Votes</h2>
+							<button
+								type="button"
+								class="btn btn-xs btn-outline"
+								hx-get={liveVotesRefreshURL()}
+								hx-target="#live-votes-panel"
+								hx-swap="outerHTML"
+								onclick={() => {
+									void loadVotes();
+								}}
+							>
+								Refresh
+							</button>
+						</div>
+						{#if !voteState.data?.hasActiveAgenda}
+							<p class="text-sm text-base-content/70">No active agenda point.</p>
+						{:else if visibleLiveVotes().length === 0}
+							<p class="text-sm text-base-content/70">No open or recently closed votes right now.</p>
 						{:else}
-							{@html liveVotesTemplateHTML()}
+							<div class="space-y-3">
+								{#each visibleLiveVotes() as vote}
+									<article
+										class="rounded-box border border-base-300 bg-base-100 p-3 space-y-2"
+										data-vote-card
+										data-vote-id={vote.vote?.voteId ?? ''}
+										data-vote-state={vote.vote?.state ?? ''}
+										data-vote-results-until={String(vote.resultsUntilUnix ?? 0n)}
+									>
+										<div class="flex flex-wrap items-center gap-2">
+											<h3 class="font-semibold">{vote.vote?.name}</h3>
+											<span class={voteVisibilityBadgeClass(vote.vote?.visibility ?? '')}>{voteVisibilityLabel(vote.vote?.visibility ?? '')}</span>
+											<span class={voteStateBadgeClass(vote.vote?.state ?? '')}>{voteStateLabel(vote.vote?.state ?? '')}</span>
+											<span class="text-xs text-base-content/70">{voteBoundsLabel(vote)}</span>
+											{#if !vote.isEligible && vote.vote?.state === 'open'}
+												<span class="badge badge-error badge-outline badge-sm">not eligible</span>
+											{/if}
+										</div>
+
+										{#if vote.hasTimedResults}
+											<div class="rounded-box border border-base-300 bg-base-200/40 p-2 space-y-2">
+												<div class="text-xs font-semibold uppercase text-base-content/70">Final Results (visible for 30s)</div>
+												<ul class="space-y-1 text-sm">
+													{#each vote.timedResults as row}
+														<li class="flex items-center justify-between gap-2">
+															<span class="truncate">{row.label}</span>
+															<span class="badge badge-outline badge-sm">{String(row.count)}</span>
+														</li>
+													{/each}
+												</ul>
+												<div class="text-xs text-base-content/70">
+													eligible={String(vote.stats?.eligibleCount ?? 0n)} casts={String(vote.stats?.castCount ?? 0n)} ballots={String(vote.stats?.ballotCount ?? 0n)}
+												</div>
+												<div class="text-xs text-base-content/70">
+													Hiding in <span data-vote-results-countdown>{voteResultsRemaining(vote)}</span>s
+												</div>
+											</div>
+										{:else if vote.resultsBlockedCounting}
+											<div class="alert alert-warning text-sm">
+												<span>Vote is in counting phase. Results are not finalized yet.</span>
+											</div>
+										{:else if vote.vote?.state === 'open'}
+											{#if vote.alreadyVoted}
+												<div class="alert alert-success text-sm" data-vote-submitted-screen>
+													<span>Your vote was submitted. You can wait for close to see results.</span>
+												</div>
+											{:else}
+												<div data-vote-inputs class="space-y-2">
+													<div class={Number(vote.vote?.maxSelections ?? 0n) === 1 ? 'grid gap-1 grid-cols-1' : 'grid gap-1 grid-cols-2'}>
+														{#each vote.vote?.options ?? [] as option}
+															<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+																<input
+																	type={Number(vote.vote?.maxSelections ?? 0n) === 1 ? 'radio' : 'checkbox'}
+																	class={Number(vote.vote?.maxSelections ?? 0n) === 1 ? 'radio radio-sm' : 'checkbox checkbox-sm'}
+																	name="option_id"
+																	value={option.optionId}
+																	checked={isVoteSelectionActive(vote, option.optionId)}
+																	disabled={!vote.isEligible || submittingVote}
+																	onchange={() => chooseVoteOption(option.optionId, Number(vote.vote?.maxSelections ?? 0n) > 1)}
+																/>
+																<span>{option.label}</span>
+															</label>
+														{/each}
+													</div>
+													<button
+														type="button"
+														class="btn btn-sm btn-primary"
+														disabled={!vote.isEligible || submittingVote}
+														onclick={() => {
+															void submitBallot(vote);
+														}}
+													>
+														{vote.vote?.visibility === 'secret' ? 'Submit Secret Ballot' : 'Submit Open Ballot'}
+													</button>
+												</div>
+											{/if}
+										{/if}
+									</article>
+								{/each}
+							</div>
 						{/if}
+						<div id="live-vote-last-receipt" class="hidden" data-receipt-b64=""></div>
 					</div>
 				</div>
 			</section>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { onDestroy, tick } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
@@ -270,18 +270,20 @@
 	let attendeeState = $state(createRemoteState<AttendeeRecord[]>());
 	let agendaState = $state(createRemoteState<AgendaPointRecord[]>());
 	let votesState = $state(createRemoteState<VotesPanelView>());
-	let legacyVotesPanelHTML = $state('');
-	let legacyVotesPanelAgendaPointId = $state('');
 	let actionError = $state('');
+	let actionNotice = $state('');
 	let togglingSignup = $state(false);
 	let attendeeActionPending = $state('');
 	let speakerActionPending = $state('');
 	let agendaActionPending = $state('');
 	let voteActionPending = $state('');
 	let settingsActionPending = $state('');
+	let createVoteDetailsOpen = $state(false);
 	let creatingAgenda = $state(false);
 	let agendaEditOpen = $state(false);
 	let agendaParentId = $state('');
+	let editingAgendaPointId = $state('');
+	let editingAgendaPointTitle = $state('');
 	let creatingVote = $state(false);
 	let agendaTitle = $state('');
 	let agendaImportOpen = $state(false);
@@ -304,6 +306,7 @@
 		vote: VoteDefinitionRecord;
 		tally: VoteTallyEntry[];
 		outcome: string;
+		stats?: { eligibleCount: bigint; castCount: bigint; ballotCount: bigint };
 	} | null>(null);
 	let moderateLeftTab = $state<'agenda' | 'tools' | 'attendees' | 'settings'>('agenda');
 	let speakerSearch = $state('');
@@ -335,27 +338,25 @@
 		loadModerationView();
 	});
 
+	function syncVoteOptionValueAttrs() {
+		if (typeof document === 'undefined') return;
+		for (const input of document.querySelectorAll<HTMLInputElement>('#moderate-votes-panel [data-vote-option-input]')) {
+			input.setAttribute('value', input.value);
+		}
+	}
+
+	$effect(() => {
+		votesState.data;
+		lastClosedVote;
+		createVoteDetailsOpen;
+		queueMicrotask(syncVoteOptionValueAttrs);
+	});
+
 	$effect(() => {
 		const interval = window.setInterval(() => {
 			nowMs = Date.now();
 		}, 1000);
 		return () => window.clearInterval(interval);
-	});
-
-	$effect(() => {
-		const activeAgendaPointId = moderationState.data?.activeAgendaPoint?.agendaPointId ?? '';
-		if (!activeAgendaPointId) {
-			legacyVotesPanelHTML = '';
-			legacyVotesPanelAgendaPointId = '';
-			return;
-		}
-		if (legacyVotesPanelAgendaPointId !== activeAgendaPointId) {
-			legacyVotesPanelHTML = '';
-			legacyVotesPanelAgendaPointId = '';
-		}
-		if (moderateLeftTab === 'tools' && !legacyVotesPanelHTML) {
-			void loadLegacyVotesPanel();
-		}
 	});
 
 	$effect(() => {
@@ -510,40 +511,6 @@
 		}
 	}
 
-	async function loadLegacyVotesPanel() {
-		const activeAgendaPointId = moderationState.data?.activeAgendaPoint?.agendaPointId ?? '';
-		if (!activeAgendaPointId) {
-			legacyVotesPanelHTML = '';
-			legacyVotesPanelAgendaPointId = '';
-			return;
-		}
-		if (legacyVotesPanelHTML && legacyVotesPanelAgendaPointId === activeAgendaPointId) {
-			return;
-		}
-		try {
-			const response = await fetch(`/committee/${slug}/meeting/${meetingId}/votes/partial`, {
-				headers: {
-					'HX-Request': 'true'
-				},
-				credentials: 'same-origin'
-			});
-			if (!response.ok) {
-				return;
-			}
-			legacyVotesPanelHTML = await response.text();
-			legacyVotesPanelAgendaPointId = activeAgendaPointId;
-			await tick();
-			normalizeLegacyVoteOptionPlaceholders();
-			const host = document.getElementById('moderate-votes-panel-host');
-			const htmx = (window as typeof window & { htmx?: { process?: (node: Element) => void } }).htmx;
-			if (host && typeof htmx?.process === 'function') {
-				htmx.process(host);
-			}
-		} catch {
-			// Silent refresh
-		}
-	}
-
 	async function toggleSignupOpen() {
 		const view = moderationState.data;
 		if (!view?.attendees || togglingSignup) return;
@@ -569,44 +536,12 @@
 		}
 	}
 
-	function attendeeCreateURL() {
-		return `/committee/${slug}/meeting/${meetingId}/attendee/create`;
-	}
-
-	function attendeeSelfSignupURL() {
-		return `/committee/${slug}/meeting/${meetingId}/attendee/self-signup`;
-	}
-
-	function attendeeDeleteURL(attendeeId: string) {
-		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/delete`;
-	}
-
-	function attendeeToggleChairURL(attendeeId: string) {
-		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/chair`;
-	}
-
-	function attendeeToggleQuotedURL(attendeeId: string) {
-		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/quoted`;
-	}
-
 	function attendeeRecoveryURL(attendeeId: string) {
 		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/recovery`;
 	}
 
 	function manageJoinQrURL() {
 		return `/committee/${slug}/meeting/${meetingId}/moderate/join-qr`;
-	}
-
-	async function postLegacyAttendeeAction(url: string, body: URLSearchParams) {
-		const response = await fetch(url, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-			body
-		});
-		if (!response.ok) {
-			throw new Error((await response.text()) || `request failed (${response.status})`);
-		}
-		await Promise.all([loadModeration(), loadAttendees(), loadSpeakers()]);
 	}
 
 	async function addGuestAttendee(event: SubmitEvent) {
@@ -623,13 +558,10 @@
 		attendeeActionPending = 'add-guest';
 		actionError = '';
 		try {
-			const body = new URLSearchParams();
-			body.set('full_name', fullName);
-			if (form.querySelector<HTMLInputElement>('input[name="gender_quoted"]')?.checked) {
-				body.set('gender_quoted', 'true');
-			}
-			await postLegacyAttendeeAction(attendeeCreateURL(), body);
+			const genderQuoted = form.querySelector<HTMLInputElement>('input[name="gender_quoted"]')?.checked ?? false;
+			await attendeeClient.createAttendee({ committeeSlug: slug, meetingId, fullName, genderQuoted });
 			form.reset();
+			await Promise.all([loadModeration(), loadAttendees(), loadSpeakers()]);
 			searchInput?.focus();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to add the guest attendee.');
@@ -643,7 +575,8 @@
 		attendeeActionPending = 'self-signup';
 		actionError = '';
 		try {
-			await postLegacyAttendeeAction(attendeeSelfSignupURL(), new URLSearchParams());
+			await attendeeClient.selfSignup({ committeeSlug: slug, meetingId });
+			await Promise.all([loadModeration(), loadAttendees(), loadSpeakers()]);
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to sign you up as an attendee.');
 		} finally {
@@ -658,7 +591,8 @@
 		attendeeActionPending = `remove-${attendeeId}`;
 		actionError = '';
 		try {
-			await postLegacyAttendeeAction(attendeeDeleteURL(attendeeId), new URLSearchParams());
+			await attendeeClient.deleteAttendee({ committeeSlug: slug, meetingId, attendeeId });
+			await Promise.all([loadModeration(), loadAttendees(), loadSpeakers()]);
 		} catch (err) {
 			actionError = getDisplayError(err, `Failed to remove ${fullName}.`);
 		} finally {
@@ -671,7 +605,8 @@
 		attendeeActionPending = `chair-${attendee.attendeeId}`;
 		actionError = '';
 		try {
-			await postLegacyAttendeeAction(attendeeToggleChairURL(attendee.attendeeId), new URLSearchParams());
+			await attendeeClient.setChairperson({ committeeSlug: slug, meetingId, attendeeId: attendee.attendeeId, isChair: !attendee.isChair });
+			await loadAttendees();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update chairperson status.');
 			loadAttendees();
@@ -685,7 +620,8 @@
 		attendeeActionPending = `quoted-${attendee.attendeeId}`;
 		actionError = '';
 		try {
-			await postLegacyAttendeeAction(attendeeToggleQuotedURL(attendee.attendeeId), new URLSearchParams());
+			await attendeeClient.setQuoted({ committeeSlug: slug, meetingId, attendeeId: attendee.attendeeId, quoted: !attendee.quoted });
+			await loadAttendees();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to update FLINTA* status.');
 			loadAttendees();
@@ -762,15 +698,6 @@
 		return speaker.speakerType === 'ropm' || speaker.quoted || speaker.firstSpeaker || speaker.priority;
 	}
 
-	function normalizeLegacyVoteOptionPlaceholders() {
-		const panel = document.getElementById('moderate-votes-panel');
-		if (!panel) return;
-		const inputs = panel.querySelectorAll<HTMLInputElement>('[data-vote-option-input]');
-		for (const [index, input] of inputs.entries()) {
-			input.placeholder = `Choice ${index + 1}`;
-		}
-	}
-
 	function scrollToInitialSpeaker() {
 		const target = document.querySelector('#speakers-list-container [data-manage-scroll-anchor="true"]');
 		if (target instanceof HTMLElement) {
@@ -787,9 +714,6 @@
 
 	function selectModerateLeftTab(tab: 'agenda' | 'tools' | 'attendees' | 'settings') {
 		moderateLeftTab = tab;
-		if (tab === 'tools' && !legacyVotesPanelHTML) {
-			void loadLegacyVotesPanel();
-		}
 	}
 
 	function openDocs(path: string) {
@@ -833,13 +757,6 @@
 		<\/script>`;
 	}
 
-	function legacyClientIDVals() {
-		return "js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}";
-	}
-
-	function attendeeCreateAfterRequest() {
-		return "if(event.detail.successful){ this.reset(); var speakerSearch=document.getElementById('speaker-add-search-input') || document.getElementById('moderate-speaker-search'); if(speakerSearch && window.htmx){ htmx.trigger(speakerSearch,'search'); } }";
-	}
 
 
 	async function runSpeakerAction(
@@ -905,6 +822,7 @@
 
 	async function runVoteAction(key: string, action: () => Promise<void>) {
 		actionError = '';
+		actionNotice = '';
 		voteActionPending = key;
 		try {
 			await action();
@@ -1090,6 +1008,7 @@
 			if (moderationState.data) {
 				moderationState.data.activeAgendaPoint = res.activeAgendaPoint;
 			}
+			await loadAgenda();
 		});
 	}
 
@@ -1115,6 +1034,27 @@
 			});
 			loadAgenda();
 		});
+	}
+
+	function startEditAgendaPoint(point: AgendaPointRecord) {
+		editingAgendaPointId = point.agendaPointId;
+		editingAgendaPointTitle = point.title;
+	}
+
+	function cancelEditAgendaPoint() {
+		editingAgendaPointId = '';
+		editingAgendaPointTitle = '';
+	}
+
+	async function saveEditAgendaPoint(agendaPointId: string) {
+		const title = editingAgendaPointTitle.trim();
+		if (!title) return;
+		await runAgendaAction(`edit-${agendaPointId}`, async () => {
+			await agendaClient.updateAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId, title });
+			loadAgenda();
+		});
+		editingAgendaPointId = '';
+		editingAgendaPointTitle = '';
 	}
 
 	function flattenAgenda(points: AgendaPointRecord[]) {
@@ -1466,6 +1406,13 @@
 
 	async function closeVote(voteId: string) {
 		await runVoteAction(`close-${voteId}`, async () => {
+			const stats = votesState.data?.activeVoteStats
+				? {
+						eligibleCount: votesState.data.activeVoteStats.eligibleCount,
+						castCount: votesState.data.activeVoteStats.castCount,
+						ballotCount: votesState.data.activeVoteStats.ballotCount
+					}
+				: undefined;
 			const res = await voteClient.closeVote({
 				committeeSlug: slug,
 				meetingId,
@@ -1475,7 +1422,8 @@
 				? {
 						vote: res.vote,
 						tally: res.tally,
-						outcome: res.outcome
+						outcome: res.outcome,
+						stats
 					}
 				: null;
 			if (votesState.data) {
@@ -1494,10 +1442,188 @@
 				meetingId,
 				voteId
 			});
+			actionNotice = 'Vote archived.';
 			if (lastClosedVote?.vote.voteId === voteId) {
 				lastClosedVote = null;
 			}
 			loadVotes();
+		});
+	}
+
+	function voteStateBadgeClass(state: string) {
+		switch (state) {
+			case 'draft':
+				return 'badge badge-neutral badge-sm';
+			case 'open':
+				return 'badge badge-success badge-sm';
+			case 'counting':
+				return 'badge badge-warning badge-sm';
+			case 'closed':
+				return 'badge badge-info badge-sm';
+			case 'archived':
+				return 'badge badge-ghost badge-sm';
+			default:
+				return 'badge badge-sm';
+		}
+	}
+
+	function voteVisibilityBadgeClass(visibility: string) {
+		return visibility === 'secret' ? 'badge badge-warning badge-outline badge-sm' : 'badge badge-primary badge-outline badge-sm';
+	}
+
+	function voteStateLabel(state: string) {
+		switch (state) {
+			case 'draft':
+				return 'Draft';
+			case 'open':
+				return 'Open';
+			case 'counting':
+				return 'Counting';
+			case 'closed':
+				return 'Closed';
+			case 'archived':
+				return 'Archived';
+			default:
+				return state;
+		}
+	}
+
+	function voteVisibilityLabel(visibility: string) {
+		return visibility === 'secret' ? 'Secret' : 'Open';
+	}
+
+	function voteBoundsLabel(vote: VoteDefinitionRecord) {
+		if (vote.minSelections === vote.maxSelections) {
+			return `select exactly ${vote.minSelections.toString()}`;
+		}
+		return `select between ${vote.minSelections.toString()} and ${vote.maxSelections.toString()}`;
+	}
+
+	function voteDefaultOptionLabels() {
+		return ['Yes', 'No', 'Abstain', ''];
+	}
+
+	function voteLabelsForEdit(vote: VoteDefinitionRecord) {
+		const labels = vote.options.map((option) => option.label);
+		if (labels.length < 2) {
+			labels.push('Yes', 'No');
+		}
+		labels.push('');
+		return labels;
+	}
+
+	function voteStatsFor(vote: VoteDefinitionRecord) {
+		if (votesState.data?.activeVote?.voteId === vote.voteId && votesState.data.activeVoteStats) {
+			return votesState.data.activeVoteStats;
+		}
+		if (lastClosedVote?.vote.voteId === vote.voteId && lastClosedVote.stats) {
+			return lastClosedVote.stats;
+		}
+		return { eligibleCount: 0n, castCount: 0n, ballotCount: 0n };
+	}
+
+	function voteTalliesFor(vote: VoteDefinitionRecord) {
+		if (votesState.data?.activeVote?.voteId === vote.voteId) {
+			return votesState.data.activeVoteTally ?? [];
+		}
+		if (lastClosedVote?.vote.voteId === vote.voteId) {
+			return lastClosedVote.tally;
+		}
+		return [];
+	}
+
+	function voteOutcomeFor(vote: VoteDefinitionRecord) {
+		if (lastClosedVote?.vote.voteId === vote.voteId) {
+			return lastClosedVote.outcome;
+		}
+		return '';
+	}
+
+	function voteShouldShowTallies(vote: VoteDefinitionRecord) {
+		return vote.state === 'closed' || lastClosedVote?.vote.voteId === vote.voteId;
+	}
+
+	async function submitVoteRoute(form: HTMLFormElement | null, key: string) {
+		const url = form?.getAttribute('hx-post');
+		if (!form || !url) return;
+		await runVoteAction(key, async () => {
+			const params = new URLSearchParams();
+			for (const [field, value] of new FormData(form).entries()) {
+				if (typeof value === 'string') {
+					params.append(field, value);
+				}
+			}
+			const response = await fetch(url, {
+				method: 'POST',
+				body: params.toString(),
+				credentials: 'same-origin',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+					'HX-Request': 'true'
+				}
+			});
+			if (!response.ok) {
+				throw new Error(`vote route ${url} failed`);
+			}
+			form.reset();
+			await loadVotes();
+		});
+	}
+
+	async function submitVoteRouteForm(event: SubmitEvent, key: string) {
+		event.preventDefault();
+		const form = event.currentTarget as HTMLFormElement | null;
+		await submitVoteRoute(form, key);
+	}
+
+	async function submitCreateVoteForm(event: SubmitEvent) {
+		event.preventDefault();
+		const form = event.currentTarget as HTMLFormElement | null;
+		if (!form) return;
+		const data = new FormData(form);
+		await runVoteAction('create-vote', async () => {
+			const res = await voteClient.createVote({
+				committeeSlug: slug,
+				meetingId,
+				name: String(data.get('name') ?? '').trim(),
+				visibility: String(data.get('visibility') ?? 'open'),
+				minSelections: bigintFromInput(String(data.get('min_selections') ?? '1')),
+				maxSelections: bigintFromInput(String(data.get('max_selections') ?? '1')),
+				optionLabels: data
+					.getAll('option_label')
+					.map((value) => String(value).trim())
+					.filter(Boolean)
+			});
+			lastClosedVote = null;
+			if (votesState.data && res.vote) {
+				votesState.data.votes = [...votesState.data.votes, res.vote];
+			}
+			form.reset();
+			createVoteDetailsOpen = false;
+			await loadVotes();
+		});
+	}
+
+	async function submitUpdateDraftVoteForm(event: SubmitEvent, voteId: string) {
+		event.preventDefault();
+		const form = event.currentTarget as HTMLFormElement | null;
+		if (!form) return;
+		const data = new FormData(form);
+		await runVoteAction(`save-draft-${voteId}`, async () => {
+			await voteClient.updateVoteDraft({
+				committeeSlug: slug,
+				meetingId,
+				voteId,
+				name: String(data.get('name') ?? '').trim(),
+				visibility: String(data.get('visibility') ?? 'open'),
+				minSelections: bigintFromInput(String(data.get('min_selections') ?? '1')),
+				maxSelections: bigintFromInput(String(data.get('max_selections') ?? '1')),
+				optionLabels: data
+					.getAll('option_label')
+					.map((value) => String(value).trim())
+					.filter(Boolean)
+			});
+			await loadVotes();
 		});
 	}
 </script>
@@ -1517,6 +1643,9 @@
 
 		{#if actionError}
 			<AppAlert message={actionError} />
+		{/if}
+		{#if actionNotice}
+			<AppAlert tone="success" message={actionNotice} />
 		{/if}
 
 		<div id="moderate-sse-root" class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:h-full lg:grid-cols-2 lg:grid-rows-1 lg:overflow-hidden">
@@ -1632,38 +1761,47 @@
 													{:else}
 														<div class="grid gap-3">
 															{#each agendaPointsFlat() as point}
-																<div class={point.isActive ? `card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm bg-primary/5 border-primary/40${point.parentId ? ' ml-5' : ''}` : point.parentId ? 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm ml-5' : 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm'} data-testid="manage-agenda-point-card">
-																	<div class="flex items-start gap-3">
-																		<span class="badge badge-outline shrink-0">{legacyAgendaDisplayNumber(point)}</span>
-																		<div class="min-w-0 flex-1">
-																			<div class="truncate font-semibold">{point.title}</div>
-																			<div class="mt-1 flex flex-wrap gap-1">
-																				{#if point.parentId}
-																					<span class="badge badge-outline">Child</span>
-																				{/if}
-																				{#if point.isActive}
-																					<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">Active</span>
-																				{/if}
+																<div id={`agenda-point-card-${point.agendaPointId}`} class={point.isActive ? `card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm bg-primary/5 border-primary/40${point.parentId ? ' ml-5' : ''}` : point.parentId ? 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm ml-5' : 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm'} data-testid="manage-agenda-point-card">
+																	{#if editingAgendaPointId === point.agendaPointId}
+																		<form class="flex items-center gap-2" data-testid="manage-agenda-point-edit-form" onsubmit={async (event) => { event.preventDefault(); await saveEditAgendaPoint(point.agendaPointId); }}>
+																			<input class="input input-bordered input-sm flex-1" type="text" name="title" bind:value={editingAgendaPointTitle} required disabled={isAgendaBusy(`edit-${point.agendaPointId}`)} data-testid="manage-agenda-point-edit-input" />
+																			<button type="submit" class="btn btn-sm btn-primary" disabled={isAgendaBusy(`edit-${point.agendaPointId}`)}>Save</button>
+																			<button type="button" class="btn btn-sm btn-ghost" onclick={cancelEditAgendaPoint}>Cancel</button>
+																		</form>
+																	{:else}
+																		<div class="flex items-start gap-3">
+																			<span class="badge badge-outline shrink-0">{legacyAgendaDisplayNumber(point)}</span>
+																			<div class="min-w-0 flex-1">
+																				<div class="truncate font-semibold">{point.title}</div>
+																				<div class="mt-1 flex flex-wrap gap-1">
+																					{#if point.parentId}
+																						<span class="badge badge-outline">Child</span>
+																					{/if}
+																					{#if point.isActive}
+																						<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">Active</span>
+																					{/if}
+																				</div>
 																			</div>
 																		</div>
-																	</div>
-																	<div class="mt-2 flex items-center gap-2">
-																		<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-up`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'up'); }}>
-																			<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move up" title="Move up" aria-label="Move up" disabled={!agendaPointCanMoveUp(point) || isAgendaBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
-																		</form>
-																		<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-down`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'down'); }}>
-																			<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move down" title="Move down" aria-label="Move down" disabled={!agendaPointCanMoveDown(point) || isAgendaBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
-																		</form>
-																		{#if !point.isActive}
-																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/activate`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
-																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
+																		<div class="mt-2 flex items-center gap-2">
+																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-up`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'up'); }}>
+																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move up" title="Move up" aria-label="Move up" disabled={!agendaPointCanMoveUp(point) || isAgendaBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
 																			</form>
-																		{/if}
-																		<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Open tools" title="Open tools" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
-																		<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/delete`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-confirm="Delete this agenda point?" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await deleteAgendaPoint(point.agendaPointId); }}>
-																			<button type="submit" class="btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Delete agenda point" title="Delete agenda point" aria-label="Delete agenda point" disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
-																		</form>
-																	</div>
+																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-down`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'down'); }}>
+																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move down" title="Move down" aria-label="Move down" disabled={!agendaPointCanMoveDown(point) || isAgendaBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
+																			</form>
+																			{#if !point.isActive}
+																				<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/activate`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
+																					<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
+																				</form>
+																			{/if}
+																			<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda point" title="Edit agenda point" aria-label="Edit agenda point" hx-get={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/edit-form`} hx-target={`#agenda-point-card-${point.agendaPointId}`} hx-swap="outerHTML" data-testid="manage-agenda-point-edit-btn" onclick={() => startEditAgendaPoint(point)}><LegacyIcon name="edit" class="h-4 w-4" /></button>
+																			<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Open tools" title="Open tools" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
+																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/delete`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-confirm="Delete this agenda point?" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await deleteAgendaPoint(point.agendaPointId); }}>
+																				<button type="submit" class="btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Delete agenda point" title="Delete agenda point" aria-label="Delete agenda point" disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+																			</form>
+																		</div>
+																	{/if}
 																</div>
 															{/each}
 														</div>
@@ -1820,7 +1958,7 @@
 									{#if !moderationState.data.activeAgendaPoint}
 										<p class="text-sm text-base-content/70">No active agenda point.</p>
 									{:else}
-										<div class="space-y-5">
+											<div class="space-y-5">
 											<div class="space-y-2">
 												<div class="flex items-center justify-between gap-2">
 													<strong class="text-base">Files</strong>
@@ -1828,17 +1966,258 @@
 												<p class="text-sm text-base-content/70">No files have been uploaded yet.</p>
 											</div>
 											<div id="moderate-votes-panel-host">
-												{#if legacyVotesPanelHTML}
-													{@html legacyVotesPanelHTML}
-												{:else}
-													<div id="moderate-votes-panel" class="space-y-4">
-														<div class="flex items-center justify-between gap-2">
-															<h3 class="text-base font-semibold">Votes</h3>
-															<button type="button" class="btn btn-xs btn-outline" onclick={() => void loadVotes()}>Refresh</button>
-														</div>
-														<p class="text-sm text-base-content/70">Loading vote tools...</p>
+												<div id="moderate-votes-panel" class="space-y-4" hx-get={`/committee/${slug}/meeting/${meetingId}/votes/partial`} hx-trigger="reload" hx-swap="outerHTML" data-choice-label="Choice">
+													<div class="flex items-center justify-between gap-2">
+														<h3 class="text-base font-semibold">Votes</h3>
+														<button type="button" class="btn btn-xs btn-outline" hx-get={`/committee/${slug}/meeting/${meetingId}/votes/partial`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={(event) => { event.preventDefault(); void loadVotes(); }}>Refresh</button>
 													</div>
-												{/if}
+													{#if votesState.loading && !votesState.data}
+														<AppSpinner label="Loading votes" />
+													{:else if votesState.error && !votesState.data}
+														<AppAlert message={votesState.error} />
+													{:else if !votesState.data?.hasActiveAgendaPoint}
+														<p class="text-sm text-base-content/70">No active agenda point.</p>
+													{:else}
+														<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={createVoteDetailsOpen} ontoggle={(event) => { createVoteDetailsOpen = (event.currentTarget as HTMLDetailsElement).open; }}>
+															<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
+															<div class="collapse-content">
+																<form class="grid gap-2 md:grid-cols-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/create`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={submitCreateVoteForm}>
+																	<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required />
+																	<select class="select select-bordered select-sm" name="visibility">
+																		<option value="open">Open</option>
+																		<option value="secret">Secret</option>
+																	</select>
+																	<div class="join">
+																		<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required />
+																		<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required />
+																	</div>
+																	<div class="md:col-span-2 space-y-1" data-vote-option-list>
+																		<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+																		{#each voteDefaultOptionLabels() as label, index}
+																			<div data-vote-option-row>
+																				<input class="input input-bordered input-sm w-full" name="option_label" value={label} data-vote-option-input placeholder={`Choice ${index + 1}`} autocomplete="off" />
+																			</div>
+																		{/each}
+																		<div class="text-xs text-base-content/70" data-vote-option-hint>Add one choice per field. A new field appears once the last one is filled.</div>
+																	</div>
+																	<div class="md:col-span-2">
+																		<button type="submit" class="btn btn-sm btn-primary">Create Draft Vote</button>
+																	</div>
+																</form>
+															</div>
+														</details>
+
+														{#if (votesState.data?.votes ?? []).length === 0}
+															<p class="text-sm text-base-content/70">No votes for {votesState.data?.activeAgendaPointTitle}.</p>
+														{:else}
+															<div class="space-y-3">
+																{#each votesState.data?.votes ?? [] as vote}
+																	<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={vote.state === 'open' || vote.state === 'counting'}>
+																		<summary class="collapse-title py-3 pr-10">
+																			<div class="flex flex-wrap items-center gap-2">
+																				<h4 class="font-semibold">{vote.name}</h4>
+																				<span class={voteStateBadgeClass(vote.state)}>{voteStateLabel(vote.state)}</span>
+																				<span class={voteVisibilityBadgeClass(vote.visibility)}>{voteVisibilityLabel(vote.visibility)}</span>
+																				<span class="text-xs text-base-content/70">{voteBoundsLabel(vote)}</span>
+																			</div>
+																		</summary>
+																		<div class="collapse-content space-y-3">
+																			{#if vote.options.length > 0}
+																				<ul class="list rounded-box border border-base-300 bg-base-200/40">
+																					{#each vote.options as option}
+																						<li class="list-row py-1">
+																							<span class="badge badge-outline badge-sm">{option.position.toString()}</span>
+																							<span class="flex-1 truncate">{option.label}</span>
+																						</li>
+																					{/each}
+																				</ul>
+																			{/if}
+
+																			<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
+																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Live Submission Tally</div>
+																				<div class="grid gap-1 text-sm sm:grid-cols-2">
+																					<div class="flex items-center justify-between gap-2">
+																						<span>Eligible</span>
+																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).eligibleCount.toString()}</span>
+																					</div>
+																					<div class="flex items-center justify-between gap-2">
+																						<span>Casts</span>
+																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).castCount.toString()}</span>
+																					</div>
+																					<div class="flex items-center justify-between gap-2">
+																						<span>Counted Ballots</span>
+																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).ballotCount.toString()}</span>
+																					</div>
+																					{#if vote.visibility === 'secret'}
+																						<div class="flex items-center justify-between gap-2">
+																							<span>Outstanding</span>
+																							<span class={(voteStatsFor(vote).eligibleCount - voteStatsFor(vote).castCount) > 0n ? 'badge badge-sm badge-warning' : 'badge badge-sm badge-success'}>{(voteStatsFor(vote).eligibleCount - voteStatsFor(vote).castCount).toString()}</span>
+																						</div>
+																					{:else}
+																						<div class="flex items-center justify-between gap-2">
+																							<span>Open Ballots</span>
+																							<span class="badge badge-outline badge-sm">{voteStatsFor(vote).ballotCount.toString()}</span>
+																						</div>
+																					{/if}
+																				</div>
+																			</div>
+
+																			{#if vote.state === 'draft'}
+																				<div class="flex flex-wrap gap-2">
+																					<button type="button" class="btn btn-sm btn-success" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/open`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await openVote(vote.voteId); }}>Open Vote</button>
+																				</div>
+																				<details class="collapse collapse-arrow border border-base-300 bg-base-200/30">
+																					<summary class="collapse-title text-sm">Edit Draft</summary>
+																					<div class="collapse-content">
+																						<form class="grid gap-2 md:grid-cols-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/update-draft`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitUpdateDraftVoteForm(event, vote.voteId)}>
+																							<input class="input input-bordered input-sm md:col-span-2" name="name" value={vote.name} required />
+																							<select class="select select-bordered select-sm" name="visibility">
+																								<option value="open" selected={vote.visibility === 'open'}>Open</option>
+																								<option value="secret" selected={vote.visibility === 'secret'}>Secret</option>
+																							</select>
+																							<div class="join">
+																								<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value={vote.minSelections.toString()} required />
+																								<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value={vote.maxSelections.toString()} required />
+																							</div>
+																							<div class="md:col-span-2 space-y-1" data-vote-option-list>
+																								<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+																								{#each voteLabelsForEdit(vote) as label, index}
+																									<div data-vote-option-row>
+																										<input class="input input-bordered input-sm w-full" name="option_label" value={label} data-vote-option-input placeholder={`Choice ${index + 1}`} autocomplete="off" />
+																									</div>
+																								{/each}
+																								<div class="text-xs text-base-content/70" data-vote-option-hint>Leave an empty field at the end to add another choice.</div>
+																							</div>
+																							<div class="md:col-span-2 flex flex-wrap gap-2">
+																								<button type="submit" class="btn btn-sm btn-primary">Save Draft</button>
+																							</div>
+																						</form>
+																					</div>
+																				</details>
+																			{/if}
+
+																			{#if vote.state === 'open' || vote.state === 'counting'}
+																				<div class="flex flex-wrap gap-2">
+																					<button type="button" class="btn btn-sm btn-warning" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/close`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await closeVote(vote.voteId); }}>Close Vote</button>
+																				</div>
+																			{/if}
+
+																			<div class="rounded-box border border-base-300 bg-base-200/20 p-2 space-y-2">
+																				<div class="text-xs font-semibold uppercase text-base-content/70">Manual Submission</div>
+																				{#if vote.visibility === 'open'}
+																					{#if vote.state === 'open'}
+																						<form class="space-y-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/ballot/open`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitVoteRouteForm(event, `ballot-open-${vote.voteId}`)}>
+																							<div class="text-xs font-semibold uppercase text-base-content/70">Open Ballot Entry</div>
+																							<div class={vote.maxSelections === 1n ? 'grid gap-1 text-sm grid-cols-1' : 'grid gap-1 text-sm grid-cols-2'}>
+																								{#each vote.options as option}
+																									<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+																										{#if vote.maxSelections === 1n}
+																											<input class="radio radio-sm" type="radio" name="option_id" value={option.optionId} />
+																										{:else}
+																											<input class="checkbox checkbox-sm" type="checkbox" name="option_id" value={option.optionId} />
+																										{/if}
+																										<span>{option.label}</span>
+																									</label>
+																								{/each}
+																							</div>
+																							{#if attendeeRows().length === 0}
+																								<p class="text-xs text-warning">No attendees available for manual entry.</p>
+																							{:else}
+																								<div class="join w-full">
+																									<input class="input input-bordered input-sm join-item w-full" name="attendee_query" list={`vote-manual-open-attendee-list-${vote.voteId}`} placeholder="Search attendee" required />
+																									<button type="button" class="btn btn-sm btn-primary join-item" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await submitVoteRoute((event.currentTarget as HTMLButtonElement | null)?.closest('form'), `ballot-open-${vote.voteId}`); }}>Submit Ballot</button>
+																								</div>
+																								<datalist id={`vote-manual-open-attendee-list-${vote.voteId}`}>
+																									{#each attendeeRows() as attendee}
+																										<option value={`${attendee.attendeeNumber.toString()} ${attendee.fullName}`}></option>
+																									{/each}
+																								</datalist>
+																								<p class="text-xs text-base-content/70">Quick-cast uses attendee number followed by the attendee name.</p>
+																							{/if}
+																						</form>
+																					{:else}
+																						<p class="text-xs text-base-content/70">Manual open-ballot entry is available while the vote is open.</p>
+																					{/if}
+																				{:else}
+																					<p class="text-xs text-base-content/70">Secret ballots can be registered first and counted later.</p>
+																					{#if vote.state === 'open' || vote.state === 'counting'}
+																						<div class={vote.state === 'open' ? 'grid gap-2 md:grid-cols-2' : 'grid gap-2 md:grid-cols-1'}>
+																							{#if vote.state === 'open'}
+																								<form class="rounded-box border border-base-300 p-2 space-y-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/cast/register`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitVoteRouteForm(event, `register-cast-${vote.voteId}`)}>
+																									<div class="text-xs font-semibold uppercase text-base-content/70">1. Register Cast</div>
+																									<input type="hidden" name="source" value="manual_submission" />
+																									{#if attendeeRows().length === 0}
+																										<p class="text-xs text-warning">No attendees are available for cast registration.</p>
+																									{:else}
+																										<div class="join w-full">
+																											<input class="input input-bordered input-sm join-item w-full" name="attendee_query" list={`vote-manual-secret-attendee-list-${vote.voteId}`} placeholder="Search attendee" required />
+																											<button type="button" class="btn btn-sm join-item" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await submitVoteRoute((event.currentTarget as HTMLButtonElement | null)?.closest('form'), `register-cast-${vote.voteId}`); }}>Register Cast</button>
+																										</div>
+																										<datalist id={`vote-manual-secret-attendee-list-${vote.voteId}`}>
+																											{#each attendeeRows() as attendee}
+																												<option value={`${attendee.attendeeNumber.toString()} ${attendee.fullName}`}></option>
+																											{/each}
+																										</datalist>
+																										<p class="text-xs text-base-content/70">Quick registration uses attendee number followed by the attendee name.</p>
+																									{/if}
+																								</form>
+																							{/if}
+																							<form class="rounded-box border border-base-300 p-2 space-y-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/ballot/secret`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitVoteRouteForm(event, `ballot-secret-${vote.voteId}`)}>
+																								<div class="text-xs font-semibold uppercase text-base-content/70">2. Count Secret Ballot</div>
+																								<input class="input input-bordered input-sm w-full" name="receipt_token" placeholder="Receipt token (optional)" />
+																								<input type="hidden" name="commitment_cipher" value="xchacha20poly1305" />
+																								<input type="hidden" name="commitment_version" value="1" />
+																								<input class="input input-bordered input-sm w-full" name="encrypted_commitment_b64" placeholder="Encrypted commitment (optional)" />
+																								<div class="grid grid-cols-2 gap-1 text-sm">
+																									{#each vote.options as option}
+																										<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
+																											{#if vote.maxSelections === 1n}
+																												<input class="radio radio-sm" type="radio" name="option_id" value={option.optionId} />
+																											{:else}
+																												<input class="checkbox checkbox-sm" type="checkbox" name="option_id" value={option.optionId} />
+																											{/if}
+																											<span>{option.label}</span>
+																										</label>
+																									{/each}
+																								</div>
+																								<button type="button" class="btn btn-sm btn-primary" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await submitVoteRoute((event.currentTarget as HTMLButtonElement | null)?.closest('form'), `ballot-secret-${vote.voteId}`); }}>Count Ballot</button>
+																							</form>
+																						</div>
+																					{:else}
+																						<p class="text-xs text-base-content/70">Manual secret actions are available while vote is open or counting.</p>
+																					{/if}
+																				{/if}
+																			</div>
+
+																			{#if vote.state === 'closed'}
+																				<div class="flex flex-wrap gap-2">
+																					<button type="button" class="btn btn-sm btn-outline" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/archive`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await archiveVote(vote.voteId); }}>Archive Vote</button>
+																				</div>
+																			{/if}
+
+																			{#if vote.state === 'counting'}
+																				<p class="text-sm text-warning">Results are blocked while vote is in counting state.</p>
+																			{:else if voteShouldShowTallies(vote)}
+																				<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
+																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Final Tallies</div>
+																					<ul class="space-y-1 text-sm">
+																						{#each voteTalliesFor(vote) as row}
+																							<li class="flex items-center justify-between gap-2">
+																								<span class="truncate">{row.label}</span>
+																								<span class="badge badge-outline badge-sm">{row.count.toString()}</span>
+																							</li>
+																						{/each}
+																					</ul>
+																					<div class="mt-2 text-xs text-base-content/70">eligible={voteStatsFor(vote).eligibleCount.toString()} casts={voteStatsFor(vote).castCount.toString()} ballots={voteStatsFor(vote).ballotCount.toString()}</div>
+																				</div>
+																			{/if}
+																		</div>
+																	</details>
+																{/each}
+															</div>
+														{/if}
+													{/if}
+												</div>
 											</div>
 										</div>
 									{/if}
@@ -1860,7 +2239,7 @@
 												<span>Guest signup</span>
 											</label>
 										</form>
-										<form hx-post={attendeeSelfSignupURL()} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
+										<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/self-signup`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
 											<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Sign yourself up" title="Sign yourself up" aria-label="Sign yourself up" disabled={attendeeActionPending !== ''}><LegacyIcon name="person-raised" class="h-4 w-4" /></button>
 										</form>
 										<a href={manageJoinQrURL()} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR"><LegacyIcon name="qr-code" class="h-4 w-4" /></a>
@@ -1868,7 +2247,7 @@
 								</div>
 								<div id="attendee-list-container" hx-swap="outerHTML" sse-swap="manage-attendee-list-updated">
 									<div class="mb-4">
-										<form hx-post={attendeeCreateURL()} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-on::after-request={attendeeCreateAfterRequest()} class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" onsubmit={addGuestAttendee}>
+										<form class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/create`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-on::after-request={"if(event.detail.successful){ this.reset(); var speakerSearch=document.getElementById('speaker-add-search-input') || document.getElementById('moderate-speaker-search'); if(speakerSearch && window.htmx){ htmx.trigger(speakerSearch,'search'); } }"} onsubmit={addGuestAttendee}>
 											<div class="w-full min-w-0 flex-1">
 												<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
 												<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder="Display name" required disabled={attendeeActionPending !== ''} />
@@ -1914,23 +2293,23 @@
 																	{#if attendee.isGuest}
 																		<a href={attendeeRecoveryURL(attendee.attendeeId)} class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link"><LegacyIcon name="history" class="h-4 w-4" /></a>
 																	{/if}
-																	<form hx-post={attendeeDeleteURL(attendee.attendeeId)} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-confirm="Remove this attendee?" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await removeAttendee(attendee.attendeeId, attendee.fullName); }}>
+																	<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/${attendee.attendeeId}/delete`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-confirm="Remove this attendee?" onsubmit={async (event) => { event.preventDefault(); await removeAttendee(attendee.attendeeId, attendee.fullName); }}>
 																		<button type="submit" class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Remove attendee" title="Remove attendee" aria-label="Remove attendee" disabled={attendeeActionPending !== ''}><LegacyIcon name="trash" class="h-4 w-4" /></button>
 																	</form>
 																</div>
 															</div>
 														</div>
 														<div class="flex items-center justify-between gap-3">
-															<form hx-post={attendeeToggleChairURL(attendee.attendeeId)} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-trigger="change" class="inline-flex">
+															<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/${attendee.attendeeId}/chair`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-trigger="change">
 																<label class="label cursor-pointer justify-start gap-2 p-0">
-																	<input class={attendee.isChair ? 'toggle toggle-sm toggle-primary' : 'toggle toggle-sm'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async () => await toggleAttendeeChair(attendee)} />
+																	<input class={attendee.isChair ? 'toggle toggle-sm toggle-primary' : 'toggle toggle-sm'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await toggleAttendeeChair(attendee); }} />
 																	<span class="text-xs leading-none">Chairperson</span>
 																</label>
 															</form>
 															{#if attendee.isGuest}
-																<form hx-post={attendeeToggleQuotedURL(attendee.attendeeId)} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={legacyClientIDVals()} hx-trigger="change" class="inline-flex">
+																<form class="inline-flex" hx-post={`/committee/${slug}/meeting/${meetingId}/attendee/${attendee.attendeeId}/quoted`} hx-target="#attendee-list-container" hx-swap="outerHTML" hx-vals={"js:{client_id: document.getElementById('moderate-sse-root')?.dataset.clientId || document.getElementById('manage-sse-root')?.dataset.clientId || ''}"} hx-trigger="change">
 																	<label class="label cursor-pointer justify-start gap-2 p-0">
-																		<input class={attendee.quoted ? 'toggle toggle-sm toggle-info' : 'toggle toggle-sm'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async () => await toggleAttendeeQuoted(attendee)} />
+																		<input class={attendee.quoted ? 'toggle toggle-sm toggle-info' : 'toggle toggle-sm'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await toggleAttendeeQuoted(attendee); }} />
 																		<span class="text-xs leading-none">FLINTA*</span>
 																	</label>
 																</form>
