@@ -14,7 +14,7 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 ## Current State
 
-`A01` through `A10`, plus `A12`, `A13`, `A14`, and `A15`, are complete locally.
+`A01` through `A10`, plus `A12`–`A16`, are complete locally.
 
 `A11` is currently blocked on missing agenda-point edit functionality in the product/UI surface.
 
@@ -73,6 +73,16 @@ The detailed expansion strategy lives in `ui-parity-expansion-plan.md`. The next
 
 - added `TestModerateDeleteAgendaPoint_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
 - seeds `Keep Me` and `Delete Me`, deletes `Delete Me` via the moderation UI in each browser, waits for the deleted card to detach, then compares the remaining `[data-testid='manage-agenda-point-card']` outer HTML list
+
+### A16 — speaker parity: end speaker
+
+- added `TestModerateEndSpeaker_UIParityWithLegacy` in `e2e/ui_parity_extended_test.go`
+- seeds active agenda point + Alice + Bob; adds both, starts Alice, then ends Alice in each browser; waits for Bob in WAITING state; compares `#speakers-list-container` with `normalizeInitialScrollTop`
+- fixed SPA done-speaker display number: added `doneDisplayNumber` function to `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte` and used it in the `DONE` branch instead of `&nbsp;`
+- fixed SPA waiting-speaker display number to include `doneCount + speakingCount` offset (matching legacy `WaitingDisplayNumber = doneCount + speakingCount + orderPosition`)
+- added `normalizeInitialScrollTop` helper in `e2e/ui_parity_extended_test.go`; applied to A14, A15, A16 comparisons — `data-initial-scroll-top` is timing-dependent (static in SPA template vs. async JS in legacy)
+- updated `TestSpeakersList_DoneSpeakerCanBeReadded` in `e2e/agenda_speakers_test.go` to expect the position number in the done-speaker column (now "1") instead of blank
+- rebuilt `internal/web/build/`
 
 ### A15 — speaker parity: start speaker
 
@@ -144,6 +154,12 @@ Verification completed (2026-03-31):
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — all 29 PASS
 - `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
 
+Verification completed (2026-04-01):
+
+- `nix develop -c go test -v -tags=e2e -timeout=300s ./e2e/... -run "TestModerateEndSpeaker_UIParityWithLegacy|TestSpeakersList_DoneSpeakerCanBeReadded"` — PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/... -run ".*UIParityWithLegacy"` — all 30 PASS
+- `nix develop -c go test -v -tags=e2e -timeout=600s ./e2e/...` — PASS
+
 ## Atomic Task Queue
 
 Use the queue in `ui-parity-expansion-plan.md` under `Atomic Task Queue`.
@@ -192,14 +208,15 @@ Each atomic task should follow this sequence:
 
 ## Recommended Next Task
 
-Start with `A16`.
+Start with `A17`.
 
-Definition of done for `A16`:
+Definition of done for `A17`:
 
-- add moderate-page parity coverage for ending the current speaker via the UI
-- keep the change limited to one new parity scenario
-- verify with a focused parity test, then the full parity suite, then the full E2E suite
-- update this handoff to point at `A17` next, unless `A11` is explicitly unblocked first
+- add a dedicated legacy-contract test file that explicitly documents `/docs/oob/...` and `/docs/search` routes as still backed by the legacy handler
+- verify the route families return the expected fragment contract
+- keep to docs routes only in this task
+- verify with a focused test, then the full parity suite, then the full E2E suite
+- update this handoff to point at `A18` next
 
 ## Files Most Likely To Matter Next
 

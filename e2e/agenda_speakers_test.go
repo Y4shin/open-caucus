@@ -819,8 +819,10 @@ func TestSpeakersList_DoneSpeakerCanBeReadded(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read done row left column text: %v", err)
 	}
-	if strings.TrimSpace(leftColumnText) != "" {
-		t.Fatalf("expected done speaker left column to be blank, got %q", strings.TrimSpace(leftColumnText))
+	// Done speakers now show their sequential done-position number (e.g. "1") to
+	// match legacy behaviour. The column must not be blank.
+	if strings.TrimSpace(leftColumnText) == "" {
+		t.Fatalf("expected done speaker left column to show a position number, got blank")
 	}
 
 	openSpeakerAddDialog(t, page)

@@ -23,6 +23,20 @@ var speakingSinceAttrRe = regexp.MustCompile(`data-speaking-since="[^"]*"`)
 // browser and therefore must not be compared verbatim.
 var speakingTimerContentRe = regexp.MustCompile(`data-speaking-since="">[^<]*<`)
 
+// initialScrollTopAttrRe matches the data-initial-scroll-top attribute and its value.
+// This attribute is set asynchronously by JavaScript (after an HTMX swap) in the
+// legacy server and statically in the SPA Svelte template on initial render, so the
+// timing of when Playwright captures the snapshot determines whether it appears.
+// Stripping it makes speaker-list comparisons timing-independent.
+var initialScrollTopAttrRe = regexp.MustCompile(` data-initial-scroll-top="[^"]*"`)
+
+// normalizeInitialScrollTop removes data-initial-scroll-top attributes so that
+// timing differences between static Svelte rendering and async JS attribute setting
+// do not cause false parity failures.
+func normalizeInitialScrollTop(html string) string {
+	return initialScrollTopAttrRe.ReplaceAllString(html, "")
+}
+
 // normalizeSpeakingSinceAttr replaces data-speaking-since attribute values with an
 // empty string and normalizes the associated timer text content to "00:00" so that
 // the active-speaker clock does not cause false parity failures.
@@ -319,8 +333,8 @@ func TestModerateAddSpeaker_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualHTML(t, "speakers list after add",
-		locatorOuterHTML(t, newBrowserPage, "#speakers-list-container"),
-		locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container"),
+		normalizeInitialScrollTop(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container")),
+		normalizeInitialScrollTop(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container")),
 	)
 }
 
@@ -1149,8 +1163,94 @@ func TestModerateStartSpeaker_UIParityWithLegacy(t *testing.T) {
 
 	// The data-speaking-since attribute value differs between legacy (Unix seconds) and
 	// SPA (milliseconds from Date.now()), so normalize it before comparing.
+	// Also strip data-initial-scroll-top which is timing-dependent.
 	assertEqualHTML(t, "speakers list after start speaker",
-		normalizeSpeakingSinceAttr(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container")),
-		normalizeSpeakingSinceAttr(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container")),
+		normalizeInitialScrollTop(normalizeSpeakingSinceAttr(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container"))),
+		normalizeInitialScrollTop(normalizeSpeakingSinceAttr(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container"))),
+	)
+}
+
+// TestModerateEndSpeaker_UIParityWithLegacy (A16) checks that ending the current
+// speaker via the moderation UI produces the same speakers list in the SPA and
+// legacy implementations. Alice is started then ended; Bob remains waiting.
+func TestModerateEndSpeaker_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAttendee(t, "test", "Board Meeting", "Alice Member", "secret-alice")
+		ts.seedAttendee(t, "test", "Board Meeting", "Bob Member", "secret-bob")
+		apID := ts.seedAgendaPoint(t, "test", "Board Meeting", "Main Topic")
+		ts.activateAgendaPoint(t, "test", "Board Meeting", apID)
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#speakers-list-container")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#speakers-list-container")
+
+	// Add Alice and Bob to the queue, then start Alice in each browser.
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		for _, name := range []string{"Alice Member", "Bob Member"} {
+			openSpeakerAddDialog(t, p)
+			card := speakerCandidateCard(p, name)
+			if err := card.WaitFor(); err != nil {
+				t.Fatalf("wait candidate card %q on %s: %v", name, label, err)
+			}
+			if err := card.Locator("button[title='Add regular speech']").Click(); err != nil {
+				t.Fatalf("add regular speech %q on %s: %v", name, label, err)
+			}
+			if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item']:has-text('"+name+"')").WaitFor(); err != nil {
+				t.Fatalf("wait speaker %q in queue on %s: %v", name, label, err)
+			}
+		}
+		startBtn := p.Locator("#speakers-list-container button[title='Start next speaker']")
+		if err := startBtn.WaitFor(); err != nil {
+			t.Fatalf("wait start-next on %s: %v", label, err)
+		}
+		if err := startBtn.Click(); err != nil {
+			t.Fatalf("click start-next on %s: %v", label, err)
+		}
+		if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']:has-text('Alice Member')").WaitFor(); err != nil {
+			t.Fatalf("wait Alice speaking on %s: %v", label, err)
+		}
+	}
+
+	// End Alice's speech in each browser.
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		endBtn := p.Locator("#speakers-list-container button[title='End current speech']")
+		if err := endBtn.WaitFor(); err != nil {
+			t.Fatalf("wait end-speech button on %s: %v", label, err)
+		}
+		if err := endBtn.Click(); err != nil {
+			t.Fatalf("click end-speech on %s: %v", label, err)
+		}
+		// Alice's speaking row should detach; Bob should remain waiting.
+		if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='speaking']").WaitFor(
+			playwright.LocatorWaitForOptions{State: playwright.WaitForSelectorStateDetached},
+		); err != nil {
+			t.Fatalf("wait speaking row detached on %s: %v", label, err)
+		}
+		if err := p.Locator("#speakers-list-container [data-testid='live-speaker-item'][data-speaker-state='waiting']:has-text('Bob Member')").WaitFor(); err != nil {
+			t.Fatalf("wait Bob waiting on %s: %v", label, err)
+		}
+	}
+
+	// Strip data-initial-scroll-top: the SPA Svelte template renders it statically
+	// while the legacy sets it asynchronously via JS after the HTMX swap. The timing
+	// of the Playwright snapshot determines whether it appears in the legacy DOM.
+	assertEqualHTML(t, "speakers list after end speaker",
+		normalizeInitialScrollTop(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container")),
+		normalizeInitialScrollTop(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container")),
 	)
 }

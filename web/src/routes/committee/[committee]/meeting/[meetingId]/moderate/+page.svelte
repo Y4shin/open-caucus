@@ -721,9 +721,23 @@
 	}
 
 	function waitingDisplayNumber(speakerId: string) {
+		const speakers = speakerState.data?.speakers ?? [];
+		const doneCount = speakers.filter((s) => s.state === 'DONE').length;
+		const speakingCount = speakers.filter((s) => s.state === 'SPEAKING').length;
+		let waitingPosition = 0;
+		for (const speaker of speakers) {
+			if (speaker.state === 'WAITING') {
+				waitingPosition++;
+				if (speaker.speakerId === speakerId) return doneCount + speakingCount + waitingPosition;
+			}
+		}
+		return 0;
+	}
+
+	function doneDisplayNumber(speakerId: string) {
 		let position = 0;
 		for (const speaker of speakerState.data?.speakers ?? []) {
-			if (speaker.state === 'WAITING') {
+			if (speaker.state === 'DONE') {
 				position++;
 				if (speaker.speakerId === speakerId) return position;
 			}
@@ -2123,8 +2137,8 @@
 														<span class="font-mono text-xs whitespace-nowrap text-base-content/70" data-speaking-since={String(speakingSinceMs[speaker.speakerId] ?? '')}>{speakingTimerLabel(speaker.speakerId)}</span>
 													{:else if speaker.state === 'WAITING'}
 														{waitingDisplayNumber(speaker.speakerId)}
-													{:else}
-														&nbsp;
+													{:else if speaker.state === 'DONE'}
+														{doneDisplayNumber(speaker.speakerId)}
 													{/if}
 												</div>
 												<div class="list-col-grow min-w-0">
