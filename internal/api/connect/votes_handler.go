@@ -98,3 +98,27 @@ func (h *VoteHandler) VerifySecretReceipt(ctx context.Context, req *connect.Requ
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (h *VoteHandler) RegisterCast(ctx context.Context, req *connect.Request[votesv1.RegisterCastRequest]) (*connect.Response[votesv1.RegisterCastResponse], error) {
+	resp, err := h.service.RegisterCast(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.VoteId, req.Msg.AttendeeId)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *VoteHandler) CountSecretBallot(ctx context.Context, req *connect.Request[votesv1.CountSecretBallotRequest]) (*connect.Response[votesv1.CountSecretBallotResponse], error) {
+	resp, err := h.service.CountSecretBallot(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.VoteId, req.Msg.ReceiptToken, req.Msg.SelectedOptionIds)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (h *VoteHandler) CountOpenBallot(ctx context.Context, req *connect.Request[votesv1.CountOpenBallotRequest]) (*connect.Response[votesv1.CountOpenBallotResponse], error) {
+	resp, err := h.service.CountOpenBallot(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.VoteId, req.Msg.AttendeeId, req.Msg.SelectedOptionIds)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}

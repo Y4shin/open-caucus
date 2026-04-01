@@ -1899,6 +1899,362 @@ func (x *VerifySecretReceiptResponse) GetCommitmentVersion() int64 {
 	return 0
 }
 
+type RegisterCastRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	VoteId        string                 `protobuf:"bytes,3,opt,name=vote_id,json=voteId,proto3" json:"vote_id,omitempty"`
+	// attendee_id of the attendee submitting a physical ballot.
+	AttendeeId    string `protobuf:"bytes,4,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterCastRequest) Reset() {
+	*x = RegisterCastRequest{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterCastRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterCastRequest) ProtoMessage() {}
+
+func (x *RegisterCastRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterCastRequest.ProtoReflect.Descriptor instead.
+func (*RegisterCastRequest) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *RegisterCastRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *RegisterCastRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *RegisterCastRequest) GetVoteId() string {
+	if x != nil {
+		return x.VoteId
+	}
+	return ""
+}
+
+func (x *RegisterCastRequest) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+type RegisterCastResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	View          *VotesPanelView        `protobuf:"bytes,1,opt,name=view,proto3" json:"view,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterCastResponse) Reset() {
+	*x = RegisterCastResponse{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterCastResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterCastResponse) ProtoMessage() {}
+
+func (x *RegisterCastResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterCastResponse.ProtoReflect.Descriptor instead.
+func (*RegisterCastResponse) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *RegisterCastResponse) GetView() *VotesPanelView {
+	if x != nil {
+		return x.View
+	}
+	return nil
+}
+
+type CountSecretBallotRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	VoteId        string                 `protobuf:"bytes,3,opt,name=vote_id,json=voteId,proto3" json:"vote_id,omitempty"`
+	// receipt_token is the verifiable token written on the physical ballot.
+	ReceiptToken string `protobuf:"bytes,4,opt,name=receipt_token,json=receiptToken,proto3" json:"receipt_token,omitempty"`
+	// selected_option_ids are the option IDs chosen on the physical ballot.
+	SelectedOptionIds []string `protobuf:"bytes,5,rep,name=selected_option_ids,json=selectedOptionIds,proto3" json:"selected_option_ids,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *CountSecretBallotRequest) Reset() {
+	*x = CountSecretBallotRequest{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CountSecretBallotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountSecretBallotRequest) ProtoMessage() {}
+
+func (x *CountSecretBallotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountSecretBallotRequest.ProtoReflect.Descriptor instead.
+func (*CountSecretBallotRequest) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *CountSecretBallotRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *CountSecretBallotRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *CountSecretBallotRequest) GetVoteId() string {
+	if x != nil {
+		return x.VoteId
+	}
+	return ""
+}
+
+func (x *CountSecretBallotRequest) GetReceiptToken() string {
+	if x != nil {
+		return x.ReceiptToken
+	}
+	return ""
+}
+
+func (x *CountSecretBallotRequest) GetSelectedOptionIds() []string {
+	if x != nil {
+		return x.SelectedOptionIds
+	}
+	return nil
+}
+
+type CountSecretBallotResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	View          *VotesPanelView        `protobuf:"bytes,1,opt,name=view,proto3" json:"view,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CountSecretBallotResponse) Reset() {
+	*x = CountSecretBallotResponse{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CountSecretBallotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountSecretBallotResponse) ProtoMessage() {}
+
+func (x *CountSecretBallotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountSecretBallotResponse.ProtoReflect.Descriptor instead.
+func (*CountSecretBallotResponse) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *CountSecretBallotResponse) GetView() *VotesPanelView {
+	if x != nil {
+		return x.View
+	}
+	return nil
+}
+
+type CountOpenBallotRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	VoteId        string                 `protobuf:"bytes,3,opt,name=vote_id,json=voteId,proto3" json:"vote_id,omitempty"`
+	// attendee_id of the attendee whose ballot is being entered manually.
+	AttendeeId        string   `protobuf:"bytes,4,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	SelectedOptionIds []string `protobuf:"bytes,5,rep,name=selected_option_ids,json=selectedOptionIds,proto3" json:"selected_option_ids,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *CountOpenBallotRequest) Reset() {
+	*x = CountOpenBallotRequest{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CountOpenBallotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountOpenBallotRequest) ProtoMessage() {}
+
+func (x *CountOpenBallotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountOpenBallotRequest.ProtoReflect.Descriptor instead.
+func (*CountOpenBallotRequest) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *CountOpenBallotRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *CountOpenBallotRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *CountOpenBallotRequest) GetVoteId() string {
+	if x != nil {
+		return x.VoteId
+	}
+	return ""
+}
+
+func (x *CountOpenBallotRequest) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
+func (x *CountOpenBallotRequest) GetSelectedOptionIds() []string {
+	if x != nil {
+		return x.SelectedOptionIds
+	}
+	return nil
+}
+
+type CountOpenBallotResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	View          *VotesPanelView        `protobuf:"bytes,1,opt,name=view,proto3" json:"view,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CountOpenBallotResponse) Reset() {
+	*x = CountOpenBallotResponse{}
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CountOpenBallotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CountOpenBallotResponse) ProtoMessage() {}
+
+func (x *CountOpenBallotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_votes_v1_votes_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CountOpenBallotResponse.ProtoReflect.Descriptor instead.
+func (*CountOpenBallotResponse) Descriptor() ([]byte, []int) {
+	return file_conference_votes_v1_votes_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *CountOpenBallotResponse) GetView() *VotesPanelView {
+	if x != nil {
+		return x.View
+	}
+	return nil
+}
+
 var File_conference_votes_v1_votes_proto protoreflect.FileDescriptor
 
 const file_conference_votes_v1_votes_proto_rawDesc = "" +
@@ -2065,7 +2421,36 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\rreceipt_token\x18\x03 \x01(\tR\freceiptToken\x128\n" +
 	"\x18encrypted_commitment_b64\x18\x04 \x01(\tR\x16encryptedCommitmentB64\x12+\n" +
 	"\x11commitment_cipher\x18\x05 \x01(\tR\x10commitmentCipher\x12-\n" +
-	"\x12commitment_version\x18\x06 \x01(\x03R\x11commitmentVersion2\x9d\b\n" +
+	"\x12commitment_version\x18\x06 \x01(\x03R\x11commitmentVersion\"\x95\x01\n" +
+	"\x13RegisterCastRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x17\n" +
+	"\avote_id\x18\x03 \x01(\tR\x06voteId\x12\x1f\n" +
+	"\vattendee_id\x18\x04 \x01(\tR\n" +
+	"attendeeId\"O\n" +
+	"\x14RegisterCastResponse\x127\n" +
+	"\x04view\x18\x01 \x01(\v2#.conference.votes.v1.VotesPanelViewR\x04view\"\xce\x01\n" +
+	"\x18CountSecretBallotRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x17\n" +
+	"\avote_id\x18\x03 \x01(\tR\x06voteId\x12#\n" +
+	"\rreceipt_token\x18\x04 \x01(\tR\freceiptToken\x12.\n" +
+	"\x13selected_option_ids\x18\x05 \x03(\tR\x11selectedOptionIds\"T\n" +
+	"\x19CountSecretBallotResponse\x127\n" +
+	"\x04view\x18\x01 \x01(\v2#.conference.votes.v1.VotesPanelViewR\x04view\"\xc8\x01\n" +
+	"\x16CountOpenBallotRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x17\n" +
+	"\avote_id\x18\x03 \x01(\tR\x06voteId\x12\x1f\n" +
+	"\vattendee_id\x18\x04 \x01(\tR\n" +
+	"attendeeId\x12.\n" +
+	"\x13selected_option_ids\x18\x05 \x03(\tR\x11selectedOptionIds\"R\n" +
+	"\x17CountOpenBallotResponse\x127\n" +
+	"\x04view\x18\x01 \x01(\v2#.conference.votes.v1.VotesPanelViewR\x04view2\xe4\n" +
+	"\n" +
 	"\vVoteService\x12f\n" +
 	"\rGetVotesPanel\x12).conference.votes.v1.GetVotesPanelRequest\x1a*.conference.votes.v1.GetVotesPanelResponse\x12o\n" +
 	"\x10GetLiveVotePanel\x12,.conference.votes.v1.GetLiveVotePanelRequest\x1a-.conference.votes.v1.GetLiveVotePanelResponse\x12]\n" +
@@ -2077,7 +2462,10 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\vArchiveVote\x12'.conference.votes.v1.ArchiveVoteRequest\x1a(.conference.votes.v1.ArchiveVoteResponse\x12c\n" +
 	"\fSubmitBallot\x12(.conference.votes.v1.SubmitBallotRequest\x1a).conference.votes.v1.SubmitBallotResponse\x12r\n" +
 	"\x11VerifyOpenReceipt\x12-.conference.votes.v1.VerifyOpenReceiptRequest\x1a..conference.votes.v1.VerifyOpenReceiptResponse\x12x\n" +
-	"\x13VerifySecretReceipt\x12/.conference.votes.v1.VerifySecretReceiptRequest\x1a0.conference.votes.v1.VerifySecretReceiptResponseBFZDgithub.com/Y4shin/conference-tool/gen/go/conference/votes/v1;votesv1b\x06proto3"
+	"\x13VerifySecretReceipt\x12/.conference.votes.v1.VerifySecretReceiptRequest\x1a0.conference.votes.v1.VerifySecretReceiptResponse\x12c\n" +
+	"\fRegisterCast\x12(.conference.votes.v1.RegisterCastRequest\x1a).conference.votes.v1.RegisterCastResponse\x12r\n" +
+	"\x11CountSecretBallot\x12-.conference.votes.v1.CountSecretBallotRequest\x1a..conference.votes.v1.CountSecretBallotResponse\x12l\n" +
+	"\x0fCountOpenBallot\x12+.conference.votes.v1.CountOpenBallotRequest\x1a,.conference.votes.v1.CountOpenBallotResponseBFZDgithub.com/Y4shin/conference-tool/gen/go/conference/votes/v1;votesv1b\x06proto3"
 
 var (
 	file_conference_votes_v1_votes_proto_rawDescOnce sync.Once
@@ -2091,7 +2479,7 @@ func file_conference_votes_v1_votes_proto_rawDescGZIP() []byte {
 	return file_conference_votes_v1_votes_proto_rawDescData
 }
 
-var file_conference_votes_v1_votes_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_conference_votes_v1_votes_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_conference_votes_v1_votes_proto_goTypes = []any{
 	(*VoteOptionRecord)(nil),            // 0: conference.votes.v1.VoteOptionRecord
 	(*VoteDefinitionRecord)(nil),        // 1: conference.votes.v1.VoteDefinitionRecord
@@ -2120,6 +2508,12 @@ var file_conference_votes_v1_votes_proto_goTypes = []any{
 	(*VerifyOpenReceiptResponse)(nil),   // 24: conference.votes.v1.VerifyOpenReceiptResponse
 	(*VerifySecretReceiptRequest)(nil),  // 25: conference.votes.v1.VerifySecretReceiptRequest
 	(*VerifySecretReceiptResponse)(nil), // 26: conference.votes.v1.VerifySecretReceiptResponse
+	(*RegisterCastRequest)(nil),         // 27: conference.votes.v1.RegisterCastRequest
+	(*RegisterCastResponse)(nil),        // 28: conference.votes.v1.RegisterCastResponse
+	(*CountSecretBallotRequest)(nil),    // 29: conference.votes.v1.CountSecretBallotRequest
+	(*CountSecretBallotResponse)(nil),   // 30: conference.votes.v1.CountSecretBallotResponse
+	(*CountOpenBallotRequest)(nil),      // 31: conference.votes.v1.CountOpenBallotRequest
+	(*CountOpenBallotResponse)(nil),     // 32: conference.votes.v1.CountOpenBallotResponse
 }
 var file_conference_votes_v1_votes_proto_depIdxs = []int32{
 	0,  // 0: conference.votes.v1.VoteDefinitionRecord.options:type_name -> conference.votes.v1.VoteOptionRecord
@@ -2141,31 +2535,40 @@ var file_conference_votes_v1_votes_proto_depIdxs = []int32{
 	1,  // 16: conference.votes.v1.CloseVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
 	3,  // 17: conference.votes.v1.CloseVoteResponse.tally:type_name -> conference.votes.v1.VoteTallyEntry
 	1,  // 18: conference.votes.v1.ArchiveVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	7,  // 19: conference.votes.v1.VoteService.GetVotesPanel:input_type -> conference.votes.v1.GetVotesPanelRequest
-	9,  // 20: conference.votes.v1.VoteService.GetLiveVotePanel:input_type -> conference.votes.v1.GetLiveVotePanelRequest
-	11, // 21: conference.votes.v1.VoteService.CreateVote:input_type -> conference.votes.v1.CreateVoteRequest
-	13, // 22: conference.votes.v1.VoteService.UpdateVoteDraft:input_type -> conference.votes.v1.UpdateVoteDraftRequest
-	15, // 23: conference.votes.v1.VoteService.OpenVote:input_type -> conference.votes.v1.OpenVoteRequest
-	17, // 24: conference.votes.v1.VoteService.CloseVote:input_type -> conference.votes.v1.CloseVoteRequest
-	19, // 25: conference.votes.v1.VoteService.ArchiveVote:input_type -> conference.votes.v1.ArchiveVoteRequest
-	21, // 26: conference.votes.v1.VoteService.SubmitBallot:input_type -> conference.votes.v1.SubmitBallotRequest
-	23, // 27: conference.votes.v1.VoteService.VerifyOpenReceipt:input_type -> conference.votes.v1.VerifyOpenReceiptRequest
-	25, // 28: conference.votes.v1.VoteService.VerifySecretReceipt:input_type -> conference.votes.v1.VerifySecretReceiptRequest
-	8,  // 29: conference.votes.v1.VoteService.GetVotesPanel:output_type -> conference.votes.v1.GetVotesPanelResponse
-	10, // 30: conference.votes.v1.VoteService.GetLiveVotePanel:output_type -> conference.votes.v1.GetLiveVotePanelResponse
-	12, // 31: conference.votes.v1.VoteService.CreateVote:output_type -> conference.votes.v1.CreateVoteResponse
-	14, // 32: conference.votes.v1.VoteService.UpdateVoteDraft:output_type -> conference.votes.v1.UpdateVoteDraftResponse
-	16, // 33: conference.votes.v1.VoteService.OpenVote:output_type -> conference.votes.v1.OpenVoteResponse
-	18, // 34: conference.votes.v1.VoteService.CloseVote:output_type -> conference.votes.v1.CloseVoteResponse
-	20, // 35: conference.votes.v1.VoteService.ArchiveVote:output_type -> conference.votes.v1.ArchiveVoteResponse
-	22, // 36: conference.votes.v1.VoteService.SubmitBallot:output_type -> conference.votes.v1.SubmitBallotResponse
-	24, // 37: conference.votes.v1.VoteService.VerifyOpenReceipt:output_type -> conference.votes.v1.VerifyOpenReceiptResponse
-	26, // 38: conference.votes.v1.VoteService.VerifySecretReceipt:output_type -> conference.votes.v1.VerifySecretReceiptResponse
-	29, // [29:39] is the sub-list for method output_type
-	19, // [19:29] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	5,  // 19: conference.votes.v1.RegisterCastResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	5,  // 20: conference.votes.v1.CountSecretBallotResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	5,  // 21: conference.votes.v1.CountOpenBallotResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	7,  // 22: conference.votes.v1.VoteService.GetVotesPanel:input_type -> conference.votes.v1.GetVotesPanelRequest
+	9,  // 23: conference.votes.v1.VoteService.GetLiveVotePanel:input_type -> conference.votes.v1.GetLiveVotePanelRequest
+	11, // 24: conference.votes.v1.VoteService.CreateVote:input_type -> conference.votes.v1.CreateVoteRequest
+	13, // 25: conference.votes.v1.VoteService.UpdateVoteDraft:input_type -> conference.votes.v1.UpdateVoteDraftRequest
+	15, // 26: conference.votes.v1.VoteService.OpenVote:input_type -> conference.votes.v1.OpenVoteRequest
+	17, // 27: conference.votes.v1.VoteService.CloseVote:input_type -> conference.votes.v1.CloseVoteRequest
+	19, // 28: conference.votes.v1.VoteService.ArchiveVote:input_type -> conference.votes.v1.ArchiveVoteRequest
+	21, // 29: conference.votes.v1.VoteService.SubmitBallot:input_type -> conference.votes.v1.SubmitBallotRequest
+	23, // 30: conference.votes.v1.VoteService.VerifyOpenReceipt:input_type -> conference.votes.v1.VerifyOpenReceiptRequest
+	25, // 31: conference.votes.v1.VoteService.VerifySecretReceipt:input_type -> conference.votes.v1.VerifySecretReceiptRequest
+	27, // 32: conference.votes.v1.VoteService.RegisterCast:input_type -> conference.votes.v1.RegisterCastRequest
+	29, // 33: conference.votes.v1.VoteService.CountSecretBallot:input_type -> conference.votes.v1.CountSecretBallotRequest
+	31, // 34: conference.votes.v1.VoteService.CountOpenBallot:input_type -> conference.votes.v1.CountOpenBallotRequest
+	8,  // 35: conference.votes.v1.VoteService.GetVotesPanel:output_type -> conference.votes.v1.GetVotesPanelResponse
+	10, // 36: conference.votes.v1.VoteService.GetLiveVotePanel:output_type -> conference.votes.v1.GetLiveVotePanelResponse
+	12, // 37: conference.votes.v1.VoteService.CreateVote:output_type -> conference.votes.v1.CreateVoteResponse
+	14, // 38: conference.votes.v1.VoteService.UpdateVoteDraft:output_type -> conference.votes.v1.UpdateVoteDraftResponse
+	16, // 39: conference.votes.v1.VoteService.OpenVote:output_type -> conference.votes.v1.OpenVoteResponse
+	18, // 40: conference.votes.v1.VoteService.CloseVote:output_type -> conference.votes.v1.CloseVoteResponse
+	20, // 41: conference.votes.v1.VoteService.ArchiveVote:output_type -> conference.votes.v1.ArchiveVoteResponse
+	22, // 42: conference.votes.v1.VoteService.SubmitBallot:output_type -> conference.votes.v1.SubmitBallotResponse
+	24, // 43: conference.votes.v1.VoteService.VerifyOpenReceipt:output_type -> conference.votes.v1.VerifyOpenReceiptResponse
+	26, // 44: conference.votes.v1.VoteService.VerifySecretReceipt:output_type -> conference.votes.v1.VerifySecretReceiptResponse
+	28, // 45: conference.votes.v1.VoteService.RegisterCast:output_type -> conference.votes.v1.RegisterCastResponse
+	30, // 46: conference.votes.v1.VoteService.CountSecretBallot:output_type -> conference.votes.v1.CountSecretBallotResponse
+	32, // 47: conference.votes.v1.VoteService.CountOpenBallot:output_type -> conference.votes.v1.CountOpenBallotResponse
+	35, // [35:48] is the sub-list for method output_type
+	22, // [22:35] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_conference_votes_v1_votes_proto_init() }
@@ -2179,7 +2582,7 @@ func file_conference_votes_v1_votes_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_votes_v1_votes_proto_rawDesc), len(file_conference_votes_v1_votes_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   27,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

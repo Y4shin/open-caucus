@@ -66,7 +66,7 @@ func ensureDetailsOpen(t *testing.T, details playwright.Locator) {
 func moderatorVoteAccordion(t *testing.T, page playwright.Page, voteName string) playwright.Locator {
 	t.Helper()
 	panel := openModerateVotesPanel(t, page)
-	accordion := panel.Locator("details.collapse").Filter(playwright.LocatorFilterOptions{HasText: voteName}).First()
+	accordion := panel.Locator("details").Filter(playwright.LocatorFilterOptions{HasText: voteName}).First()
 	if err := accordion.WaitFor(); err != nil {
 		t.Fatalf("wait vote accordion %q: %v", voteName, err)
 	}
@@ -104,7 +104,7 @@ func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, vi
 	createDetails := panel.Locator("details").Filter(playwright.LocatorFilterOptions{HasText: "Create Vote"}).First()
 	ensureDetailsOpen(t, createDetails)
 
-	form := createDetails.Locator("form[hx-post$='/votes/create']").First()
+	form := createDetails.Locator("form").First()
 	if err := form.WaitFor(); err != nil {
 		t.Fatalf("wait create vote form: %v", err)
 	}
@@ -124,7 +124,7 @@ func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, vi
 	if err := form.Locator("button:has-text('Create Draft Vote')").Click(); err != nil {
 		t.Fatalf("submit create draft vote form: %v", err)
 	}
-	if err := openModerateVotesPanel(t, page).Locator("details.collapse").Filter(playwright.LocatorFilterOptions{HasText: name}).First().WaitFor(); err != nil {
+	if err := openModerateVotesPanel(t, page).Locator("details").Filter(playwright.LocatorFilterOptions{HasText: name}).First().WaitFor(); err != nil {
 		t.Fatalf("wait newly created draft vote %q in panel: %v", name, err)
 	}
 }
@@ -136,7 +136,7 @@ func openDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, voteName s
 		t.Fatalf("open draft vote %q: %v", voteName, err)
 	}
 	waitUntil(t, 5*time.Second, func() (bool, error) {
-		count, err := page.Locator("#moderate-votes-panel details.collapse").
+		count, err := page.Locator("#moderate-votes-panel details").
 			Filter(playwright.LocatorFilterOptions{HasText: voteName}).
 			Locator("button:has-text('Close Vote')").
 			Count()
@@ -167,14 +167,14 @@ func archiveVoteFromModeratorUI(t *testing.T, page playwright.Page, voteName str
 func registerSecretCastFromModeratorUI(t *testing.T, page playwright.Page, voteName, attendeeQuery string) {
 	t.Helper()
 	accordion := moderatorVoteAccordion(t, page, voteName)
-	form := accordion.Locator("form[hx-post*='/cast/register']").First()
+	form := accordion.Locator("[data-testid='manage-vote-register-cast-form']").First()
 	if err := form.WaitFor(); err != nil {
 		t.Fatalf("wait register-cast form for %q: %v", voteName, err)
 	}
-	if err := form.Locator("input[name='attendee_query']").Fill(attendeeQuery); err != nil {
+	if err := form.Locator("[data-testid='register-cast-attendee-query']").Fill(attendeeQuery); err != nil {
 		t.Fatalf("fill attendee query for cast register: %v", err)
 	}
-	if err := form.Locator("button:has-text('Register Cast')").Click(); err != nil {
+	if err := form.Locator("[data-testid='register-cast-submit']").Click(); err != nil {
 		t.Fatalf("submit cast register form: %v", err)
 	}
 }
@@ -182,20 +182,20 @@ func registerSecretCastFromModeratorUI(t *testing.T, page playwright.Page, voteN
 func countSecretBallotFromModeratorUI(t *testing.T, page playwright.Page, voteName, receiptToken string, optionID int64) {
 	t.Helper()
 	accordion := moderatorVoteAccordion(t, page, voteName)
-	form := accordion.Locator("form[hx-post*='/ballot/secret']").First()
+	form := accordion.Locator("[data-testid='manage-vote-count-secret-form']").First()
 	if err := form.WaitFor(); err != nil {
 		t.Fatalf("wait count secret ballot form: %v", err)
 	}
 	if receiptToken != "" {
-		if err := form.Locator("input[name='receipt_token']").Fill(receiptToken); err != nil {
+		if err := form.Locator("[data-testid='count-secret-receipt-token']").Fill(receiptToken); err != nil {
 			t.Fatalf("fill secret ballot receipt token: %v", err)
 		}
 	}
-	optionSelector := fmt.Sprintf("input[name='option_id'][value='%d']", optionID)
+	optionSelector := fmt.Sprintf("input[value='%d']", optionID)
 	if err := form.Locator(optionSelector).Check(); err != nil {
 		t.Fatalf("check secret ballot option %d: %v", optionID, err)
 	}
-	if err := form.Locator("button:has-text('Count Ballot')").Click(); err != nil {
+	if err := form.Locator("[data-testid='count-secret-submit']").Click(); err != nil {
 		t.Fatalf("submit count secret ballot form: %v", err)
 	}
 }
@@ -243,12 +243,40 @@ func firstVoteOptionID(t *testing.T, ts *testServer, voteID int64) int64 {
 	return options[0].ID
 }
 
-func voteOpenSubmitURL(baseURL, slug, meetingID string, voteID int64) string {
-	return fmt.Sprintf("%s/committee/%s/meeting/%s/votes/%d/submit/open", baseURL, slug, meetingID, voteID)
-}
 
-func voteSecretSubmitURL(baseURL, slug, meetingID string, voteID int64) string {
-	return fmt.Sprintf("%s/committee/%s/meeting/%s/votes/%d/submit/secret", baseURL, slug, meetingID, voteID)
+// connectJSONCallViaPage calls a Connect JSON RPC endpoint from within the browser
+// so that the browser's session cookies are included automatically.
+// Returns the HTTP status and the JSON "code" field (empty string on success).
+func connectJSONCallViaPage(t *testing.T, page playwright.Page, baseURL, method string, body any) (int, string) {
+	t.Helper()
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("marshal connect body for %s: %v", method, err)
+	}
+	raw, err := page.Evaluate(`async ({ url, body }) => {
+		const res = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'same-origin',
+			body,
+		});
+		let code = '';
+		try { const j = await res.json(); code = j.code || ''; } catch(e) {}
+		return { status: res.status, code };
+	}`, map[string]any{
+		"url":  baseURL + "/api/conference.votes.v1.VoteService/" + method,
+		"body": string(bodyBytes),
+	})
+	if err != nil {
+		t.Fatalf("evaluate connect call %s: %v", method, err)
+	}
+	m, ok := raw.(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected evaluate result type for %s: %T", method, raw)
+	}
+	status := int(m["status"].(float64))
+	code, _ := m["code"].(string)
+	return status, code
 }
 
 func postFormFromPage(t *testing.T, page playwright.Page, url string, form map[string]any) (int, string) {
@@ -343,7 +371,7 @@ func parseJSStatusCode(t *testing.T, raw any) int {
 	}
 }
 
-func TestVoting_OpenVote_ModeratorAndAttendeeHappyPath_HTMX(t *testing.T) {
+func TestVoting_OpenVote_ModeratorAndAttendeeHappyPath(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
@@ -430,21 +458,20 @@ func TestVoting_CreateRejectedWithoutActiveAgenda(t *testing.T) {
 		t.Fatalf("expected no-active-agenda state in votes panel: %v", err)
 	}
 
-	status, body := postFormFromPage(t, page,
-		fmt.Sprintf("%s/committee/%s/meeting/%s/votes/create", ts.URL, "test-committee", meetingID),
-		map[string]any{
-			"name":           "Should Fail",
-			"visibility":     "open",
-			"min_selections": "1",
-			"max_selections": "1",
-			"option_label":   []string{"Yes", "No"},
-		},
-	)
-	if status != 200 {
-		t.Fatalf("expected create-vote POST to return 200 with inline error, got %d", status)
+	createStatus, createCode := connectJSONCallViaPage(t, page, ts.URL, "CreateVote", map[string]any{
+		"committee_slug":  "test-committee",
+		"meeting_id":      meetingID,
+		"name":            "Should Fail",
+		"visibility":      "open",
+		"min_selections":  1,
+		"max_selections":  1,
+		"option_labels":   []string{"Yes", "No"},
+	})
+	if createStatus == 200 {
+		t.Fatalf("expected create-vote to fail without active agenda, got 200")
 	}
-	if !strings.Contains(body, "No active agenda point.") {
-		t.Fatalf("expected no-active-agenda error in response body, got: %s", body)
+	if createCode != "invalid_argument" && createCode != "failed_precondition" {
+		t.Fatalf("expected invalid_argument or failed_precondition, got code=%q status=%d", createCode, createStatus)
 	}
 }
 
@@ -463,41 +490,40 @@ func TestVoting_InvalidCreateAndUpdateDraftPayloadsRejected(t *testing.T) {
 		t.Fatalf("goto moderate page: %v", err)
 	}
 
-	createStatus, createBody := postFormFromPage(t, page,
-		fmt.Sprintf("%s/committee/%s/meeting/%s/votes/create", ts.URL, "test-committee", meetingID),
-		map[string]any{
-			"name":           "Bad Vote",
-			"visibility":     "open",
-			"min_selections": "1",
-			"max_selections": "1",
-			"option_label":   []string{"OnlyOneChoice"},
-		},
-	)
-	if createStatus != 200 {
-		t.Fatalf("expected invalid create-vote POST to return 200 with inline error, got %d", createStatus)
+	createStatus, createCode := connectJSONCallViaPage(t, page, ts.URL, "CreateVote", map[string]any{
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"name":           "Bad Vote",
+		"visibility":     "open",
+		"min_selections": 1,
+		"max_selections": 1,
+		"option_labels":  []string{"OnlyOneChoice"},
+	})
+	if createStatus == 200 {
+		t.Fatalf("expected invalid create-vote to fail, got 200")
 	}
-	if !strings.Contains(createBody, "Provide valid bounds and at least two non-empty options.") {
-		t.Fatalf("expected invalid-create error in response body, got: %s", createBody)
+	if createCode != "invalid_argument" {
+		t.Fatalf("expected invalid_argument for bad create, got code=%q status=%d", createCode, createStatus)
 	}
 
 	createDraftVoteFromModeratorUI(t, page, "Draft To Validate", "open", 1, 1)
 	voteID := voteIDByName(t, ts, apID, "Draft To Validate")
 
-	updateStatus, updateBody := postFormFromPage(t, page,
-		fmt.Sprintf("%s/committee/%s/meeting/%s/votes/%d/update-draft", ts.URL, "test-committee", meetingID, voteID),
-		map[string]any{
-			"name":           "",
-			"visibility":     "open",
-			"min_selections": "1",
-			"max_selections": "1",
-			"option_label":   []string{"OnlyOneChoice"},
-		},
-	)
-	if updateStatus != 200 {
-		t.Fatalf("expected invalid update-draft POST to return 200 with inline error, got %d", updateStatus)
+	updateStatus, updateCode := connectJSONCallViaPage(t, page, ts.URL, "UpdateVoteDraft", map[string]any{
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"vote_id":        strconv.FormatInt(voteID, 10),
+		"name":           "",
+		"visibility":     "open",
+		"min_selections": 1,
+		"max_selections": 1,
+		"option_labels":  []string{"OnlyOneChoice"},
+	})
+	if updateStatus == 200 {
+		t.Fatalf("expected invalid update-draft to fail, got 200")
 	}
-	if !strings.Contains(updateBody, "Provide valid draft fields and at least two non-empty options.") {
-		t.Fatalf("expected invalid-update error in response body, got: %s", updateBody)
+	if updateCode != "invalid_argument" {
+		t.Fatalf("expected invalid_argument for bad update, got code=%q status=%d", updateCode, updateStatus)
 	}
 }
 
@@ -543,18 +569,17 @@ func TestVoting_IneligibleAttendeeCannotSubmit(t *testing.T) {
 		t.Fatalf("expected submit button to be disabled for ineligible attendee")
 	}
 
-	status, body := postFormFromPage(t, lateAttendeePage,
-		voteOpenSubmitURL(ts.URL, "test-committee", meetingID, voteID),
-		map[string]any{
-			"option_id":     strconv.FormatInt(optionID, 10),
-			"receipt_token": "late-forged-receipt",
-		},
-	)
-	if status != 200 {
-		t.Fatalf("expected forged ineligible submission to return 200 with inline error, got %d", status)
+	submitStatus, submitCode := connectJSONCallViaPage(t, lateAttendeePage, ts.URL, "SubmitBallot", map[string]any{
+		"committee_slug":       "test-committee",
+		"meeting_id":           meetingID,
+		"vote_id":              strconv.FormatInt(voteID, 10),
+		"selected_option_ids":  []string{strconv.FormatInt(optionID, 10)},
+	})
+	if submitStatus == 200 {
+		t.Fatalf("expected ineligible ballot submission to fail, got 200")
 	}
-	if !strings.Contains(body, "Open ballot rejected") {
-		t.Fatalf("expected open ballot rejection for ineligible attendee, got: %s", body)
+	if submitCode == "" {
+		t.Fatalf("expected error code for ineligible ballot, got empty code (status=%d)", submitStatus)
 	}
 
 	stats, err := ts.repo.GetVoteSubmissionStatsLive(context.Background(), voteID)
@@ -607,18 +632,17 @@ func TestVoting_DuplicateOpenSubmissionRejected(t *testing.T) {
 		return stats.CastCount == 1 && stats.BallotCount == 1, nil
 	}, "first open ballot to be persisted")
 
-	status, body := postFormFromPage(t, attendeePage,
-		voteOpenSubmitURL(ts.URL, "test-committee", meetingID, voteID),
-		map[string]any{
-			"option_id":     strconv.FormatInt(optionID, 10),
-			"receipt_token": "duplicate-open-2",
-		},
-	)
-	if status != 200 {
-		t.Fatalf("expected duplicate open submission to return 200 with inline error, got %d", status)
+	dupStatus, dupCode := connectJSONCallViaPage(t, attendeePage, ts.URL, "SubmitBallot", map[string]any{
+		"committee_slug":       "test-committee",
+		"meeting_id":           meetingID,
+		"vote_id":              strconv.FormatInt(voteID, 10),
+		"selected_option_ids":  []string{strconv.FormatInt(optionID, 10)},
+	})
+	if dupStatus == 200 {
+		t.Fatalf("expected duplicate open submission to fail, got 200")
 	}
-	if !strings.Contains(body, "Open ballot rejected") {
-		t.Fatalf("expected duplicate open ballot rejection, got: %s", body)
+	if dupCode == "" {
+		t.Fatalf("expected error code for duplicate ballot, got empty code (status=%d)", dupStatus)
 	}
 
 	stats, err := ts.repo.GetVoteSubmissionStatsLive(context.Background(), voteID)
@@ -675,7 +699,7 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 	waitUntil(t, 5*time.Second, func() (bool, error) {
 		count, err := moderatorPage.
-			Locator("#moderate-votes-panel details.collapse").
+			Locator("#moderate-votes-panel details").
 			Filter(playwright.LocatorFilterOptions{HasText: "Secret Vote"}).
 			Locator("summary span:has-text('counting')").
 			Count()
@@ -687,15 +711,18 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 		t.Fatalf("expected counting-state results block message: %v", err)
 	}
 
-	registerStatus, registerBody := postFormFromPage(t, moderatorPage,
-		fmt.Sprintf("%s/committee/%s/meeting/%s/votes/%d/cast/register", ts.URL, "test-committee", meetingID, voteID),
-		map[string]any{"attendee_query": "Alice Member"},
-	)
-	if registerStatus != 200 {
-		t.Fatalf("expected register-cast during counting to return 200 with inline error, got %d", registerStatus)
+	aliceAttendeeIDStr := ts.getAttendeeIDForMeeting(t, "test-committee", "Secret Lifecycle Meeting", "Alice Member")
+	registerStatus, registerCode := connectJSONCallViaPage(t, moderatorPage, ts.URL, "RegisterCast", map[string]any{
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"vote_id":        strconv.FormatInt(voteID, 10),
+		"attendee_id":    aliceAttendeeIDStr,
+	})
+	if registerStatus == 200 {
+		t.Fatalf("expected register-cast during counting to fail, got 200")
 	}
-	if !strings.Contains(registerBody, "Failed to register cast") {
-		t.Fatalf("expected register-cast rejection during counting, got: %s", registerBody)
+	if registerCode == "" {
+		t.Fatalf("expected error code for register-cast during counting, got empty code (status=%d)", registerStatus)
 	}
 
 	_, verifyErrCounting := verifySecretReceiptViaConnect(t, ts.URL, voteID, "secret-r1")
@@ -712,7 +739,7 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 	waitUntil(t, 5*time.Second, func() (bool, error) {
 		count, err := moderatorPage.
-			Locator("#moderate-votes-panel details.collapse").
+			Locator("#moderate-votes-panel details").
 			Filter(playwright.LocatorFilterOptions{HasText: "Secret Vote"}).
 			Locator("summary span:has-text('counting')").
 			Count()
@@ -730,7 +757,7 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 	waitUntil(t, 5*time.Second, func() (bool, error) {
 		count, err := moderatorPage.
-			Locator("#moderate-votes-panel details.collapse").
+			Locator("#moderate-votes-panel details").
 			Filter(playwright.LocatorFilterOptions{HasText: "Secret Vote"}).
 			Locator("summary span:has-text('closed')").
 			Count()
@@ -757,18 +784,20 @@ func TestVoting_ModeratorEndpoints_ForbiddenForMember(t *testing.T) {
 	memberPage := newPage(t)
 	userLogin(t, memberPage, ts.URL, "test-committee", "member1", "pass123")
 
-	status, _ := postFormFromPage(t, memberPage,
-		fmt.Sprintf("%s/committee/%s/meeting/%s/votes/create", ts.URL, "test-committee", meetingID),
-		map[string]any{
-			"name":           "Forbidden Vote",
-			"visibility":     "open",
-			"min_selections": "1",
-			"max_selections": "1",
-			"option_label":   []string{"Yes", "No"},
-		},
-	)
-	if status != 403 {
-		t.Fatalf("expected member POST to moderator votes endpoint to return 403, got %d", status)
+	createStatus, createCode := connectJSONCallViaPage(t, memberPage, ts.URL, "CreateVote", map[string]any{
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"name":           "Forbidden Vote",
+		"visibility":     "open",
+		"min_selections": 1,
+		"max_selections": 1,
+		"option_labels":  []string{"Yes", "No"},
+	})
+	if createStatus == 200 {
+		t.Fatalf("expected member create-vote to fail, got 200")
+	}
+	if createCode != "permission_denied" {
+		t.Fatalf("expected permission_denied for member create-vote, got code=%q status=%d", createCode, createStatus)
 	}
 }
 
@@ -849,22 +878,17 @@ func TestVoting_DuplicateSecretSubmissionRejected(t *testing.T) {
 		return stats.CastCount == 1 && stats.SecretBallotCount == 1, nil
 	}, "first secret ballot to be persisted")
 
-	status, body := postFormFromPage(t, attendeePage,
-		voteSecretSubmitURL(ts.URL, "test-committee", meetingID, voteID),
-		map[string]any{
-			"option_id":                strconv.FormatInt(optionID, 10),
-			"receipt_token":            "dup-secret-2",
-			"nonce":                    "nonce-dup-secret-2",
-			"encrypted_commitment_b64": "YQ==",
-			"commitment_cipher":        "xchacha20poly1305",
-			"commitment_version":       "1",
-		},
-	)
-	if status != 200 {
-		t.Fatalf("expected duplicate secret submission to return 200 with inline error, got %d", status)
+	dupStatus, dupCode := connectJSONCallViaPage(t, attendeePage, ts.URL, "SubmitBallot", map[string]any{
+		"committee_slug":      "test-committee",
+		"meeting_id":          meetingID,
+		"vote_id":             strconv.FormatInt(voteID, 10),
+		"selected_option_ids": []string{strconv.FormatInt(optionID, 10)},
+	})
+	if dupStatus == 200 {
+		t.Fatalf("expected duplicate secret submission to fail, got 200")
 	}
-	if !strings.Contains(body, "Secret ballot rejected") {
-		t.Fatalf("expected duplicate secret ballot rejection, got: %s", body)
+	if dupCode == "" {
+		t.Fatalf("expected error code for duplicate secret ballot, got empty code (status=%d)", dupStatus)
 	}
 
 	stats, err := ts.repo.GetVoteSubmissionStatsLive(context.Background(), voteID)

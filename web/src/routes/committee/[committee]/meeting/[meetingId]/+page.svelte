@@ -17,235 +17,6 @@
 	import { saveReceipt } from '$lib/utils/receipts.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 
-	const liveVotesLegacyScript = String.raw`
-		(function() {
-			if (!window.voteReceiptVault) {
-				window.voteReceiptVault = {
-					open: function() {
-						return new Promise(function(resolve, reject) {
-							var req = indexedDB.open("conference_tool_receipts", 1);
-							req.onupgradeneeded = function(event) {
-								var db = event.target.result;
-								if (!db.objectStoreNames.contains("receipts")) {
-									var store = db.createObjectStore("receipts", { keyPath: "id" });
-									store.createIndex("vote_id", "vote_id", { unique: false });
-									store.createIndex("kind", "kind", { unique: false });
-								}
-							};
-							req.onsuccess = function() { resolve(req.result); };
-							req.onerror = function() { reject(req.error); };
-						});
-					},
-					put: function(payload) {
-						if (!payload || !payload.id) { return Promise.resolve(); }
-						return this.open().then(function(db) {
-							return new Promise(function(resolve, reject) {
-								var tx = db.transaction("receipts", "readwrite");
-								tx.objectStore("receipts").put(payload);
-								tx.oncomplete = function() { resolve(); };
-								tx.onerror = function() { reject(tx.error); };
-							});
-						});
-					}
-				};
-			}
-
-			function randomToken() {
-				if (window.crypto && window.crypto.randomUUID) {
-					return window.crypto.randomUUID().replace(/-/g, "");
-				}
-				return String(Date.now()) + String(Math.random()).replace("0.", "");
-			}
-
-			function encodePayload(value) {
-				try {
-					return btoa(unescape(encodeURIComponent(value)));
-				} catch (error) {
-					return "";
-				}
-			}
-
-			function decodeB64JSON(raw) {
-				if (!raw) { return null; }
-				try {
-					return JSON.parse(decodeURIComponent(escape(atob(raw))));
-				} catch (error) {
-					return null;
-				}
-			}
-
-			var submissionStorageKey = "conference_tool_live_vote_submissions";
-			var countdownIntervalID = 0;
-			var refreshTimeoutID = 0;
-
-			function readSubmissionState() {
-				try {
-					var raw = window.sessionStorage.getItem(submissionStorageKey);
-					if (!raw) { return {}; }
-					var parsed = JSON.parse(raw);
-					if (parsed && typeof parsed === "object") {
-						return parsed;
-					}
-				} catch (error) {
-				}
-				return {};
-			}
-
-			function writeSubmissionState(state) {
-				try {
-					window.sessionStorage.setItem(submissionStorageKey, JSON.stringify(state || {}));
-				} catch (error) {
-				}
-			}
-
-			function pruneSubmissionState() {
-				var state = readSubmissionState();
-				var now = Date.now();
-				var maxAgeMs = 24 * 60 * 60 * 1000;
-				var changed = false;
-				for (var key in state) {
-					if (!Object.prototype.hasOwnProperty.call(state, key)) { continue; }
-					var ts = Number(state[key]);
-					if (!Number.isFinite(ts) || now-ts > maxAgeMs) {
-						delete state[key];
-						changed = true;
-					}
-				}
-				if (changed) {
-					writeSubmissionState(state);
-				}
-				return state;
-			}
-
-			function markVoteSubmitted(voteID) {
-				var numeric = Number(voteID);
-				if (!Number.isFinite(numeric) || numeric <= 0) { return; }
-				var state = pruneSubmissionState();
-				state[String(Math.floor(numeric))] = Date.now();
-				writeSubmissionState(state);
-			}
-
-			function applySubmittedScreens() {
-				var panel = document.getElementById("live-votes-panel");
-				if (!panel) { return; }
-				var state = pruneSubmissionState();
-				var cards = panel.querySelectorAll("[data-vote-card]");
-				for (var i = 0; i < cards.length; i++) {
-					var card = cards[i];
-					var voteID = card.getAttribute("data-vote-id") || "";
-					var voteState = card.getAttribute("data-vote-state") || "";
-					var submittedScreen = card.querySelector("[data-vote-submitted-screen]");
-					var voteInputs = card.querySelector("[data-vote-inputs]");
-					if (!submittedScreen || !voteInputs) {
-						continue;
-					}
-					var showSubmitted = voteState === "open" && !!state[voteID];
-					submittedScreen.classList.toggle("hidden", !showSubmitted);
-					voteInputs.classList.toggle("hidden", showSubmitted);
-				}
-			}
-
-			function applyResultsCountdown() {
-				var panel = document.getElementById("live-votes-panel");
-				if (!panel) { return; }
-				var cards = panel.querySelectorAll("[data-vote-card]");
-				var nowMs = Date.now();
-				var soonestExpiryMs = 0;
-				for (var i = 0; i < cards.length; i++) {
-					var card = cards[i];
-					var untilRaw = card.getAttribute("data-vote-results-until") || "";
-					var untilSec = Number.parseInt(untilRaw, 10);
-					if (!Number.isFinite(untilSec) || untilSec <= 0) {
-						continue;
-					}
-					var untilMs = untilSec * 1000;
-					var remainingSec = Math.max(0, Math.ceil((untilMs - nowMs) / 1000));
-					var countdown = card.querySelector("[data-vote-results-countdown]");
-					if (countdown) {
-						countdown.textContent = String(remainingSec);
-					}
-					if (untilMs > nowMs && (soonestExpiryMs === 0 || untilMs < soonestExpiryMs)) {
-						soonestExpiryMs = untilMs;
-					}
-				}
-				if (refreshTimeoutID) {
-					window.clearTimeout(refreshTimeoutID);
-					refreshTimeoutID = 0;
-				}
-				if (soonestExpiryMs > 0) {
-					var delay = Math.max(150, soonestExpiryMs - nowMs + 250);
-					refreshTimeoutID = window.setTimeout(function() {
-						var currentPanel = document.getElementById("live-votes-panel");
-						if (currentPanel && window.htmx) {
-							window.htmx.trigger(currentPanel, "reload");
-						}
-					}, delay);
-				}
-			}
-
-			function applyLiveVoteUIState() {
-				applySubmittedScreens();
-				applyResultsCountdown();
-			}
-
-			function persistLatestReceipt() {
-				var node = document.getElementById("live-vote-last-receipt");
-				if (!node) { return; }
-				var raw = node.getAttribute("data-receipt-b64") || "";
-				if (!raw) { return; }
-				var payload = decodeB64JSON(raw);
-				if (!payload) { return; }
-				window.voteReceiptVault.put(payload);
-				markVoteSubmitted(payload.vote_id);
-				node.setAttribute("data-receipt-b64", "");
-			}
-
-			if (!window.__voteBallotFormsWired) {
-				document.addEventListener("submit", function(event) {
-					var form = event.target;
-					if (!(form instanceof HTMLFormElement)) { return; }
-					if (!form.matches("[data-vote-open-form], [data-vote-secret-form]")) { return; }
-
-					var receiptTokenInput = form.querySelector("input[name='receipt_token']");
-					if (receiptTokenInput && !receiptTokenInput.value) {
-						receiptTokenInput.value = randomToken();
-					}
-
-					if (form.matches("[data-vote-secret-form]")) {
-						var nonceInput = form.querySelector("input[name='nonce']");
-						var payloadInput = form.querySelector("input[name='encrypted_commitment_b64']");
-						if (!nonceInput || !payloadInput) { return; }
-						if (!nonceInput.value) {
-							nonceInput.value = randomToken();
-						}
-						var selected = [];
-						var options = form.querySelectorAll("input[name='option_id']");
-						for (var i = 0; i < options.length; i++) {
-							if (options[i].checked) {
-								selected.push(options[i].value);
-							}
-						}
-						var attendeeID = form.getAttribute("data-attendee-id") || "";
-						payloadInput.value = encodePayload(attendeeID + ":" + selected.join(",") + ":" + nonceInput.value);
-					}
-				});
-				document.addEventListener("htmx:afterSwap", function(event) {
-					if (!event.target) { return; }
-					if (event.target.id === "live-votes-panel" || (event.target.closest && event.target.closest("#live-votes-panel"))) {
-						persistLatestReceipt();
-						applyLiveVoteUIState();
-					}
-				});
-				window.__voteBallotFormsWired = true;
-			}
-
-			persistLatestReceipt();
-			applyLiveVoteUIState();
-			if (!window.__voteResultsCountdownIntervalID) {
-				window.__voteResultsCountdownIntervalID = window.setInterval(applyResultsCountdown, 1000);
-			}
-		})();`;
-
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
 
@@ -700,24 +471,6 @@
 		return `/committee/${slug}/meeting/${meetingId}/speaker/self-yield`;
 	}
 
-	function liveVotesRefreshURL() {
-		return `/committee/${slug}/meeting/${meetingId}/votes/live/partial`;
-	}
-
-	function escapeHTML(value: string) {
-		return value
-			.replaceAll('&', '&amp;')
-			.replaceAll('<', '&lt;')
-			.replaceAll('>', '&gt;')
-			.replaceAll('"', '&quot;')
-			.replaceAll("'", '&#39;');
-	}
-
-	function liveVotesTemplateHTML() {
-		const refreshURL = escapeHTML(liveVotesRefreshURL());
-		const noVotesMarkup = `<div id="live-votes-panel" class="space-y-3" sse-swap="votes-updated" hx-get="${refreshURL}" hx-trigger="reload" hx-swap="outerHTML" hx-swap-oob="outerHTML"><div class="flex items-center justify-between gap-2"><h2 class="text-lg font-semibold">Votes</h2><button type="button" class="btn btn-xs btn-outline" hx-get="${refreshURL}" hx-target="#live-votes-panel" hx-swap="outerHTML">Refresh</button></div><p class="text-sm text-base-content/70">No open or recently closed votes right now.</p><div id="live-vote-last-receipt" class="hidden" data-receipt-b64=""></div></div>`;
-		return `${noVotesMarkup}<script>${liveVotesLegacyScript}\n\t<\/script>`;
-	}
 </script>
 
 <div class="space-y-6">
@@ -1094,7 +847,6 @@
 									</div>
 								</div>
 								<div id="live-speakers-panel-meta" hx-swap-oob="innerHTML" hidden></div>
-								<template>{@html liveVotesTemplateHTML()}</template>
 								<div id="live-doc-fab-oob" hx-swap-oob="innerHTML:#live-doc-fab-wrapper" hidden></div>
 							</div>
 						</div>
@@ -1107,9 +859,6 @@
 					<div
 						id="live-votes-panel"
 						class="space-y-3"
-						sse-swap="votes-updated"
-						hx-get={liveVotesRefreshURL()}
-						hx-trigger="reload"
 						hx-swap="outerHTML"
 					>
 						<div class="flex items-center justify-between gap-2">
@@ -1117,9 +866,6 @@
 							<button
 								type="button"
 								class="btn btn-xs btn-outline"
-								hx-get={liveVotesRefreshURL()}
-								hx-target="#live-votes-panel"
-								hx-swap="outerHTML"
 								onclick={() => {
 									void loadVotes();
 								}}

@@ -193,40 +193,6 @@ func newTestServer(t *testing.T) *testServer {
 	spaHandler := webassets.NewSPAHandler()
 
 	appHandler := mw.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		isCommitteeVoteRoute := strings.HasPrefix(path, "/committee/") && func() bool {
-			if r.Method == http.MethodGet {
-				return strings.HasSuffix(path, "/votes/partial") || strings.HasSuffix(path, "/votes/live/partial")
-			}
-			if r.Method != http.MethodPost {
-				return false
-			}
-			switch {
-			case strings.HasSuffix(path, "/votes/create"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/update-draft"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/open"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/close"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/archive"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/cast/register"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/open"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/ballot/secret"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/open"):
-				return true
-			case strings.Contains(path, "/votes/") && strings.HasSuffix(path, "/submit/secret"):
-				return true
-			default:
-				return false
-			}
-		}()
-
 		switch {
 		case strings.HasPrefix(r.URL.Path, "/api/"):
 			http.StripPrefix("/api", apiMux).ServeHTTP(w, r)
@@ -245,12 +211,6 @@ func newTestServer(t *testing.T) *testServer {
 			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
 		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
 			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
-		// Vote HTML endpoints are still operationally legacy-backed in the new test
-		// server. The native moderate page uses Connect data for first render, but
-		// vote form posts and the live page's post-close results flow still rely on
-		// these HTMX fragments.
-		case isCommitteeVoteRoute:
-			legacyRouter.ServeHTTP(w, r)
 		// Legacy docs fragment endpoints stay proxied because the existing E2E
 		// contract tests assert the exact legacy HTML fragment structure.
 		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/docs/oob/"):

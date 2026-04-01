@@ -1543,37 +1543,60 @@
 		return vote.state === 'closed' || lastClosedVote?.vote.voteId === vote.voteId;
 	}
 
-	async function submitVoteRoute(form: HTMLFormElement | null, key: string) {
-		const url = form?.getAttribute('hx-post');
-		if (!form || !url) return;
-		await runVoteAction(key, async () => {
-			const params = new URLSearchParams();
-			for (const [field, value] of new FormData(form).entries()) {
-				if (typeof value === 'string') {
-					params.append(field, value);
-				}
-			}
-			const response = await fetch(url, {
-				method: 'POST',
-				body: params.toString(),
-				credentials: 'same-origin',
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-					'HX-Request': 'true'
-				}
-			});
-			if (!response.ok) {
-				throw new Error(`vote route ${url} failed`);
-			}
-			form.reset();
+	function resolveAttendeeIdFromQuery(query: string): string | null {
+		const trimmed = query.trim();
+		const rows = attendeeRows();
+		const leadingNum = trimmed.match(/^(\d+)/);
+		if (leadingNum) {
+			const num = BigInt(leadingNum[1]);
+			const found = rows.find((a) => a.attendeeNumber === num);
+			if (found) return found.attendeeId;
+		}
+		const exact = rows.find((a) => a.fullName.toLowerCase() === trimmed.toLowerCase());
+		if (exact) return exact.attendeeId;
+		const lower = trimmed.toLowerCase();
+		const matches = rows.filter((a) =>
+			`${a.attendeeNumber} ${a.fullName}`.toLowerCase().includes(lower)
+		);
+		if (matches.length === 1) return matches[0].attendeeId;
+		return null;
+	}
+
+	async function registerCast(voteId: string, attendeeQuery: string) {
+		const attendeeId = resolveAttendeeIdFromQuery(attendeeQuery);
+		if (!attendeeId) throw new Error('Could not resolve attendee from query');
+		await runVoteAction(`register-cast-${voteId}`, async () => {
+			await voteClient.registerCast({ committeeSlug: slug, meetingId, voteId, attendeeId });
 			await loadVotes();
 		});
 	}
 
-	async function submitVoteRouteForm(event: SubmitEvent, key: string) {
-		event.preventDefault();
-		const form = event.currentTarget as HTMLFormElement | null;
-		await submitVoteRoute(form, key);
+	async function countOpenBallot(voteId: string, attendeeQuery: string, selectedOptionIds: string[]) {
+		const attendeeId = resolveAttendeeIdFromQuery(attendeeQuery);
+		if (!attendeeId) throw new Error('Could not resolve attendee from query');
+		await runVoteAction(`ballot-open-${voteId}`, async () => {
+			await voteClient.countOpenBallot({
+				committeeSlug: slug,
+				meetingId,
+				voteId,
+				attendeeId,
+				selectedOptionIds
+			});
+			await loadVotes();
+		});
+	}
+
+	async function countSecretBallot(voteId: string, receiptToken: string, selectedOptionIds: string[]) {
+		await runVoteAction(`ballot-secret-${voteId}`, async () => {
+			await voteClient.countSecretBallot({
+				committeeSlug: slug,
+				meetingId,
+				voteId,
+				receiptToken,
+				selectedOptionIds
+			});
+			await loadVotes();
+		});
 	}
 
 	async function submitCreateVoteForm(event: SubmitEvent) {
@@ -2106,15 +2129,15 @@
 																				<div class="text-xs font-semibold uppercase text-base-content/70">Manual Submission</div>
 																				{#if vote.visibility === 'open'}
 																					{#if vote.state === 'open'}
-																						<form class="space-y-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/ballot/open`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitVoteRouteForm(event, `ballot-open-${vote.voteId}`)}>
+																						<div class="space-y-2" id={`open-ballot-form-${vote.voteId}`} data-testid="manage-vote-open-ballot-form">
 																							<div class="text-xs font-semibold uppercase text-base-content/70">Open Ballot Entry</div>
 																							<div class={vote.maxSelections === 1n ? 'grid gap-1 text-sm grid-cols-1' : 'grid gap-1 text-sm grid-cols-2'}>
 																								{#each vote.options as option}
 																									<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
 																										{#if vote.maxSelections === 1n}
-																											<input class="radio radio-sm" type="radio" name="option_id" value={option.optionId} />
+																											<input class="radio radio-sm" type="radio" name={`open-option-${vote.voteId}`} value={option.optionId} />
 																										{:else}
-																											<input class="checkbox checkbox-sm" type="checkbox" name="option_id" value={option.optionId} />
+																											<input class="checkbox checkbox-sm" type="checkbox" name={`open-option-${vote.voteId}`} value={option.optionId} />
 																										{/if}
 																										<span>{option.label}</span>
 																									</label>
@@ -2124,8 +2147,16 @@
 																								<p class="text-xs text-warning">No attendees available for manual entry.</p>
 																							{:else}
 																								<div class="join w-full">
-																									<input class="input input-bordered input-sm join-item w-full" name="attendee_query" list={`vote-manual-open-attendee-list-${vote.voteId}`} placeholder="Search attendee" required />
-																									<button type="button" class="btn btn-sm btn-primary join-item" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await submitVoteRoute((event.currentTarget as HTMLButtonElement | null)?.closest('form'), `ballot-open-${vote.voteId}`); }}>Submit Ballot</button>
+																									<input id={`open-ballot-attendee-${vote.voteId}`} class="input input-bordered input-sm join-item w-full" list={`vote-manual-open-attendee-list-${vote.voteId}`} placeholder="Search attendee" required data-testid="open-ballot-attendee-query" />
+																									<button type="button" class="btn btn-sm btn-primary join-item" data-testid="open-ballot-submit" onclick={async () => {
+																										const container = document.getElementById(`open-ballot-form-${vote.voteId}`);
+																										const attendeeInput = document.getElementById(`open-ballot-attendee-${vote.voteId}`) as HTMLInputElement | null;
+																										const attendeeQuery = attendeeInput?.value ?? '';
+																										const checked = [...(container?.querySelectorAll(`[name="open-option-${vote.voteId}"]:checked`) ?? [])].map((el) => (el as HTMLInputElement).value);
+																										await countOpenBallot(vote.voteId, attendeeQuery, checked);
+																										if (attendeeInput) attendeeInput.value = '';
+																										container?.querySelectorAll(`[name="open-option-${vote.voteId}"]`).forEach((el) => { (el as HTMLInputElement).checked = false; });
+																									}}>Submit Ballot</button>
 																								</div>
 																								<datalist id={`vote-manual-open-attendee-list-${vote.voteId}`}>
 																									{#each attendeeRows() as attendee}
@@ -2134,7 +2165,7 @@
 																								</datalist>
 																								<p class="text-xs text-base-content/70">Quick-cast uses attendee number followed by the attendee name.</p>
 																							{/if}
-																						</form>
+																						</div>
 																					{:else}
 																						<p class="text-xs text-base-content/70">Manual open-ballot entry is available while the vote is open.</p>
 																					{/if}
@@ -2143,15 +2174,19 @@
 																					{#if vote.state === 'open' || vote.state === 'counting'}
 																						<div class={vote.state === 'open' ? 'grid gap-2 md:grid-cols-2' : 'grid gap-2 md:grid-cols-1'}>
 																							{#if vote.state === 'open'}
-																								<form class="rounded-box border border-base-300 p-2 space-y-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/cast/register`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitVoteRouteForm(event, `register-cast-${vote.voteId}`)}>
+																								<div class="rounded-box border border-base-300 p-2 space-y-2" id={`register-cast-form-${vote.voteId}`} data-testid="manage-vote-register-cast-form">
 																									<div class="text-xs font-semibold uppercase text-base-content/70">1. Register Cast</div>
-																									<input type="hidden" name="source" value="manual_submission" />
 																									{#if attendeeRows().length === 0}
 																										<p class="text-xs text-warning">No attendees are available for cast registration.</p>
 																									{:else}
 																										<div class="join w-full">
-																											<input class="input input-bordered input-sm join-item w-full" name="attendee_query" list={`vote-manual-secret-attendee-list-${vote.voteId}`} placeholder="Search attendee" required />
-																											<button type="button" class="btn btn-sm join-item" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await submitVoteRoute((event.currentTarget as HTMLButtonElement | null)?.closest('form'), `register-cast-${vote.voteId}`); }}>Register Cast</button>
+																											<input id={`register-cast-attendee-${vote.voteId}`} class="input input-bordered input-sm join-item w-full" list={`vote-manual-secret-attendee-list-${vote.voteId}`} placeholder="Search attendee" required data-testid="register-cast-attendee-query" />
+																											<button type="button" class="btn btn-sm join-item" data-testid="register-cast-submit" onclick={async () => {
+																												const attendeeInput = document.getElementById(`register-cast-attendee-${vote.voteId}`) as HTMLInputElement | null;
+																												const attendeeQuery = attendeeInput?.value ?? '';
+																												await registerCast(vote.voteId, attendeeQuery);
+																												if (attendeeInput) attendeeInput.value = '';
+																											}}>Register Cast</button>
 																										</div>
 																										<datalist id={`vote-manual-secret-attendee-list-${vote.voteId}`}>
 																											{#each attendeeRows() as attendee}
@@ -2160,28 +2195,33 @@
 																										</datalist>
 																										<p class="text-xs text-base-content/70">Quick registration uses attendee number followed by the attendee name.</p>
 																									{/if}
-																								</form>
+																								</div>
 																							{/if}
-																							<form class="rounded-box border border-base-300 p-2 space-y-2" hx-post={`/committee/${slug}/meeting/${meetingId}/votes/${vote.voteId}/ballot/secret`} hx-target="#moderate-votes-panel" hx-swap="outerHTML" onsubmit={async (event) => await submitVoteRouteForm(event, `ballot-secret-${vote.voteId}`)}>
+																							<div class="rounded-box border border-base-300 p-2 space-y-2" id={`count-secret-form-${vote.voteId}`} data-testid="manage-vote-count-secret-form">
 																								<div class="text-xs font-semibold uppercase text-base-content/70">2. Count Secret Ballot</div>
-																								<input class="input input-bordered input-sm w-full" name="receipt_token" placeholder="Receipt token (optional)" />
-																								<input type="hidden" name="commitment_cipher" value="xchacha20poly1305" />
-																								<input type="hidden" name="commitment_version" value="1" />
-																								<input class="input input-bordered input-sm w-full" name="encrypted_commitment_b64" placeholder="Encrypted commitment (optional)" />
+																								<input id={`secret-receipt-${vote.voteId}`} class="input input-bordered input-sm w-full" placeholder="Receipt token (optional)" data-testid="count-secret-receipt-token" />
 																								<div class="grid grid-cols-2 gap-1 text-sm">
 																									{#each vote.options as option}
 																										<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
 																											{#if vote.maxSelections === 1n}
-																												<input class="radio radio-sm" type="radio" name="option_id" value={option.optionId} />
+																												<input class="radio radio-sm" type="radio" name={`secret-option-${vote.voteId}`} value={option.optionId} />
 																											{:else}
-																												<input class="checkbox checkbox-sm" type="checkbox" name="option_id" value={option.optionId} />
+																												<input class="checkbox checkbox-sm" type="checkbox" name={`secret-option-${vote.voteId}`} value={option.optionId} />
 																											{/if}
 																											<span>{option.label}</span>
 																										</label>
 																									{/each}
 																								</div>
-																								<button type="button" class="btn btn-sm btn-primary" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await submitVoteRoute((event.currentTarget as HTMLButtonElement | null)?.closest('form'), `ballot-secret-${vote.voteId}`); }}>Count Ballot</button>
-																							</form>
+																								<button type="button" class="btn btn-sm btn-primary" data-testid="count-secret-submit" onclick={async () => {
+																									const container = document.getElementById(`count-secret-form-${vote.voteId}`);
+																									const receiptInput = document.getElementById(`secret-receipt-${vote.voteId}`) as HTMLInputElement | null;
+																									const receiptToken = receiptInput?.value ?? '';
+																									const checked = [...(container?.querySelectorAll(`[name="secret-option-${vote.voteId}"]:checked`) ?? [])].map((el) => (el as HTMLInputElement).value);
+																									await countSecretBallot(vote.voteId, receiptToken, checked);
+																									if (receiptInput) receiptInput.value = '';
+																									container?.querySelectorAll(`[name="secret-option-${vote.voteId}"]`).forEach((el) => { (el as HTMLInputElement).checked = false; });
+																								}}>Count Ballot</button>
+																							</div>
 																						</div>
 																					{:else}
 																						<p class="text-xs text-base-content/70">Manual secret actions are available while vote is open or counting.</p>

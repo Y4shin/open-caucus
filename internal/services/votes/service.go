@@ -700,3 +700,120 @@ func generateReceiptToken() (string, error) {
 	}
 	return hex.EncodeToString(b), nil
 }
+
+// RegisterCast marks an attendee as having submitted a physical ballot for a secret vote.
+func (s *Service) RegisterCast(ctx context.Context, committeeSlug, meetingIDStr, voteIDStr, attendeeIDStr string) (*votesv1.RegisterCastResponse, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
+	}
+	voteID, err := strconv.ParseInt(voteIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid vote id")
+	}
+	attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+	}
+	if _, err := s.repo.RegisterVoteCast(ctx, voteID, meetingID, attendeeID, model.VoteCastSourceManualSubmission); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInvalidArgument, "failed to register cast: "+err.Error(), err)
+	}
+	s.publishVotesUpdated(meetingID)
+	view, err := s.getVotesPanelView(ctx, committeeSlug, meetingIDStr, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return &votesv1.RegisterCastResponse{View: view}, nil
+}
+
+// CountSecretBallot counts a physical secret ballot.
+func (s *Service) CountSecretBallot(ctx context.Context, committeeSlug, meetingIDStr, voteIDStr, receiptToken string, selectedOptionIDStrs []string) (*votesv1.CountSecretBallotResponse, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
+	}
+	voteID, err := strconv.ParseInt(voteIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid vote id")
+	}
+	optionIDs, err := parseIDList(selectedOptionIDStrs)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid option id")
+	}
+	if receiptToken == "" {
+		receiptToken, _ = generateReceiptToken()
+	}
+	payload := []byte("manual:" + receiptToken)
+	if _, err := s.repo.SubmitSecretBallot(ctx, repository.SecretBallotSubmission{
+		VoteDefinitionID:    voteID,
+		ReceiptToken:        receiptToken,
+		EncryptedCommitment: payload,
+		CommitmentCipher:    "xchacha20poly1305",
+		CommitmentVersion:   1,
+		OptionIDs:           optionIDs,
+	}); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInvalidArgument, "failed to count secret ballot: "+err.Error(), err)
+	}
+	s.publishVotesUpdated(meetingID)
+	view, err := s.getVotesPanelView(ctx, committeeSlug, meetingIDStr, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return &votesv1.CountSecretBallotResponse{View: view}, nil
+}
+
+// CountOpenBallot manually records an open ballot on behalf of an attendee.
+func (s *Service) CountOpenBallot(ctx context.Context, committeeSlug, meetingIDStr, voteIDStr, attendeeIDStr string, selectedOptionIDStrs []string) (*votesv1.CountOpenBallotResponse, error) {
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+	if err := serviceauthz.RequireModerationAccess(ctx, s.repo, committeeSlug, meetingID); err != nil {
+		return nil, err
+	}
+	voteID, err := strconv.ParseInt(voteIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid vote id")
+	}
+	attendeeID, err := strconv.ParseInt(attendeeIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid attendee id")
+	}
+	optionIDs, err := parseIDList(selectedOptionIDStrs)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid option id")
+	}
+	receiptToken, _ := generateReceiptToken()
+	if _, err := s.repo.SubmitOpenBallot(ctx, repository.OpenBallotSubmission{
+		VoteDefinitionID: voteID,
+		MeetingID:        meetingID,
+		AttendeeID:       attendeeID,
+		Source:           model.VoteCastSourceManualSubmission,
+		ReceiptToken:     receiptToken,
+		OptionIDs:        optionIDs,
+	}); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInvalidArgument, "failed to count open ballot: "+err.Error(), err)
+	}
+	s.publishVotesUpdated(meetingID)
+	view, err := s.getVotesPanelView(ctx, committeeSlug, meetingIDStr, meetingID)
+	if err != nil {
+		return nil, err
+	}
+	return &votesv1.CountOpenBallotResponse{View: view}, nil
+}
+
+// getVotesPanelView is a helper that returns the current VotesPanelView for the given meeting.
+func (s *Service) getVotesPanelView(ctx context.Context, committeeSlug, meetingIDStr string, meetingID int64) (*votesv1.VotesPanelView, error) {
+	res, err := s.GetVotesPanel(ctx, committeeSlug, meetingIDStr)
+	if err != nil {
+		return nil, err
+	}
+	_ = meetingID
+	return res.View, nil
+}

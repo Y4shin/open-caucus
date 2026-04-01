@@ -59,6 +59,15 @@ const (
 	// VoteServiceVerifySecretReceiptProcedure is the fully-qualified name of the VoteService's
 	// VerifySecretReceipt RPC.
 	VoteServiceVerifySecretReceiptProcedure = "/conference.votes.v1.VoteService/VerifySecretReceipt"
+	// VoteServiceRegisterCastProcedure is the fully-qualified name of the VoteService's RegisterCast
+	// RPC.
+	VoteServiceRegisterCastProcedure = "/conference.votes.v1.VoteService/RegisterCast"
+	// VoteServiceCountSecretBallotProcedure is the fully-qualified name of the VoteService's
+	// CountSecretBallot RPC.
+	VoteServiceCountSecretBallotProcedure = "/conference.votes.v1.VoteService/CountSecretBallot"
+	// VoteServiceCountOpenBallotProcedure is the fully-qualified name of the VoteService's
+	// CountOpenBallot RPC.
+	VoteServiceCountOpenBallotProcedure = "/conference.votes.v1.VoteService/CountOpenBallot"
 )
 
 // VoteServiceClient is a client for the conference.votes.v1.VoteService service.
@@ -83,6 +92,12 @@ type VoteServiceClient interface {
 	VerifyOpenReceipt(context.Context, *connect.Request[v1.VerifyOpenReceiptRequest]) (*connect.Response[v1.VerifyOpenReceiptResponse], error)
 	// VerifySecretReceipt returns the recorded secret ballot commitment for a receipt.
 	VerifySecretReceipt(context.Context, *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error)
+	// RegisterCast marks an attendee as having physically submitted a secret ballot.
+	RegisterCast(context.Context, *connect.Request[v1.RegisterCastRequest]) (*connect.Response[v1.RegisterCastResponse], error)
+	// CountSecretBallot counts a physical secret ballot submitted by an attendee.
+	CountSecretBallot(context.Context, *connect.Request[v1.CountSecretBallotRequest]) (*connect.Response[v1.CountSecretBallotResponse], error)
+	// CountOpenBallot manually records an open ballot on behalf of an attendee.
+	CountOpenBallot(context.Context, *connect.Request[v1.CountOpenBallotRequest]) (*connect.Response[v1.CountOpenBallotResponse], error)
 }
 
 // NewVoteServiceClient constructs a client for the conference.votes.v1.VoteService service. By
@@ -156,6 +171,24 @@ func NewVoteServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(voteServiceMethods.ByName("VerifySecretReceipt")),
 			connect.WithClientOptions(opts...),
 		),
+		registerCast: connect.NewClient[v1.RegisterCastRequest, v1.RegisterCastResponse](
+			httpClient,
+			baseURL+VoteServiceRegisterCastProcedure,
+			connect.WithSchema(voteServiceMethods.ByName("RegisterCast")),
+			connect.WithClientOptions(opts...),
+		),
+		countSecretBallot: connect.NewClient[v1.CountSecretBallotRequest, v1.CountSecretBallotResponse](
+			httpClient,
+			baseURL+VoteServiceCountSecretBallotProcedure,
+			connect.WithSchema(voteServiceMethods.ByName("CountSecretBallot")),
+			connect.WithClientOptions(opts...),
+		),
+		countOpenBallot: connect.NewClient[v1.CountOpenBallotRequest, v1.CountOpenBallotResponse](
+			httpClient,
+			baseURL+VoteServiceCountOpenBallotProcedure,
+			connect.WithSchema(voteServiceMethods.ByName("CountOpenBallot")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -171,6 +204,9 @@ type voteServiceClient struct {
 	submitBallot        *connect.Client[v1.SubmitBallotRequest, v1.SubmitBallotResponse]
 	verifyOpenReceipt   *connect.Client[v1.VerifyOpenReceiptRequest, v1.VerifyOpenReceiptResponse]
 	verifySecretReceipt *connect.Client[v1.VerifySecretReceiptRequest, v1.VerifySecretReceiptResponse]
+	registerCast        *connect.Client[v1.RegisterCastRequest, v1.RegisterCastResponse]
+	countSecretBallot   *connect.Client[v1.CountSecretBallotRequest, v1.CountSecretBallotResponse]
+	countOpenBallot     *connect.Client[v1.CountOpenBallotRequest, v1.CountOpenBallotResponse]
 }
 
 // GetVotesPanel calls conference.votes.v1.VoteService.GetVotesPanel.
@@ -223,6 +259,21 @@ func (c *voteServiceClient) VerifySecretReceipt(ctx context.Context, req *connec
 	return c.verifySecretReceipt.CallUnary(ctx, req)
 }
 
+// RegisterCast calls conference.votes.v1.VoteService.RegisterCast.
+func (c *voteServiceClient) RegisterCast(ctx context.Context, req *connect.Request[v1.RegisterCastRequest]) (*connect.Response[v1.RegisterCastResponse], error) {
+	return c.registerCast.CallUnary(ctx, req)
+}
+
+// CountSecretBallot calls conference.votes.v1.VoteService.CountSecretBallot.
+func (c *voteServiceClient) CountSecretBallot(ctx context.Context, req *connect.Request[v1.CountSecretBallotRequest]) (*connect.Response[v1.CountSecretBallotResponse], error) {
+	return c.countSecretBallot.CallUnary(ctx, req)
+}
+
+// CountOpenBallot calls conference.votes.v1.VoteService.CountOpenBallot.
+func (c *voteServiceClient) CountOpenBallot(ctx context.Context, req *connect.Request[v1.CountOpenBallotRequest]) (*connect.Response[v1.CountOpenBallotResponse], error) {
+	return c.countOpenBallot.CallUnary(ctx, req)
+}
+
 // VoteServiceHandler is an implementation of the conference.votes.v1.VoteService service.
 type VoteServiceHandler interface {
 	// GetVotesPanel returns the moderator-facing votes panel for the active agenda point.
@@ -245,6 +296,12 @@ type VoteServiceHandler interface {
 	VerifyOpenReceipt(context.Context, *connect.Request[v1.VerifyOpenReceiptRequest]) (*connect.Response[v1.VerifyOpenReceiptResponse], error)
 	// VerifySecretReceipt returns the recorded secret ballot commitment for a receipt.
 	VerifySecretReceipt(context.Context, *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error)
+	// RegisterCast marks an attendee as having physically submitted a secret ballot.
+	RegisterCast(context.Context, *connect.Request[v1.RegisterCastRequest]) (*connect.Response[v1.RegisterCastResponse], error)
+	// CountSecretBallot counts a physical secret ballot submitted by an attendee.
+	CountSecretBallot(context.Context, *connect.Request[v1.CountSecretBallotRequest]) (*connect.Response[v1.CountSecretBallotResponse], error)
+	// CountOpenBallot manually records an open ballot on behalf of an attendee.
+	CountOpenBallot(context.Context, *connect.Request[v1.CountOpenBallotRequest]) (*connect.Response[v1.CountOpenBallotResponse], error)
 }
 
 // NewVoteServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -314,6 +371,24 @@ func NewVoteServiceHandler(svc VoteServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(voteServiceMethods.ByName("VerifySecretReceipt")),
 		connect.WithHandlerOptions(opts...),
 	)
+	voteServiceRegisterCastHandler := connect.NewUnaryHandler(
+		VoteServiceRegisterCastProcedure,
+		svc.RegisterCast,
+		connect.WithSchema(voteServiceMethods.ByName("RegisterCast")),
+		connect.WithHandlerOptions(opts...),
+	)
+	voteServiceCountSecretBallotHandler := connect.NewUnaryHandler(
+		VoteServiceCountSecretBallotProcedure,
+		svc.CountSecretBallot,
+		connect.WithSchema(voteServiceMethods.ByName("CountSecretBallot")),
+		connect.WithHandlerOptions(opts...),
+	)
+	voteServiceCountOpenBallotHandler := connect.NewUnaryHandler(
+		VoteServiceCountOpenBallotProcedure,
+		svc.CountOpenBallot,
+		connect.WithSchema(voteServiceMethods.ByName("CountOpenBallot")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.votes.v1.VoteService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case VoteServiceGetVotesPanelProcedure:
@@ -336,6 +411,12 @@ func NewVoteServiceHandler(svc VoteServiceHandler, opts ...connect.HandlerOption
 			voteServiceVerifyOpenReceiptHandler.ServeHTTP(w, r)
 		case VoteServiceVerifySecretReceiptProcedure:
 			voteServiceVerifySecretReceiptHandler.ServeHTTP(w, r)
+		case VoteServiceRegisterCastProcedure:
+			voteServiceRegisterCastHandler.ServeHTTP(w, r)
+		case VoteServiceCountSecretBallotProcedure:
+			voteServiceCountSecretBallotHandler.ServeHTTP(w, r)
+		case VoteServiceCountOpenBallotProcedure:
+			voteServiceCountOpenBallotHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -383,4 +464,16 @@ func (UnimplementedVoteServiceHandler) VerifyOpenReceipt(context.Context, *conne
 
 func (UnimplementedVoteServiceHandler) VerifySecretReceipt(context.Context, *connect.Request[v1.VerifySecretReceiptRequest]) (*connect.Response[v1.VerifySecretReceiptResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.VerifySecretReceipt is not implemented"))
+}
+
+func (UnimplementedVoteServiceHandler) RegisterCast(context.Context, *connect.Request[v1.RegisterCastRequest]) (*connect.Response[v1.RegisterCastResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.RegisterCast is not implemented"))
+}
+
+func (UnimplementedVoteServiceHandler) CountSecretBallot(context.Context, *connect.Request[v1.CountSecretBallotRequest]) (*connect.Response[v1.CountSecretBallotResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.CountSecretBallot is not implemented"))
+}
+
+func (UnimplementedVoteServiceHandler) CountOpenBallot(context.Context, *connect.Request[v1.CountOpenBallotRequest]) (*connect.Response[v1.CountOpenBallotResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.votes.v1.VoteService.CountOpenBallot is not implemented"))
 }

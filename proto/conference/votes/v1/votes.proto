@@ -34,6 +34,15 @@ service VoteService {
 
   // VerifySecretReceipt returns the recorded secret ballot commitment for a receipt.
   rpc VerifySecretReceipt(VerifySecretReceiptRequest) returns (VerifySecretReceiptResponse);
+
+  // RegisterCast marks an attendee as having physically submitted a secret ballot.
+  rpc RegisterCast(RegisterCastRequest) returns (RegisterCastResponse);
+
+  // CountSecretBallot counts a physical secret ballot submitted by an attendee.
+  rpc CountSecretBallot(CountSecretBallotRequest) returns (CountSecretBallotResponse);
+
+  // CountOpenBallot manually records an open ballot on behalf of an attendee.
+  rpc CountOpenBallot(CountOpenBallotRequest) returns (CountOpenBallotResponse);
 }
 
 // VoteOptionRecord is one selectable choice in a vote.
@@ -244,4 +253,43 @@ message VerifySecretReceiptResponse {
   string encrypted_commitment_b64 = 4;
   string commitment_cipher = 5;
   int64 commitment_version = 6;
+}
+
+message RegisterCastRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+  // attendee_id of the attendee submitting a physical ballot.
+  string attendee_id = 4;
+}
+
+message RegisterCastResponse {
+  VotesPanelView view = 1;
+}
+
+message CountSecretBallotRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+  // receipt_token is the verifiable token written on the physical ballot.
+  string receipt_token = 4;
+  // selected_option_ids are the option IDs chosen on the physical ballot.
+  repeated string selected_option_ids = 5;
+}
+
+message CountSecretBallotResponse {
+  VotesPanelView view = 1;
+}
+
+message CountOpenBallotRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string vote_id = 3;
+  // attendee_id of the attendee whose ballot is being entered manually.
+  string attendee_id = 4;
+  repeated string selected_option_ids = 5;
+}
+
+message CountOpenBallotResponse {
+  VotesPanelView view = 1;
 }
