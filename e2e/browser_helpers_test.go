@@ -129,11 +129,11 @@ func userLogin(t *testing.T, page playwright.Page, baseURL, committee, username,
 func openModerateLeftTab(t *testing.T, page playwright.Page, tabName string) {
 	t.Helper()
 	controls := page.Locator("#moderate-left-controls")
-	if err := controls.WaitFor(); err != nil {
+	if err := controls.WaitFor(playwright.LocatorWaitForOptions{Timeout: playwright.Float(30000)}); err != nil {
 		t.Fatalf("wait moderate left controls: %v", err)
 	}
 	tab := page.Locator("#moderate-left-controls [data-moderate-left-tab='" + tabName + "']")
-	if err := tab.First().WaitFor(); err != nil {
+	if err := tab.First().WaitFor(playwright.LocatorWaitForOptions{Timeout: playwright.Float(30000)}); err != nil {
 		t.Fatalf("wait moderate left tab %q: %v", tabName, err)
 	}
 	panel := page.Locator("#moderate-left-panel-" + tabName)

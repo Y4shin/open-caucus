@@ -5,34 +5,45 @@ package e2e_test
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
-	"net/url"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	connect "connectrpc.com/connect"
+
+	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
+	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
+	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
+	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 )
 
-// attendeeHTTPClient logs an attendee in via a plain HTTP request (no browser) and
-// returns an *http.Client whose cookie jar holds the resulting session cookie.
-// This avoids spinning up a browser context for every concurrent voter.
-func attendeeHTTPClient(t *testing.T, baseURL, slug, meetingID, secret string) *http.Client {
+type attendeeVoteClient struct {
+	votes votesv1connect.VoteServiceClient
+}
+
+// attendeeConnectClient authenticates an attendee through the same Connect API
+// the native app uses, while still keeping each voter on its own cookie jar.
+func attendeeConnectClient(t *testing.T, baseURL, meetingID, secret string) *attendeeVoteClient {
 	t.Helper()
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		t.Fatalf("create cookie jar: %v", err)
 	}
 	client := &http.Client{Jar: jar}
-	loginURL := fmt.Sprintf("%s/committee/%s/meeting/%s/attendee-login", baseURL, slug, meetingID)
-	resp, err := client.PostForm(loginURL, url.Values{"secret": {secret}})
-	if err != nil {
-		t.Fatalf("HTTP login for attendee secret %q: %v", secret, err)
+	attendeeClient := attendeesv1connect.NewAttendeeServiceClient(client, baseURL+"/api")
+	voteClient := votesv1connect.NewVoteServiceClient(client, baseURL+"/api")
+
+	if _, err := attendeeClient.AttendeeLogin(context.Background(), connect.NewRequest(&attendeesv1.AttendeeLoginRequest{
+		MeetingId:      meetingID,
+		AttendeeSecret: secret,
+	})); err != nil {
+		t.Fatalf("attendee login for secret %q: %v", secret, err)
 	}
-	resp.Body.Close()
-	return client
+
+	return &attendeeVoteClient{votes: voteClient}
 }
 
 // TestVoting_Concurrent20Attendees_TallyIsCorrect verifies that when 20 attendees
@@ -89,10 +100,10 @@ func TestVoting_Concurrent20Attendees_TallyIsCorrect(t *testing.T) {
 		t.Fatalf("eligible count after open: got %d, want %d", stats.EligibleCount, numAttendees)
 	}
 
-	// --- Authenticate every attendee via plain HTTP (no browser per attendee) ---
-	clients := make([]*http.Client, numAttendees)
+	// --- Authenticate every attendee via Connect (no browser per attendee) ---
+	clients := make([]*attendeeVoteClient, numAttendees)
 	for i, secret := range secrets {
-		clients[i] = attendeeHTTPClient(t, ts.URL, slug, meetingID, secret)
+		clients[i] = attendeeConnectClient(t, ts.URL, meetingID, secret)
 	}
 
 	// Assign vote choices: first yesVoterCount vote Yes, the rest vote No.
@@ -105,13 +116,10 @@ func TestVoting_Concurrent20Attendees_TallyIsCorrect(t *testing.T) {
 		}
 	}
 
-	submitURL := voteOpenSubmitURL(ts.URL, slug, meetingID, voteID)
-
 	// --- Fire all ballot submissions concurrently ---
 	type submitResult struct {
-		status int
-		body   string
-		err    error
+		receiptToken string
+		err          error
 	}
 	results := make([]submitResult, numAttendees)
 	var wg sync.WaitGroup
@@ -120,40 +128,29 @@ func TestVoting_Concurrent20Attendees_TallyIsCorrect(t *testing.T) {
 		i := i
 		go func() {
 			defer wg.Done()
-			form := url.Values{
-				"option_id":     {strconv.FormatInt(optionIDs[i], 10)},
-				"receipt_token": {fmt.Sprintf("receipt-concurrent-%02d", i+1)},
-			}
-			req, err := http.NewRequest(http.MethodPost, submitURL, strings.NewReader(form.Encode()))
+			resp, err := clients[i].votes.SubmitBallot(context.Background(), connect.NewRequest(&votesv1.SubmitBallotRequest{
+				CommitteeSlug:     slug,
+				MeetingId:         meetingID,
+				VoteId:            strconv.FormatInt(voteID, 10),
+				SelectedOptionIds: []string{strconv.FormatInt(optionIDs[i], 10)},
+			}))
 			if err != nil {
-				results[i] = submitResult{err: fmt.Errorf("build request: %w", err)}
+				results[i] = submitResult{err: fmt.Errorf("submit ballot: %w", err)}
 				return
 			}
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-			req.Header.Set("HX-Request", "true")
-			resp, err := clients[i].Do(req)
-			if err != nil {
-				results[i] = submitResult{err: fmt.Errorf("do request: %w", err)}
-				return
-			}
-			defer resp.Body.Close()
-			bodyBytes, _ := io.ReadAll(resp.Body)
-			results[i] = submitResult{status: resp.StatusCode, body: string(bodyBytes)}
+			results[i] = submitResult{receiptToken: resp.Msg.GetReceiptToken()}
 		}()
 	}
 	wg.Wait()
 
-	// All submissions must succeed with an HTTP 200 and must not be rejected.
+	// All submissions must succeed and return a receipt token.
 	for i, r := range results {
 		if r.err != nil {
 			t.Errorf("attendee %d request error: %v", i+1, r.err)
 			continue
 		}
-		if r.status != http.StatusOK {
-			t.Errorf("attendee %d: got HTTP %d, body=%q", i+1, r.status, r.body)
-		}
-		if strings.Contains(r.body, "rejected") {
-			t.Errorf("attendee %d ballot was rejected: %s", i+1, r.body)
+		if r.receiptToken == "" {
+			t.Errorf("attendee %d received an empty receipt token", i+1)
 		}
 	}
 

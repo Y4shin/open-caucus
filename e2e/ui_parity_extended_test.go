@@ -188,6 +188,78 @@ func TestModerateCreateAgendaPoint_UIParityWithLegacy(t *testing.T) {
 	)
 }
 
+// TestModerateEditAgendaPoint_UIParityWithLegacy (A11) checks that editing an
+// agenda point title via the inline edit form produces the same updated agenda
+// card list in the SPA and legacy implementations.
+func TestModerateEditAgendaPoint_UIParityWithLegacy(t *testing.T) {
+	newTS := newTestServer(t)
+	legacyTS := newLegacyTestServer(t)
+
+	for _, ts := range []*testServer{newTS, legacyTS} {
+		ts.seedCommittee(t, "Test Committee", "test")
+		ts.seedUser(t, "test", "chair1", "pass123", "Chair Person", "chairperson")
+		ts.seedMeetingOpen(t, "test", "Board Meeting", "")
+		ts.seedAgendaPoint(t, "test", "Board Meeting", "Old Title")
+	}
+
+	newBrowserPage := newPage(t)
+	legacyBrowserPage := newPage(t)
+
+	userLogin(t, newBrowserPage, newTS.URL, "test", "chair1", "pass123")
+	userLogin(t, legacyBrowserPage, legacyTS.URL, "test", "chair1", "pass123")
+
+	meetingID := newTS.getMeetingID(t, "test", "Board Meeting")
+	legacyMeetingID := legacyTS.getMeetingID(t, "test", "Board Meeting")
+
+	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/committee/test/meeting/"+meetingID+"/moderate", "#moderate-left-controls")
+	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/committee/test/meeting/"+legacyMeetingID+"/moderate", "#moderate-left-controls")
+
+	openModerateAgendaEditor(t, newBrowserPage)
+	openModerateAgendaEditor(t, legacyBrowserPage)
+
+	for label, p := range map[string]playwright.Page{"new": newBrowserPage, "legacy": legacyBrowserPage} {
+		card := p.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
+			HasText: "Old Title",
+		})
+		// Click the edit button to open the inline edit form.
+		if err := card.Locator("[data-testid='manage-agenda-point-edit-btn']").Click(); err != nil {
+			t.Fatalf("click edit button on %s: %v", label, err)
+		}
+		// Wait for the inline edit form to appear.
+		editForm := p.Locator("[data-testid='manage-agenda-point-edit-form']")
+		if err := editForm.WaitFor(); err != nil {
+			t.Fatalf("wait for edit form on %s: %v", label, err)
+		}
+		// Clear the title input and type the new title.
+		titleInput := editForm.Locator("input[name='title']")
+		if err := titleInput.Clear(); err != nil {
+			t.Fatalf("clear title input on %s: %v", label, err)
+		}
+		if err := titleInput.Fill("New Title"); err != nil {
+			t.Fatalf("fill title input on %s: %v", label, err)
+		}
+		// Submit the form.
+		if err := editForm.Locator("button[type='submit']").Click(); err != nil {
+			t.Fatalf("click save on %s: %v", label, err)
+		}
+		// Wait for the updated title to appear in the list.
+		if err := p.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('New Title')").WaitFor(); err != nil {
+			t.Fatalf("wait for updated title on %s: %v", label, err)
+		}
+		// Wait for the old title to disappear.
+		if err := p.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']:has-text('Old Title')").WaitFor(playwright.LocatorWaitForOptions{
+			State: playwright.WaitForSelectorStateDetached,
+		}); err != nil {
+			t.Fatalf("wait old title detach on %s: %v", label, err)
+		}
+	}
+
+	assertEqualStringSlices(t, "agenda point list items after edit",
+		locatorAllOuterHTML(t, newBrowserPage, "[data-testid='manage-agenda-point-card']"),
+		locatorAllOuterHTML(t, legacyBrowserPage, "[data-testid='manage-agenda-point-card']"),
+	)
+}
+
 // TestModerateReorderAgendaPoint_UIParityWithLegacy (A12) checks that moving
 // an agenda point up via the moderation UI produces the same ordered agenda
 // list in the SPA and legacy implementations.
