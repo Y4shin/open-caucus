@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { locales } from '$lib/paraglide/runtime';
+	import { getLocale, locales, setLocale } from '$lib/paraglide/runtime';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
@@ -63,6 +63,15 @@
 	function openDocs(event: Event) {
 		event.preventDefault();
 		goto('/docs/index');
+	}
+
+	function isActiveLocale(lang: (typeof locales)[number]) {
+		return getLocale() === lang;
+	}
+
+	async function switchLocale(lang: (typeof locales)[number]) {
+		document.cookie = `locale=${lang}; path=/; max-age=${365 * 24 * 60 * 60}; samesite=lax`;
+		await setLocale(lang);
 	}
 </script>
 
@@ -148,15 +157,13 @@
 									<div class="flex items-center gap-2">
 										<div class="join">
 											{#each locales as locale}
-												<form method="POST" action="/locale" class="inline flex-1">
-													<input type="hidden" name="lang" value={locale} />
-													<button
-														type="submit"
-														class={`btn btn-sm join-item w-full ${session.locale === locale ? 'btn-active' : ''}`}
-													>
-														{locale.toUpperCase()}
-													</button>
-												</form>
+												<button
+													type="button"
+													class={`btn btn-sm join-item flex-1 ${isActiveLocale(locale) ? 'btn-active' : ''}`}
+													onclick={() => switchLocale(locale)}
+												>
+													{locale.toUpperCase()}
+												</button>
 											{/each}
 										</div>
 										<div class="join">
@@ -206,15 +213,13 @@
 					<button class="btn btn-ghost btn-sm" type="button" onclick={openDocs}>Help</button>
 					<div class="join">
 						{#each locales as locale}
-							<form method="POST" action="/locale" class="inline">
-								<input type="hidden" name="lang" value={locale} />
-								<button
-									type="submit"
-									class={`btn btn-sm join-item ${session.locale === locale ? 'btn-active' : ''}`}
-								>
-									{locale.toUpperCase()}
-								</button>
-							</form>
+							<button
+								type="button"
+								class={`btn btn-sm join-item ${isActiveLocale(locale) ? 'btn-active' : ''}`}
+								onclick={() => switchLocale(locale)}
+							>
+								{locale.toUpperCase()}
+							</button>
 						{/each}
 					</div>
 					<div class="join">

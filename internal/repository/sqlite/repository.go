@@ -303,20 +303,20 @@ func (r *Repository) UpsertOAuthIdentity(
 		 )
 		 VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
 		 ON CONFLICT (issuer, subject) DO UPDATE
-		 SET account_id = excluded.account_id,
-		     username = excluded.username,
-		     full_name = excluded.full_name,
-		     email = excluded.email,
+		 SET account_id  = excluded.account_id,
+		     username    = excluded.username,
+		     full_name   = excluded.full_name,
+		     email       = excluded.email,
 		     groups_json = excluded.groups_json,
-		     updated_at = datetime('now')
+		     updated_at  = datetime('now')
 		 ON CONFLICT (account_id) DO UPDATE
-		 SET issuer = excluded.issuer,
-		     subject = excluded.subject,
-		     username = excluded.username,
-		     full_name = excluded.full_name,
-		     email = excluded.email,
+		 SET issuer      = excluded.issuer,
+		     subject     = excluded.subject,
+		     username    = excluded.username,
+		     full_name   = excluded.full_name,
+		     email       = excluded.email,
 		     groups_json = excluded.groups_json,
-		     updated_at = datetime('now')`,
+		     updated_at  = datetime('now')`,
 		issuer,
 		subject,
 		accountID,
@@ -327,7 +327,7 @@ func (r *Repository) UpsertOAuthIdentity(
 	); err != nil {
 		return nil, fmt.Errorf("upsert oauth identity: %w", err)
 	}
-	return r.GetOAuthIdentityByIssuerSubject(ctx, issuer, subject)
+	return nil, nil
 }
 
 // GetUserByCommitteeAndUsername retrieves a committee membership by committee slug and username

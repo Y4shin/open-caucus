@@ -179,7 +179,7 @@
 						{/if}
 
 						<div>
-							<label for="guest_gender_quoted">Quoted / feminine forms apply to me</label>
+							<label for="guest_gender_quoted">FLINTA*</label>
 							<input
 								id="guest_gender_quoted"
 								class="checkbox checkbox-sm"

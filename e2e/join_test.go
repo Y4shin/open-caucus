@@ -84,6 +84,31 @@ func TestJoinPage_GuestSeesFormWhenSignupOpen(t *testing.T) {
 	}
 }
 
+func TestJoinPage_GuestFormShowsFLINTALabel(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedMeetingOpen(t, "test-committee", "Open Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Meeting")
+
+	page := newPage(t)
+	if _, err := page.Goto(joinURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto join page: %v", err)
+	}
+	waitForJoinGuestForm(t, page)
+
+	label := page.Locator("label[for='guest_gender_quoted']")
+	if err := label.WaitFor(); err != nil {
+		t.Fatalf("wait for FLINTA label: %v", err)
+	}
+	text, err := label.TextContent()
+	if err != nil {
+		t.Fatalf("read FLINTA label text: %v", err)
+	}
+	if strings.TrimSpace(text) != "FLINTA*" {
+		t.Fatalf("expected FLINTA label text %q, got %q", "FLINTA*", strings.TrimSpace(text))
+	}
+}
+
 // TestJoinPage_GuestSeesClosedMessageWhenSignupClosed verifies that an unauthenticated
 // visitor sees a "signup is closed" message when signup_open is false.
 func TestJoinPage_GuestSeesClosedMessageWhenSignupClosed(t *testing.T) {

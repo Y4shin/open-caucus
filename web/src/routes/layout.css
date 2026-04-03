@@ -2,11 +2,15 @@
 @plugin "daisyui";
 
 .app-shell {
-	min-height: 100vh;
+	height: 100dvh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .page-main {
 	min-height: 0;
+	overflow-y: auto;
 }
 
 .manage-speaker-candidate-button-icon,

@@ -462,18 +462,20 @@ func (x *AttendeeSummary) GetQuoted() bool {
 }
 
 type SpeakerSummary struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	SpeakerId     string                 `protobuf:"bytes,1,opt,name=speaker_id,json=speakerId,proto3" json:"speaker_id,omitempty"`
-	AttendeeId    string                 `protobuf:"bytes,2,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
-	FullName      string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	SpeakerType   string                 `protobuf:"bytes,4,opt,name=speaker_type,json=speakerType,proto3" json:"speaker_type,omitempty"`
-	State         string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
-	Priority      bool                   `protobuf:"varint,6,opt,name=priority,proto3" json:"priority,omitempty"`
-	Quoted        bool                   `protobuf:"varint,7,opt,name=quoted,proto3" json:"quoted,omitempty"`
-	FirstSpeaker  bool                   `protobuf:"varint,8,opt,name=first_speaker,json=firstSpeaker,proto3" json:"first_speaker,omitempty"`
-	Mine          bool                   `protobuf:"varint,9,opt,name=mine,proto3" json:"mine,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	SpeakerId    string                 `protobuf:"bytes,1,opt,name=speaker_id,json=speakerId,proto3" json:"speaker_id,omitempty"`
+	AttendeeId   string                 `protobuf:"bytes,2,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	FullName     string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	SpeakerType  string                 `protobuf:"bytes,4,opt,name=speaker_type,json=speakerType,proto3" json:"speaker_type,omitempty"`
+	State        string                 `protobuf:"bytes,5,opt,name=state,proto3" json:"state,omitempty"`
+	Priority     bool                   `protobuf:"varint,6,opt,name=priority,proto3" json:"priority,omitempty"`
+	Quoted       bool                   `protobuf:"varint,7,opt,name=quoted,proto3" json:"quoted,omitempty"`
+	FirstSpeaker bool                   `protobuf:"varint,8,opt,name=first_speaker,json=firstSpeaker,proto3" json:"first_speaker,omitempty"`
+	Mine         bool                   `protobuf:"varint,9,opt,name=mine,proto3" json:"mine,omitempty"`
+	// duration_seconds is set for DONE speakers; 0 otherwise.
+	DurationSeconds int64 `protobuf:"varint,10,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *SpeakerSummary) Reset() {
@@ -567,6 +569,13 @@ func (x *SpeakerSummary) GetMine() bool {
 		return x.Mine
 	}
 	return false
+}
+
+func (x *SpeakerSummary) GetDurationSeconds() int64 {
+	if x != nil {
+		return x.DurationSeconds
+	}
+	return 0
 }
 
 type CurrentDocumentSummary struct {
@@ -690,7 +699,7 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\x0fattendee_number\x18\x03 \x01(\x03R\x0eattendeeNumber\x12\x19\n" +
 	"\bis_chair\x18\x04 \x01(\bR\aisChair\x12\x19\n" +
 	"\bis_guest\x18\x05 \x01(\bR\aisGuest\x12\x16\n" +
-	"\x06quoted\x18\x06 \x01(\bR\x06quoted\"\x93\x02\n" +
+	"\x06quoted\x18\x06 \x01(\bR\x06quoted\"\xbe\x02\n" +
 	"\x0eSpeakerSummary\x12\x1d\n" +
 	"\n" +
 	"speaker_id\x18\x01 \x01(\tR\tspeakerId\x12\x1f\n" +
@@ -702,7 +711,9 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\bpriority\x18\x06 \x01(\bR\bpriority\x12\x16\n" +
 	"\x06quoted\x18\a \x01(\bR\x06quoted\x12#\n" +
 	"\rfirst_speaker\x18\b \x01(\bR\ffirstSpeaker\x12\x12\n" +
-	"\x04mine\x18\t \x01(\bR\x04mine\"\xa9\x01\n" +
+	"\x04mine\x18\t \x01(\bR\x04mine\x12)\n" +
+	"\x10duration_seconds\x18\n" +
+	" \x01(\x03R\x0fdurationSeconds\"\xa9\x01\n" +
 	"\x16CurrentDocumentSummary\x12\x17\n" +
 	"\ablob_id\x18\x01 \x01(\tR\x06blobId\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x14\n" +

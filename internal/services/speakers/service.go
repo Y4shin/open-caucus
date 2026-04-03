@@ -309,15 +309,16 @@ func (s *Service) buildQueueView(ctx context.Context, committeeSlug string, meet
 		}
 		mine := callerAttendeeID != 0 && e.AttendeeID == callerAttendeeID
 		speakers = append(speakers, &commonv1.SpeakerSummary{
-			SpeakerId:    strconv.FormatInt(e.ID, 10),
-			AttendeeId:   strconv.FormatInt(e.AttendeeID, 10),
-			FullName:     e.AttendeeName,
-			SpeakerType:  e.Type,
-			State:        e.Status,
-			Priority:     e.Priority,
-			Quoted:       e.GenderQuoted,
-			FirstSpeaker: e.FirstSpeaker,
-			Mine:         mine,
+			SpeakerId:       strconv.FormatInt(e.ID, 10),
+			AttendeeId:      strconv.FormatInt(e.AttendeeID, 10),
+			FullName:        e.AttendeeName,
+			SpeakerType:     e.Type,
+			State:           e.Status,
+			Priority:        e.Priority,
+			Quoted:          e.GenderQuoted,
+			FirstSpeaker:    e.FirstSpeaker,
+			Mine:            mine,
+			DurationSeconds: e.DurationSeconds,
 		})
 	}
 	view.Speakers = speakers

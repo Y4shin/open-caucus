@@ -86,9 +86,7 @@ function createSessionStore() {
 			state.isAdmin = false;
 			state.actor = undefined;
 			state.availableCommittees = [];
-			state.passwordEnabled = true;
-			state.oauthEnabled = false;
-			state.loaded = false;
+			state.loaded = true;
 		}
 	};
 }

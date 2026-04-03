@@ -60,6 +60,8 @@ message SpeakerSummary {
   bool quoted = 7;
   bool first_speaker = 8;
   bool mine = 9;
+  // duration_seconds is set for DONE speakers; 0 otherwise.
+  int64 duration_seconds = 10;
 }
 
 message CurrentDocumentSummary {

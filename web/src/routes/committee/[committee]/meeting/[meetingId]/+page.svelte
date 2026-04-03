@@ -617,8 +617,8 @@
 																					</span>
 																				{/if}
 																				{#if speaker.quoted}
-																					<span class="tooltip tooltip-right" data-tip="Quoted" data-testid="live-speaker-quoted-badge">
-																						<span class="badge badge-info badge-sm"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																					<span class="tooltip tooltip-right" data-tip="FLINTA*" data-testid="live-speaker-quoted-badge">
+																						<span class="badge badge-info badge-sm"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
 																					</span>
 																				{/if}
 																				{#if speaker.firstSpeaker}
@@ -761,8 +761,8 @@
 																					</span>
 																				{/if}
 																				{#if speaker.quoted}
-																					<span class="tooltip tooltip-right" data-tip="Quoted" data-testid="live-speaker-quoted-badge">
-																						<span class="badge badge-info badge-sm"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																					<span class="tooltip tooltip-right" data-tip="FLINTA*" data-testid="live-speaker-quoted-badge">
+																						<span class="badge badge-info badge-sm"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
 																					</span>
 																				{/if}
 																				{#if speaker.firstSpeaker}

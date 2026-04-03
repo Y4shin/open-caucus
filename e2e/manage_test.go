@@ -13,6 +13,8 @@ import (
 	playwright "github.com/playwright-community/playwright-go"
 )
 
+const transgenderIconPath = "M579-401q41-41 41-99t-41-99q-41-41-99-41t-99 41q-41 41-41 99t41 99q41 41 99 41t99-41ZM440-40v-80h-80v-80h80v-84q-78-14-129-75t-51-141q0-33 9.5-65t28.5-59l-26-26-56 56-56-56 56-57-76-76v103H60v-240h240v80H197l76 76 57-56 56 56-56 57 26 26q27-20 59-29.5t65-9.5q33 0 65 9.5t59 29.5l159-159H660v-80h240v240h-80v-103L661-625q19 28 29 59.5t10 65.5q0 80-51 141t-129 75v84h80v80h-80v80h-80Z"
+
 func manageURL(baseURL, slug, meetingID string) string {
 	return baseURL + "/committee/" + slug + "/meeting/" + meetingID + "/moderate"
 }
@@ -105,6 +107,42 @@ func waitUntil(t *testing.T, timeout time.Duration, fn func() (bool, error), des
 		time.Sleep(100 * time.Millisecond)
 	}
 	t.Fatalf("timeout waiting for %s", description)
+}
+
+func assertFLINTABadgeUsesTransgenderIcon(t *testing.T, badge playwright.Locator) {
+	t.Helper()
+
+	if err := badge.WaitFor(); err != nil {
+		t.Fatalf("wait for FLINTA badge: %v", err)
+	}
+
+	tooltipAny, err := badge.Evaluate(`el => el.closest('[data-tip]')?.getAttribute('data-tip') ?? ''`, nil)
+	if err != nil {
+		t.Fatalf("read FLINTA badge tooltip: %v", err)
+	}
+	tooltip, ok := tooltipAny.(string)
+	if !ok {
+		t.Fatalf("FLINTA badge tooltip was %T, want string", tooltipAny)
+	}
+	if tooltip != "FLINTA*" {
+		t.Fatalf("expected FLINTA badge tooltip %q, got %q", "FLINTA*", tooltip)
+	}
+
+	viewBox, err := badge.Locator("svg").GetAttribute("viewBox")
+	if err != nil {
+		t.Fatalf("read FLINTA badge svg viewBox: %v", err)
+	}
+	if viewBox != "0 -960 960 960" {
+		t.Fatalf("expected transgender icon viewBox %q, got %q", "0 -960 960 960", viewBox)
+	}
+
+	path, err := badge.Locator("svg path").GetAttribute("d")
+	if err != nil {
+		t.Fatalf("read FLINTA badge svg path: %v", err)
+	}
+	if path != transgenderIconPath {
+		t.Fatalf("expected transgender icon path %q, got %q", transgenderIconPath, path)
+	}
 }
 
 func manageSpeakersViewportSnapshot(t *testing.T, page playwright.Page) (float64, float64, float64, int, string) {
@@ -730,6 +768,7 @@ func TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive(t *testing.T)
 	if err := quotedGuestCard.Locator("[data-testid='manage-attendee-quoted-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected quoted badge on attendee card: %v", err)
 	}
+	assertFLINTABadgeUsesTransgenderIcon(t, quotedGuestCard.Locator("[data-testid='manage-attendee-quoted-badge']"))
 	if manageSignupOpenChecked(t, managePage) {
 		t.Fatalf("signup was toggled by quoted guest add flow")
 	}
@@ -769,6 +808,7 @@ func TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive(t *testing.T)
 	if err := manageSpeakerRow.Locator("[data-testid='live-speaker-quoted-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected quoted badge in manage speaker row: %v", err)
 	}
+	assertFLINTABadgeUsesTransgenderIcon(t, manageSpeakerRow.Locator("[data-testid='live-speaker-quoted-badge']"))
 
 	liveSpeakerRow := guestPage.Locator("#attendee-speakers-list [data-testid='live-speakers-active-viewport'] [data-testid='live-speaker-item']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Quoted Guest",
@@ -779,6 +819,7 @@ func TestManagePage_AddQuotedGuest_ShowsQuotedBadgeInManageAndLive(t *testing.T)
 	if err := liveSpeakerRow.Locator("[data-testid='live-speaker-quoted-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected quoted badge in live speaker row: %v", err)
 	}
+	assertFLINTABadgeUsesTransgenderIcon(t, liveSpeakerRow.Locator("[data-testid='live-speaker-quoted-badge']"))
 }
 
 // TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip verifies that

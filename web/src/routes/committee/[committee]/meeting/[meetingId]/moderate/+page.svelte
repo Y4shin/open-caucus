@@ -688,6 +688,14 @@
 		return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 	}
 
+	function formatDuration(seconds: bigint | number) {
+		const total = Number(seconds);
+		if (total <= 0) return '—';
+		const mins = Math.floor(total / 60);
+		const secs = total % 60;
+		return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+	}
+
 	function speakingTimerLabel(speakerId: string) {
 		const since = speakingSinceMs[speakerId];
 		if (since == null) return '00:00';
@@ -1651,13 +1659,13 @@
 	}
 </script>
 
-<div class="space-y-6">
+<div class="flex min-h-0 flex-1 flex-col gap-4">
 	{#if moderationState.loading && !moderationState.data}
 		<AppSpinner label="Loading moderation view" />
 	{:else if moderationState.error && !moderationState.data}
 		<AppAlert message={moderationState.error} />
 	{:else if moderationState.data}
-		<div class="space-y-2">
+		<div class="shrink-0 space-y-2">
 			<h1 class="text-3xl font-bold">{moderationState.data.meeting?.meetingName}</h1>
 			<p class="text-base-content/70">
 				Moderation workspace for {moderationState.data.meeting?.committeeName}
@@ -1665,18 +1673,18 @@
 		</div>
 
 		{#if actionError}
-			<AppAlert message={actionError} />
+			<div class="shrink-0"><AppAlert message={actionError} /></div>
 		{/if}
 		{#if actionNotice}
-			<AppAlert tone="success" message={actionNotice} />
+			<div class="shrink-0"><AppAlert tone="success" message={actionNotice} /></div>
 		{/if}
 
-		<div id="moderate-sse-root" class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:h-full lg:grid-cols-2 lg:grid-rows-1 lg:overflow-hidden">
+		<div id="moderate-sse-root" class="grid min-h-0 flex-1 gap-4 overflow-y-auto lg:grid-cols-2 lg:grid-rows-1 lg:overflow-hidden">
 			<section
 				id="moderate-left-controls"
 				data-meeting-id={meetingId}
 				data-tabs-wired="true"
-				class="order-2 card min-h-0 min-w-0 overflow-hidden border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:h-full lg:self-stretch"
+				class="order-2 card min-h-0 min-w-0 overflow-hidden border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:self-stretch"
 			>
 				<div class="card-body flex h-full min-h-0 flex-col overflow-hidden p-4">
 					<div role="tablist" class="tabs tabs-border tabs-sm grid w-full grid-cols-4 [--tab-p:0.35rem] sm:[--tab-p:0.75rem]">
@@ -2322,7 +2330,7 @@
 																		{/if}
 																		{#if attendee.quoted}
 																			<span class="tooltip tooltip-right" data-tip="FLINTA*">
-																				<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																				<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
 																			</span>
 																		{/if}
 																	</div>
@@ -2446,11 +2454,11 @@
 				</div>
 			</section>
 
-			<div id="moderate-dependent-container" class="order-1 flex min-h-0 min-w-0 flex-col lg:order-2 lg:h-full lg:self-stretch">
-				<div id="moderate-right-resizable-stack" data-meeting-id={meetingId} class="flex min-h-0 flex-1 flex-col gap-4 lg:h-full lg:gap-0">
+			<div id="moderate-dependent-container" class="order-1 flex min-h-0 min-w-0 flex-col lg:order-2 lg:self-stretch">
+				<div id="moderate-right-resizable-stack" data-meeting-id={meetingId} class="flex min-h-0 flex-1 flex-col gap-4">
 					<section
 						id="moderate-speakers-card"
-						class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none"
+						class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:flex-1"
 						data-testid="manage-speakers-card"
 					>
 						<div class="card-body flex min-h-0 flex-col p-4">
@@ -2543,9 +2551,15 @@
 										</button>
 									</div>
 									<ul class="list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1 live-speaker-list" data-initial-scroll-top="0" data-manage-speakers-viewport data-testid="manage-speakers-viewport">
-										{#each speakerState.data.speakers as speaker}
+										{#each speakerState.data.speakers as speaker, i}
+											{@const prevSpeaker = speakerState.data.speakers[i - 1]}
+											{#if speaker.state !== 'DONE' && prevSpeaker?.state === 'DONE'}
+												<li class="list-row py-0">
+													<div class="divider my-0 text-xs text-base-content/40 col-span-full">Upcoming</div>
+												</li>
+											{/if}
 											<li
-												class="list-row min-w-0 items-center gap-3"
+												class="list-row min-w-0 items-center gap-3 {speaker.state === 'DONE' ? 'opacity-50' : ''}"
 												data-testid="live-speaker-item"
 												data-speaker-state={speaker.state.toLowerCase()}
 												data-speaker-mine="false"
@@ -2557,7 +2571,7 @@
 													{:else if speaker.state === 'WAITING'}
 														{waitingDisplayNumber(speaker.speakerId)}
 													{:else if speaker.state === 'DONE'}
-														{doneDisplayNumber(speaker.speakerId)}
+														<span class="font-mono text-xs whitespace-nowrap">{formatDuration(speaker.durationSeconds)}</span>
 													{/if}
 												</div>
 												<div class="list-col-grow min-w-0">
@@ -2571,8 +2585,8 @@
 																	</span>
 																{/if}
 																{#if speaker.quoted}
-																	<span class="tooltip tooltip-right" data-tip="Quoted">
-																		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge"><LegacyIcon name="quoted" class="h-3.5 w-3.5" /></span>
+																	<span class="tooltip tooltip-right" data-tip="FLINTA*">
+																		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
 																	</span>
 																{/if}
 																{#if speaker.firstSpeaker}
@@ -2723,7 +2737,7 @@
 
 					<section
 						id="moderate-attendees-card"
-						class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:min-h-[12rem] lg:flex-none"
+						class="card h-[50dvh] min-h-0 min-w-0 border border-base-300 bg-base-100 shadow-sm lg:h-auto lg:flex-1"
 					>
 						<div class="card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4">
 							<div class="flex min-w-0 flex-wrap items-center justify-between gap-3">

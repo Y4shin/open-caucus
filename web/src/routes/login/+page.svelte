@@ -73,7 +73,7 @@
 			</form>
 		{/if}
 		{#if session.oauthEnabled}
-			<a class="btn btn-outline mt-1" href="/oauth/start?target=user">Login with OAuth</a>
+			<a class="btn btn-outline mt-1" href="/oauth/start?target=user" data-sveltekit-reload>Login with OAuth</a>
 		{/if}
 	</fieldset>
 </div>
