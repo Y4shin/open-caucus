@@ -202,6 +202,8 @@
 	"agenda_import_source_placeholder": "Paste markdown or plaintext agenda here.",
 	"agenda_import_extract_button": "Extract Agenda",
 	"agenda_import_preview_empty": "Detected lines will appear here as you type.",
+	"agenda_import_format_markdown": "Markdown",
+	"agenda_import_format_plaintext": "Plain text",
 	"agenda_import_correction_heading": "Review Detected Lines",
 	"agenda_import_correction_hint": "Click a line to cycle between Ignore, Heading, and Subheading before generating the diff.",
 	"agenda_import_state_ignore": "Ignore",

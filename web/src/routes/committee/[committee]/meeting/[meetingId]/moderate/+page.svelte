@@ -878,6 +878,23 @@
 		return 1;
 	}
 
+	function detectSourceFormat(source: string): 'markdown' | 'plaintext' | null {
+		const trimmed = source.trim();
+		if (!trimmed) return null;
+		if (/^#{1,6}\s/m.test(trimmed) || /^[-*+]\s+\S/m.test(trimmed)) return 'markdown';
+		return 'plaintext';
+	}
+
+	let detectedFormat = $derived(detectSourceFormat(agendaImportSource));
+
+	function importStateLabel(state: AgendaImportState): string {
+		switch (state) {
+			case 'heading': return m.agenda_import_state_heading();
+			case 'subheading': return m.agenda_import_state_subheading();
+			default: return m.agenda_import_state_ignore();
+		}
+	}
+
 	function nextImportState(state: AgendaImportState): AgendaImportState {
 		switch (state) {
 			case 'ignore':
@@ -1570,17 +1587,35 @@
 																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
 																		</div>
 																		<div class="space-y-2">
-																			<h4 class="text-sm font-medium">{m.agenda_import_correction_heading()}</h4>
+																			<div class="flex items-center justify-between gap-2">
+																				<h4 class="text-sm font-medium">{m.agenda_import_correction_heading()}</h4>
+																				{#if detectedFormat !== null}
+																					<span class="badge badge-sm badge-ghost font-normal">
+																						{detectedFormat === 'markdown' ? m.agenda_import_format_markdown() : m.agenda_import_format_plaintext()}
+																					</span>
+																				{/if}
+																			</div>
 																			<p class="text-xs text-base-content/70">{m.agenda_import_correction_hint()}</p>
 																			{#if agendaImportLines.length > 0}
 																				<div class="max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
-																					<ul class="space-y-1" data-agenda-import-lines>
+																					<ul class="space-y-1.5" data-agenda-import-lines>
 																						{#each agendaImportLines as line, index}
-																							<li>
-																								<button type="button" class={line.state === 'heading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-primary/30 bg-primary/10' : line.state === 'subheading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-info/30 bg-info/10' : 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-base-300 bg-base-100 opacity-60'} data-import-line-row data-state={line.state} onclick={() => toggleAgendaImportLine(index)}>
-																									<span class="w-20 shrink-0 text-xs font-medium tabular-nums text-base-content/60" data-import-line-prefix>{importPrefix(agendaImportLines, index)}</span>
-																									<span class="min-w-0 flex-1 truncate text-sm" title={line.text}>{line.text}</span>
+																							{@const prefix = importPrefix(agendaImportLines, index)}
+																							<li class={line.state === 'subheading' ? 'flex items-start gap-2 pl-4' : 'flex items-start gap-2'}>
+																								<button
+																									type="button"
+																									class={line.state === 'heading' ? 'inline-flex shrink-0 items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20' : line.state === 'subheading' ? 'inline-flex shrink-0 items-center gap-1 rounded border border-info/30 bg-info/10 px-2 py-0.5 text-xs font-medium text-info transition-colors hover:bg-info/20' : 'inline-flex shrink-0 items-center gap-1 rounded border border-base-300 bg-base-200 px-2 py-0.5 text-xs font-medium text-base-content/50 transition-colors hover:bg-base-300'}
+																									data-import-line-row
+																									data-state={line.state}
+																									onclick={() => toggleAgendaImportLine(index)}
+																								>
+																									{#if prefix}
+																										<span class="font-mono tabular-nums" data-import-line-prefix>{prefix}</span>
+																										<span class="text-current opacity-40">·</span>
+																									{/if}
+																									<span>{importStateLabel(line.state)}</span>
 																								</button>
+																								<span class={line.state === 'ignore' ? 'min-w-0 flex-1 truncate pt-0.5 text-sm text-base-content/40' : 'min-w-0 flex-1 truncate pt-0.5 text-sm'} title={line.text}>{line.text}</span>
 																							</li>
 																						{/each}
 																					</ul>

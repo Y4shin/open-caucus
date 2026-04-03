@@ -202,6 +202,8 @@
 	"agenda_import_source_placeholder": "Markdown oder Klartext der Tagesordnung hier einfügen.",
 	"agenda_import_extract_button": "Tagesordnung extrahieren",
 	"agenda_import_preview_empty": "Erkannte Zeilen erscheinen hier, sobald du Text eingibst.",
+	"agenda_import_format_markdown": "Markdown",
+	"agenda_import_format_plaintext": "Klartext",
 	"agenda_import_correction_heading": "Erkannte Zeilen prüfen",
 	"agenda_import_correction_hint": "Klicke auf eine Zeile, um zwischen Ignorieren, Überschrift und Unterüberschrift zu wechseln, bevor du die Differenz generierst.",
 	"agenda_import_state_ignore": "Ignorieren",
