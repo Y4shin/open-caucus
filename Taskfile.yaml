@@ -16,12 +16,12 @@ tasks:
 
   # Development tasks
   dev:
-    desc: Run the application with hot reload (using air)
+    desc: Run the Go backend and SvelteKit SPA dev server in parallel
     cmds:
-      - go tool air
+      - task --parallel dev:go:vite dev:web
 
   dev:go:vite:
-    desc: Run the Go backend with hot reload for Vite-based SPA development
+    desc: Run only the Go backend with hot reload (Vite-compatible air config)
     env:
       HOST: 0.0.0.0
       PORT: "{{.APP_PORT}}"
@@ -69,8 +69,8 @@ tasks:
           CLI_ARGS: --force
       - task --parallel oidc-dev:run run
 
-  dev:spa:with-oidc:
-    desc: Run OIDC dev provider, Go air backend, and Vite SPA dev server together
+  dev:oidc:
+    desc: Run OIDC dev provider, Go backend, and Vite SPA dev server together
     cmds:
       - task: env:populate
       - task: oidc-dev:generate-users
@@ -112,15 +112,9 @@ tasks:
 
   # Code generation tasks
   generate:
-    desc: Generate all code (database client and API clients)
+    desc: Generate database client code (SQLC)
     cmds:
       - go generate ./...
-
-  generate:db:
-    desc: Generate database client code using SQLC
-    dir: internal/repository/sqlite
-    cmds:
-      - go generate
 
   # Testing tasks
   test:
@@ -424,7 +418,3 @@ tasks:
     cmds:
       - sh -lc 'PATH="$PATH:$PWD/web/node_modules/.bin" buf generate --template buf.gen.yaml'
 
-  dev:full:
-    desc: Run Go backend and SvelteKit dev server in parallel (full dev environment)
-    cmds:
-      - task --parallel dev dev:web

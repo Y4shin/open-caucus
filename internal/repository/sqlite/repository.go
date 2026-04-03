@@ -327,7 +327,7 @@ func (r *Repository) UpsertOAuthIdentity(
 	); err != nil {
 		return nil, fmt.Errorf("upsert oauth identity: %w", err)
 	}
-	return nil, nil
+	return r.GetOAuthIdentityByIssuerSubject(ctx, issuer, subject)
 }
 
 // GetUserByCommitteeAndUsername retrieves a committee membership by committee slug and username

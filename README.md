@@ -58,12 +58,6 @@ cp .env.example .env
 task dev
 ```
 
-For CSS hot-reload during development, run this in a second terminal:
-
-```bash
-task css:watch
-```
-
 The application is now available at `http://localhost:8080`.
 
 ---
@@ -493,13 +487,10 @@ i18n.T(ctx, "my_feature.title")
 |------|-------------|
 | `task deps:check` | Verify Go, Node.js, and npm are installed |
 | `task setup` | First-time setup: check deps, install modules, generate code |
-| `task dev` | Start the server with hot reload (`air`) |
-| `task css:watch` | Rebuild CSS on file changes (run alongside `task dev`) |
-| `task css:build` | Build CSS once |
-| `task generate` | Regenerate all code (CSS, routes, templates, DB client) |
-| `task generate:routes` | Regenerate routes only |
-| `task generate:templates` | Regenerate templates only |
-| `task generate:db` | Regenerate database client only |
+| `task dev` | Run Go backend and SPA dev server in parallel |
+| `task dev:oidc` | Same as `dev`, plus the local OIDC provider |
+| `task generate` | Regenerate database client (SQLC) |
+| `task generate:clients` | Regenerate TypeScript and Go clients from proto definitions |
 | `task test` | Run unit tests |
 | `task test:e2e` | Run Playwright browser tests |
 | `task check` | Format, vet, and lint |
