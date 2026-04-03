@@ -3,7 +3,7 @@ package session
 import (
 	"context"
 
-	"github.com/Y4shin/conference-tool/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
 )
 
 // Store defines the interface for session storage

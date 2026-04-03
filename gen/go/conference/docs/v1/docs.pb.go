@@ -594,7 +594,7 @@ const file_conference_docs_v1_docs_proto_rawDesc = "" +
 	"\x04hits\x18\x02 \x03(\v2\x1d.conference.docs.v1.SearchHitR\x04hits2\xb2\x01\n" +
 	"\vDocsService\x12R\n" +
 	"\aGetPage\x12\".conference.docs.v1.GetPageRequest\x1a#.conference.docs.v1.GetPageResponse\x12O\n" +
-	"\x06Search\x12!.conference.docs.v1.SearchRequest\x1a\".conference.docs.v1.SearchResponseBDZBgithub.com/Y4shin/conference-tool/gen/go/conference/docs/v1;docsv1b\x06proto3"
+	"\x06Search\x12!.conference.docs.v1.SearchRequest\x1a\".conference.docs.v1.SearchResponseBDZBgithub.com/Y4shin/open-caucus/gen/go/conference/docs/v1;docsv1b\x06proto3"
 
 var (
 	file_conference_docs_v1_docs_proto_rawDescOnce sync.Once

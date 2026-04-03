@@ -1,4 +1,4 @@
-module github.com/Y4shin/conference-tool
+module github.com/Y4shin/open-caucus
 
 go 1.25.5
 

@@ -8,8 +8,8 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	agendav1 "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
+	agendav1 "github.com/Y4shin/open-caucus/gen/go/conference/agenda/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
 )
 
 func TestAgendaService_ListAgendaPoints_Member(t *testing.T) {

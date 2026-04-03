@@ -7,9 +7,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
-	speakersv1 "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1"
+	attendeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
+	speakersv1 "github.com/Y4shin/open-caucus/gen/go/conference/speakers/v1"
 )
 
 func TestSpeakerService_AddSpeaker_SelfForAttendeeSession(t *testing.T) {

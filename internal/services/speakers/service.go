@@ -4,13 +4,13 @@ import (
 	"context"
 	"strconv"
 
-	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
-	speakersv1 "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1"
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/broker"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	"github.com/Y4shin/conference-tool/internal/session"
+	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
+	speakersv1 "github.com/Y4shin/open-caucus/gen/go/conference/speakers/v1"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/broker"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 type Service struct {

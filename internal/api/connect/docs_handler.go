@@ -6,9 +6,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	docsv1 "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1"
-	docsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1/docsv1connect"
-	"github.com/Y4shin/conference-tool/internal/docs"
+	docsv1 "github.com/Y4shin/open-caucus/gen/go/conference/docs/v1"
+	docsv1connect "github.com/Y4shin/open-caucus/gen/go/conference/docs/v1/docsv1connect"
+	"github.com/Y4shin/open-caucus/internal/docs"
 )
 
 type DocsHandler struct {

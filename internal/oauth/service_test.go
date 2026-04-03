@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	oidctest "github.com/Y4shin/conference-tool/internal/testsupport/oidc"
+	oidctest "github.com/Y4shin/open-caucus/internal/testsupport/oidc"
 )
 
 func TestServiceHandleCallbackSuccess_ZitadelOP(t *testing.T) {

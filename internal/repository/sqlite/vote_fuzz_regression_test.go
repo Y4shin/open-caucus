@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Y4shin/conference-tool/internal/votefuzz"
+	"github.com/Y4shin/open-caucus/internal/votefuzz"
 )
 
 func TestVoteFuzzRegressionSeeds(t *testing.T) {

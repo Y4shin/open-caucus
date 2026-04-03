@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"strconv"
 
-	agendav1 "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1"
-	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/broker"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
-	"github.com/Y4shin/conference-tool/internal/session"
-	"github.com/Y4shin/conference-tool/internal/storage"
+	agendav1 "github.com/Y4shin/open-caucus/gen/go/conference/agenda/v1"
+	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/broker"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	serviceauthz "github.com/Y4shin/open-caucus/internal/services/authz"
+	"github.com/Y4shin/open-caucus/internal/session"
+	"github.com/Y4shin/open-caucus/internal/storage"
 )
 
 type Service struct {

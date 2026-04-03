@@ -16,9 +16,9 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "modernc.org/sqlite"
 
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	"github.com/Y4shin/conference-tool/internal/repository/sqlite/client"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/repository/sqlite/client"
 )
 
 //go:embed migrations/*.sql

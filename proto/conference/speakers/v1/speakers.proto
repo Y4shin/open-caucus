@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package conference.speakers.v1;
 
-option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1;speakersv1";
+option go_package = "github.com/Y4shin/open-caucus/gen/go/conference/speakers/v1;speakersv1";
 
 import "conference/common/v1/common.proto";
 

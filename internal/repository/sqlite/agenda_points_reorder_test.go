@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Y4shin/conference-tool/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository"
 )
 
 func seedMeetingForAgendaTests(t *testing.T, repo *Repository) int64 {

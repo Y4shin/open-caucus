@@ -7,8 +7,8 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	adminv1 "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
+	adminv1 "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
 )
 
 // seedAdmin creates an admin account directly in the repo and returns the username.

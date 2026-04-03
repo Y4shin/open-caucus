@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	adminv1 "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1"
-	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
-	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
+	adminv1 "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1"
+	adminv1connect "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1/adminv1connect"
+	adminservice "github.com/Y4shin/open-caucus/internal/services/admin"
 )
 
 type AdminHandler struct {

@@ -7,7 +7,7 @@
 package committeesv1
 
 import (
-	v1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
+	v1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -744,7 +744,7 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\x14GetCommitteeOverview\x125.conference.committees.v1.GetCommitteeOverviewRequest\x1a6.conference.committees.v1.GetCommitteeOverviewResponse\x12p\n" +
 	"\rCreateMeeting\x12..conference.committees.v1.CreateMeetingRequest\x1a/.conference.committees.v1.CreateMeetingResponse\x12p\n" +
 	"\rDeleteMeeting\x12..conference.committees.v1.DeleteMeetingRequest\x1a/.conference.committees.v1.DeleteMeetingResponse\x12\x82\x01\n" +
-	"\x13ToggleMeetingActive\x124.conference.committees.v1.ToggleMeetingActiveRequest\x1a5.conference.committees.v1.ToggleMeetingActiveResponseBPZNgithub.com/Y4shin/conference-tool/gen/go/conference/committees/v1;committeesv1b\x06proto3"
+	"\x13ToggleMeetingActive\x124.conference.committees.v1.ToggleMeetingActiveRequest\x1a5.conference.committees.v1.ToggleMeetingActiveResponseBPZNgithub.com/Y4shin/open-caucus/gen/go/conference/committees/v1;committeesv1b\x06proto3"
 
 var (
 	file_conference_committees_v1_committees_proto_rawDescOnce sync.Once

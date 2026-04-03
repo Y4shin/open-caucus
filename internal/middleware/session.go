@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 // sessionMiddleware extracts session data from cookies and adds it to the request context.

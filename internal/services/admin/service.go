@@ -6,11 +6,11 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	adminv1 "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1"
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	"github.com/Y4shin/conference-tool/internal/session"
+	adminv1 "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 type Service struct {

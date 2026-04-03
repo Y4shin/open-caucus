@@ -9,8 +9,8 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Y4shin/conference-tool/internal/config"
-	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
+	"github.com/Y4shin/open-caucus/internal/config"
+	"github.com/Y4shin/open-caucus/internal/repository/sqlite"
 	"github.com/spf13/cobra"
 )
 

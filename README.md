@@ -166,7 +166,7 @@ Example route definition:
         - auth
         - committee_access
       template:
-        package: github.com/Y4shin/conference-tool/internal/templates
+        package: github.com/Y4shin/open-caucus/internal/templates
         type: MeetingManageTemplate
         input_type: MeetingManageInput
 ```
@@ -184,7 +184,7 @@ CommitteeManageMeeting(
 Using the generated URL builder in a template:
 
 ```go
-import "github.com/Y4shin/conference-tool/internal/routes/paths"
+import "github.com/Y4shin/open-caucus/internal/routes/paths"
 
 // No path params:
 paths.Route.AdminDashboardGet(ctx, "")
@@ -361,7 +361,7 @@ Routes marked `sse: true` in `routes.yaml` stream Server-Sent Events. Handlers s
            - auth
            - committee_access
          template:
-           package: github.com/Y4shin/conference-tool/internal/templates
+           package: github.com/Y4shin/open-caucus/internal/templates
            type: MyFeatureTemplate
            input_type: MyFeatureInput
    ```
@@ -398,8 +398,8 @@ Routes marked `sse: true` in `routes.yaml` stream Server-Sent Events. Handlers s
        "context"
        "net/http"
 
-       "github.com/Y4shin/conference-tool/internal/routes"
-       "github.com/Y4shin/conference-tool/internal/templates"
+       "github.com/Y4shin/open-caucus/internal/routes"
+       "github.com/Y4shin/open-caucus/internal/templates"
    )
 
    func (h *Handler) CommitteeMyFeature(

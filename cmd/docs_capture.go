@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Y4shin/conference-tool/tools/docscapture"
-	"github.com/Y4shin/conference-tool/tools/docscapture/scripts"
+	"github.com/Y4shin/open-caucus/tools/docscapture"
+	"github.com/Y4shin/open-caucus/tools/docscapture/scripts"
 	"github.com/spf13/cobra"
 )
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package conference.attendees.v1;
 
-option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1;attendeesv1";
+option go_package = "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1;attendeesv1";
 
 import "conference/common/v1/common.proto";
 

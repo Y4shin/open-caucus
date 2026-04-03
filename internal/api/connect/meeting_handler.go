@@ -6,10 +6,10 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	meetingsv1 "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1"
-	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
-	"github.com/Y4shin/conference-tool/internal/broker"
-	meetingservice "github.com/Y4shin/conference-tool/internal/services/meetings"
+	meetingsv1 "github.com/Y4shin/open-caucus/gen/go/conference/meetings/v1"
+	meetingsv1connect "github.com/Y4shin/open-caucus/gen/go/conference/meetings/v1/meetingsv1connect"
+	"github.com/Y4shin/open-caucus/internal/broker"
+	meetingservice "github.com/Y4shin/open-caucus/internal/services/meetings"
 )
 
 type MeetingHandler struct {

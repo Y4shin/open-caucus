@@ -10,14 +10,14 @@ import (
 	connect "connectrpc.com/connect"
 	"golang.org/x/crypto/bcrypt"
 
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
-	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
-	"github.com/Y4shin/conference-tool/internal/locale"
-	"github.com/Y4shin/conference-tool/internal/middleware"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
-	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
-	"github.com/Y4shin/conference-tool/internal/session"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
+	sessionv1connect "github.com/Y4shin/open-caucus/gen/go/conference/session/v1/sessionv1connect"
+	"github.com/Y4shin/open-caucus/internal/locale"
+	"github.com/Y4shin/open-caucus/internal/middleware"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/sqlite"
+	sessionservice "github.com/Y4shin/open-caucus/internal/services/session"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 const testSecret = "test-secret-32-bytes-exactly!!!!"

@@ -2051,7 +2051,7 @@ const file_conference_admin_v1_admin_proto_rawDesc = "" +
 	"\x13UpdateCommitteeUser\x12/.conference.admin.v1.UpdateCommitteeUserRequest\x1a0.conference.admin.v1.UpdateCommitteeUserResponse\x12i\n" +
 	"\x0eListOAuthRules\x12*.conference.admin.v1.ListOAuthRulesRequest\x1a+.conference.admin.v1.ListOAuthRulesResponse\x12l\n" +
 	"\x0fCreateOAuthRule\x12+.conference.admin.v1.CreateOAuthRuleRequest\x1a,.conference.admin.v1.CreateOAuthRuleResponse\x12l\n" +
-	"\x0fDeleteOAuthRule\x12+.conference.admin.v1.DeleteOAuthRuleRequest\x1a,.conference.admin.v1.DeleteOAuthRuleResponseBFZDgithub.com/Y4shin/conference-tool/gen/go/conference/admin/v1;adminv1b\x06proto3"
+	"\x0fDeleteOAuthRule\x12+.conference.admin.v1.DeleteOAuthRuleRequest\x1a,.conference.admin.v1.DeleteOAuthRuleResponseBFZDgithub.com/Y4shin/open-caucus/gen/go/conference/admin/v1;adminv1b\x06proto3"
 
 var (
 	file_conference_admin_v1_admin_proto_rawDescOnce sync.Once

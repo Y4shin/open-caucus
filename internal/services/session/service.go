@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/locale"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/session"
+	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/locale"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/session"
 	"golang.org/x/crypto/bcrypt"
 )
 

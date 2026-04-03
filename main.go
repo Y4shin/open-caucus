@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Y4shin/conference-tool/cmd"
+	"github.com/Y4shin/open-caucus/cmd"
 )
 
 func main() {

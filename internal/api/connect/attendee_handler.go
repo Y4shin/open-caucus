@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
-	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
-	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
+	attendeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1"
+	attendeesv1connect "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1/attendeesv1connect"
+	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
 )
 
 type AttendeeHandler struct {

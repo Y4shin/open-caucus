@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 // committeeAccess middleware ensures the user can access the requested committee.

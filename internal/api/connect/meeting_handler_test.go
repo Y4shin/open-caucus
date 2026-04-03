@@ -7,9 +7,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
-	meetingsv1 "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
+	attendeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1"
+	meetingsv1 "github.com/Y4shin/open-caucus/gen/go/conference/meetings/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
 )
 
 func TestMeetingServiceGetJoinMeeting_AnonymousGuestSeesGuestJoin(t *testing.T) {

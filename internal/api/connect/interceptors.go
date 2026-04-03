@@ -5,7 +5,7 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
 )
 
 func ErrorInterceptor() connect.UnaryInterceptorFunc {

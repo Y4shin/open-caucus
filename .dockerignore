@@ -1,18 +1,76 @@
+# Version control
 .git
+.gitignore
+.gitattributes
+
+# Nix / direnv
 .direnv
+flake.nix
+flake.lock
+.envrc
+
+# IDE / editor
 .vscode
-tmp
-node_modules
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# CI / Docker meta
+.github
+docker-compose*.yml
+
+# AI tooling
+.claude
+CLAUDE.md
+AGENTS.md
+.mcp.json
+
+# Documentation
+doc/
+docs-rewrite/
+README.md
+
+# Dev-only tooling config
+.air.vite.toml
+Taskfile.yaml
+tools/
+
+# Environment files — never bake secrets into the image
+.env
+.env.local
+.env.*.local
+
+# Dev OIDC provider data
+dev/
+
+# User uploads — runtime data, not build-time
+uploads/
+
+# E2E tests
+e2e/
+
+# Compiled / local build artifacts
+tmp/
+conference-tool
+conference-tool.exe
 web/node_modules
 web/.svelte-kit
 web/build
-conference-tool.exe
-conference-tool
-conference.db
+node_modules
+
+# Generated code (regenerated inside Docker build)
+**/*_generated.go
+**/*_gen.go
+**/*_templ.go
+
+# Test / coverage artifacts
 coverage.out
 coverage.html
-internal/routes/static/app.css
-internal/routes/routes_gen.go
-internal/routes/paths/paths_gen.go
-internal/templates/*_templ.go
-internal/repository/sqlite/client/*_generated.go
+*.test
+*.log
+
+# Database files — runtime data, not build-time
+*.db
+*.sqlite
+*.sqlite3

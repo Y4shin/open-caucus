@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Y4shin/conference-tool/internal/docs"
+	"github.com/Y4shin/open-caucus/internal/docs"
 )
 
 func NewDocsAssetHandler(service *docs.Service) http.HandlerFunc {

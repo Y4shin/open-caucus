@@ -9,9 +9,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	docsv1 "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1"
-	"github.com/Y4shin/conference-tool/internal/docs"
-	"github.com/Y4shin/conference-tool/internal/locale"
+	docsv1 "github.com/Y4shin/open-caucus/gen/go/conference/docs/v1"
+	"github.com/Y4shin/open-caucus/internal/docs"
+	"github.com/Y4shin/open-caucus/internal/locale"
 )
 
 func TestDocsServiceGetPage(t *testing.T) {

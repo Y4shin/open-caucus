@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	reposqlite "github.com/Y4shin/conference-tool/internal/repository/sqlite"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	reposqlite "github.com/Y4shin/open-caucus/internal/repository/sqlite"
 )
 
 type executionFixture struct {

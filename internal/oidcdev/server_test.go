@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Y4shin/conference-tool/internal/oauth"
+	"github.com/Y4shin/open-caucus/internal/oauth"
 )
 
 func TestRun_EmitsGroupsClaimFromYAML(t *testing.T) {

@@ -3,9 +3,9 @@ package authz
 import (
 	"context"
 
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/session"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 func RequireChairperson(ctx context.Context, repo repository.Repository, committeeSlug string) error {

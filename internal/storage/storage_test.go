@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Y4shin/conference-tool/internal/storage"
+	"github.com/Y4shin/open-caucus/internal/storage"
 )
 
 // runContractTests exercises every Service method against the given implementation.

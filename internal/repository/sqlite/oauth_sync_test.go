@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Y4shin/conference-tool/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
 )
 
 func TestSyncOAuthCommitteeMemberships_RemovesOnlyOAuthManaged(t *testing.T) {

@@ -7,7 +7,7 @@
 package moderationv1
 
 import (
-	v1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
+	v1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -967,7 +967,7 @@ const file_conference_moderation_v1_moderation_proto_rawDesc = "" +
 	"\x11GetModerationView\x122.conference.moderation.v1.GetModerationViewRequest\x1a3.conference.moderation.v1.GetModerationViewResponse\x12y\n" +
 	"\x10ToggleSignupOpen\x121.conference.moderation.v1.ToggleSignupOpenRequest\x1a2.conference.moderation.v1.ToggleSignupOpenResponse\x12\x82\x01\n" +
 	"\x13SetMeetingQuotation\x124.conference.moderation.v1.SetMeetingQuotationRequest\x1a5.conference.moderation.v1.SetMeetingQuotationResponse\x12\x82\x01\n" +
-	"\x13SetMeetingModerator\x124.conference.moderation.v1.SetMeetingModeratorRequest\x1a5.conference.moderation.v1.SetMeetingModeratorResponseBPZNgithub.com/Y4shin/conference-tool/gen/go/conference/moderation/v1;moderationv1b\x06proto3"
+	"\x13SetMeetingModerator\x124.conference.moderation.v1.SetMeetingModeratorRequest\x1a5.conference.moderation.v1.SetMeetingModeratorResponseBPZNgithub.com/Y4shin/open-caucus/gen/go/conference/moderation/v1;moderationv1b\x06proto3"
 
 var (
 	file_conference_moderation_v1_moderation_proto_rawDescOnce sync.Once

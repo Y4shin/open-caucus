@@ -160,7 +160,7 @@ The code generator also produces [internal/routes/paths/paths_gen.go](internal/r
 
 Example usage in a Templ template:
 ```go
-import "github.com/Y4shin/conference-tool/internal/routes/paths"
+import "github.com/Y4shin/open-caucus/internal/routes/paths"
 
 <form hx-post={ paths.NewCommitteeSlugMeetingCreateRoute(slug).CommitteeCreateMeetingPost(ctx, "") }>
 <a href={ templ.URL(paths.Route.AdminDashboardGet(ctx, "")) }>Dashboard</a>

@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"time"
 
-	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
-	moderationv1 "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1"
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/broker"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
+	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
+	moderationv1 "github.com/Y4shin/open-caucus/gen/go/conference/moderation/v1"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/broker"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	serviceauthz "github.com/Y4shin/open-caucus/internal/services/authz"
 )
 
 // MeetingInvalidationEvent is the JSON payload sent over the SSE stream when

@@ -2484,7 +2484,7 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\x13VerifySecretReceipt\x12/.conference.votes.v1.VerifySecretReceiptRequest\x1a0.conference.votes.v1.VerifySecretReceiptResponse\x12c\n" +
 	"\fRegisterCast\x12(.conference.votes.v1.RegisterCastRequest\x1a).conference.votes.v1.RegisterCastResponse\x12r\n" +
 	"\x11CountSecretBallot\x12-.conference.votes.v1.CountSecretBallotRequest\x1a..conference.votes.v1.CountSecretBallotResponse\x12l\n" +
-	"\x0fCountOpenBallot\x12+.conference.votes.v1.CountOpenBallotRequest\x1a,.conference.votes.v1.CountOpenBallotResponseBFZDgithub.com/Y4shin/conference-tool/gen/go/conference/votes/v1;votesv1b\x06proto3"
+	"\x0fCountOpenBallot\x12+.conference.votes.v1.CountOpenBallotRequest\x1a,.conference.votes.v1.CountOpenBallotResponseBFZDgithub.com/Y4shin/open-caucus/gen/go/conference/votes/v1;votesv1b\x06proto3"
 
 var (
 	file_conference_votes_v1_votes_proto_rawDescOnce sync.Once

@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	committeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1"
-	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
-	committeeservice "github.com/Y4shin/conference-tool/internal/services/committees"
+	committeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1"
+	committeesv1connect "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1/committeesv1connect"
+	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
 )
 
 type CommitteeHandler struct {

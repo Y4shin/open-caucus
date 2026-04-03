@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Y4shin/conference-tool/internal/oidcdev"
+	"github.com/Y4shin/open-caucus/internal/oidcdev"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )

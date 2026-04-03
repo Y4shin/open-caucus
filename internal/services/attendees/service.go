@@ -14,14 +14,14 @@ import (
 
 	"github.com/skip2/go-qrcode"
 
-	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
-	commonv1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/broker"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	serviceauthz "github.com/Y4shin/conference-tool/internal/services/authz"
-	"github.com/Y4shin/conference-tool/internal/session"
+	attendeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1"
+	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/broker"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	serviceauthz "github.com/Y4shin/open-caucus/internal/services/authz"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 // MeetingAttendeesChangedEvent is the SSE event type published when attendee

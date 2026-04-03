@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	speakersv1 "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1"
-	speakersv1connect "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1/speakersv1connect"
-	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
+	speakersv1 "github.com/Y4shin/open-caucus/gen/go/conference/speakers/v1"
+	speakersv1connect "github.com/Y4shin/open-caucus/gen/go/conference/speakers/v1/speakersv1connect"
+	speakerservice "github.com/Y4shin/open-caucus/internal/services/speakers"
 )
 
 type SpeakerHandler struct {

@@ -7,7 +7,7 @@
 package sessionv1
 
 import (
-	v1 "github.com/Y4shin/conference-tool/gen/go/conference/common/v1"
+	v1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -427,7 +427,7 @@ const file_conference_session_v1_session_proto_rawDesc = "" +
 	"\n" +
 	"GetSession\x12(.conference.session.v1.GetSessionRequest\x1a).conference.session.v1.GetSessionResponse\x12R\n" +
 	"\x05Login\x12#.conference.session.v1.LoginRequest\x1a$.conference.session.v1.LoginResponse\x12U\n" +
-	"\x06Logout\x12$.conference.session.v1.LogoutRequest\x1a%.conference.session.v1.LogoutResponseBJZHgithub.com/Y4shin/conference-tool/gen/go/conference/session/v1;sessionv1b\x06proto3"
+	"\x06Logout\x12$.conference.session.v1.LogoutRequest\x1a%.conference.session.v1.LogoutResponseBJZHgithub.com/Y4shin/open-caucus/gen/go/conference/session/v1;sessionv1b\x06proto3"
 
 var (
 	file_conference_session_v1_session_proto_rawDescOnce sync.Once

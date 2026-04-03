@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package conference.votes.v1;
 
-option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1;votesv1";
+option go_package = "github.com/Y4shin/open-caucus/gen/go/conference/votes/v1;votesv1";
 
 service VoteService {
   // GetVotesPanel returns the moderator-facing votes panel for the active agenda point.

@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Y4shin/conference-tool/internal/votefuzz"
+	"github.com/Y4shin/open-caucus/internal/votefuzz"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"

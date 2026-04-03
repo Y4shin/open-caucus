@@ -8,7 +8,7 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	v1 "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1"
+	v1 "github.com/Y4shin/open-caucus/gen/go/conference/moderation/v1"
 	http "net/http"
 	strings "strings"
 )

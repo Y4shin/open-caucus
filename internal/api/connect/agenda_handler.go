@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	agendav1 "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1"
-	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
-	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
+	agendav1 "github.com/Y4shin/open-caucus/gen/go/conference/agenda/v1"
+	agendav1connect "github.com/Y4shin/open-caucus/gen/go/conference/agenda/v1/agendav1connect"
+	agendaservice "github.com/Y4shin/open-caucus/internal/services/agenda"
 )
 
 type AgendaHandler struct {

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Y4shin/conference-tool/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
 )
 
 // Manager handles session creation, validation, and cookie management

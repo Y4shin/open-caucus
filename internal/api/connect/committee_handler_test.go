@@ -6,8 +6,8 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	committeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
+	committeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
 )
 
 func TestCommitteeServiceListMyCommittees_Chairperson(t *testing.T) {

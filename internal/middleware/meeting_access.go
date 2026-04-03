@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Y4shin/conference-tool/internal/session"
+	"github.com/Y4shin/open-caucus/internal/session"
 )
 
 // meetingAccess validates meeting-level access and, when possible, populates

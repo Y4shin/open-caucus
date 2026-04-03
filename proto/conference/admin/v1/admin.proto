@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package conference.admin.v1;
 
-option go_package = "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1;adminv1";
+option go_package = "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1;adminv1";
 
 service AdminService {
   // GetAdminDashboard returns summary stats for the admin dashboard.

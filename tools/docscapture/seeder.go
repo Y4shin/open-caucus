@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	"github.com/Y4shin/conference-tool/internal/storage"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	"github.com/Y4shin/open-caucus/internal/storage"
 )
 
 // Seeder provides deterministic fixture helpers for docs-capture scripts.

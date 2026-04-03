@@ -7,9 +7,9 @@ import (
 
 	playwright "github.com/playwright-community/playwright-go"
 
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
-	"github.com/Y4shin/conference-tool/tools/docscapture"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
+	"github.com/Y4shin/open-caucus/tools/docscapture"
 )
 
 const (

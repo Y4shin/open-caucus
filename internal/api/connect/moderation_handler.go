@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	moderationv1 "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1"
-	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
-	moderationservice "github.com/Y4shin/conference-tool/internal/services/moderation"
+	moderationv1 "github.com/Y4shin/open-caucus/gen/go/conference/moderation/v1"
+	moderationv1connect "github.com/Y4shin/open-caucus/gen/go/conference/moderation/v1/moderationv1connect"
+	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
 )
 
 type ModerationHandler struct {

@@ -5,9 +5,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
-	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
-	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
+	votesv1 "github.com/Y4shin/open-caucus/gen/go/conference/votes/v1"
+	votesv1connect "github.com/Y4shin/open-caucus/gen/go/conference/votes/v1/votesv1connect"
+	voteservice "github.com/Y4shin/open-caucus/internal/services/votes"
 )
 
 type VoteHandler struct {

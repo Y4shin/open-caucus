@@ -8,10 +8,10 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	attendeesv1 "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1"
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
-	votesv1 "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1"
-	"github.com/Y4shin/conference-tool/internal/repository/model"
+	attendeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/attendees/v1"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
+	votesv1 "github.com/Y4shin/open-caucus/gen/go/conference/votes/v1"
+	"github.com/Y4shin/open-caucus/internal/repository/model"
 )
 
 func TestVoteService_CreateOpenCloseVote(t *testing.T) {

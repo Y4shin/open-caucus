@@ -6,9 +6,9 @@ import (
 
 	connect "connectrpc.com/connect"
 
-	sessionv1 "github.com/Y4shin/conference-tool/gen/go/conference/session/v1"
-	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
-	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
+	sessionv1connect "github.com/Y4shin/open-caucus/gen/go/conference/session/v1/sessionv1connect"
+	sessionservice "github.com/Y4shin/open-caucus/internal/services/session"
 )
 
 type SessionHandler struct {

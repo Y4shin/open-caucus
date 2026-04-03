@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Y4shin/conference-tool/internal/locale"
+	"github.com/Y4shin/open-caucus/internal/locale"
 )
 
 const themeCookieName = "conference-tool-theme"

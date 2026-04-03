@@ -6,7 +6,7 @@ import (
 	"path"
 	"slices"
 
-	"github.com/Y4shin/conference-tool/tools/docscapture"
+	"github.com/Y4shin/open-caucus/tools/docscapture"
 )
 
 type Script struct {

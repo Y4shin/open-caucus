@@ -17,16 +17,18 @@ RUN --mount=type=cache,target=/root/.npm \
 
 COPY . .
 
+ARG VERSION=dev
+
 RUN --mount=type=cache,target=/root/.npm \
     PATH="/src/web/node_modules/.bin:$PATH" ./web/node_modules/.bin/buf generate --template buf.gen.yaml
 RUN --mount=type=cache,target=/root/.npm \
-    cd web && npm run build
+    cd web && VITE_APP_VERSION=${VERSION} npm run build
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go generate ./...
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/conference-tool .
+    CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X github.com/Y4shin/open-caucus/cmd.version=${VERSION}" -o /out/conference-tool .
 
 FROM alpine:3.22
 

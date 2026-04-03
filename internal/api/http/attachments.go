@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	apierrors "github.com/Y4shin/conference-tool/internal/api/errors"
-	"github.com/Y4shin/conference-tool/internal/repository"
-	"github.com/Y4shin/conference-tool/internal/session"
-	"github.com/Y4shin/conference-tool/internal/storage"
+	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
+	"github.com/Y4shin/open-caucus/internal/repository"
+	"github.com/Y4shin/open-caucus/internal/session"
+	"github.com/Y4shin/open-caucus/internal/storage"
 )
 
 type attachmentUploadHandler struct {
