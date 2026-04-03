@@ -1587,7 +1587,7 @@
 																				</div>
 																			{:else}
 																				<div class="flex h-32 items-center justify-center rounded-box border border-dashed border-base-300 text-sm text-base-content/40">
-																					{m.agenda_import_source_placeholder()}
+																					{m.agenda_import_preview_empty()}
 																				</div>
 																			{/if}
 																		</div>
