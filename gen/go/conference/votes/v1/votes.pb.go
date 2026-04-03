@@ -95,6 +95,8 @@ type VoteDefinitionRecord struct {
 	MinSelections int64               `protobuf:"varint,6,opt,name=min_selections,json=minSelections,proto3" json:"min_selections,omitempty"`
 	MaxSelections int64               `protobuf:"varint,7,opt,name=max_selections,json=maxSelections,proto3" json:"max_selections,omitempty"`
 	Options       []*VoteOptionRecord `protobuf:"bytes,8,rep,name=options,proto3" json:"options,omitempty"`
+	Stats         *VoteStats          `protobuf:"bytes,9,opt,name=stats,proto3" json:"stats,omitempty"`
+	Tally         []*VoteTallyEntry   `protobuf:"bytes,10,rep,name=tally,proto3" json:"tally,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -181,6 +183,20 @@ func (x *VoteDefinitionRecord) GetMaxSelections() int64 {
 func (x *VoteDefinitionRecord) GetOptions() []*VoteOptionRecord {
 	if x != nil {
 		return x.Options
+	}
+	return nil
+}
+
+func (x *VoteDefinitionRecord) GetStats() *VoteStats {
+	if x != nil {
+		return x.Stats
+	}
+	return nil
+}
+
+func (x *VoteDefinitionRecord) GetTally() []*VoteTallyEntry {
+	if x != nil {
+		return x.Tally
 	}
 	return nil
 }
@@ -2263,7 +2279,7 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\x10VoteOptionRecord\x12\x1b\n" +
 	"\toption_id\x18\x01 \x01(\tR\boptionId\x12\x14\n" +
 	"\x05label\x18\x02 \x01(\tR\x05label\x12\x1a\n" +
-	"\bposition\x18\x03 \x01(\x03R\bposition\"\xb0\x02\n" +
+	"\bposition\x18\x03 \x01(\x03R\bposition\"\xa1\x03\n" +
 	"\x14VoteDefinitionRecord\x12\x17\n" +
 	"\avote_id\x18\x01 \x01(\tR\x06voteId\x12&\n" +
 	"\x0fagenda_point_id\x18\x02 \x01(\tR\ragendaPointId\x12\x12\n" +
@@ -2274,7 +2290,10 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\x05state\x18\x05 \x01(\tR\x05state\x12%\n" +
 	"\x0emin_selections\x18\x06 \x01(\x03R\rminSelections\x12%\n" +
 	"\x0emax_selections\x18\a \x01(\x03R\rmaxSelections\x12?\n" +
-	"\aoptions\x18\b \x03(\v2%.conference.votes.v1.VoteOptionRecordR\aoptions\"t\n" +
+	"\aoptions\x18\b \x03(\v2%.conference.votes.v1.VoteOptionRecordR\aoptions\x124\n" +
+	"\x05stats\x18\t \x01(\v2\x1e.conference.votes.v1.VoteStatsR\x05stats\x129\n" +
+	"\x05tally\x18\n" +
+	" \x03(\v2#.conference.votes.v1.VoteTallyEntryR\x05tally\"t\n" +
 	"\tVoteStats\x12%\n" +
 	"\x0eeligible_count\x18\x01 \x01(\x03R\religibleCount\x12\x1d\n" +
 	"\n" +
@@ -2517,58 +2536,60 @@ var file_conference_votes_v1_votes_proto_goTypes = []any{
 }
 var file_conference_votes_v1_votes_proto_depIdxs = []int32{
 	0,  // 0: conference.votes.v1.VoteDefinitionRecord.options:type_name -> conference.votes.v1.VoteOptionRecord
-	1,  // 1: conference.votes.v1.LiveVoteCardView.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	2,  // 2: conference.votes.v1.LiveVoteCardView.stats:type_name -> conference.votes.v1.VoteStats
-	3,  // 3: conference.votes.v1.LiveVoteCardView.timed_results:type_name -> conference.votes.v1.VoteTallyEntry
-	1,  // 4: conference.votes.v1.VotesPanelView.votes:type_name -> conference.votes.v1.VoteDefinitionRecord
-	1,  // 5: conference.votes.v1.VotesPanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	2,  // 6: conference.votes.v1.VotesPanelView.active_vote_stats:type_name -> conference.votes.v1.VoteStats
-	3,  // 7: conference.votes.v1.VotesPanelView.active_vote_tally:type_name -> conference.votes.v1.VoteTallyEntry
-	1,  // 8: conference.votes.v1.LiveVotePanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	4,  // 9: conference.votes.v1.LiveVotePanelView.votes:type_name -> conference.votes.v1.LiveVoteCardView
-	5,  // 10: conference.votes.v1.GetVotesPanelResponse.view:type_name -> conference.votes.v1.VotesPanelView
-	6,  // 11: conference.votes.v1.GetLiveVotePanelResponse.view:type_name -> conference.votes.v1.LiveVotePanelView
-	1,  // 12: conference.votes.v1.CreateVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	1,  // 13: conference.votes.v1.UpdateVoteDraftResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	1,  // 14: conference.votes.v1.OpenVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	2,  // 15: conference.votes.v1.OpenVoteResponse.stats:type_name -> conference.votes.v1.VoteStats
-	1,  // 16: conference.votes.v1.CloseVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	3,  // 17: conference.votes.v1.CloseVoteResponse.tally:type_name -> conference.votes.v1.VoteTallyEntry
-	1,  // 18: conference.votes.v1.ArchiveVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
-	5,  // 19: conference.votes.v1.RegisterCastResponse.view:type_name -> conference.votes.v1.VotesPanelView
-	5,  // 20: conference.votes.v1.CountSecretBallotResponse.view:type_name -> conference.votes.v1.VotesPanelView
-	5,  // 21: conference.votes.v1.CountOpenBallotResponse.view:type_name -> conference.votes.v1.VotesPanelView
-	7,  // 22: conference.votes.v1.VoteService.GetVotesPanel:input_type -> conference.votes.v1.GetVotesPanelRequest
-	9,  // 23: conference.votes.v1.VoteService.GetLiveVotePanel:input_type -> conference.votes.v1.GetLiveVotePanelRequest
-	11, // 24: conference.votes.v1.VoteService.CreateVote:input_type -> conference.votes.v1.CreateVoteRequest
-	13, // 25: conference.votes.v1.VoteService.UpdateVoteDraft:input_type -> conference.votes.v1.UpdateVoteDraftRequest
-	15, // 26: conference.votes.v1.VoteService.OpenVote:input_type -> conference.votes.v1.OpenVoteRequest
-	17, // 27: conference.votes.v1.VoteService.CloseVote:input_type -> conference.votes.v1.CloseVoteRequest
-	19, // 28: conference.votes.v1.VoteService.ArchiveVote:input_type -> conference.votes.v1.ArchiveVoteRequest
-	21, // 29: conference.votes.v1.VoteService.SubmitBallot:input_type -> conference.votes.v1.SubmitBallotRequest
-	23, // 30: conference.votes.v1.VoteService.VerifyOpenReceipt:input_type -> conference.votes.v1.VerifyOpenReceiptRequest
-	25, // 31: conference.votes.v1.VoteService.VerifySecretReceipt:input_type -> conference.votes.v1.VerifySecretReceiptRequest
-	27, // 32: conference.votes.v1.VoteService.RegisterCast:input_type -> conference.votes.v1.RegisterCastRequest
-	29, // 33: conference.votes.v1.VoteService.CountSecretBallot:input_type -> conference.votes.v1.CountSecretBallotRequest
-	31, // 34: conference.votes.v1.VoteService.CountOpenBallot:input_type -> conference.votes.v1.CountOpenBallotRequest
-	8,  // 35: conference.votes.v1.VoteService.GetVotesPanel:output_type -> conference.votes.v1.GetVotesPanelResponse
-	10, // 36: conference.votes.v1.VoteService.GetLiveVotePanel:output_type -> conference.votes.v1.GetLiveVotePanelResponse
-	12, // 37: conference.votes.v1.VoteService.CreateVote:output_type -> conference.votes.v1.CreateVoteResponse
-	14, // 38: conference.votes.v1.VoteService.UpdateVoteDraft:output_type -> conference.votes.v1.UpdateVoteDraftResponse
-	16, // 39: conference.votes.v1.VoteService.OpenVote:output_type -> conference.votes.v1.OpenVoteResponse
-	18, // 40: conference.votes.v1.VoteService.CloseVote:output_type -> conference.votes.v1.CloseVoteResponse
-	20, // 41: conference.votes.v1.VoteService.ArchiveVote:output_type -> conference.votes.v1.ArchiveVoteResponse
-	22, // 42: conference.votes.v1.VoteService.SubmitBallot:output_type -> conference.votes.v1.SubmitBallotResponse
-	24, // 43: conference.votes.v1.VoteService.VerifyOpenReceipt:output_type -> conference.votes.v1.VerifyOpenReceiptResponse
-	26, // 44: conference.votes.v1.VoteService.VerifySecretReceipt:output_type -> conference.votes.v1.VerifySecretReceiptResponse
-	28, // 45: conference.votes.v1.VoteService.RegisterCast:output_type -> conference.votes.v1.RegisterCastResponse
-	30, // 46: conference.votes.v1.VoteService.CountSecretBallot:output_type -> conference.votes.v1.CountSecretBallotResponse
-	32, // 47: conference.votes.v1.VoteService.CountOpenBallot:output_type -> conference.votes.v1.CountOpenBallotResponse
-	35, // [35:48] is the sub-list for method output_type
-	22, // [22:35] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	2,  // 1: conference.votes.v1.VoteDefinitionRecord.stats:type_name -> conference.votes.v1.VoteStats
+	3,  // 2: conference.votes.v1.VoteDefinitionRecord.tally:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 3: conference.votes.v1.LiveVoteCardView.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	2,  // 4: conference.votes.v1.LiveVoteCardView.stats:type_name -> conference.votes.v1.VoteStats
+	3,  // 5: conference.votes.v1.LiveVoteCardView.timed_results:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 6: conference.votes.v1.VotesPanelView.votes:type_name -> conference.votes.v1.VoteDefinitionRecord
+	1,  // 7: conference.votes.v1.VotesPanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	2,  // 8: conference.votes.v1.VotesPanelView.active_vote_stats:type_name -> conference.votes.v1.VoteStats
+	3,  // 9: conference.votes.v1.VotesPanelView.active_vote_tally:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 10: conference.votes.v1.LiveVotePanelView.active_vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	4,  // 11: conference.votes.v1.LiveVotePanelView.votes:type_name -> conference.votes.v1.LiveVoteCardView
+	5,  // 12: conference.votes.v1.GetVotesPanelResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	6,  // 13: conference.votes.v1.GetLiveVotePanelResponse.view:type_name -> conference.votes.v1.LiveVotePanelView
+	1,  // 14: conference.votes.v1.CreateVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	1,  // 15: conference.votes.v1.UpdateVoteDraftResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	1,  // 16: conference.votes.v1.OpenVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	2,  // 17: conference.votes.v1.OpenVoteResponse.stats:type_name -> conference.votes.v1.VoteStats
+	1,  // 18: conference.votes.v1.CloseVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	3,  // 19: conference.votes.v1.CloseVoteResponse.tally:type_name -> conference.votes.v1.VoteTallyEntry
+	1,  // 20: conference.votes.v1.ArchiveVoteResponse.vote:type_name -> conference.votes.v1.VoteDefinitionRecord
+	5,  // 21: conference.votes.v1.RegisterCastResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	5,  // 22: conference.votes.v1.CountSecretBallotResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	5,  // 23: conference.votes.v1.CountOpenBallotResponse.view:type_name -> conference.votes.v1.VotesPanelView
+	7,  // 24: conference.votes.v1.VoteService.GetVotesPanel:input_type -> conference.votes.v1.GetVotesPanelRequest
+	9,  // 25: conference.votes.v1.VoteService.GetLiveVotePanel:input_type -> conference.votes.v1.GetLiveVotePanelRequest
+	11, // 26: conference.votes.v1.VoteService.CreateVote:input_type -> conference.votes.v1.CreateVoteRequest
+	13, // 27: conference.votes.v1.VoteService.UpdateVoteDraft:input_type -> conference.votes.v1.UpdateVoteDraftRequest
+	15, // 28: conference.votes.v1.VoteService.OpenVote:input_type -> conference.votes.v1.OpenVoteRequest
+	17, // 29: conference.votes.v1.VoteService.CloseVote:input_type -> conference.votes.v1.CloseVoteRequest
+	19, // 30: conference.votes.v1.VoteService.ArchiveVote:input_type -> conference.votes.v1.ArchiveVoteRequest
+	21, // 31: conference.votes.v1.VoteService.SubmitBallot:input_type -> conference.votes.v1.SubmitBallotRequest
+	23, // 32: conference.votes.v1.VoteService.VerifyOpenReceipt:input_type -> conference.votes.v1.VerifyOpenReceiptRequest
+	25, // 33: conference.votes.v1.VoteService.VerifySecretReceipt:input_type -> conference.votes.v1.VerifySecretReceiptRequest
+	27, // 34: conference.votes.v1.VoteService.RegisterCast:input_type -> conference.votes.v1.RegisterCastRequest
+	29, // 35: conference.votes.v1.VoteService.CountSecretBallot:input_type -> conference.votes.v1.CountSecretBallotRequest
+	31, // 36: conference.votes.v1.VoteService.CountOpenBallot:input_type -> conference.votes.v1.CountOpenBallotRequest
+	8,  // 37: conference.votes.v1.VoteService.GetVotesPanel:output_type -> conference.votes.v1.GetVotesPanelResponse
+	10, // 38: conference.votes.v1.VoteService.GetLiveVotePanel:output_type -> conference.votes.v1.GetLiveVotePanelResponse
+	12, // 39: conference.votes.v1.VoteService.CreateVote:output_type -> conference.votes.v1.CreateVoteResponse
+	14, // 40: conference.votes.v1.VoteService.UpdateVoteDraft:output_type -> conference.votes.v1.UpdateVoteDraftResponse
+	16, // 41: conference.votes.v1.VoteService.OpenVote:output_type -> conference.votes.v1.OpenVoteResponse
+	18, // 42: conference.votes.v1.VoteService.CloseVote:output_type -> conference.votes.v1.CloseVoteResponse
+	20, // 43: conference.votes.v1.VoteService.ArchiveVote:output_type -> conference.votes.v1.ArchiveVoteResponse
+	22, // 44: conference.votes.v1.VoteService.SubmitBallot:output_type -> conference.votes.v1.SubmitBallotResponse
+	24, // 45: conference.votes.v1.VoteService.VerifyOpenReceipt:output_type -> conference.votes.v1.VerifyOpenReceiptResponse
+	26, // 46: conference.votes.v1.VoteService.VerifySecretReceipt:output_type -> conference.votes.v1.VerifySecretReceiptResponse
+	28, // 47: conference.votes.v1.VoteService.RegisterCast:output_type -> conference.votes.v1.RegisterCastResponse
+	30, // 48: conference.votes.v1.VoteService.CountSecretBallot:output_type -> conference.votes.v1.CountSecretBallotResponse
+	32, // 49: conference.votes.v1.VoteService.CountOpenBallot:output_type -> conference.votes.v1.CountOpenBallotResponse
+	37, // [37:50] is the sub-list for method output_type
+	24, // [24:37] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_conference_votes_v1_votes_proto_init() }

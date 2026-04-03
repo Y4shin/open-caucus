@@ -9,7 +9,6 @@
 	import type { CommitteeRecord } from '$lib/gen/conference/admin/v1/admin_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
-	import { legacyAttrs, legacyValueAttr } from '$lib/utils/legacy-attrs.js';
 
 	let dashboardState = $state(createRemoteState<CommitteeRecord[]>());
 	let createCommitteePending = $state(false);
@@ -93,12 +92,6 @@
 		<h3>Add New Committee</h3>
 		<form
 			id="create-committee-form"
-			use:legacyAttrs={{
-				'hx-post': '/admin/committee/create',
-				'hx-target': '#committee-list-container',
-				'hx-swap': 'outerHTML',
-				'hx-on::after-request': 'if(event.detail.successful) this.reset()'
-			}}
 			onsubmit={(event) => {
 				event.preventDefault();
 				createCommittee();
@@ -111,8 +104,7 @@
 					type="text"
 					id="name"
 					name="name"
-					value={newCommitteeName}
-					use:legacyValueAttr={newCommitteeName}
+					bind:value={newCommitteeName}
 					oninput={(event) => {
 						newCommitteeName = (event.currentTarget as HTMLInputElement).value;
 					}}
@@ -126,8 +118,7 @@
 					type="text"
 					id="slug"
 					name="slug"
-					value={newCommitteeSlug}
-					use:legacyValueAttr={newCommitteeSlug}
+					bind:value={newCommitteeSlug}
 					oninput={(event) => {
 						newCommitteeSlug = (event.currentTarget as HTMLInputElement).value;
 					}}
@@ -166,12 +157,6 @@
 									<td>
 										<a href={"/admin/committee/" + committee.slug}>Assign Accounts</a>{' |'}<form
 											class="inline-form inline"
-											use:legacyAttrs={{
-												'hx-post': '/admin/committee/' + committee.slug + '/delete',
-												'hx-target': '#committee-list-container',
-												'hx-swap': 'outerHTML',
-												'hx-confirm': 'Are you sure you want to delete this committee?'
-											}}
 											onsubmit={(event) => {
 												event.preventDefault();
 												deleteCommittee(committee.slug);

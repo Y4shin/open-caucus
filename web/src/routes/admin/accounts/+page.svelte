@@ -7,7 +7,6 @@
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
-	import { legacyAttrs, legacyValueAttr } from '$lib/utils/legacy-attrs.js';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 
 	type AccountRow = {
@@ -94,12 +93,6 @@
 			<h2>Add New Account</h2>
 			<form
 				id="create-account-form"
-				use:legacyAttrs={{
-					'hx-post': '/admin/account/create',
-					'hx-target': '#account-list-container',
-					'hx-swap': 'outerHTML',
-					'hx-on::after-request': 'if(event.detail.successful) this.reset()'
-				}}
 				onsubmit={(event) => {
 					event.preventDefault();
 					createAccount();
@@ -112,8 +105,7 @@
 						type="text"
 						id="username"
 						name="username"
-						value={newUsername}
-						use:legacyValueAttr={newUsername}
+						bind:value={newUsername}
 						oninput={(event) => {
 							newUsername = (event.currentTarget as HTMLInputElement).value;
 						}}
@@ -127,8 +119,7 @@
 						type="text"
 						id="full_name"
 						name="full_name"
-						value={newFullName}
-						use:legacyValueAttr={newFullName}
+						bind:value={newFullName}
 						oninput={(event) => {
 							newFullName = (event.currentTarget as HTMLInputElement).value;
 						}}
@@ -143,8 +134,7 @@
 							type="password"
 							id="password"
 							name="password"
-							value={newPassword}
-							use:legacyValueAttr={newPassword}
+							bind:value={newPassword}
 							oninput={(event) => {
 								newPassword = (event.currentTarget as HTMLInputElement).value;
 							}}

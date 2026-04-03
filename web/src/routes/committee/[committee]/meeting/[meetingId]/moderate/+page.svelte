@@ -16,7 +16,6 @@
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
 	import type {
 		VoteDefinitionRecord,
-		VoteTallyEntry,
 		VotesPanelView
 	} from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
@@ -32,236 +31,6 @@
 		title: string;
 		children: string[];
 	};
-
-	const moderateAgendaImportLegacyScript = `(function() {
-				var agendaImportTopPrefix = (document.getElementById("agenda-point-list-container")?.getAttribute("data-import-top-prefix")) || "TOP";
-
-				function nextImportLineState(state) {
-					switch (state) {
-						case "ignore":
-							return "heading";
-						case "heading":
-							return "subheading";
-						default:
-							return "ignore";
-					}
-				}
-
-				function setImportLineVisualState(row, state) {
-					row.setAttribute("data-state", state);
-					row.classList.remove("border-base-300", "bg-base-100", "border-primary/30", "bg-primary/10", "border-info/30", "bg-info/10", "opacity-60");
-					switch (state) {
-						case "heading":
-							row.classList.add("border-primary/30", "bg-primary/10");
-							break;
-						case "subheading":
-							row.classList.add("border-info/30", "bg-info/10");
-							break;
-						default:
-						row.classList.add("border-base-300", "bg-base-100", "opacity-60");
-					}
-				}
-
-				function setAgendaImportStep(flow, step) {
-					if (!(flow instanceof Element)) { return; }
-					var parsedStep = parseInt(step, 10);
-					if (!Number.isFinite(parsedStep)) {
-						parsedStep = 1;
-					}
-					if (parsedStep < 1) { parsedStep = 1; }
-					if (parsedStep > 3) { parsedStep = 3; }
-					flow.setAttribute("data-agenda-import-step", String(parsedStep));
-
-					var panels = flow.querySelectorAll("[data-agenda-import-panel]");
-					for (var i = 0; i < panels.length; i++) {
-						var panel = panels[i];
-						var panelStep = parseInt(panel.getAttribute("data-agenda-import-panel") || "", 10);
-						var isVisible = panelStep === parsedStep;
-						panel.classList.toggle("hidden", !isVisible);
-					}
-
-					var stepItems = flow.querySelectorAll("[data-agenda-import-step-item]");
-					for (var j = 0; j < stepItems.length; j++) {
-						var stepItem = stepItems[j];
-						var itemStep = parseInt(stepItem.getAttribute("data-agenda-import-step-item") || "", 10);
-						stepItem.classList.toggle("step-primary", itemStep <= parsedStep);
-					}
-				}
-
-				function recomputeAgendaImportDetectedNumbers(scope) {
-					var root = scope instanceof Element ? scope : document;
-					var containers = [];
-					if (root instanceof Element && root.matches("[data-agenda-import-lines]")) {
-						containers.push(root);
-					}
-					var nested = root.querySelectorAll("[data-agenda-import-lines]");
-					for (var n = 0; n < nested.length; n++) {
-						containers.push(nested[n]);
-					}
-					for (var c = 0; c < containers.length; c++) {
-						var topIndex = 0;
-						var subIndex = 0;
-						var rows = containers[c].querySelectorAll("[data-import-line-row]");
-						for (var i = 0; i < rows.length; i++) {
-							var row = rows[i];
-							var state = row.getAttribute("data-state") || "ignore";
-							var prefix = row.querySelector("[data-import-line-prefix]");
-							var label = "";
-							if (state === "heading") {
-								topIndex++;
-								subIndex = 0;
-								label = agendaImportTopPrefix + " " + topIndex;
-							} else if (state === "subheading" && topIndex > 0) {
-								subIndex++;
-								label = agendaImportTopPrefix + " " + topIndex + "." + subIndex;
-							}
-							if (prefix) {
-								prefix.textContent = label;
-							}
-						}
-					}
-				}
-
-				function syncAgendaImportLineStates(scope) {
-					var root = scope instanceof Element ? scope : document;
-					var rows = root.querySelectorAll("[data-import-line-row]");
-					for (var i = 0; i < rows.length; i++) {
-						var row = rows[i];
-						var container = row.parentElement;
-						if (!container) { continue; }
-						var hiddenState = container.querySelector("[data-import-line-state]");
-						var state = "ignore";
-						if (hiddenState instanceof HTMLInputElement) {
-							state = hiddenState.value;
-						}
-						if (state !== "ignore" && state !== "heading" && state !== "subheading") {
-							state = "ignore";
-							if (hiddenState instanceof HTMLInputElement) {
-								hiddenState.value = state;
-							}
-						}
-						setImportLineVisualState(row, state);
-					}
-					recomputeAgendaImportDetectedNumbers(root);
-				}
-
-				function clearAgendaImportDiffHover() {
-					var hovered = document.querySelectorAll("#agenda-import-diff-grid [data-diff-cell][data-hovered='true']");
-					for (var i = 0; i < hovered.length; i++) {
-						hovered[i].removeAttribute("data-hovered");
-					}
-				}
-
-				function applyAgendaImportDiffHover(key) {
-					clearAgendaImportDiffHover();
-					if (!key) { return; }
-					var safeKey = key.replace(/"/g, '\\\\"');
-					var selector = "#agenda-import-diff-grid [data-diff-cell][data-diff-hover-key=\\"" + safeKey + "\\"]";
-					var cells = document.querySelectorAll(selector);
-					for (var i = 0; i < cells.length; i++) {
-						cells[i].setAttribute("data-hovered", "true");
-					}
-				}
-
-				if (!window.__agendaImportFileWired) {
-					document.addEventListener("change", function(event) {
-						var input = event.target;
-						if (!(input instanceof HTMLInputElement) || !input.matches("[data-agenda-import-file]")) { return; }
-						if (!input.files || input.files.length === 0) { return; }
-						var file = input.files[0];
-						var targetID = input.getAttribute("data-target");
-						if (!targetID) { return; }
-						file.text().then(function(content) {
-							var target = document.getElementById(targetID);
-							if (target instanceof HTMLTextAreaElement) {
-								target.value = content;
-							}
-						});
-					});
-					window.__agendaImportFileWired = true;
-				}
-
-				if (!window.__agendaImportCorrectionWired) {
-					document.addEventListener("click", function(event) {
-						var target = event.target;
-						if (!(target instanceof Element)) { return; }
-						var row = target.closest("[data-import-line-row]");
-						if (!row) { return; }
-						var container = row.parentElement;
-						if (!container) { return; }
-						var hiddenState = container.querySelector("[data-import-line-state]");
-						if (!(hiddenState instanceof HTMLInputElement)) { return; }
-						var next = nextImportLineState(hiddenState.value);
-						hiddenState.value = next;
-						setImportLineVisualState(row, next);
-						recomputeAgendaImportDetectedNumbers(row.closest("[data-agenda-import-lines]"));
-					});
-					document.addEventListener("htmx:afterSwap", function(event) {
-						var target = event.target;
-						if (target instanceof Element) {
-							syncAgendaImportLineStates(target);
-							return;
-						}
-						syncAgendaImportLineStates(document);
-					});
-					window.__agendaImportCorrectionWired = true;
-				}
-
-				if (!window.__agendaImportDiffHoverWired) {
-					document.addEventListener("mouseover", function(event) {
-						var target = event.target;
-						if (!(target instanceof Element)) { return; }
-						var cell = target.closest("#agenda-import-diff-grid [data-diff-cell]");
-						if (!cell) { return; }
-						applyAgendaImportDiffHover(cell.getAttribute("data-diff-hover-key") || "");
-					});
-					document.addEventListener("mouseout", function(event) {
-						var target = event.target;
-						if (!(target instanceof Element)) { return; }
-						var cell = target.closest("#agenda-import-diff-grid [data-diff-cell]");
-						if (!cell) { return; }
-						var related = event.relatedTarget;
-						if (related instanceof Element) {
-							var nextCell = related.closest("#agenda-import-diff-grid [data-diff-cell]");
-							if (nextCell) {
-								applyAgendaImportDiffHover(nextCell.getAttribute("data-diff-hover-key") || "");
-								return;
-							}
-						}
-						clearAgendaImportDiffHover();
-					});
-					document.addEventListener("htmx:afterSwap", function() {
-						clearAgendaImportDiffHover();
-					});
-					window.__agendaImportDiffHoverWired = true;
-				}
-
-				if (!window.__agendaImportStepWired) {
-					document.addEventListener("click", function(event) {
-						var target = event.target;
-						if (!(target instanceof Element)) { return; }
-						var backButton = target.closest("[data-agenda-import-back]");
-						if (!backButton) { return; }
-						var flow = backButton.closest("[data-agenda-import-flow]");
-						if (!(flow instanceof Element)) { return; }
-						var nextStep = backButton.getAttribute("data-agenda-import-back") || "";
-						setAgendaImportStep(flow, nextStep);
-					});
-					window.__agendaImportStepWired = true;
-				}
-
-				var root = document.getElementById("agenda-point-list-container");
-				var modal = document.getElementById("moderate-agenda-import-dialog");
-				if (!root || !modal || typeof modal.showModal !== "function") { return; }
-				syncAgendaImportLineStates(root);
-				var flow = root.querySelector("[data-agenda-import-flow]");
-				if (flow) {
-					setAgendaImportStep(flow, flow.getAttribute("data-agenda-import-step") || "1");
-				}
-				if (root.getAttribute("data-import-open") === "true" && !modal.open) {
-					modal.showModal();
-				}
-			})();`;
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -305,12 +74,6 @@
 	let draftOptionTexts = $state<Record<string, string>>({});
 	let draftMinSelections = $state<Record<string, string>>({});
 	let draftMaxSelections = $state<Record<string, string>>({});
-	let lastClosedVote = $state<{
-		vote: VoteDefinitionRecord;
-		tally: VoteTallyEntry[];
-		outcome: string;
-		stats?: { eligibleCount: bigint; castCount: bigint; ballotCount: bigint };
-	} | null>(null);
 	let moderateLeftTab = $state<'agenda' | 'tools' | 'attendees' | 'settings'>('agenda');
 	let speakerSearch = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
@@ -339,20 +102,6 @@
 			return;
 		}
 		loadModerationView();
-	});
-
-	function syncVoteOptionValueAttrs() {
-		if (typeof document === 'undefined') return;
-		for (const input of document.querySelectorAll<HTMLInputElement>('#moderate-votes-panel [data-vote-option-input]')) {
-			input.setAttribute('value', input.value);
-		}
-	}
-
-	$effect(() => {
-		votesState.data;
-		lastClosedVote;
-		createVoteDetailsOpen;
-		queueMicrotask(syncVoteOptionValueAttrs);
 	});
 
 	$effect(() => {
@@ -736,37 +485,6 @@
 	function openDocsWithHeading(path: string, heading?: string) {
 		goto(buildDocsOverlayHref(path, page.url, { heading }));
 	}
-
-	function preserveEmptyClass(node: HTMLElement, enabled: boolean) {
-		function sync(nextEnabled: boolean) {
-			if (nextEnabled) {
-				node.setAttribute('class', node.className);
-				if (!node.hasAttribute('class')) {
-					node.setAttribute('class', '');
-				}
-				return;
-			}
-			if (node.getAttribute('class') === '') {
-				node.removeAttribute('class');
-			}
-		}
-
-		sync(enabled);
-
-		return {
-			update(nextEnabled: boolean) {
-				sync(nextEnabled);
-			}
-		};
-	}
-
-	function moderateAgendaImportScriptHTML() {
-		return `<script>
-			${moderateAgendaImportLegacyScript}
-		<\/script>`;
-	}
-
-
 
 	async function runSpeakerAction(
 		key: string,
@@ -1369,7 +1087,7 @@
 		actionError = '';
 		creatingVote = true;
 		try {
-			const res = await voteClient.createVote({
+			await voteClient.createVote({
 				committeeSlug: slug,
 				meetingId,
 				name: voteName.trim(),
@@ -1379,16 +1097,12 @@
 				optionLabels: parsedVoteOptions()
 			});
 
-			lastClosedVote = null;
-			if (votesState.data && res.vote) {
-				votesState.data.votes = [...votesState.data.votes, res.vote];
-			}
 			voteName = '';
 			voteVisibility = 'open';
 			voteMinSelections = '1';
 			voteMaxSelections = '1';
 			voteOptionsText = 'Yes\nNo';
-			loadVotes();
+			await loadVotes();
 			voteNameInput?.focus();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to create the vote.');
@@ -1399,48 +1113,23 @@
 
 	async function openVote(voteId: string) {
 		await runVoteAction(`open-${voteId}`, async () => {
-			const res = await voteClient.openVote({
+			await voteClient.openVote({
 				committeeSlug: slug,
 				meetingId,
 				voteId
 			});
-			lastClosedVote = null;
-			if (votesState.data) {
-				votesState.data.activeVote = res.vote;
-				votesState.data.activeVoteStats = res.stats;
-			}
-			loadVotes();
+			await loadVotes();
 		});
 	}
 
 	async function closeVote(voteId: string) {
 		await runVoteAction(`close-${voteId}`, async () => {
-			const stats = votesState.data?.activeVoteStats
-				? {
-						eligibleCount: votesState.data.activeVoteStats.eligibleCount,
-						castCount: votesState.data.activeVoteStats.castCount,
-						ballotCount: votesState.data.activeVoteStats.ballotCount
-					}
-				: undefined;
-			const res = await voteClient.closeVote({
+			await voteClient.closeVote({
 				committeeSlug: slug,
 				meetingId,
 				voteId
 			});
-			lastClosedVote = res.vote
-				? {
-						vote: res.vote,
-						tally: res.tally,
-						outcome: res.outcome,
-						stats
-					}
-				: null;
-			if (votesState.data) {
-				votesState.data.activeVote = undefined;
-				votesState.data.activeVoteStats = undefined;
-				votesState.data.activeVoteTally = [];
-			}
-			loadVotes();
+			await loadVotes();
 		});
 	}
 
@@ -1452,10 +1141,7 @@
 				voteId
 			});
 			actionNotice = 'Vote archived.';
-			if (lastClosedVote?.vote.voteId === voteId) {
-				lastClosedVote = null;
-			}
-			loadVotes();
+			await loadVotes();
 		});
 	}
 
@@ -1547,35 +1233,26 @@
 		return labels;
 	}
 
-	function voteStatsFor(vote: VoteDefinitionRecord) {
-		if (votesState.data?.activeVote?.voteId === vote.voteId && votesState.data.activeVoteStats) {
-			return votesState.data.activeVoteStats;
-		}
-		if (lastClosedVote?.vote.voteId === vote.voteId && lastClosedVote.stats) {
-			return lastClosedVote.stats;
-		}
+	function emptyVoteStats() {
 		return { eligibleCount: 0n, castCount: 0n, ballotCount: 0n };
 	}
 
-	function voteTalliesFor(vote: VoteDefinitionRecord) {
-		if (votesState.data?.activeVote?.voteId === vote.voteId) {
-			return votesState.data.activeVoteTally ?? [];
-		}
-		if (lastClosedVote?.vote.voteId === vote.voteId) {
-			return lastClosedVote.tally;
-		}
-		return [];
+	function voteStatsFor(vote: VoteDefinitionRecord) {
+		return vote.stats ?? emptyVoteStats();
 	}
 
-	function voteOutcomeFor(vote: VoteDefinitionRecord) {
-		if (lastClosedVote?.vote.voteId === vote.voteId) {
-			return lastClosedVote.outcome;
-		}
-		return '';
+	function voteTalliesFor(vote: VoteDefinitionRecord) {
+		return vote.tally ?? [];
+	}
+
+	function voteOutstandingCount(vote: VoteDefinitionRecord) {
+		const stats = voteStatsFor(vote);
+		const outstanding = stats.castCount - stats.ballotCount;
+		return outstanding > 0n ? outstanding : 0n;
 	}
 
 	function voteShouldShowTallies(vote: VoteDefinitionRecord) {
-		return vote.state === 'closed' || lastClosedVote?.vote.voteId === vote.voteId;
+		return vote.state === 'closed' || vote.state === 'archived';
 	}
 
 	function resolveAttendeeIdFromQuery(query: string): string | null {
@@ -1640,7 +1317,7 @@
 		if (!form) return;
 		const data = new FormData(form);
 		await runVoteAction('create-vote', async () => {
-			const res = await voteClient.createVote({
+			await voteClient.createVote({
 				committeeSlug: slug,
 				meetingId,
 				name: String(data.get('name') ?? '').trim(),
@@ -1652,10 +1329,6 @@
 					.map((value) => String(value).trim())
 					.filter(Boolean)
 			});
-			lastClosedVote = null;
-			if (votesState.data && res.vote) {
-				votesState.data.votes = [...votesState.data.votes, res.vote];
-			}
 			form.reset();
 			createVoteDetailsOpen = false;
 			await loadVotes();
@@ -1758,7 +1431,7 @@
 										<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda" data-manage-dialog-open aria-controls="moderate-agenda-edit-dialog" title="Edit agenda" aria-label="Edit agenda" onclick={openAgendaEditDialog}><LegacyIcon name="settings" class="h-4 w-4" /></button>
 									</div>
 								</div>
-								<div id="moderate-agenda-compact" hx-get={`/committee/${slug}/meeting/${meetingId}/moderate/agenda`} hx-trigger="reload" hx-swap="outerHTML" class="space-y-2">
+								<div id="moderate-agenda-compact" class="space-y-2">
 									{#if agendaPointsFlat().length === 0}
 										<p class="text-sm text-base-content/70">No agenda points have been created yet.</p>
 									{:else}
@@ -1770,7 +1443,7 @@
 													{#if point.isActive}
 														<span class="badge badge-success badge-sm">Active</span>
 													{:else}
-														<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/activate`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) htmx.trigger(document.getElementById('moderate-agenda-compact'),'reload')" class="inline" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
+														<form class="inline" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
 															<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
 														</form>
 													{/if}
@@ -1796,7 +1469,7 @@
 										<div id="agenda-point-list-container" class="space-y-3" data-import-open={agendaImportOpen ? 'true' : 'false'} data-import-top-prefix="TOP">
 											<div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
 												<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-1">
-													<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/create`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) this.reset()" class="space-y-3" data-testid="manage-agenda-add-form" onsubmit={async (event) => { event.preventDefault(); await createAgendaPoint(); }}>
+													<form class="space-y-3" data-testid="manage-agenda-add-form" onsubmit={async (event) => { event.preventDefault(); await createAgendaPoint(); }}>
 														<fieldset class="fieldset rounded-box border border-base-300 p-3">
 															<legend class="fieldset-legend px-1 text-sm font-semibold">Add Agenda Point</legend>
 															<label class="label p-0 text-sm font-medium" for="ap_title">Title</label>
@@ -1842,20 +1515,20 @@
 																			</div>
 																		</div>
 																		<div class="mt-2 flex items-center gap-2">
-																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-up`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'up'); }}>
+																			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'up'); }}>
 																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move up" title="Move up" aria-label="Move up" disabled={!agendaPointCanMoveUp(point) || isAgendaBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
 																			</form>
-																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/move-down`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'down'); }}>
+																			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'down'); }}>
 																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move down" title="Move down" aria-label="Move down" disabled={!agendaPointCanMoveDown(point) || isAgendaBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
 																			</form>
 																			{#if !point.isActive}
-																				<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/activate`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
+																				<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
 																					<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
 																				</form>
 																			{/if}
-																			<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda point" title="Edit agenda point" aria-label="Edit agenda point" hx-get={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/edit-form`} hx-target={`#agenda-point-card-${point.agendaPointId}`} hx-swap="outerHTML" data-testid="manage-agenda-point-edit-btn" onclick={() => startEditAgendaPoint(point)}><LegacyIcon name="edit" class="h-4 w-4" /></button>
+																			<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda point" title="Edit agenda point" aria-label="Edit agenda point" data-testid="manage-agenda-point-edit-btn" onclick={() => startEditAgendaPoint(point)}><LegacyIcon name="edit" class="h-4 w-4" /></button>
 																			<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Open tools" title="Open tools" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
-																			<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/delete`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" hx-confirm="Delete this agenda point?" class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await deleteAgendaPoint(point.agendaPointId); }}>
+																			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await deleteAgendaPoint(point.agendaPointId); }}>
 																				<button type="submit" class="btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Delete agenda point" title="Delete agenda point" aria-label="Delete agenda point" disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
 																			</form>
 																		</div>
@@ -1893,8 +1566,8 @@
 																<li class={agendaImportCurrentStep() >= 3 ? 'step step-primary' : 'step'} data-agenda-import-step-item="3">Diff</li>
 															</ul>
 															{#if agendaImportCurrentStep() === 1}
-																<div use:preserveEmptyClass={true} data-agenda-import-panel="1" class="">
-																	<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda/import/extract`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
+																<div data-agenda-import-panel="1" class="">
+																	<form class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
 																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">Source text</label>
 																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder="Paste markdown or plaintext agenda here." bind:value={agendaImportSource}></textarea>
 																		<div class="flex flex-wrap items-center gap-2">
@@ -1904,8 +1577,8 @@
 																	</form>
 																</div>
 															{:else}
-																<div use:preserveEmptyClass={false} data-agenda-import-panel="1" class="hidden">
-																	<form hx-post={`/committee/${slug}/meeting/${meetingId}/agenda/import/extract`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
+																<div data-agenda-import-panel="1" class="hidden">
+																	<form class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
 																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">Source text</label>
 																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder="Paste markdown or plaintext agenda here." bind:value={agendaImportSource}></textarea>
 																		<div class="flex flex-wrap items-center gap-2">
@@ -1916,8 +1589,8 @@
 																</div>
 															{/if}
 															{#if agendaImportLines.length > 0}
-																<div use:preserveEmptyClass={agendaImportCurrentStep() === 2} data-agenda-import-panel="2" class={agendaImportCurrentStep() === 2 ? '' : 'hidden'}>
-																	<form id="agenda-import-correction-form" hx-post={`/committee/${slug}/meeting/${meetingId}/agenda/import/diff`} hx-target="#agenda-point-list-container" hx-swap="outerHTML" class="space-y-3" onsubmit={(event) => { event.preventDefault(); generateAgendaDiff(); }}>
+																<div data-agenda-import-panel="2" class={agendaImportCurrentStep() === 2 ? '' : 'hidden'}>
+																	<form id="agenda-import-correction-form" class="space-y-3" onsubmit={(event) => { event.preventDefault(); generateAgendaDiff(); }}>
 																		<input type="hidden" name="source_text" value={agendaImportSource} />
 																		<h4 class="text-base font-semibold">Correct detected agenda structure</h4>
 																		<p class="text-sm text-base-content/70">Click each line to cycle between ignored, heading, and subheading.</p>
@@ -1945,7 +1618,7 @@
 																</div>
 															{/if}
 															{#if agendaImportStep === 'diff' && buildImportedAgenda(agendaImportLines).length > 0}
-																<div use:preserveEmptyClass={agendaImportCurrentStep() === 3} data-agenda-import-panel="3" class={agendaImportCurrentStep() === 3 ? '' : 'hidden'}>
+																<div data-agenda-import-panel="3" class={agendaImportCurrentStep() === 3 ? '' : 'hidden'}>
 																	<div class="space-y-3">
 																		<h4 class="text-base font-semibold">Agenda Diff</h4>
 																		<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-2">
@@ -1998,7 +1671,7 @@
 												<form method="dialog" class="modal-backdrop">
 													<button aria-label="Close">Close</button>
 												</form>
-											</dialog>{@html moderateAgendaImportScriptHTML()}
+											</dialog>
 										</div>
 									</div>
 									<form method="dialog" class="modal-backdrop">
@@ -2116,17 +1789,10 @@
 																						<span>Counted Ballots</span>
 																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).ballotCount.toString()}</span>
 																					</div>
-																					{#if vote.visibility === 'secret'}
-																						<div class="flex items-center justify-between gap-2">
-																							<span>Outstanding</span>
-																							<span class={(voteStatsFor(vote).eligibleCount - voteStatsFor(vote).castCount) > 0n ? 'badge badge-sm badge-warning' : 'badge badge-sm badge-success'}>{(voteStatsFor(vote).eligibleCount - voteStatsFor(vote).castCount).toString()}</span>
-																						</div>
-																					{:else}
-																						<div class="flex items-center justify-between gap-2">
-																							<span>Open Ballots</span>
-																							<span class="badge badge-outline badge-sm">{voteStatsFor(vote).ballotCount.toString()}</span>
-																						</div>
-																					{/if}
+																					<div class="flex items-center justify-between gap-2">
+																						<span>Outstanding</span>
+																						<span class={voteOutstandingCount(vote) > 0n ? 'badge badge-sm badge-warning' : 'badge badge-sm badge-success'}>{voteOutstandingCount(vote).toString()}</span>
+																					</div>
 																				</div>
 																			</div>
 
@@ -2340,7 +2006,7 @@
 										<a href={manageJoinQrURL()} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR"><LegacyIcon name="qr-code" class="h-4 w-4" /></a>
 									</div>
 								</div>
-								<div id="attendee-list-container" sse-swap="manage-attendee-list-updated">
+								<div id="attendee-list-container">
 									<div class="mb-4">
 										<form class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" onsubmit={addGuestAttendee}>
 											<div class="w-full min-w-0 flex-1">
@@ -2438,7 +2104,7 @@
 												<div class="space-y-3">
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
 														<h3 class="mb-2 text-sm font-semibold">Quotation Settings</h3>
-														<form hx-post={`/committee/${slug}/meeting/${meetingId}/quotation`} hx-target="#meeting-settings-container" hx-swap="outerHTML" hx-trigger="change" class="grid gap-3 md:grid-cols-2">
+														<form class="grid gap-3 md:grid-cols-2">
 															<div class="space-y-1">
 																<label for="gender_quotation_enabled">FLINTA* quotation</label>
 																<select class="select select-bordered select-sm" id="gender_quotation_enabled" name="gender_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.genderQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
@@ -2467,7 +2133,7 @@
 													</div>
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
 														<h3 class="mb-2 text-sm font-semibold">Moderator</h3>
-														<form hx-post={`/committee/${slug}/meeting/${meetingId}/moderator`} hx-target="#meeting-settings-container" hx-swap="outerHTML" hx-trigger="change" class="flex flex-wrap items-end gap-3">
+														<form class="flex flex-wrap items-end gap-3">
 															<select class="select select-bordered select-sm" id="meeting_moderator_attendee_id" name="attendee_id" disabled={settingsActionPending !== ''} onchange={updateMeetingModerator}>
 																{#if !(moderationState.data.settings?.moderatorAttendeeId ?? '')}
 																	<option selected value="">-- none --</option>
@@ -2521,7 +2187,7 @@
 									<LegacyIcon name="help" />
 								</button>
 							</div>
-							<div id="speakers-list-container" sse-swap="manage-speakers-list-updated" hx-swap="outerHTML" class="flex min-h-0 flex-1 flex-col">
+							<div id="speakers-list-container" class="flex min-h-0 flex-1 flex-col">
 								{#if !moderationState.data.activeAgendaPoint}
 									<p class="text-sm text-base-content/70">No active agenda point.</p>
 								{:else if speakerState.data?.speakers?.length}
@@ -2530,9 +2196,6 @@
 											{#if activeSpeaker()}
 												<form
 													class="inline"
-													hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${activeSpeaker()?.speakerId ?? ''}/end`}
-													hx-target="#speakers-list-container"
-													hx-swap="outerHTML"
 													onsubmit={(event) => {
 														event.preventDefault();
 														void endCurrentSpeaker();
@@ -2553,9 +2216,6 @@
 											{:else if nextWaitingSpeaker()}
 												<form
 													class="inline"
-													hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${nextWaitingSpeaker()?.speakerId ?? ''}/start`}
-													hx-target="#speakers-list-container"
-													hx-swap="outerHTML"
 													onsubmit={(event) => {
 														event.preventDefault();
 														void runSpeakerAction('start-next', async () => {
@@ -2661,18 +2321,14 @@
 													<div class="shrink-0 self-center">
 														<div class="join join-horizontal">
 															<button
-																type="button"
-																class="join-item btn btn-sm btn-square tooltip tooltip-left"
-																title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-																aria-label={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-																data-tip={speaker.priority ? 'Remove Priority' : 'Give Priority'}
-																hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${speaker.speakerId}/priority`}
-																hx-target="#speakers-list-container"
-																hx-swap="outerHTML"
-																hx-confirm=""
-																onclick={() =>
-																	void runSpeakerAction(`priority-${speaker.speakerId}`, async () =>
-																		await speakerClient.setSpeakerPriority({
+															type="button"
+															class="join-item btn btn-sm btn-square tooltip tooltip-left"
+															title={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+															aria-label={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+															data-tip={speaker.priority ? 'Remove Priority' : 'Give Priority'}
+															onclick={() =>
+																void runSpeakerAction(`priority-${speaker.speakerId}`, async () =>
+																	await speakerClient.setSpeakerPriority({
 																			committeeSlug: slug,
 																			meetingId,
 																			speakerId: speaker.speakerId,
@@ -2684,18 +2340,14 @@
 																<LegacyIcon name={speaker.priority ? 'star' : 'star-outline'} />
 															</button>
 															<button
-																type="button"
-																class="join-item btn btn-sm btn-square tooltip tooltip-left"
-																title="Start"
-																aria-label="Start"
-																data-tip="Start"
-																hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${speaker.speakerId}/start`}
-																hx-target="#speakers-list-container"
-																hx-swap="outerHTML"
-																hx-confirm=""
-																onclick={() =>
-																	void runSpeakerAction(`start-${speaker.speakerId}`, async () =>
-																		await speakerClient.setSpeakerSpeaking({
+															type="button"
+															class="join-item btn btn-sm btn-square tooltip tooltip-left"
+															title="Start"
+															aria-label="Start"
+															data-tip="Start"
+															onclick={() =>
+																void runSpeakerAction(`start-${speaker.speakerId}`, async () =>
+																	await speakerClient.setSpeakerSpeaking({
 																			committeeSlug: slug,
 																			meetingId,
 																			speakerId: speaker.speakerId
@@ -2707,17 +2359,13 @@
 															</button>
 															<button
 																type="button"
-																class="join-item btn btn-sm btn-square tooltip tooltip-left join-item btn btn-sm btn-error btn-square tooltip tooltip-left"
-																title="Remove"
-																aria-label="Remove"
-																data-tip="Remove"
-																hx-post={`/committee/${slug}/meeting/${meetingId}/speaker/${speaker.speakerId}/remove`}
-																hx-target="#speakers-list-container"
-																hx-swap="outerHTML"
-																hx-confirm="Remove this speaker?"
-																onclick={() =>
-																	void runSpeakerAction(`remove-${speaker.speakerId}`, async () =>
-																		await speakerClient.removeSpeaker({
+															class="join-item btn btn-sm btn-square tooltip tooltip-left join-item btn btn-sm btn-error btn-square tooltip tooltip-left"
+															title="Remove"
+															aria-label="Remove"
+															data-tip="Remove"
+															onclick={() =>
+																void runSpeakerAction(`remove-${speaker.speakerId}`, async () =>
+																	await speakerClient.removeSpeaker({
 																			committeeSlug: slug,
 																			meetingId,
 																			speakerId: speaker.speakerId

@@ -61,6 +61,24 @@ func (s *Service) GetVotesPanel(ctx context.Context, committeeSlug, meetingIDStr
 			for _, v := range votes {
 				opts, _ := s.repo.ListVoteOptions(ctx, v.ID)
 				rec := toVoteDefinitionRecord(v, opts)
+				if stats, err := s.repo.GetVoteSubmissionStatsLive(ctx, v.ID); err == nil {
+					rec.Stats = &votesv1.VoteStats{
+						EligibleCount: stats.EligibleCount,
+						CastCount:     stats.CastCount,
+						BallotCount:   stats.BallotCount,
+					}
+				}
+				if v.State == model.VoteStateClosed || v.State == model.VoteStateArchived {
+					if tallies, err := s.repo.GetVoteTallies(ctx, v.ID); err == nil {
+						for _, t := range tallies {
+							rec.Tally = append(rec.Tally, &votesv1.VoteTallyEntry{
+								OptionId: strconv.FormatInt(t.OptionID, 10),
+								Label:    t.Label,
+								Count:    t.Count,
+							})
+						}
+					}
+				}
 				view.Votes = append(view.Votes, rec)
 
 				if v.State == model.VoteStateOpen || v.State == model.VoteStateCounting {

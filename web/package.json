@@ -50,7 +50,6 @@
 		"@connectrpc/connect": "^2.1.1",
 		"@connectrpc/connect-web": "^2.1.1",
 		"@mdi/js": "^7.4.47",
-		"daisyui": "^5.5.19",
-		"htmx.org": "^2.0.8"
+		"daisyui": "^5.5.19"
 	}
 }

@@ -4,7 +4,6 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
-	import { legacyValueAttr } from '$lib/utils/legacy-attrs.js';
 
 	let username = $state('');
 	let password = $state('');
@@ -45,8 +44,7 @@
 				type="text"
 				id="username"
 				name="username"
-				value={username}
-				use:legacyValueAttr={username}
+				bind:value={username}
 				oninput={(event) => {
 					username = (event.currentTarget as HTMLInputElement).value;
 				}}
@@ -61,8 +59,7 @@
 				type="password"
 				id="password"
 				name="password"
-				value={password}
-				use:legacyValueAttr={password}
+				bind:value={password}
 				oninput={(event) => {
 					password = (event.currentTarget as HTMLInputElement).value;
 				}}

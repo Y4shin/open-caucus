@@ -5,11 +5,10 @@
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
-	import { committeeClient } from '$lib/api/index.js';
+	import { committeeClient, moderationClient } from '$lib/api/index.js';
 	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
-	import { legacyAttrs } from '$lib/utils/legacy-attrs.js';
 
 	const slug = $derived(page.params.committee);
 
@@ -21,6 +20,7 @@
 	let createError = $state('');
 	let actionError = $state('');
 	let localActiveMeetingId = $state<string | null>(null);
+	let signupTogglePendingMeetingId = $state('');
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -106,6 +106,27 @@
 			actionError = getDisplayError(err, 'Failed to delete meeting.');
 		}
 	}
+
+	async function toggleSignupOpen(meetingId: string, currentOpen: boolean) {
+		if (signupTogglePendingMeetingId) return;
+		signupTogglePendingMeetingId = meetingId;
+		actionError = '';
+		try {
+			const moderation = await moderationClient.getModerationView({ committeeSlug: slug, meetingId });
+			const expectedVersion = moderation.view?.version ?? 0n;
+			await moderationClient.toggleSignupOpen({
+				committeeSlug: slug,
+				meetingId,
+				desiredOpen: !currentOpen,
+				expectedVersion
+			});
+			await loadCommittee();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to toggle meeting signup.');
+		} finally {
+			signupTogglePendingMeetingId = '';
+		}
+	}
 </script>
 
 {#if committeeState.loading}
@@ -127,12 +148,6 @@
 			<form
 				class="fieldset w-full rounded-box border border-base-300 bg-base-200 p-4"
 				data-testid="committee-create-form"
-				use:legacyAttrs={{
-					'hx-post': '/committee/' + slug + '/meeting/create',
-					'hx-target': '#meeting-list-container',
-					'hx-swap': 'outerHTML',
-					'hx-on::after-request': 'if(event.detail.successful) this.reset()'
-				}}
 				onsubmit={createMeeting}
 			>
 				<legend class="fieldset-legend">Create New Meeting</legend>
@@ -191,13 +206,6 @@
 											id={"meeting-active-toggle-" + (item.meeting?.meetingId ?? '')}
 											checked={localActiveMeetingId === item.meeting?.meetingId}
 											data-testid="committee-toggle-active"
-											use:legacyAttrs={{
-												checked: localActiveMeetingId === item.meeting?.meetingId,
-												'hx-post': '/committee/' + slug + '/meeting/' + (item.meeting?.meetingId ?? '') + '/activate',
-												'hx-target': '#meeting-list-container',
-												'hx-swap': 'outerHTML',
-												'hx-trigger': 'change'
-											}}
 											onchange={(e) => toggleActive(e, item.meeting?.meetingId ?? '')}
 										/>
 										Active
@@ -209,13 +217,8 @@
 											id={"meeting-signup-toggle-" + (item.meeting?.meetingId ?? '')}
 											checked={item.meeting?.signupOpen ?? false}
 											data-testid="committee-toggle-signup-open"
-											use:legacyAttrs={{
-												checked: item.meeting?.signupOpen ?? false,
-												'hx-post': '/committee/' + slug + '/meeting/' + (item.meeting?.meetingId ?? '') + '/signup-open-toggle',
-												'hx-target': '#meeting-list-container',
-												'hx-swap': 'outerHTML',
-												'hx-trigger': 'change'
-											}}
+											disabled={signupTogglePendingMeetingId === (item.meeting?.meetingId ?? '')}
+											onchange={() => toggleSignupOpen(item.meeting?.meetingId ?? '', item.meeting?.signupOpen ?? false)}
 										/>
 										Signup Open
 									</label>
@@ -239,12 +242,6 @@
 									</a>
 									<form
 										class="inline"
-										use:legacyAttrs={{
-											'hx-post': '/committee/' + slug + '/meeting/' + (item.meeting?.meetingId ?? '') + '/delete',
-											'hx-target': '#meeting-list-container',
-											'hx-swap': 'outerHTML',
-											'hx-confirm': 'Delete this meeting?'
-										}}
 										onsubmit={(event) => {
 											event.preventDefault();
 											deleteMeeting(item.meeting?.meetingId ?? '', item.meeting?.name ?? '');

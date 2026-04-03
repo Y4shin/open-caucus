@@ -64,6 +64,8 @@ message VoteDefinitionRecord {
   int64 min_selections = 6;
   int64 max_selections = 7;
   repeated VoteOptionRecord options = 8;
+  VoteStats stats = 9;
+  repeated VoteTallyEntry tally = 10;
 }
 
 // VoteStats contains submission progress for an open or closed vote.

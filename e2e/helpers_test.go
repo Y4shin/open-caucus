@@ -25,7 +25,6 @@ import (
 	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
 	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
-	"github.com/Y4shin/conference-tool/internal/handlers"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Y4shin/conference-tool/internal/broker"
@@ -36,7 +35,6 @@ import (
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
-	"github.com/Y4shin/conference-tool/internal/routes"
 	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
 	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
@@ -223,78 +221,6 @@ func newTestServer(t *testing.T) *testServer {
 	// Seed the default admin account so adminLogin() always works
 	result.seedAdminAccount(t, testAdminUsername, testAdminPassword)
 
-	return result
-}
-
-// newLegacyTestServer boots the legacy HTMX/Templ server with the same in-memory
-// backing services so browser parity tests can compare the old and new UIs.
-func newLegacyTestServer(t *testing.T) *testServer {
-	t.Helper()
-
-	repo, err := sqlite.New(":memory:")
-	if err != nil {
-		t.Fatalf("create repo: %v", err)
-	}
-	if err := repo.MigrateUp(); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
-
-	secret := []byte(testSecret)
-	sessionMgr := session.NewManager(repo, secret)
-	authCfg := &config.AuthConfig{
-		PasswordEnabled:       true,
-		OAuthEnabled:          false,
-		OAuthProvisioningMode: "preprovisioned",
-		OAuthGroupsClaim:      "groups",
-		OAuthUsernameClaims:   []string{"preferred_username", "email", "sub"},
-		OAuthFullNameClaims:   []string{"name", "preferred_username", "email"},
-		OAuthStateTTLSeconds:  300,
-	}
-	oauthSvc, err := oauth.New(context.Background(), oauth.Config{Enabled: false}, secret)
-	if err != nil {
-		t.Fatalf("create oauth service: %v", err)
-	}
-	mw := middleware.NewRegistry(sessionMgr, repo, authCfg.PasswordEnabled)
-	b := broker.NewMemoryBroker()
-	store := storage.NewMemStorage()
-
-	if err := locale.LoadTranslations(); err != nil {
-		t.Fatalf("load translations: %v", err)
-	}
-	docsService, err := docs.Load(docembed.ContentFS(), docembed.AssetsFS())
-	if err != nil {
-		t.Fatalf("load embedded docs: %v", err)
-	}
-
-	h := &handlers.Handler{
-		Broker:         b,
-		Repository:     repo,
-		Storage:        store,
-		SessionManager: sessionMgr,
-		AuthConfig:     authCfg,
-		OAuthService:   oauthSvc,
-		DocsService:    docsService,
-	}
-
-	legacyHandler := locale.NewMiddleware(
-		routes.NewRouter(h, mw).RegisterRoutes(),
-		locale.Config{
-			Default:   "en",
-			Supported: []string{"en"},
-		},
-	)
-
-	ts := httptest.NewServer(legacyHandler)
-
-	t.Cleanup(func() {
-		ts.Close()
-		b.Shutdown()
-		_ = docsService.Close()
-		repo.Close()
-	})
-
-	result := &testServer{Server: ts, repo: repo, storage: store}
-	result.seedAdminAccount(t, testAdminUsername, testAdminPassword)
 	return result
 }
 

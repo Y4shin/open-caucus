@@ -10,7 +10,6 @@
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
-	import { legacyAttrs } from '$lib/utils/legacy-attrs.js';
 
 	interface CommitteeAdminData {
 		committee: CommitteeRecord;
@@ -187,12 +186,6 @@
 					<p>All accounts are already assigned to this committee.</p>
 				{:else}
 					<form
-						use:legacyAttrs={{
-							'hx-post': '/admin/committee/' + slug + '/account/assign',
-							'hx-target': '#committee-users-container',
-							'hx-swap': 'outerHTML',
-							'hx-on::after-request': 'if(event.detail.successful) this.reset()'
-						}}
 						onsubmit={(event) => {
 							event.preventDefault();
 							assignExistingAccount();
@@ -282,11 +275,6 @@
 										<form
 											id={"membership-update-" + user.userId}
 											class="inline-form inline"
-											use:legacyAttrs={{
-												'hx-post': '/admin/committee/' + slug + '/membership/' + user.userId + '/update',
-												'hx-target': '#committee-users-container',
-												'hx-swap': 'outerHTML'
-											}}
 											onsubmit={(event) => {
 												event.preventDefault();
 												saveMembership(user.userId);
@@ -299,12 +287,6 @@
 										</form>
 										<form
 											class="inline-form inline ml-1"
-											use:legacyAttrs={{
-												'hx-post': '/admin/committee/' + slug + '/membership/' + user.userId + '/delete',
-												'hx-target': '#committee-users-container',
-												'hx-swap': 'outerHTML',
-												'hx-confirm': 'Are you sure you want to remove this assignment?'
-											}}
 											onsubmit={(event) => {
 												event.preventDefault();
 												deleteMembership(user);
@@ -335,12 +317,6 @@
 					<h2>OAuth Group Access Rules</h2>
 					<form
 						class="flex flex-wrap gap-2 items-end"
-						use:legacyAttrs={{
-							'hx-post': '/admin/committee/' + slug + '/oauth-group-rule/create',
-							'hx-target': '#committee-users-container',
-							'hx-swap': 'outerHTML',
-							'hx-on::after-request': 'if(event.detail.successful) this.reset()'
-						}}
 						onsubmit={(event) => {
 							event.preventDefault();
 							createOAuthRule();
@@ -378,12 +354,6 @@
 										<td>
 											<form
 												class="inline-form inline"
-												use:legacyAttrs={{
-													'hx-post': '/admin/committee/' + slug + '/oauth-group-rule/' + rule.ruleId + '/delete',
-													'hx-target': '#committee-users-container',
-													'hx-swap': 'outerHTML',
-													'hx-confirm': 'Are you sure you want to remove this assignment?'
-												}}
 												onsubmit={(event) => {
 													event.preventDefault();
 													deleteOAuthRule(rule);

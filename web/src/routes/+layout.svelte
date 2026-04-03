@@ -68,13 +68,6 @@
 	const docsOverlayOpen = $derived(!standaloneDocsRoute && docsOverlayPath !== '');
 
 	onMount(() => {
-		void import('htmx.org').then((mod) => {
-			const htmx = mod.default ?? mod;
-			(window as typeof window & { htmx?: unknown }).htmx = htmx;
-			if (typeof (htmx as { process?: (node: Element | Document) => void }).process === 'function') {
-				(htmx as { process: (node: Element | Document) => void }).process(document.body);
-			}
-		});
 		try {
 			const stored = window.localStorage.getItem(themeStorageKey);
 			if (stored === 'light' || stored === 'dark' || stored === 'auto') {

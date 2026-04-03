@@ -4,7 +4,6 @@ vars:
   BINARY_NAME: conference-tool
   BUILD_DIR: ./tmp
   MAIN_PATH: .
-  ROUTES_CONFIG: routes.yaml
   APP_PORT: "8080"
   OIDC_DEV_PORT: "9096"
   VITE_DEV_PORT: "5173"
@@ -42,7 +41,7 @@ tasks:
 
   run:
     desc: Run the application directly
-    deps: [generate]
+    deps: [generate, build:web]
     cmds:
       - go run {{.MAIN_PATH}} serve
 
@@ -101,7 +100,7 @@ tasks:
 
   build:
     desc: Build the application
-    deps: [generate]
+    deps: [generate, build:web]
     cmds:
       - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} {{.MAIN_PATH}}
 
@@ -113,32 +112,9 @@ tasks:
 
   # Code generation tasks
   generate:
-    desc: Generate all code (routes, templates, database client)
+    desc: Generate all code (database client and API clients)
     cmds:
-      - task: css:build
       - go generate ./...
-
-  css:build:
-    desc: Build Tailwind + DaisyUI stylesheet
-    cmds:
-      - npm run build:css
-
-  css:watch:
-    desc: Watch and rebuild Tailwind + DaisyUI stylesheet
-    cmds:
-      - npm run watch:css
-
-  generate:routes:
-    desc: Generate routing code from routes.yaml
-    dir: internal/routes
-    cmds:
-      - go generate
-
-  generate:templates:
-    desc: Generate Go code from Templ templates
-    dir: internal/templates
-    cmds:
-      - go generate
 
   generate:db:
     desc: Generate database client code using SQLC
@@ -173,11 +149,13 @@ tasks:
 
   test:e2e:
     desc: Run browser-based end-to-end tests (requires Playwright browsers installed)
+    deps: [build:web]
     cmds:
       - go test -v -tags=e2e -timeout=600s ./e2e/...
 
   test:e2e:headed:
     desc: Run browser-based end-to-end tests with visible browser windows
+    deps: [build:web]
     env:
       PLAYWRIGHT_HEADED: "1"
     cmds:
@@ -185,6 +163,7 @@ tasks:
 
   test:e2e:headed:slow:
     desc: Run headed E2E tests with slow-motion browser actions
+    deps: [build:web]
     env:
       PLAYWRIGHT_HEADED: "1"
       PLAYWRIGHT_SLOW_MO_MS: "350"
@@ -238,7 +217,7 @@ tasks:
     desc: Download dependencies
     cmds:
       - go mod download
-      - npm install
+      - cd web && npm install
 
   deps:tidy:
     desc: Tidy go.mod and go.sum
@@ -276,12 +255,6 @@ tasks:
     desc: Reset database (down and up)
     cmds:
       - echo "Database migration commands not yet implemented in the binary"
-
-  # Validation tasks
-  validate:routes:
-    desc: Validate routes.yaml configuration
-    cmds:
-      - go run ./tools/routing/cmd/route-codegen/main.go -config {{.ROUTES_CONFIG}} -validate
 
   # Development workflow tasks
   fresh:
@@ -394,7 +367,16 @@ tasks:
         fi
 
         echo "Missing $platform_pkg; repairing frontend optional dependencies with npm install --include=optional"
-        npm install --include=optional
+        if npm install --include=optional; then
+          exit 0
+        fi
+
+        echo "Optional dependency repair failed; rebuilding web/node_modules from package-lock.json"
+        if ! rm -rf node_modules; then
+          echo "POSIX cleanup failed; attempting Windows-side node_modules cleanup"
+          cmd.exe /c rmdir /s /q node_modules || true
+        fi
+        npm ci --include=optional
 
   dev:web:
     desc: Run the SvelteKit dev server with hot reload (proxies /api to Go backend on :8080)
@@ -406,24 +388,28 @@ tasks:
   build:web:
     desc: Build the SvelteKit SPA (outputs to internal/web/build for Go embedding)
     dir: web
+    deps: [deps:web:repair-native]
     cmds:
       - npm run build
 
   test:web:
     desc: Run SvelteKit unit and component tests
     dir: web
+    deps: [deps:web:repair-native]
     cmds:
       - npm run test
 
   check:web:
     desc: Run svelte-check and TypeScript type checks for the frontend
     dir: web
+    deps: [deps:web:repair-native]
     cmds:
       - npm run check
 
   lint:web:
     desc: Lint and format-check the frontend code
     dir: web
+    deps: [deps:web:repair-native]
     cmds:
       - npm run lint
 

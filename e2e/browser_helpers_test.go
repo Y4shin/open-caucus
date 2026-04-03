@@ -85,6 +85,19 @@ func gotoAndWaitForInput(t *testing.T, page playwright.Page, url, selector strin
 	t.Fatalf("open %s with %s: %v (current URL: %s)", url, selector, lastErr, currentURL)
 }
 
+func gotoAndWaitForSelector(t *testing.T, page playwright.Page, url, selector string) {
+	t.Helper()
+
+	if _, err := page.Goto(url); err != nil {
+		t.Fatalf("goto %s: %v", url, err)
+	}
+	if err := page.Locator(selector).First().WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait for %s on %s: %v (current URL: %s)", selector, url, err, page.URL())
+	}
+}
+
 // adminLogin navigates to /admin/login and authenticates with the test admin credentials.
 func adminLogin(t *testing.T, page playwright.Page, baseURL string) {
 	t.Helper()

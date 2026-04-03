@@ -4,7 +4,6 @@ go 1.25.5
 
 require (
 	connectrpc.com/connect v1.19.1
-	github.com/a-h/templ v0.3.977
 	github.com/blevesearch/bleve/v2 v2.5.7
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
@@ -33,6 +32,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.4.5 // indirect
 	github.com/a-h/parse v0.0.0-20250122154542-74294addb73e // indirect
+	github.com/a-h/templ v0.3.977 // indirect
 	github.com/air-verse/air v1.64.5 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect

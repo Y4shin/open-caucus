@@ -74,6 +74,17 @@ func moderatorVoteAccordion(t *testing.T, page playwright.Page, voteName string)
 	return accordion
 }
 
+func moderatorVoteTallyCardCompactText(t *testing.T, page playwright.Page, voteName string) string {
+	t.Helper()
+	accordion := moderatorVoteAccordion(t, page, voteName)
+	card := accordion.Locator(".rounded-box.border.border-base-300.bg-base-200\\/30").First()
+	text, err := card.TextContent()
+	if err != nil {
+		t.Fatalf("read moderator vote tally card text for %q: %v", voteName, err)
+	}
+	return compactText(text)
+}
+
 func waitPageContainsText(t *testing.T, page playwright.Page, contains string) {
 	t.Helper()
 	waitUntil(t, 5*time.Second, func() (bool, error) {
@@ -242,7 +253,6 @@ func firstVoteOptionID(t *testing.T, ts *testServer, voteID int64) int64 {
 	}
 	return options[0].ID
 }
-
 
 // connectJSONCallViaPage calls a Connect JSON RPC endpoint from within the browser
 // so that the browser's session cookies are included automatically.
@@ -446,6 +456,136 @@ func TestVoting_OpenVote_ModeratorAndAttendeeHappyPath(t *testing.T) {
 	}
 }
 
+func TestVoting_OpenVoteModeratorTallyPersistsAcrossReload(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Open Vote Reload Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Open Vote Reload Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Open Vote Reload Meeting", "Budget")
+	ts.activateAgendaPoint(t, "test-committee", "Open Vote Reload Meeting", apID)
+	ts.seedAttendee(t, "test-committee", "Open Vote Reload Meeting", "Alice Member", "secret-alice-open-reload")
+
+	moderatorPage := newPage(t)
+	userLogin(t, moderatorPage, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := moderatorPage.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto moderate page: %v", err)
+	}
+	moderatorURLBefore := moderatorPage.URL()
+
+	createDraftVoteFromModeratorUI(t, moderatorPage, "Reloadable Open Vote", "open", 1, 1)
+	openDraftVoteFromModeratorUI(t, moderatorPage, "Reloadable Open Vote")
+
+	voteID := voteIDByName(t, ts, apID, "Reloadable Open Vote")
+	yesOptionID := voteOptionIDByLabel(t, ts, voteID, "Yes")
+
+	attendeePage := newPage(t)
+	attendeeLoginHelper(t, attendeePage, ts.URL, "test-committee", meetingID, "secret-alice-open-reload")
+	voteCard := attendeePage.Locator("#live-votes-panel [data-vote-card]").Filter(playwright.LocatorFilterOptions{HasText: "Reloadable Open Vote"})
+	if err := voteCard.WaitFor(); err != nil {
+		t.Fatalf("wait live vote card: %v", err)
+	}
+	if err := voteCard.Locator(fmt.Sprintf("input[name='option_id'][value='%d']", yesOptionID)).Check(); err != nil {
+		t.Fatalf("select Yes option: %v", err)
+	}
+	if err := voteCard.Locator("button:has-text('Submit Open Ballot')").Click(); err != nil {
+		t.Fatalf("submit open ballot: %v", err)
+	}
+
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		stats, err := ts.repo.GetVoteSubmissionStatsLive(context.Background(), voteID)
+		if err != nil {
+			return false, err
+		}
+		return stats.EligibleCount == 1 && stats.CastCount == 1 && stats.BallotCount == 1, nil
+	}, "open vote submission stats to persist")
+
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		return moderatorVoteTallyCardCompactText(t, moderatorPage, "Reloadable Open Vote") == "LiveSubmissionTallyEligible1Casts1CountedBallots1Outstanding0", nil
+	}, "moderator tally card to show outstanding zero for open vote")
+
+	if _, err := moderatorPage.Reload(); err != nil {
+		t.Fatalf("reload moderator page: %v", err)
+	}
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		return moderatorVoteTallyCardCompactText(t, moderatorPage, "Reloadable Open Vote") == "LiveSubmissionTallyEligible1Casts1CountedBallots1Outstanding0", nil
+	}, "moderator tally card to persist after reload")
+
+	if moderatorPage.URL() != moderatorURLBefore {
+		t.Fatalf("moderator URL changed during open vote reload test: before=%s after=%s", moderatorURLBefore, moderatorPage.URL())
+	}
+}
+
+func TestVoting_ClosedVoteTalliesPersistAcrossReload(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Closed Vote Reload Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Closed Vote Reload Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Closed Vote Reload Meeting", "Budget")
+	ts.activateAgendaPoint(t, "test-committee", "Closed Vote Reload Meeting", apID)
+	ts.seedAttendee(t, "test-committee", "Closed Vote Reload Meeting", "Alice Member", "secret-alice-closed-reload")
+
+	moderatorPage := newPage(t)
+	userLogin(t, moderatorPage, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := moderatorPage.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto moderate page: %v", err)
+	}
+
+	createDraftVoteFromModeratorUI(t, moderatorPage, "Reloadable Closed Vote", "open", 1, 1)
+	openDraftVoteFromModeratorUI(t, moderatorPage, "Reloadable Closed Vote")
+
+	voteID := voteIDByName(t, ts, apID, "Reloadable Closed Vote")
+	yesOptionID := voteOptionIDByLabel(t, ts, voteID, "Yes")
+
+	attendeePage := newPage(t)
+	attendeeLoginHelper(t, attendeePage, ts.URL, "test-committee", meetingID, "secret-alice-closed-reload")
+	voteCard := attendeePage.Locator("#live-votes-panel [data-vote-card]").Filter(playwright.LocatorFilterOptions{HasText: "Reloadable Closed Vote"})
+	if err := voteCard.WaitFor(); err != nil {
+		t.Fatalf("wait live vote card: %v", err)
+	}
+	if err := voteCard.Locator(fmt.Sprintf("input[name='option_id'][value='%d']", yesOptionID)).Check(); err != nil {
+		t.Fatalf("select Yes option: %v", err)
+	}
+	if err := voteCard.Locator("button:has-text('Submit Open Ballot')").Click(); err != nil {
+		t.Fatalf("submit open ballot: %v", err)
+	}
+
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		stats, err := ts.repo.GetVoteSubmissionStatsLive(context.Background(), voteID)
+		if err != nil {
+			return false, err
+		}
+		return stats.CastCount == 1 && stats.BallotCount == 1, nil
+	}, "closed vote submission stats to persist before close")
+
+	closeVoteFromModeratorUI(t, moderatorPage, "Reloadable Closed Vote")
+
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		accordion := moderatorVoteAccordion(t, moderatorPage, "Reloadable Closed Vote")
+		text, err := accordion.TextContent()
+		if err != nil {
+			return false, err
+		}
+		return strings.Contains(compactText(text), "FinalTalliesYes1No0") &&
+			strings.Contains(compactText(text), "eligible=1casts=1ballots=1"), nil
+	}, "closed vote tallies to appear before reload")
+
+	if _, err := moderatorPage.Reload(); err != nil {
+		t.Fatalf("reload moderator page: %v", err)
+	}
+
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		accordion := moderatorVoteAccordion(t, moderatorPage, "Reloadable Closed Vote")
+		text, err := accordion.TextContent()
+		if err != nil {
+			return false, err
+		}
+		return strings.Contains(compactText(text), "FinalTalliesYes1No0") &&
+			strings.Contains(compactText(text), "eligible=1casts=1ballots=1"), nil
+	}, "closed vote tallies to persist after reload")
+}
+
 func TestVoting_DraftEditorStaysOpenAcrossVoteRefreshes(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
@@ -531,13 +671,13 @@ func TestVoting_CreateRejectedWithoutActiveAgenda(t *testing.T) {
 	}
 
 	createStatus, createCode := connectJSONCallViaPage(t, page, ts.URL, "CreateVote", map[string]any{
-		"committee_slug":  "test-committee",
-		"meeting_id":      meetingID,
-		"name":            "Should Fail",
-		"visibility":      "open",
-		"min_selections":  1,
-		"max_selections":  1,
-		"option_labels":   []string{"Yes", "No"},
+		"committee_slug": "test-committee",
+		"meeting_id":     meetingID,
+		"name":           "Should Fail",
+		"visibility":     "open",
+		"min_selections": 1,
+		"max_selections": 1,
+		"option_labels":  []string{"Yes", "No"},
 	})
 	if createStatus == 200 {
 		t.Fatalf("expected create-vote to fail without active agenda, got 200")
@@ -658,10 +798,10 @@ func TestVoting_IneligibleAttendeeCannotSubmit(t *testing.T) {
 	}
 
 	submitStatus, submitCode := connectJSONCallViaPage(t, lateAttendeePage, ts.URL, "SubmitBallot", map[string]any{
-		"committee_slug":       "test-committee",
-		"meeting_id":           meetingID,
-		"vote_id":              strconv.FormatInt(voteID, 10),
-		"selected_option_ids":  []string{strconv.FormatInt(optionID, 10)},
+		"committee_slug":      "test-committee",
+		"meeting_id":          meetingID,
+		"vote_id":             strconv.FormatInt(voteID, 10),
+		"selected_option_ids": []string{strconv.FormatInt(optionID, 10)},
 	})
 	if submitStatus == 200 {
 		t.Fatalf("expected ineligible ballot submission to fail, got 200")
@@ -721,10 +861,10 @@ func TestVoting_DuplicateOpenSubmissionRejected(t *testing.T) {
 	}, "first open ballot to be persisted")
 
 	dupStatus, dupCode := connectJSONCallViaPage(t, attendeePage, ts.URL, "SubmitBallot", map[string]any{
-		"committee_slug":       "test-committee",
-		"meeting_id":           meetingID,
-		"vote_id":              strconv.FormatInt(voteID, 10),
-		"selected_option_ids":  []string{strconv.FormatInt(optionID, 10)},
+		"committee_slug":      "test-committee",
+		"meeting_id":          meetingID,
+		"vote_id":             strconv.FormatInt(voteID, 10),
+		"selected_option_ids": []string{strconv.FormatInt(optionID, 10)},
 	})
 	if dupStatus == 200 {
 		t.Fatalf("expected duplicate open submission to fail, got 200")

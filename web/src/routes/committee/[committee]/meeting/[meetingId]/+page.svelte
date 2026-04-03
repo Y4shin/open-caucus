@@ -463,14 +463,6 @@
 		return 'flex-1 truncate';
 	}
 
-	function liveSpeakerSelfAddURL() {
-		return `/committee/${slug}/meeting/${meetingId}/speaker/self-add`;
-	}
-
-	function liveSpeakerSelfYieldURL() {
-		return `/committee/${slug}/meeting/${meetingId}/speaker/self-yield`;
-	}
-
 </script>
 
 <div class="space-y-6">
@@ -574,7 +566,7 @@
 					</div>
 					<div id="live-speakers-panel-meta" class="mb-2"></div>
 					<div class="live-speakers-sse min-h-0 flex-1">
-						<div id="attendee-speakers-list" sse-swap="speakers-updated" class="flex h-full min-h-0 flex-col">
+						<div id="attendee-speakers-list" class="flex h-full min-h-0 flex-col">
 							<div class="contents">
 								{#if liveState.data.activeAgendaPoint}
 									<div class="flex h-full min-h-0 flex-1 flex-col gap-3">
@@ -679,9 +671,6 @@
 															const submitter = event.submitter as HTMLButtonElement | null;
 															void addSelfSpeaker(submitter?.value === 'ropm' ? 'ropm' : 'regular');
 														}}
-														hx-post={liveSpeakerSelfAddURL()}
-														hx-target="#attendee-speakers-list"
-														hx-swap="innerHTML"
 													>
 														<div class="join flex w-full">
 															<button
@@ -800,54 +789,6 @@
 								{:else}
 									<p>No active agenda point.</p>
 								{/if}
-								<div hidden>
-									<div id="live-agenda-main-stack" class="min-h-0 flex flex-1 flex-col" hx-swap-oob="outerHTML">
-										<div class="flex min-h-0 flex-1 overflow-hidden">
-											<div id="live-agenda-panel-body" class="min-h-0 flex-1">
-												<div class="flex h-full min-h-0 flex-col gap-3">
-													<div class="live-agenda-preview-block lg:hidden">
-														<div class="live-agenda-preview-row">
-															<span class="live-agenda-preview-label">Current</span>
-															<span class="live-agenda-preview-value">
-																{#if currentAgendaPoint()}
-																	{currentAgendaPoint()?.title}
-																{:else}
-																	No active agenda point.
-																{/if}
-															</span>
-														</div>
-														<div class="live-agenda-preview-row">
-															<span class="live-agenda-preview-label">Next</span>
-															<span class="live-agenda-preview-value">
-																{#if nextAgendaPoint()}
-																	{nextAgendaPoint()?.title}
-																{:else}
-																	None
-																{/if}
-															</span>
-														</div>
-													</div>
-													<div class="hidden min-h-0 flex-1 flex-col lg:flex">
-														{#if agendaRows().length === 0}
-															<p class="live-empty-state text-base-content/70">No agenda points are available.</p>
-														{:else}
-															<ul class="list rounded-box border border-base-300 bg-base-100 min-h-0 flex-1 overflow-y-auto">
-																{#each agendaRows() as agendaPoint}
-																	<li class={liveAgendaRowClass(agendaPoint)}>
-																		<span class="badge badge-outline">{agendaPoint.displayNumber}</span>
-																		<span class={liveAgendaTitleClass(agendaPoint)}>{agendaPoint.title}</span>
-																	</li>
-																{/each}
-															</ul>
-														{/if}
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div id="live-speakers-panel-meta" hx-swap-oob="innerHTML" hidden></div>
-								<div id="live-doc-fab-oob" hx-swap-oob="innerHTML:#live-doc-fab-wrapper" hidden></div>
 							</div>
 						</div>
 					</div>
@@ -856,11 +797,7 @@
 
 			<section class="card min-h-0 border border-base-300 bg-base-100 shadow-sm lg:col-span-2">
 				<div class="p-4">
-					<div
-						id="live-votes-panel"
-						class="space-y-3"
-						hx-swap="outerHTML"
-					>
+					<div id="live-votes-panel" class="space-y-3">
 						<div class="flex items-center justify-between gap-2">
 							<h2 class="text-lg font-semibold">Votes</h2>
 							<button

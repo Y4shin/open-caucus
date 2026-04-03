@@ -10,20 +10,41 @@ import (
 	"strings"
 	"time"
 
+	connect "connectrpc.com/connect"
 	docembed "github.com/Y4shin/conference-tool/doc"
+	adminv1connect "github.com/Y4shin/conference-tool/gen/go/conference/admin/v1/adminv1connect"
+	agendav1connect "github.com/Y4shin/conference-tool/gen/go/conference/agenda/v1/agendav1connect"
+	attendeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/attendees/v1/attendeesv1connect"
+	committeesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/committees/v1/committeesv1connect"
+	docsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/docs/v1/docsv1connect"
+	meetingsv1connect "github.com/Y4shin/conference-tool/gen/go/conference/meetings/v1/meetingsv1connect"
+	moderationv1connect "github.com/Y4shin/conference-tool/gen/go/conference/moderation/v1/moderationv1connect"
+	sessionv1connect "github.com/Y4shin/conference-tool/gen/go/conference/session/v1/sessionv1connect"
+	speakersv1connect "github.com/Y4shin/conference-tool/gen/go/conference/speakers/v1/speakersv1connect"
+	votesv1connect "github.com/Y4shin/conference-tool/gen/go/conference/votes/v1/votesv1connect"
+	apiconnect "github.com/Y4shin/conference-tool/internal/api/connect"
+	apihttp "github.com/Y4shin/conference-tool/internal/api/http"
 	"github.com/Y4shin/conference-tool/internal/broker"
 	"github.com/Y4shin/conference-tool/internal/config"
 	"github.com/Y4shin/conference-tool/internal/docs"
-	"github.com/Y4shin/conference-tool/internal/handlers"
 	"github.com/Y4shin/conference-tool/internal/locale"
 	"github.com/Y4shin/conference-tool/internal/middleware"
 	"github.com/Y4shin/conference-tool/internal/oauth"
 	"github.com/Y4shin/conference-tool/internal/repository"
 	"github.com/Y4shin/conference-tool/internal/repository/sqlite"
-	"github.com/Y4shin/conference-tool/internal/routes"
+	adminservice "github.com/Y4shin/conference-tool/internal/services/admin"
+	agendaservice "github.com/Y4shin/conference-tool/internal/services/agenda"
+	attendeeservice "github.com/Y4shin/conference-tool/internal/services/attendees"
+	committeeservice "github.com/Y4shin/conference-tool/internal/services/committees"
+	meetingservice "github.com/Y4shin/conference-tool/internal/services/meetings"
+	moderationservice "github.com/Y4shin/conference-tool/internal/services/moderation"
+	sessionservice "github.com/Y4shin/conference-tool/internal/services/session"
+	speakerservice "github.com/Y4shin/conference-tool/internal/services/speakers"
+	voteservice "github.com/Y4shin/conference-tool/internal/services/votes"
 	"github.com/Y4shin/conference-tool/internal/session"
 	"github.com/Y4shin/conference-tool/internal/storage"
 	oidctest "github.com/Y4shin/conference-tool/internal/testsupport/oidc"
+	webassets "github.com/Y4shin/conference-tool/internal/web"
 )
 
 const captureSessionSecret = "docs-capture-session-secret-at-least-32-bytes"
@@ -174,16 +195,6 @@ func NewEnvironment(rawOpts EnvironmentOptions) (*Environment, error) {
 		repo.Close()
 		return nil, fmt.Errorf("load embedded docs: %w", err)
 	}
-	h := &handlers.Handler{
-		Broker:         b,
-		Repository:     repo,
-		Storage:        store,
-		SessionManager: sessionManager,
-		AuthConfig:     authCfg,
-		OAuthService:   oauthSvc,
-		DocsService:    docsService,
-	}
-
 	if err := locale.LoadTranslations(); err != nil {
 		if listener != nil {
 			listener.Close()
@@ -196,10 +207,109 @@ func NewEnvironment(rawOpts EnvironmentOptions) (*Environment, error) {
 		return nil, fmt.Errorf("load translations: %w", err)
 	}
 
-	mux := routes.NewRouter(h, mw).RegisterRoutes()
-	appMux := http.NewServeMux()
-	appMux.Handle("/", mux)
-	handler := locale.NewMiddleware(appMux, locale.Config{
+	oauthHandler := &apihttp.OAuthHandler{
+		OAuthService:   oauthSvc,
+		Repository:     repo,
+		SessionManager: sessionManager,
+		AuthConfig:     authCfg,
+	}
+
+	apiMux := http.NewServeMux()
+
+	sessionAPIPath, sessionAPIHandler := sessionv1connect.NewSessionServiceHandler(
+		apiconnect.NewSessionHandler(sessionservice.New(repo, sessionManager, authCfg.PasswordEnabled, authCfg.OAuthEnabled)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
+
+	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
+		apiconnect.NewCommitteeHandler(committeeservice.New(repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))
+
+	meetingAPIPath, meetingAPIHandler := meetingsv1connect.NewMeetingServiceHandler(
+		apiconnect.NewMeetingHandler(meetingservice.New(repo), b),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(meetingAPIPath, mw.Get("session")(meetingAPIHandler))
+
+	moderationAPIPath, moderationAPIHandler := moderationv1connect.NewModerationServiceHandler(
+		apiconnect.NewModerationHandler(moderationservice.New(repo, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(moderationAPIPath, mw.Get("session")(moderationAPIHandler))
+
+	attendeeAPIPath, attendeeAPIHandler := attendeesv1connect.NewAttendeeServiceHandler(
+		apiconnect.NewAttendeeHandler(attendeeservice.New(repo, sessionManager, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(attendeeAPIPath, mw.Get("session")(attendeeAPIHandler))
+
+	agendaAPIPath, agendaAPIHandler := agendav1connect.NewAgendaServiceHandler(
+		apiconnect.NewAgendaHandler(agendaservice.New(repo, b, store)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(agendaAPIPath, mw.Get("session")(agendaAPIHandler))
+
+	speakerAPIPath, speakerAPIHandler := speakersv1connect.NewSpeakerServiceHandler(
+		apiconnect.NewSpeakerHandler(speakerservice.New(repo, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(speakerAPIPath, mw.Get("session")(speakerAPIHandler))
+
+	voteAPIPath, voteAPIHandler := votesv1connect.NewVoteServiceHandler(
+		apiconnect.NewVoteHandler(voteservice.New(repo, b)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(voteAPIPath, mw.Get("session")(voteAPIHandler))
+
+	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
+		apiconnect.NewAdminHandler(adminservice.New(repo)),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))
+
+	docsAPIPath, docsAPIHandler := docsv1connect.NewDocsServiceHandler(
+		apiconnect.NewDocsHandler(docsService),
+		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
+	)
+	apiMux.Handle(docsAPIPath, docsAPIHandler)
+
+	apiMux.Handle("POST /committee/{slug}/meeting/{meetingId}/agenda-point/{agendaPointId}/attachments",
+		mw.Get("session")(apihttp.NewAttachmentUploadHandler(repo, store)),
+	)
+	apiMux.Handle("GET /docs/assets/{assetPath...}", apihttp.NewDocsAssetHandler(docsService))
+
+	spaHandler := webassets.NewSPAHandler()
+
+	appHandler := mw.Get("session")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/api/"):
+			http.StripPrefix("/api", apiMux).ServeHTTP(w, r)
+		case r.Method == http.MethodGet && (r.URL.Path == "/admin" || strings.HasPrefix(r.URL.Path, "/admin/")) && r.URL.Path != "/admin/login":
+			sd, ok := session.GetSession(r.Context())
+			if !ok || sd == nil || sd.AccountID == nil || !sd.IsAdmin || sd.IsExpired() {
+				http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+				return
+			}
+			spaHandler.ServeHTTP(w, r)
+		case r.URL.Path == "/oauth/start" && r.Method == http.MethodGet:
+			apihttp.NewOAuthStartHandler(oauthHandler).ServeHTTP(w, r)
+		case r.URL.Path == "/oauth/callback" && r.Method == http.MethodGet:
+			apihttp.NewOAuthCallbackHandler(oauthHandler).ServeHTTP(w, r)
+		case r.URL.Path == "/docs/assets" || strings.HasPrefix(r.URL.Path, "/docs/assets/"):
+			apihttp.NewDocsAssetHandler(docsService).ServeHTTP(w, r)
+		case r.URL.Path == "/blobs" || strings.HasPrefix(r.URL.Path, "/blobs/"):
+			apihttp.NewBlobDownloadHandler(repo, store).ServeHTTP(w, r)
+		case r.Method == http.MethodGet || r.Method == http.MethodHead:
+			spaHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+
+	handler := locale.NewMiddleware(appHandler, locale.Config{
 		Default:   "en",
 		Supported: []string{"en", "de"},
 	})
