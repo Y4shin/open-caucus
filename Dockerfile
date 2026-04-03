@@ -22,7 +22,7 @@ ARG VERSION=dev
 RUN --mount=type=cache,target=/root/.npm \
     PATH="/src/web/node_modules/.bin:$PATH" ./web/node_modules/.bin/buf generate --template buf.gen.yaml
 RUN --mount=type=cache,target=/root/.npm \
-    cd web && VITE_APP_VERSION=${VERSION} npm run build
+    cd web && PUBLIC_APP_VERSION=${VERSION} npm run build
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go generate ./...

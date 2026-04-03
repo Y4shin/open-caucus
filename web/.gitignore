@@ -17,6 +17,8 @@ Thumbs.db
 .env.*
 !.env.example
 !.env.test
+# Public defaults — non-secret, committed intentionally for SvelteKit type generation
+!.env
 
 # Vite
 vite.config.js.timestamp-*
