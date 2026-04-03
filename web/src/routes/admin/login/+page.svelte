@@ -4,6 +4,7 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
+	import * as m from '$lib/paraglide/messages';
 
 	let username = $state('');
 	let password = $state('');
@@ -38,7 +39,7 @@
 {#if session.passwordEnabled}
 	<form method="POST" action="/admin/login" onsubmit={handleLogin}>
 		<div>
-			<label for="username">Username:</label>
+			<label for="username">{m.admin_login_username_label()}</label>
 			<input
 				class="input input-bordered input-sm"
 				type="text"
@@ -49,11 +50,10 @@
 					username = (event.currentTarget as HTMLInputElement).value;
 				}}
 				required
-				autofocus
 			/>
 		</div>
 		<div>
-			<label for="password">Password:</label>
+			<label for="password">{m.admin_login_password_label()}</label>
 			<input
 				class="input input-bordered input-sm"
 				type="password"
@@ -66,9 +66,9 @@
 				required
 			/>
 		</div>
-		<button class="btn btn-sm" type="submit" disabled={loading}>Login</button>
+		<button class="btn btn-sm" type="submit" disabled={loading}>{m.admin_login_button()}</button>
 	</form>
 {/if}
 {#if session.oauthEnabled}
-	<a class="btn btn-sm btn-outline mt-2" href="/oauth/start?target=admin" data-sveltekit-reload>Login with OAuth</a>
+	<a class="btn btn-sm btn-outline mt-2" href="/oauth/start?target=admin" data-sveltekit-reload>{m.admin_login_oauth_button()}</a>
 {/if}

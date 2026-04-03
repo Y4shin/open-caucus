@@ -9,6 +9,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { onDestroy } from 'svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -31,7 +32,7 @@
 		if (!recoveryState.data) return;
 		pageActions.set([], {
 			backHref: moderateHref,
-			title: 'Guest Recovery',
+			title: m.meeting_attendee_recovery_title(),
 			subtitle: `${recoveryState.data.attendeeName} - ${recoveryState.data.meetingName}`
 		});
 	});
@@ -62,14 +63,14 @@
 		<AppAlert message={recoveryState.error} />
 	{:else if recoveryState.data}
 		<div class="space-y-2">
-			<h1 class="text-3xl font-bold">Guest Recovery</h1>
+			<h1 class="text-3xl font-bold">{m.meeting_attendee_recovery_title()}</h1>
 			<p class="text-base-content/70">{recoveryState.data.attendeeName} - {recoveryState.data.meetingName}</p>
 		</div>
 
-		<p>Use this recovery link or QR code to log this guest back into the meeting directly.</p>
+		<p>{m.meeting_attendee_recovery_description()}</p>
 		<p>
 			<a id="attendee-recovery-link" href={recoveryState.data.loginUrl}>{recoveryState.data.loginUrl}</a>
 		</p>
-		<img id="attendee-recovery-qr" src={recoveryState.data.qrCodeDataUrl} alt="Guest Recovery QR Code" />
+		<img id="attendee-recovery-qr" src={recoveryState.data.qrCodeDataUrl} alt={m.meeting_attendee_recovery_alt()} />
 	{/if}
 </div>

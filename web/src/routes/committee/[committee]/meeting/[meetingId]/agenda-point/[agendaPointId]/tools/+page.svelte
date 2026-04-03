@@ -8,6 +8,7 @@
 	import { session } from '$lib/stores/session.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -119,7 +120,7 @@
 	}
 
 	async function deleteAttachment(attachment: AttachmentRecord) {
-		if (!window.confirm(`Delete "${attachment.label || attachment.filename}"?`)) {
+		if (!window.confirm(m.attachment_delete_confirm())) {
 			return;
 		}
 
@@ -155,9 +156,9 @@
 
 		{#if toolsState.data}
 			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-				<h2>Attachments</h2>
+				<h2>{m.attachment_heading()}</h2>
 				<div id="attachment-list-ap-{agendaPointId}">
-					<h4>{toolsState.data.agendaPointTitle} - Attachments</h4>
+					<h4>{m.meeting_moderate_attachments_for({ agendaPoint: toolsState.data.agendaPointTitle })}</h4>
 					<form
 						onsubmit={async (event) => {
 							event.preventDefault();
@@ -165,7 +166,7 @@
 						}}
 					>
 						<div>
-							<label for="attachment-label-{agendaPointId}">Label</label>
+							<label for="attachment-label-{agendaPointId}">{m.attachment_label_label()}</label>
 							<input
 								class="input input-bordered input-sm"
 								type="text"
@@ -175,7 +176,7 @@
 							/>
 						</div>
 						<div>
-							<label for="attachment-file-{agendaPointId}">File</label>
+							<label for="attachment-file-{agendaPointId}">{m.attachment_file_label()}</label>
 							<input
 								class="file-input file-input-bordered file-input-sm"
 								id="attachment-file-{agendaPointId}"
@@ -185,10 +186,10 @@
 								required
 							/>
 						</div>
-						<button class="btn btn-sm" type="submit" disabled={uploadPending}>Upload</button>
+						<button class="btn btn-sm" type="submit" disabled={uploadPending}>{m.attachment_upload_button()}</button>
 					</form>
 					{#if toolsState.data.attachments.length === 0}
-						<p>No attachments have been uploaded for this agenda point yet.</p>
+						<p>{m.attachment_empty_state()}</p>
 					{:else}
 						<ul>
 							{#each toolsState.data.attachments as attachment}
@@ -208,7 +209,7 @@
 										}}
 									>
 										<button class="btn btn-sm" type="submit" disabled={currentAction === `delete:${attachment.attachmentId}`}>
-											Delete
+											{m.attachment_delete_button()}
 										</button>
 									</form>
 									{#if attachment.isCurrent}
@@ -220,7 +221,7 @@
 											}}
 										>
 											<button class="btn btn-sm" type="submit" disabled={currentAction === 'clear'}>
-												Clear
+												{m.attachment_clear_button()}
 											</button>
 										</form>
 									{:else}
@@ -232,7 +233,7 @@
 											}}
 										>
 											<button class="btn btn-sm" type="submit" disabled={currentAction === `set:${attachment.attachmentId}`}>
-												Set as Current
+												{m.attachment_set_current_button()}
 											</button>
 										</form>
 									{/if}

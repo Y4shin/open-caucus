@@ -16,6 +16,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { saveReceipt } from '$lib/utils/receipts.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -247,31 +248,31 @@
 	function voteStateLabel(state: string) {
 		switch (state) {
 			case 'draft':
-				return 'Draft';
+				return m.votes_state_draft();
 			case 'open':
-				return 'Open';
+				return m.votes_state_open();
 			case 'counting':
-				return 'Counting';
+				return m.votes_state_counting();
 			case 'closed':
-				return 'Closed';
+				return m.votes_state_closed();
 			case 'archived':
-				return 'Archived';
+				return m.votes_state_archived();
 			default:
 				return state;
 		}
 	}
 
 	function voteVisibilityLabel(visibility: string) {
-		return visibility === 'secret' ? 'Secret' : 'Open';
+		return visibility === 'secret' ? m.votes_visibility_secret() : m.votes_visibility_open();
 	}
 
 	function voteBoundsLabel(vote: LiveVoteCardView) {
 		const minSelections = Number(vote.vote?.minSelections ?? 0n);
 		const maxSelections = Number(vote.vote?.maxSelections ?? 0n);
 		if (minSelections === maxSelections) {
-			return `select exactly ${minSelections}`;
+			return m.votes_select_exactly({ count: minSelections });
 		}
-		return `select ${minSelections} to ${maxSelections}`;
+		return m.votes_select_between({ min: minSelections, max: maxSelections });
 	}
 
 	function voteResultsRemaining(vote: LiveVoteCardView) {
@@ -484,7 +485,7 @@
 			<section class="card relative min-h-0 border border-base-300 bg-base-100 shadow-sm">
 				<div class="flex h-full min-h-0 flex-col p-4">
 					<div class="mb-3 flex items-center justify-between gap-2">
-						<h2 class="text-lg font-semibold">Agenda</h2>
+						<h2 class="text-lg font-semibold">{m.meeting_live_agenda_heading()}</h2>
 						{#if liveState.data.currentDocument}
 							<button type="button" class="btn btn-sm btn-outline btn-square tooltip tooltip-left lg:hidden" data-live-dialog-open aria-controls="live-doc-modal" title="Open document" aria-label="Open document" data-tip="Open document">
 								<LegacyIcon name="eye" class="live-agenda-dialog-icon" />
@@ -497,29 +498,29 @@
 								<div class="flex h-full min-h-0 flex-col gap-3">
 									<div class="live-agenda-preview-block lg:hidden">
 										<div class="live-agenda-preview-row">
-											<span class="live-agenda-preview-label">Current</span>
+											<span class="live-agenda-preview-label">{m.meeting_live_current_item()}</span>
 											<span class="live-agenda-preview-value">
 												{#if currentAgendaPoint()}
 													{currentAgendaPoint()?.title}
 												{:else}
-													No active agenda point.
+													{m.meeting_live_no_active_agenda()}
 												{/if}
 											</span>
 										</div>
 										<div class="live-agenda-preview-row">
-											<span class="live-agenda-preview-label">Next</span>
+											<span class="live-agenda-preview-label">{m.meeting_live_next_item()}</span>
 											<span class="live-agenda-preview-value">
 												{#if nextAgendaPoint()}
 													{nextAgendaPoint()?.title}
 												{:else}
-													None
+													{m.meeting_live_none_label()}
 												{/if}
 											</span>
 										</div>
 									</div>
 									<div class="hidden min-h-0 flex-1 flex-col lg:flex">
 										{#if agendaRows().length === 0}
-											<p class="live-empty-state text-base-content/70">No agenda points are available.</p>
+											<p class="live-empty-state text-base-content/70">{m.meeting_live_no_agenda_points()}</p>
 										{:else}
 											<ul class="list rounded-box border border-base-300 bg-base-100 min-h-0 flex-1 overflow-y-auto">
 												{#each agendaRows() as agendaPoint}
@@ -551,7 +552,7 @@
 			<section class="card min-h-0 border border-base-300 bg-base-100 shadow-sm">
 				<div class="flex h-full min-h-0 flex-col p-4">
 					<div class="mb-3 flex items-center justify-between gap-2">
-						<h2 class="text-lg font-semibold">Speakers</h2>
+						<h2 class="text-lg font-semibold">{m.meeting_live_speakers_heading()}</h2>
 						<button
 							type="button"
 							class="btn btn-sm btn-outline btn-square tooltip tooltip-left lg:hidden"
@@ -575,7 +576,7 @@
 												<AppAlert message={actionError} />
 											{/if}
 											{#if activeSpeakers().length === 0}
-												<p class="live-empty-state text-base-content/70">No speakers in the queue yet.</p>
+												<p class="live-empty-state text-base-content/70">{m.meeting_live_no_speakers()}</p>
 											{:else}
 												<ul class="list w-full min-w-0 rounded-box border border-base-300 bg-base-100 live-speaker-list" data-testid="live-speakers-active-list">
 													{#each activeSpeakers() as speaker}
@@ -622,10 +623,10 @@
 																					<span class="tooltip tooltip-right" data-tip="Priority">
 																						<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
 																					</span>
-																					<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
+																					<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{m.meeting_live_badge_priority()}</span>
 																				{/if}
 																				{#if speaker.mine}
-																					<span class="badge badge-primary badge-sm">You</span>
+																					<span class="badge badge-primary badge-sm">{m.speaker_badge_you()}</span>
 																				{/if}
 																			</div>
 																		{/if}
@@ -660,7 +661,7 @@
 															data-testid="live-self-yield"
 														>
 															<LegacyIcon name="mic" class="live-self-add-icon" />
-															<span>Yield Speech</span>
+															<span>{m.meeting_live_yield_speech()}</span>
 														</button>
 													</form>
 												{:else}
@@ -713,11 +714,11 @@
 										<dialog id="speakers-full-dialog" class="modal" data-live-dialog>
 											<div class="modal-box max-w-4xl live-speaker-history-dialog">
 												<div class="mb-3 flex items-center justify-between gap-3">
-													<h3 class="text-lg font-semibold">Speakers List</h3>
-													<button type="button" class="btn btn-sm btn-ghost shrink-0" data-live-dialog-close>Close</button>
+													<h3 class="text-lg font-semibold">{m.meeting_live_speaker_history_title()}</h3>
+													<button type="button" class="btn btn-sm btn-ghost shrink-0" data-live-dialog-close>{m.meeting_live_speaker_history_close()}</button>
 												</div>
 												{#if activeSpeakers().length === 0}
-													<p class="live-empty-state text-base-content/70">No speakers in the queue yet.</p>
+													<p class="live-empty-state text-base-content/70">{m.meeting_live_no_speakers()}</p>
 												{:else}
 													<ul class="list w-full min-w-0 rounded-box border border-base-300 bg-base-100 live-speaker-list">
 														{#each activeSpeakers() as speaker}
@@ -763,10 +764,10 @@
 																					<span class="tooltip tooltip-right" data-tip="Priority">
 																						<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
 																					</span>
-																					<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
+																					<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{m.meeting_live_badge_priority()}</span>
 																				{/if}
 																				{#if speaker.mine}
-																					<span class="badge badge-primary badge-sm">You</span>
+																					<span class="badge badge-primary badge-sm">{m.speaker_badge_you()}</span>
 																				{/if}
 																			</div>
 																		{/if}
@@ -787,7 +788,7 @@
 										</dialog>
 									</div>
 								{:else}
-									<p>No active agenda point.</p>
+									<p>{m.meeting_live_no_active_agenda()}</p>
 								{/if}
 							</div>
 						</div>
@@ -799,7 +800,7 @@
 				<div class="p-4">
 					<div id="live-votes-panel" class="space-y-3">
 						<div class="flex items-center justify-between gap-2">
-							<h2 class="text-lg font-semibold">Votes</h2>
+							<h2 class="text-lg font-semibold">{m.votes_votes()}</h2>
 							<button
 								type="button"
 								class="btn btn-xs btn-outline"
@@ -807,13 +808,13 @@
 									void loadVotes();
 								}}
 							>
-								Refresh
+								{m.common_refresh()}
 							</button>
 						</div>
 						{#if !voteState.data?.hasActiveAgenda}
-							<p class="text-sm text-base-content/70">No active agenda point.</p>
+							<p class="text-sm text-base-content/70">{m.meeting_live_no_active_agenda()}</p>
 						{:else if visibleLiveVotes().length === 0}
-							<p class="text-sm text-base-content/70">No open or recently closed votes right now.</p>
+							<p class="text-sm text-base-content/70">{m.votes_no_live_votes()}</p>
 						{:else}
 							<div class="space-y-3">
 								{#each visibleLiveVotes() as vote}
@@ -830,13 +831,13 @@
 											<span class={voteStateBadgeClass(vote.vote?.state ?? '')}>{voteStateLabel(vote.vote?.state ?? '')}</span>
 											<span class="text-xs text-base-content/70">{voteBoundsLabel(vote)}</span>
 											{#if !vote.isEligible && vote.vote?.state === 'open'}
-												<span class="badge badge-error badge-outline badge-sm">not eligible</span>
+												<span class="badge badge-error badge-outline badge-sm">{m.votes_not_eligible()}</span>
 											{/if}
 										</div>
 
 										{#if vote.hasTimedResults}
 											<div class="rounded-box border border-base-300 bg-base-200/40 p-2 space-y-2">
-												<div class="text-xs font-semibold uppercase text-base-content/70">Final Results (visible for 30s)</div>
+												<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_final_results_visible_30s()}</div>
 												<ul class="space-y-1 text-sm">
 													{#each vote.timedResults as row}
 														<li class="flex items-center justify-between gap-2">
@@ -849,17 +850,17 @@
 													eligible={String(vote.stats?.eligibleCount ?? 0n)} casts={String(vote.stats?.castCount ?? 0n)} ballots={String(vote.stats?.ballotCount ?? 0n)}
 												</div>
 												<div class="text-xs text-base-content/70">
-													Hiding in <span data-vote-results-countdown>{voteResultsRemaining(vote)}</span>s
+													{m.votes_hiding_in()} <span data-vote-results-countdown>{voteResultsRemaining(vote)}</span>s
 												</div>
 											</div>
 										{:else if vote.resultsBlockedCounting}
 											<div class="alert alert-warning text-sm">
-												<span>Vote is in counting phase. Results are not finalized yet.</span>
+												<span>{m.votes_counting_phase_message()}</span>
 											</div>
 										{:else if vote.vote?.state === 'open'}
 											{#if vote.alreadyVoted}
 												<div class="alert alert-success text-sm" data-vote-submitted-screen>
-													<span>Your vote was submitted. You can wait for close to see results.</span>
+													<span>{m.votes_vote_submitted_message()}</span>
 												</div>
 											{:else}
 												<div data-vote-inputs class="space-y-2">
@@ -887,7 +888,7 @@
 															void submitBallot(vote);
 														}}
 													>
-														{vote.vote?.visibility === 'secret' ? 'Submit Secret Ballot' : 'Submit Open Ballot'}
+														{vote.vote?.visibility === 'secret' ? m.votes_submit_secret_ballot() : m.votes_submit_open_ballot()}
 													</button>
 												</div>
 											{/if}

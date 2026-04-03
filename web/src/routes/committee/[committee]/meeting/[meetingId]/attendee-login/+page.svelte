@@ -10,6 +10,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { onDestroy } from 'svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -101,7 +102,7 @@
 				<p class="text-base-content/70">{meetingState.data.committeeName}</p>
 			</div>
 
-			<h3>Enter Your Access Code</h3>
+			<h3>{m.attendee_login_heading()}</h3>
 			<div id="app-notification-target">
 				{#if actionError}
 					<AppAlert message={actionError} />
@@ -110,7 +111,7 @@
 
 			<form action={joinHref.replace('/join', '/attendee-login')} method="POST" onsubmit={handleSubmit}>
 				<div>
-					<label for="secret">Access Code:</label>
+					<label for="secret">{m.attendee_login_secret_label()}</label>
 					<input
 						id="secret"
 						class="input input-bordered input-sm"
@@ -123,7 +124,7 @@
 				</div>
 
 				<button class="btn btn-sm" type="submit" disabled={submitting}
-					>{#if submitting}<span class="loading loading-spinner loading-xs"></span>{/if}Enter Meeting</button
+					>{#if submitting}<span class="loading loading-spinner loading-xs"></span>{/if}{m.attendee_login_button()}</button
 				>
 			</form>
 		{/if}

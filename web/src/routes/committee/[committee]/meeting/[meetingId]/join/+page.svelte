@@ -10,6 +10,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { onDestroy } from 'svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -120,7 +121,7 @@
 				{#if joinState.data.capabilities?.alreadyJoined}
 					<div class="space-y-4">
 						<p>
-							You are already signed up as
+							{m.meeting_join_already_signed_up()}
 							<span class="font-medium">{joinState.data.currentAttendee?.fullName}</span>.
 						</p>
 						<form
@@ -131,13 +132,13 @@
 								goto(liveHref);
 							}}
 						>
-							<button class="btn btn-sm" type="submit">Enter Meeting</button>
+							<button class="btn btn-sm" type="submit">{m.meeting_join_enter_button()}</button>
 						</form>
 					</div>
 				{:else if joinState.data.capabilities?.canSelfSignup}
 					<div class="space-y-4">
-						<h3>Sign Up for This Meeting</h3>
-						<p>You are logged in as a committee member.</p>
+						<h3>{m.meeting_join_signup_heading()}</h3>
+						<p>{m.meeting_join_member_logged_in()}</p>
 						<form
 							action={joinHref}
 							method="POST"
@@ -147,16 +148,16 @@
 							}}
 						>
 							<button class="btn btn-sm" type="submit" disabled={submitting}
-								>{#if submitting}<span class="loading loading-spinner loading-xs"></span>{/if}Sign Up</button
+								>{#if submitting}<span class="loading loading-spinner loading-xs"></span>{/if}{m.meeting_join_signup_button()}</button
 							>
 						</form>
 					</div>
 				{:else if joinState.data.capabilities?.canGuestJoin}
 					<div class="space-y-4">
-					<h3>Guest Sign Up</h3>
+					<h3>{m.meeting_join_guest_heading()}</h3>
 					<form class="space-y-4" onsubmit={handleGuestSignup}>
 						<div>
-							<label for="full_name">Full Name</label>
+							<label for="full_name">{m.meeting_join_name_label()}</label>
 							<input id="full_name" class="input input-bordered input-sm" name="full_name" bind:value={fullName} required />
 						</div>
 
@@ -166,7 +167,7 @@
 							</div>
 						{:else}
 							<div>
-								<label for="meeting_secret">Meeting Secret</label>
+								<label for="meeting_secret">{m.meeting_join_meeting_secret_label()}</label>
 								<input
 									id="meeting_secret"
 									class="input input-bordered input-sm"
@@ -179,7 +180,7 @@
 						{/if}
 
 						<div>
-							<label for="guest_gender_quoted">FLINTA*</label>
+							<label for="guest_gender_quoted">{m.meeting_join_quoted_label()}</label>
 							<input
 								id="guest_gender_quoted"
 								class="checkbox checkbox-sm"
@@ -193,12 +194,12 @@
 							{#if submitting}
 								<span class="loading loading-spinner loading-xs"></span>
 							{/if}
-							Sign Up as Guest
+							{m.meeting_join_guest_button()}
 						</button>
 					</form>
 					</div>
 				{:else}
-					<p>Meeting signup is currently closed for new attendees.</p>
+					<p>{m.meeting_join_signup_closed()}</p>
 				{/if}
 				</div>
 				<div class="pt-2">

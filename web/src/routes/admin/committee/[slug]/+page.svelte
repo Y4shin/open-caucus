@@ -10,6 +10,7 @@
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import * as m from '$lib/paraglide/messages';
 
 	interface CommitteeAdminData {
 		committee: CommitteeRecord;
@@ -121,7 +122,7 @@
 	}
 
 	async function deleteMembership(user: CommitteeUserRecord) {
-		if (!window.confirm('Delete this committee membership?')) {
+		if (!window.confirm(m.admin_committee_users_delete_confirm())) {
 			return;
 		}
 		deleteMembershipPendingId = user.userId;
@@ -156,7 +157,7 @@
 	}
 
 	async function deleteOAuthRule(rule: OAuthRuleRecord) {
-		if (!window.confirm('Delete this OAuth rule?')) {
+		if (!window.confirm(m.admin_committee_users_delete_confirm())) {
 			return;
 		}
 		deleteRulePendingId = rule.ruleId;
@@ -181,9 +182,9 @@
 		{/if}
 		{#if committeeState.data}
 			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-				<h2>Assign Account</h2>
+				<h2>{m.admin_committee_users_assign_heading()}</h2>
 				{#if committeeState.data.assignableAccounts.length === 0}
-					<p>All accounts are already assigned to this committee.</p>
+					<p>{m.admin_committee_users_no_assignable_accounts()}</p>
 				{:else}
 					<form
 						onsubmit={(event) => {
@@ -192,44 +193,44 @@
 						}}
 					>
 						<div>
-							<label for="account_id">Account:</label>
+							<label for="account_id">{m.admin_committee_users_account_label()}</label>
 							<select class="select select-bordered select-sm" id="account_id" name="account_id" bind:value={selectedAccountId} required>
-								<option value="">Select account</option>
+								<option value="">{m.admin_committee_users_account_placeholder()}</option>
 								{#each committeeState.data.assignableAccounts as account}
 									<option value={account.accountId}>{account.fullName} ({account.username})</option>
 								{/each}
 							</select>
 						</div>
 						<div>
-							<label for="role">Role:</label>
+							<label for="role">{m.admin_committee_users_role_label()}</label>
 							<select class="select select-bordered select-sm" id="role" name="role" bind:value={selectedAccountRole} required>
-								<option value="member">Member</option>
-								<option value="chairperson">Chairperson</option>
+								<option value="member">{m.admin_committee_users_role_member()}</option>
+								<option value="chairperson">{m.admin_committee_users_role_chairperson()}</option>
 							</select>
 						</div>
 						<div>
 							<label>
 								<input class="checkbox checkbox-sm" type="checkbox" name="quoted" value="true" bind:checked={selectedAccountQuoted} />
-								FLINTA*
+								{m.admin_committee_users_quoted_label()}
 							</label>
 						</div>
-						<button class="btn btn-sm" type="submit" disabled={assignAccountPending}>Assign Account</button>
+						<button class="btn btn-sm" type="submit" disabled={assignAccountPending}>{m.admin_committee_users_assign_button()}</button>
 					</form>
 				{/if}
 			</section>
 			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-				<h2>Assigned Accounts</h2>
+				<h2>{m.admin_committee_users_existing_heading()}</h2>
 				{#if committeeState.data.users.length === 0}
-					<p>No accounts assigned yet.</p>
+					<p>{m.admin_committee_users_empty_state()}</p>
 				{:else}
 					<table class="data-table table table-zebra w-full">
 						<thead>
 							<tr>
-								<th>Username</th>
-								<th>Full Name</th>
-								<th>Role</th>
-								<th>FLINTA*</th>
-								<th>Actions</th>
+								<th>{m.admin_committee_users_col_username()}</th>
+								<th>{m.admin_committee_users_col_fullname()}</th>
+								<th>{m.admin_committee_users_col_role()}</th>
+								<th>{m.admin_committee_users_col_quoted()}</th>
+								<th>{m.admin_committee_users_col_actions()}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -249,11 +250,11 @@
 												membershipDrafts[user.userId] = { ...(membershipDrafts[user.userId] ?? { role: user.role, quoted: user.quoted }), role: next };
 											}}
 										>
-											<option value="member" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'member'}>Member</option>
-											<option value="chairperson" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'chairperson'}>Chairperson</option>
+											<option value="member" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'member'}>{m.admin_committee_users_role_member()}</option>
+											<option value="chairperson" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'chairperson'}>{m.admin_committee_users_role_chairperson()}</option>
 										</select>
 										{#if user.isOauthManaged}
-											<div class="text-xs text-base-content/70 mt-1">Role managed by OAuth</div>
+											<div class="text-xs text-base-content/70 mt-1">{m.admin_committee_users_oauth_managed_role_hint()}</div>
 										{/if}
 									</td>
 									<td>
@@ -283,7 +284,7 @@
 											{#if user.isOauthManaged}
 												<input type="hidden" name="role" value={user.role} />
 											{/if}
-											<button class="btn btn-sm" type="submit" disabled={saveMembershipPendingId === user.userId}>Save</button>
+											<button class="btn btn-sm" type="submit" disabled={saveMembershipPendingId === user.userId}>{m.admin_committee_users_update_button()}</button>
 										</form>
 										<form
 											class="inline-form inline ml-1"
@@ -292,7 +293,7 @@
 												deleteMembership(user);
 											}}
 										>
-											<button class="btn btn-sm" type="submit" disabled={deleteMembershipPendingId === user.userId}>Remove</button>
+											<button class="btn btn-sm" type="submit" disabled={deleteMembershipPendingId === user.userId}>{m.admin_committee_users_delete_button()}</button>
 										</form>
 									</td>
 								</tr>
@@ -303,18 +304,18 @@
 				<nav class="pagination-nav join">
 					<button type="button" disabled class="ui-icon-label btn btn-sm">
 						<LegacyIcon name="left" class="ui-icon--left" />
-						<span class="ui-icon-text">Previous</span>
+						<span class="ui-icon-text">{m.pagination_previous()}</span>
 					</button>
 					<button class="btn btn-sm" type="button" disabled>1</button>
 					<button type="button" disabled class="ui-icon-label btn btn-sm">
-						<span class="ui-icon-text">Next</span>
+						<span class="ui-icon-text">{m.pagination_next()}</span>
 						<LegacyIcon name="right" class="ui-icon--right" />
 					</button>
 				</nav>
 			</section>
 			{#if session.oauthEnabled}
 				<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-					<h2>OAuth Group Access Rules</h2>
+					<h2>{m.admin_committee_users_oauth_rules_heading()}</h2>
 					<form
 						class="flex flex-wrap gap-2 items-end"
 						onsubmit={(event) => {
@@ -323,27 +324,27 @@
 						}}
 					>
 						<div>
-							<label for="group_name">OAuth Group</label>
+							<label for="group_name">{m.admin_committee_users_oauth_group_label()}</label>
 							<input class="input input-bordered input-sm" type="text" id="group_name" name="group_name" bind:value={oauthGroupName} required />
 						</div>
 						<div>
-							<label for="oauth_rule_role">Role:</label>
+							<label for="oauth_rule_role">{m.admin_committee_users_role_label()}</label>
 							<select class="select select-bordered select-sm" id="oauth_rule_role" name="role" bind:value={oauthRole} required>
-								<option value="member">Member</option>
-								<option value="chairperson">Chairperson</option>
+								<option value="member">{m.admin_committee_users_role_member()}</option>
+								<option value="chairperson">{m.admin_committee_users_role_chairperson()}</option>
 							</select>
 						</div>
-						<button class="btn btn-sm" type="submit" disabled={createRulePending}>Add Rule</button>
+						<button class="btn btn-sm" type="submit" disabled={createRulePending}>{m.admin_committee_users_oauth_rule_add_button()}</button>
 					</form>
 					{#if committeeState.data.oauthRules.length === 0}
-						<p class="mt-2">No OAuth group rules configured.</p>
+						<p class="mt-2">{m.admin_committee_users_oauth_rules_empty()}</p>
 					{:else}
 						<table class="data-table table table-zebra w-full mt-2">
 							<thead>
 								<tr>
-									<th>OAuth Group</th>
-									<th>Role</th>
-									<th>Actions</th>
+									<th>{m.admin_committee_users_oauth_group_label()}</th>
+									<th>{m.admin_committee_users_col_role()}</th>
+									<th>{m.admin_committee_users_col_actions()}</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -359,7 +360,7 @@
 													deleteOAuthRule(rule);
 												}}
 											>
-												<button class="btn btn-sm" type="submit" disabled={deleteRulePendingId === rule.ruleId}>Delete</button>
+												<button class="btn btn-sm" type="submit" disabled={deleteRulePendingId === rule.ruleId}>{m.admin_dashboard_delete_button()}</button>
 											</form>
 										</td>
 									</tr>

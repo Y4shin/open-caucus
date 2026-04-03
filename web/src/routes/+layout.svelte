@@ -18,6 +18,7 @@
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import * as m from '$lib/paraglide/messages';
 
 	interface Crumb {
 		title: string;
@@ -204,17 +205,17 @@
 	<div class="app-shell bg-base-100 text-base-content">
 		<nav class="navbar sticky top-0 z-30 bg-base-100 shadow-sm">
 			{#if pageActions.backHref}
-				<a href={pageActions.backHref} class="btn btn-ghost btn-sm btn-square" aria-label="Back">
+				<a href={pageActions.backHref} class="btn btn-ghost btn-sm btn-square" aria-label={m.common_back()}>
 					<LegacyIcon name="left" />
 				</a>
 			{/if}
 			<div class="flex-1">
 				<div class="min-w-0 md:hidden">
-					<h1 class="truncate text-base font-semibold sm:text-lg">Conference-Tool</h1>
+					<h1 class="truncate text-base font-semibold sm:text-lg">{m.common_app_name()}</h1>
 				</div>
 				<div class="min-w-0 hidden md:block">
 					<h1 class="truncate text-base font-semibold sm:text-lg">
-						Conference-Tool{pageActions.title ? ` - ${pageActions.title}` : ''}
+						{m.common_app_name()}{pageActions.title ? ` - ${pageActions.title}` : ''}
 					</h1>
 				</div>
 			</div>
@@ -236,15 +237,15 @@
 						{#if session.isAdmin}
 							<a href="/admin" class="btn btn-ghost btn-sm">Admin</a>
 						{/if}
-						<p class="scaffold-auth-text text-xs">Logged in as {session.actor?.displayName ?? ''}</p>
-						<button class="btn btn-ghost btn-sm" type="button" onclick={logout}>Logout</button>
+						<p class="scaffold-auth-text text-xs">{m.common_logged_in_as({ name: session.actor?.displayName ?? '' })}</p>
+						<button class="btn btn-ghost btn-sm" type="button" onclick={logout}>{m.common_logout()}</button>
 					{:else}
-						<a href="/login" class="btn btn-ghost btn-sm">Login</a>
+						<a href="/login" class="btn btn-ghost btn-sm">{m.login_button()}</a>
 					{/if}
 				</div>
 				<div class="dropdown dropdown-end md:hidden">
 					<button class="btn btn-ghost btn-sm" onclick={() => (mobileMenuOpen = !mobileMenuOpen)}>
-						Menu
+						{m.scaffold_menu()}
 					</button>
 					{#if mobileMenuOpen}
 						<div class="dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow">
@@ -266,13 +267,13 @@
 									<a class="btn btn-sm justify-start" href="/admin">Admin</a>
 								{/if}
 								{#if session.authenticated}
-									<p class="text-xs text-base-content/70">Logged in as {session.actor?.displayName ?? ''}</p>
-									<button class="btn btn-sm btn-error" type="button" onclick={logout}>Logout</button>
+									<p class="text-xs text-base-content/70">{m.common_logged_in_as({ name: session.actor?.displayName ?? '' })}</p>
+									<button class="btn btn-sm btn-error" type="button" onclick={logout}>{m.common_logout()}</button>
 								{:else}
-									<a href="/login" class="btn btn-sm">Login</a>
+									<a href="/login" class="btn btn-sm">{m.login_button()}</a>
 								{/if}
 								<div class="mt-3 flex items-center justify-between gap-2">
-									<button class="btn btn-sm btn-outline" type="button" onclick={openDocs}>Help</button>
+									<button class="btn btn-sm btn-outline" type="button" onclick={openDocs}>{m.common_help()}</button>
 									<div class="flex items-center gap-2">
 										<div class="join">
 											{#each locales as locale}
@@ -291,26 +292,26 @@
 												class={`btn btn-sm join-item flex-1 ${themePreference === 'light' ? 'btn-active' : ''}`}
 												onclick={() => applyTheme('light')}
 											>
-												Light
+												{m.theme_switcher_light_button()}
 											</button>
 											<button
 												type="button"
 												class={`btn btn-sm join-item flex-1 ${themePreference === 'dark' ? 'btn-active' : ''}`}
 												onclick={() => applyTheme('dark')}
 											>
-												Dark
+												{m.theme_switcher_dark_button()}
 											</button>
 											<button
 												type="button"
 												class={`btn btn-sm join-item flex-1 ${themePreference === 'auto' ? 'btn-active' : ''}`}
 												onclick={() => applyTheme('auto')}
 											>
-												Auto
+												{m.theme_switcher_auto_button()}
 											</button>
 										</div>
 									</div>
 								</div>
-								<p class="mt-2 text-xs text-base-content/70">Powered by Open Assembly</p>
+								<p class="mt-2 text-xs text-base-content/70">Powered by Open Caucus v{import.meta.env.VITE_APP_VERSION ?? 'dev'}</p>
 							</div>
 						</div>
 					{/if}
@@ -369,9 +370,9 @@
 		</div>
 		<footer class="page-footer hidden border-t border-base-300 bg-base-100/70 md:block">
 			<div class="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-4 py-3 text-sm text-base-content/70 lg:px-5">
-				<span class="text-xs sm:text-sm">Powered by Open Assembly</span>
+				<span class="text-xs sm:text-sm">Powered by Open Caucus v{import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
 				<div class="flex items-center gap-2">
-					<button class="btn btn-ghost btn-sm" type="button" onclick={openDocs}>Help</button>
+					<button class="btn btn-ghost btn-sm" type="button" onclick={openDocs}>{m.common_help()}</button>
 					<div class="join">
 						{#each locales as locale}
 							<button
@@ -389,21 +390,21 @@
 							class={`btn btn-sm join-item ${themePreference === 'light' ? 'btn-active' : ''}`}
 							onclick={() => applyTheme('light')}
 						>
-							Light
+							{m.theme_switcher_light_button()}
 						</button>
 						<button
 							type="button"
 							class={`btn btn-sm join-item ${themePreference === 'dark' ? 'btn-active' : ''}`}
 							onclick={() => applyTheme('dark')}
 						>
-							Dark
+							{m.theme_switcher_dark_button()}
 						</button>
 						<button
 							type="button"
 							class={`btn btn-sm join-item ${themePreference === 'auto' ? 'btn-active' : ''}`}
 							onclick={() => applyTheme('auto')}
 						>
-							Auto
+							{m.theme_switcher_auto_button()}
 						</button>
 					</div>
 				</div>

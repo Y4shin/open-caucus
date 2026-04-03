@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import * as m from '$lib/paraglide/messages';
 	import {
 		buildDocsOverlayHref,
 		buildStandaloneDocsHref,
@@ -104,7 +105,7 @@
 	<button
 		type="button"
 		class="absolute inset-0 bg-neutral-950/70 md:hidden"
-		aria-label="Close documentation"
+		aria-label={m.docs_close_documentation()}
 		data-docs-close
 		onclick={closeDocs}
 	></button>
@@ -114,19 +115,19 @@
 				<div>
 					<h2 class="text-lg font-semibold">{title}</h2>
 					{#if resolvedPathDisplay}
-						<p class="text-xs text-base-content/70">Path: {resolvedPathDisplay}</p>
+						<p class="text-xs text-base-content/70">{m.docs_path_label({ path: resolvedPathDisplay })}</p>
 					{/if}
 				</div>
 				<div class="flex items-center gap-2">
 					<span class="text-xs text-base-content/70">{locale}</span>
-					<button type="button" class="btn btn-ghost btn-xs" data-docs-close onclick={closeDocs}>Close</button>
+					<button type="button" class="btn btn-ghost btn-xs" data-docs-close onclick={closeDocs}>{m.docs_close()}</button>
 				</div>
 			</div>
 			<form class="mt-3 flex gap-2" action="/docs/search" method="GET" onsubmit={submitSearch}>
-				<input class="input input-bordered input-sm flex-1" type="search" name="q" value={query} placeholder="Search documentation" />
+				<input class="input input-bordered input-sm flex-1" type="search" name="q" value={query} placeholder={m.docs_search_placeholder()} />
 			</form>
 			<details class="collapse collapse-arrow mt-3 border border-base-300 bg-base-200/30" open>
-				<summary class="collapse-title py-2 pr-8 text-sm font-medium">Browse Documentation</summary>
+				<summary class="collapse-title py-2 pr-8 text-sm font-medium">{m.docs_browse()}</summary>
 				<div class="collapse-content">
 					{#if crumbs.length}
 						<div class="mb-2 flex flex-wrap items-center gap-1 text-xs text-base-content/80">
@@ -171,7 +172,7 @@
 						{#if tree.length}
 							{@render navTree(tree)}
 						{:else}
-							<p class="text-sm text-base-content/70">No documentation tree available.</p>
+							<p class="text-sm text-base-content/70">{m.docs_no_tree()}</p>
 						{/if}
 					</div>
 				</div>
@@ -181,7 +182,7 @@
 					{#if error}
 						<p class="text-sm text-error">{error}</p>
 					{:else if searchHits.length === 0}
-						<p class="text-sm text-base-content/70">No documentation results matched that query.</p>
+						<p class="text-sm text-base-content/70">{m.docs_no_matches({ query })}</p>
 					{:else}
 						<ul class="space-y-2">
 							{#each searchHits as hit}
@@ -203,7 +204,7 @@
 				{#if error}
 					<p class="mt-3 text-sm text-error">{error}</p>
 				{:else if notFound}
-					<p class="mt-3 text-sm text-warning">Documentation page not found.</p>
+					<p class="mt-3 text-sm text-warning">{m.docs_not_found()}</p>
 				{:else if html}
 					<div class="docs-markdown mt-4">
 						{#if !hasVisibleHeading()}

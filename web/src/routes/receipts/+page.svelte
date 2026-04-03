@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
+	import * as m from '$lib/paraglide/messages';
 	import {
 		clearReceipts,
 		listReceipts,
@@ -30,7 +31,7 @@
 	const textFailedClearReceipts = 'Failed to clear receipts: ';
 
 	onMount(() => {
-		pageActions.set([], { title: 'Receipt Vault' });
+		pageActions.set([], { title: m.votes_receipt_vault_title() });
 		loadReceipts();
 		return () => pageActions.clear();
 	});
@@ -114,8 +115,8 @@
 	data-text-failed-clear-receipts={textFailedClearReceipts}
 	data-text-verify-failed-status="verify failed with status "
 >
-	<h1 class="text-2xl font-semibold">Receipt Vault</h1>
-	<p class="text-sm text-base-content/70">Receipts are stored locally in your browser. This page verifies them against public vote verification endpoints.</p>
+	<h1 class="text-2xl font-semibold">{m.votes_receipt_vault_title()}</h1>
+	<p class="text-sm text-base-content/70">{m.votes_receipt_vault_description()}</p>
 
 	{#if error}
 		<AppAlert message={error} />
@@ -123,8 +124,8 @@
 
 	<div class="rounded-box border border-base-300 bg-base-100 p-3 space-y-3">
 		<div class="flex flex-wrap items-center gap-2">
-			<button id="receipts-refresh" class="btn btn-sm btn-outline" type="button" onclick={loadReceipts}>Refresh</button>
-			<button id="receipts-clear" class="btn btn-sm btn-error btn-outline" type="button" onclick={clearAll}>Clear All</button>
+			<button id="receipts-refresh" class="btn btn-sm btn-outline" type="button" onclick={loadReceipts}>{m.common_refresh()}</button>
+			<button id="receipts-clear" class="btn btn-sm btn-error btn-outline" type="button" onclick={clearAll}>{m.votes_clear_all()}</button>
 		</div>
 
 		<div id="receipts-status" class={error ? 'text-sm text-error' : 'text-sm text-base-content/70'}>
@@ -136,9 +137,9 @@
 				{#each receipts as receipt}
 					<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
 						<div class="flex flex-wrap items-center gap-2">
-							<span class="badge badge-outline badge-sm">{receipt.kind || textUnknown}</span>
-							<span class="font-semibold">{receipt.voteName || textVote}</span>
-							<span class="text-xs text-base-content/70">{textVotePrefix}{receipt.voteId || '?'}</span>
+							<span class="badge badge-outline badge-sm">{receipt.kind || m.votes_unknown()}</span>
+							<span class="font-semibold">{receipt.voteName || m.votes_vote()}</span>
+							<span class="text-xs text-base-content/70">{m.votes_vote_number_prefix()}{receipt.voteId || '?'}</span>
 						</div>
 						<div class="text-xs text-base-content/70 break-all">{receipt.receipt}</div>
 						<div class="flex flex-wrap items-center gap-2">
@@ -148,7 +149,7 @@
 								disabled={verifyingId === receipt.id}
 								onclick={() => verifyOne(receipt)}
 							>
-								{verifyingId === receipt.id ? textVerifying : textVerify}
+								{verifyingId === receipt.id ? m.votes_verifying() : m.votes_verify()}
 							</button>
 							<span
 								data-result
@@ -161,7 +162,7 @@
 				{/each}
 			</div>
 		{:else}
-			<div id="receipts-list" class="space-y-2"><p class="text-sm text-base-content/70">{textNoStoredReceipts}</p></div>
+			<div id="receipts-list" class="space-y-2"><p class="text-sm text-base-content/70">{m.votes_no_stored_receipts()}</p></div>
 		{/if}
 	</div>
 </div>

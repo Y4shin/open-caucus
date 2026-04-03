@@ -9,6 +9,7 @@
 	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 
@@ -93,8 +94,8 @@
 		}
 	}
 
-	async function deleteMeeting(meetingId: string, name: string) {
-		if (!window.confirm(`Delete "${name}"?`)) return;
+	async function deleteMeeting(meetingId: string) {
+		if (!window.confirm(m.committee_delete_confirm())) return;
 		actionError = '';
 		try {
 			await committeeClient.deleteMeeting({
@@ -134,7 +135,7 @@
 {:else if committeeState.error}
 	<AppAlert message={committeeState.error} />
 {:else if committeeState.data}
-	<p>Welcome.</p>
+	<p>{m.committee_welcome()}</p>
 
 	{#if actionError}
 		<AppAlert message={actionError} />
@@ -150,23 +151,23 @@
 				data-testid="committee-create-form"
 				onsubmit={createMeeting}
 			>
-				<legend class="fieldset-legend">Create New Meeting</legend>
-				<label class="label">Name:</label>
+				<legend class="fieldset-legend">{m.committee_create_meeting_heading()}</legend>
+				<label class="label" for="name">{m.committee_name_label()}</label>
 				<input
 					class="input input-bordered input-sm w-full"
 					type="text"
 					id="name"
 					name="name"
-					placeholder="Name:"
+					placeholder={m.committee_name_label()}
 					bind:value={createName}
 					required
 				/>
-				<label class="label">Description:</label>
+				<label class="label" for="description">{m.committee_description_label()}</label>
 				<input
 					class="input input-bordered input-sm w-full"
 					id="description"
 					name="description"
-					placeholder="Description:"
+					placeholder={m.committee_description_label()}
 					bind:value={createDescription}
 				/>
 				<label class="label cursor-pointer justify-start gap-3">
@@ -177,15 +178,15 @@
 						class="toggle toggle-primary toggle-sm"
 						bind:checked={createSignupOpen}
 					/>
-					<span>Open for signup</span>
+					<span>{m.committee_signup_label()}</span>
 				</label>
-				<button class="btn btn-primary btn-sm" type="submit" disabled={createPending}>Create Meeting</button>
+				<button class="btn btn-primary btn-sm" type="submit" disabled={createPending}>{m.committee_create_button()}</button>
 			</form>
 
 			<section class="min-w-0 rounded-box border border-base-300 bg-base-200 p-4">
-				<h3 class="mb-3 text-lg font-semibold">Meetings</h3>
+				<h3 class="mb-3 text-lg font-semibold">{m.committee_meetings_heading()}</h3>
 				{#if committeeState.data.meetings.length === 0}
-					<p class="text-base-content/70">No meetings have been created yet.</p>
+					<p class="text-base-content/70">{m.committee_empty_state()}</p>
 				{:else}
 					<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="committee-meeting-list">
 						{#each committeeState.data.meetings as item}
@@ -195,7 +196,7 @@
 									{#if item.meeting?.description}
 										<div class="truncate text-sm text-base-content/70">{item.meeting.description}</div>
 									{:else}
-										<div class="truncate text-sm text-base-content/70">No description provided.</div>
+										<div class="truncate text-sm text-base-content/70">{m.committee_no_description()}</div>
 									{/if}
 								</div>
 								<div class="flex flex-col items-start justify-center gap-1 pr-2">
@@ -208,7 +209,7 @@
 											data-testid="committee-toggle-active"
 											onchange={(e) => toggleActive(e, item.meeting?.meetingId ?? '')}
 										/>
-										Active
+										{m.committee_col_active()}
 									</label>
 									<label class="text-xs font-medium text-base-content/70">
 										<input
@@ -220,7 +221,7 @@
 											disabled={signupTogglePendingMeetingId === (item.meeting?.meetingId ?? '')}
 											onchange={() => toggleSignupOpen(item.meeting?.meetingId ?? '', item.meeting?.signupOpen ?? false)}
 										/>
-										Signup Open
+										{m.committee_col_signup()}
 									</label>
 								</div>
 								<div class="flex items-center justify-end gap-1">
@@ -244,7 +245,7 @@
 										class="inline"
 										onsubmit={(event) => {
 											event.preventDefault();
-											deleteMeeting(item.meeting?.meetingId ?? '', item.meeting?.name ?? '');
+											deleteMeeting(item.meeting?.meetingId ?? '');
 										}}
 									>
 										<button
@@ -264,11 +265,11 @@
 						<nav class="pagination-nav join">
 							<button type="button" disabled class="ui-icon-label btn btn-sm">
 								<LegacyIcon name="left" class="ui-icon--left" />
-								<span class="ui-icon-text">Previous</span>
+								<span class="ui-icon-text">{m.pagination_previous()}</span>
 							</button>
 							<button class="btn btn-sm" type="button" disabled>1</button>
 							<button type="button" disabled class="ui-icon-label btn btn-sm">
-								<span class="ui-icon-text">Next</span>
+								<span class="ui-icon-text">{m.pagination_next()}</span>
 								<LegacyIcon name="right" class="ui-icon--right" />
 							</button>
 						</nav>
@@ -278,7 +279,7 @@
 		</div>
 	{:else}
 		<section class="card border border-base-300 bg-base-200 p-4 mt-4" data-testid="committee-active-meeting-card">
-			<h3 class="text-lg font-semibold">Current Active Meeting</h3>
+			<h3 class="text-lg font-semibold">{m.committee_active_meeting_heading()}</h3>
 			{#if activeMeetingItem?.meeting}
 				<div class="mt-2">
 					<p class="font-medium" data-testid="committee-active-meeting-name">{activeMeetingItem.meeting.name}</p>
@@ -291,10 +292,10 @@
 					data-testid="committee-join-active-meeting"
 					href={"/committee/" + slug + "/meeting/" + activeMeetingItem.meeting.meetingId + "/join"}
 				>
-					Join Meeting
+					{m.committee_join_active_meeting()}
 				</a>
 			{:else}
-				<p class="text-base-content/70">No meeting is currently active.</p>
+				<p class="text-base-content/70">{m.committee_no_active_meeting()}</p>
 			{/if}
 		</section>
 	{/if}

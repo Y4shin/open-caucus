@@ -9,6 +9,7 @@
 	import type { CommitteeRecord } from '$lib/gen/conference/admin/v1/admin_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import * as m from '$lib/paraglide/messages';
 
 	let dashboardState = $state(createRemoteState<CommitteeRecord[]>());
 	let createCommitteePending = $state(false);
@@ -65,7 +66,7 @@
 	}
 
 	async function deleteCommittee(slug: string) {
-		if (!window.confirm('Are you sure you want to delete this committee?')) {
+		if (!window.confirm(m.admin_dashboard_delete_confirm())) {
 			return;
 		}
 		deleteCommitteePendingSlug = slug;
@@ -81,7 +82,7 @@
 	}
 </script>
 
-<h2>Committees</h2>
+<h2>{m.admin_dashboard_committees_heading()}</h2>
 
 {#if dashboardState.loading}
 	<AppSpinner label="Loading admin dashboard" />
@@ -89,7 +90,7 @@
 	<AppAlert message={dashboardState.error} />
 {:else}
 	<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-		<h3>Add New Committee</h3>
+		<h3>{m.admin_dashboard_add_committee_heading()}</h3>
 		<form
 			id="create-committee-form"
 			onsubmit={(event) => {
@@ -98,7 +99,7 @@
 			}}
 		>
 			<div>
-				<label for="name">Committee Name:</label>
+				<label for="name">{m.admin_dashboard_name_label()}</label>
 				<input
 					class="input input-bordered input-sm"
 					type="text"
@@ -112,7 +113,7 @@
 				/>
 			</div>
 			<div>
-				<label for="slug">Slug (URL-friendly identifier):</label>
+				<label for="slug">{m.admin_dashboard_slug_label()}</label>
 				<input
 					class="input input-bordered input-sm"
 					type="text"
@@ -125,28 +126,28 @@
 					required
 					pattern="[a-z0-9\-]+"
 				/>
-				<small>Only lowercase letters, numbers, and hyphens</small>
+				<small>{m.admin_dashboard_slug_help()}</small>
 			</div>
 			{#if createCommitteeError}
 				<AppAlert message={createCommitteeError} />
 			{/if}
-			<button class="btn btn-sm" type="submit" disabled={createCommitteePending}>Create Committee</button>
+			<button class="btn btn-sm" type="submit" disabled={createCommitteePending}>{m.admin_dashboard_create_button()}</button>
 		</form>
 	</section>
 
 	<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-		<h3>Existing Committees</h3>
+		<h3>{m.admin_dashboard_existing_heading()}</h3>
 		<div id="committee-list-container">
 			{#if dashboardState.data?.length === 0}
-				<p>No committees have been created yet.</p>
+				<p>{m.admin_dashboard_empty_state()}</p>
 			{:else}
 				<div id="committee-list">
 					<table class="data-table table table-zebra w-full">
 						<thead>
 							<tr>
-								<th>Name</th>
-								<th>Slug</th>
-								<th>Actions</th>
+								<th>{m.admin_dashboard_col_name()}</th>
+								<th>{m.admin_dashboard_col_slug()}</th>
+								<th>{m.admin_dashboard_col_actions()}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -155,14 +156,14 @@
 									<td>{committee.name}</td>
 									<td>{committee.slug}</td>
 									<td>
-										<a href={"/admin/committee/" + committee.slug}>Assign Accounts</a>{' |'}<form
+										<a href={"/admin/committee/" + committee.slug}>{m.admin_dashboard_manage_users_link()}</a>{' |'}<form
 											class="inline-form inline"
 											onsubmit={(event) => {
 												event.preventDefault();
 												deleteCommittee(committee.slug);
 											}}
 										>
-											<button class="btn btn-sm" type="submit" disabled={deleteCommitteePendingSlug === committee.slug}>Delete</button>
+											<button class="btn btn-sm" type="submit" disabled={deleteCommitteePendingSlug === committee.slug}>{m.admin_dashboard_delete_button()}</button>
 										</form>
 									</td>
 								</tr>
@@ -176,11 +177,11 @@
 			<nav class="pagination-nav join">
 				<button type="button" disabled class="ui-icon-label btn btn-sm">
 					<LegacyIcon name="left" class="ui-icon--left" />
-					<span class="ui-icon-text">Previous</span>
+					<span class="ui-icon-text">{m.pagination_previous()}</span>
 				</button>
 				<button class="btn btn-sm" type="button" disabled>1</button>
 				<button type="button" disabled class="ui-icon-label btn btn-sm">
-					<span class="ui-icon-text">Next</span>
+					<span class="ui-icon-text">{m.pagination_next()}</span>
 					<LegacyIcon name="right" class="ui-icon--right" />
 				</button>
 			</nav>

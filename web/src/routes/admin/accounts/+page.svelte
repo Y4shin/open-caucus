@@ -8,6 +8,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	type AccountRow = {
 		accountId: string;
@@ -90,7 +91,7 @@
 			<AppAlert message={createAccountError} />
 		{/if}
 		<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-			<h2>Add New Account</h2>
+			<h2>{m.admin_accounts_add_heading()}</h2>
 			<form
 				id="create-account-form"
 				onsubmit={(event) => {
@@ -99,7 +100,7 @@
 				}}
 			>
 				<div>
-					<label for="username">Username:</label>
+					<label for="username">{m.admin_accounts_username_label()}</label>
 					<input
 						class="input input-bordered input-sm"
 						type="text"
@@ -113,7 +114,7 @@
 					/>
 				</div>
 				<div>
-					<label for="full_name">Full Name:</label>
+					<label for="full_name">{m.admin_accounts_fullname_label()}</label>
 					<input
 						class="input input-bordered input-sm"
 						type="text"
@@ -128,7 +129,7 @@
 				</div>
 				{#if session.passwordEnabled}
 					<div>
-						<label for="password">Password:</label>
+						<label for="password">{m.admin_accounts_password_label()}</label>
 						<input
 							class="input input-bordered input-sm"
 							type="password"
@@ -142,20 +143,20 @@
 						/>
 					</div>
 				{/if}
-				<button class="btn btn-sm" type="submit" disabled={createAccountPending}>Create Account</button>
+				<button class="btn btn-sm" type="submit" disabled={createAccountPending}>{m.admin_accounts_create_button()}</button>
 			</form>
 		</section>
 		<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
-			<h2>Existing Accounts</h2>
+			<h2>{m.admin_accounts_existing_heading()}</h2>
 			{#if accountsState.data?.length === 0}
-				<p>No accounts yet.</p>
+				<p>{m.admin_accounts_empty_state()}</p>
 			{:else}
 				<table class="data-table table table-zebra w-full">
 					<thead>
 						<tr>
-							<th>Username</th>
-							<th>Full Name</th>
-							<th>Admin</th>
+							<th>{m.admin_accounts_col_username()}</th>
+							<th>{m.admin_accounts_col_fullname()}</th>
+							<th>{m.admin_accounts_col_admin()}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -163,7 +164,7 @@
 							<tr>
 								<td>{account.username}</td>
 								<td>{account.fullName}</td>
-								<td>{account.isAdmin ? 'Yes' : 'No'}</td>
+								<td>{account.isAdmin ? m.common_yes() : m.common_no()}</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -172,11 +173,11 @@
 			<nav class="pagination-nav join">
 				<button type="button" disabled class="ui-icon-label btn btn-sm">
 					<LegacyIcon name="left" class="ui-icon--left" />
-					<span class="ui-icon-text">Previous</span>
+					<span class="ui-icon-text">{m.pagination_previous()}</span>
 				</button>
 				<button class="btn btn-sm" type="button" disabled>1</button>
 				<button type="button" disabled class="ui-icon-label btn btn-sm">
-					<span class="ui-icon-text">Next</span>
+					<span class="ui-icon-text">{m.pagination_next()}</span>
 					<LegacyIcon name="right" class="ui-icon--right" />
 				</button>
 			</nav>

@@ -20,6 +20,7 @@
 	} from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
+	import * as m from '$lib/paraglide/messages';
 
 	type AgendaImportState = 'ignore' | 'heading' | 'subheading';
 	type AgendaImportLine = {
@@ -752,7 +753,7 @@
 	}
 
 	async function deleteAgendaPoint(agendaPointId: string) {
-		if (!window.confirm('Delete agenda point?')) return;
+		if (!window.confirm(m.meeting_manage_delete_agenda_point_confirm())) return;
 		await runAgendaAction(`delete-${agendaPointId}`, async () => {
 			await agendaClient.deleteAgendaPoint({
 				committeeSlug: slug,
@@ -1169,29 +1170,29 @@
 	function voteStateLabel(state: string) {
 		switch (state) {
 			case 'draft':
-				return 'Draft';
+				return m.votes_state_draft();
 			case 'open':
-				return 'Open';
+				return m.votes_state_open();
 			case 'counting':
-				return 'Counting';
+				return m.votes_state_counting();
 			case 'closed':
-				return 'Closed';
+				return m.votes_state_closed();
 			case 'archived':
-				return 'Archived';
+				return m.votes_state_archived();
 			default:
 				return state;
 		}
 	}
 
 	function voteVisibilityLabel(visibility: string) {
-		return visibility === 'secret' ? 'Secret' : 'Open';
+		return visibility === 'secret' ? m.votes_visibility_secret() : m.votes_visibility_open();
 	}
 
 	function voteBoundsLabel(vote: VoteDefinitionRecord) {
 		if (vote.minSelections === vote.maxSelections) {
-			return `select exactly ${vote.minSelections.toString()}`;
+			return m.votes_select_exactly({ count: Number(vote.minSelections) });
 		}
-		return `select between ${vote.minSelections.toString()} and ${vote.maxSelections.toString()}`;
+		return m.votes_select_between({ min: Number(vote.minSelections), max: Number(vote.maxSelections) });
 	}
 
 	function voteDefaultOptionLabels() {
@@ -1368,7 +1369,7 @@
 		<div class="shrink-0 space-y-2">
 			<h1 class="text-3xl font-bold">{moderationState.data.meeting?.meetingName}</h1>
 			<p class="text-base-content/70">
-				Moderation workspace for {moderationState.data.meeting?.committeeName}
+				{m.meeting_moderate_workspace_for({ committee: moderationState.data.meeting?.committeeName ?? "" })}
 			</p>
 		</div>
 
@@ -1394,7 +1395,7 @@
 							data-moderate-left-tab="agenda"
 							onclick={() => selectModerateLeftTab('agenda')}
 						>
-							Agenda
+							{m.meeting_moderate_agenda_tab()}
 						</button>
 						<button
 							type="button"
@@ -1402,7 +1403,7 @@
 							data-moderate-left-tab="tools"
 							onclick={() => selectModerateLeftTab('tools')}
 						>
-							Tools
+							{m.meeting_moderate_tools_tab()}
 						</button>
 						<button
 							type="button"
@@ -1410,7 +1411,7 @@
 							data-moderate-left-tab="attendees"
 							onclick={() => selectModerateLeftTab('attendees')}
 						>
-							Attendees
+							{m.meeting_moderate_attendees_tab()}
 						</button>
 						<button
 							type="button"
@@ -1418,14 +1419,14 @@
 							data-moderate-left-tab="settings"
 							onclick={() => selectModerateLeftTab('settings')}
 						>
-							Settings
+							{m.meeting_moderate_settings_tab()}
 						</button>
 					</div>
 					<div class="mt-3 min-h-0 flex-1">
 						<div id="moderate-left-panel-agenda" data-moderate-left-panel="agenda" class={moderateLeftTab === 'agenda' ? 'h-full min-h-0 overflow-y-auto pr-1' : 'hidden'}>
 							<section class="min-h-0" data-testid="manage-agenda-card">
 								<div class="mb-3 flex items-center justify-between gap-2">
-									<h2 class="text-lg font-semibold">Agenda Points</h2>
+									<h2 class="text-lg font-semibold">{m.meeting_manage_agenda_points()}</h2>
 									<div class="flex items-center gap-2">
 										<button type="button" class="btn btn-sm btn-square btn-ghost" title="Open agenda help" aria-label="Open agenda help" onclick={() => openDocsWithHeading('03-chairperson/03-agenda-management-and-import', 'agenda-routes')}><LegacyIcon name="help" class="h-4 w-4" /></button>
 										<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda" data-manage-dialog-open aria-controls="moderate-agenda-edit-dialog" title="Edit agenda" aria-label="Edit agenda" onclick={openAgendaEditDialog}><LegacyIcon name="settings" class="h-4 w-4" /></button>
@@ -1433,7 +1434,7 @@
 								</div>
 								<div id="moderate-agenda-compact" class="space-y-2">
 									{#if agendaPointsFlat().length === 0}
-										<p class="text-sm text-base-content/70">No agenda points have been created yet.</p>
+										<p class="text-sm text-base-content/70">{m.meeting_manage_no_agenda_points()}</p>
 									{:else}
 										<ul class="list rounded-box border border-base-300 bg-base-100">
 											{#each agendaPointsFlat() as point}
@@ -1441,7 +1442,7 @@
 													<span class="badge badge-outline">{legacyAgendaDisplayNumber(point)}</span>
 													<span class={point.isActive ? 'flex-1 truncate font-semibold' : 'flex-1 truncate'}>{point.title}</span>
 													{#if point.isActive}
-														<span class="badge badge-success badge-sm">Active</span>
+														<span class="badge badge-success badge-sm">{m.meeting_manage_agenda_point_active_badge()}</span>
 													{:else}
 														<form class="inline" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
 															<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
@@ -1463,26 +1464,26 @@
 								>
 									<div class="modal-box w-11/12 max-w-5xl">
 										<div class="mb-4 flex items-center justify-between gap-2">
-											<h3 class="text-lg font-semibold">Edit Agenda</h3>
-											<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaEditDialog}>Close</button>
+											<h3 class="text-lg font-semibold">{m.meeting_moderate_edit_agenda_title()}</h3>
+											<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaEditDialog}>{m.common_close()}</button>
 										</div>
 										<div id="agenda-point-list-container" class="space-y-3" data-import-open={agendaImportOpen ? 'true' : 'false'} data-import-top-prefix="TOP">
 											<div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
 												<div class="rounded-box border border-base-300 bg-base-100 p-3 lg:col-span-1">
 													<form class="space-y-3" data-testid="manage-agenda-add-form" onsubmit={async (event) => { event.preventDefault(); await createAgendaPoint(); }}>
 														<fieldset class="fieldset rounded-box border border-base-300 p-3">
-															<legend class="fieldset-legend px-1 text-sm font-semibold">Add Agenda Point</legend>
-															<label class="label p-0 text-sm font-medium" for="ap_title">Title</label>
-															<input class="input input-bordered input-sm w-full" type="text" id="ap_title" name="title" required placeholder="Agenda point title" bind:value={agendaTitle} bind:this={agendaTitleInput} onkeydown={handleAgendaTitleKeydown} />
-															<label class="label mt-2 p-0 text-sm font-medium" for="ap_parent_id">Parent (optional)</label>
+															<legend class="fieldset-legend px-1 text-sm font-semibold">{m.meeting_manage_add_agenda_point()}</legend>
+															<label class="label p-0 text-sm font-medium" for="ap_title">{m.meeting_manage_edit_agenda_point_title()}</label>
+															<input class="input input-bordered input-sm w-full" type="text" id="ap_title" name="title" required placeholder={m.meeting_manage_agenda_point_title_placeholder()} bind:value={agendaTitle} bind:this={agendaTitleInput} onkeydown={handleAgendaTitleKeydown} />
+															<label class="label mt-2 p-0 text-sm font-medium" for="ap_parent_id">{m.meeting_manage_agenda_point_parent_label()}</label>
 															<select class="select select-bordered select-sm w-full" id="ap_parent_id" name="parent_id" bind:value={agendaParentId}>
 																<option value="">-- top-level --</option>
 																{#each agendaPointsFlat() as point}
 																	<option value={point.agendaPointId}>{point.title}</option>
 																{/each}
 															</select>
-															<button type="submit" class="btn btn-sm mt-3 w-full"><LegacyIcon name="arrow-forward" class="h-4 w-4" />Add</button>
-															<button type="button" class="btn btn-sm btn-outline mt-2 w-full" data-manage-dialog-open aria-controls="moderate-agenda-import-dialog" onclick={openAgendaImportDialog}>Import</button>
+															<button type="submit" class="btn btn-sm mt-3 w-full"><LegacyIcon name="arrow-forward" class="h-4 w-4" />{m.meeting_manage_add_agenda_point()}</button>
+															<button type="button" class="btn btn-sm btn-outline mt-2 w-full" data-manage-dialog-open aria-controls="moderate-agenda-import-dialog" onclick={openAgendaImportDialog}>{m.agenda_import_open_button()}</button>
 														</fieldset>
 													</form>
 												</div>
@@ -1496,8 +1497,8 @@
 																	{#if editingAgendaPointId === point.agendaPointId}
 																		<form class="flex items-center gap-2" data-testid="manage-agenda-point-edit-form" onsubmit={async (event) => { event.preventDefault(); await saveEditAgendaPoint(point.agendaPointId); }}>
 																			<input class="input input-bordered input-sm flex-1" type="text" name="title" bind:value={editingAgendaPointTitle} required disabled={isAgendaBusy(`edit-${point.agendaPointId}`)} data-testid="manage-agenda-point-edit-input" />
-																			<button type="submit" class="btn btn-sm btn-primary" disabled={isAgendaBusy(`edit-${point.agendaPointId}`)}>Save</button>
-																			<button type="button" class="btn btn-sm btn-ghost" onclick={cancelEditAgendaPoint}>Cancel</button>
+																			<button type="submit" class="btn btn-sm btn-primary" disabled={isAgendaBusy(`edit-${point.agendaPointId}`)}>{m.common_save()}</button>
+																			<button type="button" class="btn btn-sm btn-ghost" onclick={cancelEditAgendaPoint}>{m.common_cancel()}</button>
 																		</form>
 																	{:else}
 																		<div class="flex items-start gap-3">
@@ -1506,10 +1507,10 @@
 																				<div class="truncate font-semibold">{point.title}</div>
 																				<div class="mt-1 flex flex-wrap gap-1">
 																					{#if point.parentId}
-																						<span class="badge badge-outline">Child</span>
+																						<span class="badge badge-outline">{m.agenda_point_child_badge()}</span>
 																					{/if}
 																					{#if point.isActive}
-																						<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">Active</span>
+																						<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">{m.meeting_manage_agenda_point_active_badge()}</span>
 																					{/if}
 																				</div>
 																			</div>
@@ -1552,8 +1553,8 @@
 											>
 												<div class="modal-box w-11/12 max-w-5xl">
 													<div class="mb-4 flex items-center justify-between gap-2">
-														<h3 class="text-lg font-semibold">Import Agenda</h3>
-														<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>Close</button>
+														<h3 class="text-lg font-semibold">{m.agenda_import_title()}</h3>
+														<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>{m.agenda_import_close()}</button>
 													</div>
 													<div class="space-y-4">
 														{#if agendaImportWarning}
@@ -1561,18 +1562,18 @@
 														{/if}
 														<div class="space-y-4" data-agenda-import-flow data-agenda-import-step={agendaImportCurrentStep().toString()}>
 															<ul class="steps steps-horizontal w-full">
-																<li class={agendaImportCurrentStep() >= 1 ? 'step step-primary' : 'step'} data-agenda-import-step-item="1">Source</li>
-																<li class={agendaImportCurrentStep() >= 2 ? 'step step-primary' : 'step'} data-agenda-import-step-item="2">Correction</li>
-																<li class={agendaImportCurrentStep() >= 3 ? 'step step-primary' : 'step'} data-agenda-import-step-item="3">Diff</li>
+																<li class={agendaImportCurrentStep() >= 1 ? 'step step-primary' : 'step'} data-agenda-import-step-item="1">{m.agenda_import_step_source()}</li>
+																<li class={agendaImportCurrentStep() >= 2 ? 'step step-primary' : 'step'} data-agenda-import-step-item="2">{m.agenda_import_step_correction()}</li>
+																<li class={agendaImportCurrentStep() >= 3 ? 'step step-primary' : 'step'} data-agenda-import-step-item="3">{m.agenda_import_step_diff()}</li>
 															</ul>
 															{#if agendaImportCurrentStep() === 1}
 																<div data-agenda-import-panel="1" class="">
 																	<form class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
-																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">Source text</label>
-																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder="Paste markdown or plaintext agenda here." bind:value={agendaImportSource}></textarea>
+																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">{m.agenda_import_source_label()}</label>
+																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder={m.agenda_import_source_placeholder()} bind:value={agendaImportSource}></textarea>
 																		<div class="flex flex-wrap items-center gap-2">
 																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
-																			<button type="submit" class="btn btn-sm btn-outline">Extract Agenda</button>
+																			<button type="submit" class="btn btn-sm btn-outline">{m.agenda_import_extract_button()}</button>
 																		</div>
 																	</form>
 																</div>
@@ -1592,8 +1593,8 @@
 																<div data-agenda-import-panel="2" class={agendaImportCurrentStep() === 2 ? '' : 'hidden'}>
 																	<form id="agenda-import-correction-form" class="space-y-3" onsubmit={(event) => { event.preventDefault(); generateAgendaDiff(); }}>
 																		<input type="hidden" name="source_text" value={agendaImportSource} />
-																		<h4 class="text-base font-semibold">Correct detected agenda structure</h4>
-																		<p class="text-sm text-base-content/70">Click each line to cycle between ignored, heading, and subheading.</p>
+																		<h4 class="text-base font-semibold">{m.agenda_import_correction_heading()}</h4>
+																		<p class="text-sm text-base-content/70">{m.agenda_import_correction_hint()}</p>
 																		<div class="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
 																			<ul class="space-y-2" data-agenda-import-lines>
 																				{#each agendaImportLines as line, index}
@@ -1611,8 +1612,8 @@
 																			</ul>
 																		</div>
 																		<div class="flex flex-wrap gap-2">
-																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'source')}>Back</button>
-																			<button type="submit" class="btn btn-sm">Generate Diff</button>
+																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'source')}>{m.agenda_import_back_button()}</button>
+																			<button type="submit" class="btn btn-sm">{m.agenda_import_generate_diff_button()}</button>
 																		</div>
 																	</form>
 																</div>
@@ -1620,7 +1621,7 @@
 															{#if agendaImportStep === 'diff' && buildImportedAgenda(agendaImportLines).length > 0}
 																<div data-agenda-import-panel="3" class={agendaImportCurrentStep() === 3 ? '' : 'hidden'}>
 																	<div class="space-y-3">
-																		<h4 class="text-base font-semibold">Agenda Diff</h4>
+																		<h4 class="text-base font-semibold">{m.agenda_import_diff_heading()}</h4>
 																		<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-2">
 																			<style>
 																				#agenda-import-diff-grid [data-diff-cell] {
@@ -1632,9 +1633,9 @@
 																				}
 																			</style>
 																			<div class="mb-2 hidden grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-base-content/60 md:grid">
-																				<div>Current</div>
+																				<div>{m.agenda_import_diff_column_current()}</div>
 																				<div class="text-center">Change</div>
-																				<div>Imported</div>
+																				<div>{m.agenda_import_diff_column_imported()}</div>
 																			</div>
 																			<ul class="space-y-2">
 																				{#each buildImportedAgenda(agendaImportLines) as point}
@@ -1654,13 +1655,13 @@
 																				{/each}
 																			</ul>
 																		</div>
-																		<div class="alert alert-warning text-sm">Applying this import replaces the existing agenda.</div>
+																		<div class="alert alert-warning text-sm">{m.agenda_import_destructive_warning()}</div>
 																		<div class="flex flex-wrap gap-2">
-																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="2" onclick={() => (agendaImportStep = 'correction')}>Back</button>
+																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="2" onclick={() => (agendaImportStep = 'correction')}>{m.agenda_import_back_button()}</button>
 																			<form class="inline-flex" onsubmit={(event) => { event.preventDefault(); void applyAgendaImport(); }}>
-																				<button type="submit" class="btn btn-sm btn-primary" disabled={agendaImportBusy}>Accept</button>
+																				<button type="submit" class="btn btn-sm btn-primary" disabled={agendaImportBusy}>{m.agenda_import_accept_button()}</button>
 																			</form>
-																			<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>Deny</button>
+																			<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>{m.agenda_import_deny_button()}</button>
 																		</div>
 																	</div>
 																</div>
@@ -1683,63 +1684,63 @@
 						<div id="moderate-left-panel-tools" data-moderate-left-panel="tools" class={moderateLeftTab === 'tools' ? 'h-full min-h-0 overflow-hidden' : 'hidden h-full min-h-0 overflow-hidden'}>
 							<section class="flex h-full min-h-0 flex-col overflow-hidden">
 								<div class="flex items-center justify-between gap-2">
-									<h2 class="text-lg font-semibold">Tools</h2>
+									<h2 class="text-lg font-semibold">{m.meeting_moderate_tools_tab()}</h2>
 								</div>
 								<div class="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
 									{#if !moderationState.data.activeAgendaPoint}
-										<p class="text-sm text-base-content/70">No active agenda point.</p>
+										<p class="text-sm text-base-content/70">{m.meeting_manage_no_active_agenda_for_settings()}</p>
 									{:else}
 											<div class="space-y-5">
 											<div class="space-y-2">
 												<div class="flex items-center justify-between gap-2">
-													<strong class="text-base">Files</strong>
+													<strong class="text-base">{m.meeting_moderate_files_heading()}</strong>
 												</div>
-												<p class="text-sm text-base-content/70">No files have been uploaded yet.</p>
+												<p class="text-sm text-base-content/70">{m.meeting_moderate_no_files()}</p>
 											</div>
 											<div id="moderate-votes-panel-host">
 												<div id="moderate-votes-panel" class="space-y-4" data-choice-label="Choice">
 													<div class="flex items-center justify-between gap-2">
-														<h3 class="text-base font-semibold">Votes</h3>
-														<button type="button" class="btn btn-xs btn-outline" onclick={(event) => { event.preventDefault(); void loadVotes(); }}>Refresh</button>
+														<h3 class="text-base font-semibold">{m.votes_votes()}</h3>
+														<button type="button" class="btn btn-xs btn-outline" onclick={(event) => { event.preventDefault(); void loadVotes(); }}>{m.common_refresh()}</button>
 													</div>
 													{#if votesState.loading && !votesState.data}
 														<AppSpinner label="Loading votes" />
 													{:else if votesState.error && !votesState.data}
 														<AppAlert message={votesState.error} />
 													{:else if !votesState.data?.hasActiveAgendaPoint}
-														<p class="text-sm text-base-content/70">No active agenda point.</p>
+														<p class="text-sm text-base-content/70">{m.meeting_manage_no_active_agenda_for_speakers()}</p>
 													{:else}
 														<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={createVoteDetailsOpen} ontoggle={(event) => { createVoteDetailsOpen = (event.currentTarget as HTMLDetailsElement).open; }}>
-															<summary class="collapse-title text-sm font-semibold">Create Vote</summary>
+															<summary class="collapse-title text-sm font-semibold">{m.votes_create_vote()}</summary>
 															<div class="collapse-content">
 																<form class="grid gap-2 md:grid-cols-2" onsubmit={submitCreateVoteForm}>
-																	<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder="Vote name" required />
+																	<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder={m.votes_vote_name_placeholder()} required />
 																	<select class="select select-bordered select-sm" name="visibility">
-																		<option value="open">Open</option>
-																		<option value="secret">Secret</option>
+																		<option value="open">{m.votes_visibility_open()}</option>
+																		<option value="secret">{m.votes_visibility_secret()}</option>
 																	</select>
 																	<div class="join">
 																		<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required />
 																		<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required />
 																	</div>
 																	<div class="md:col-span-2 space-y-1" data-vote-option-list>
-																		<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+																		<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_choices_label()}</div>
 																		{#each voteDefaultOptionLabels() as label, index}
 																			<div data-vote-option-row>
-																				<input class="input input-bordered input-sm w-full" name="option_label" value={label} data-vote-option-input placeholder={`Choice ${index + 1}`} autocomplete="off" />
+																				<input class="input input-bordered input-sm w-full" name="option_label" value={label} data-vote-option-input placeholder={m.votes_choice_n_placeholder({ n: index + 1 })} autocomplete="off" />
 																			</div>
 																		{/each}
 																		<div class="text-xs text-base-content/70" data-vote-option-hint>Add one choice per field. A new field appears once the last one is filled.</div>
 																	</div>
 																	<div class="md:col-span-2">
-																		<button type="submit" class="btn btn-sm btn-primary">Create Draft Vote</button>
+																		<button type="submit" class="btn btn-sm btn-primary">{m.votes_create_draft_vote()}</button>
 																	</div>
 																</form>
 															</div>
 														</details>
 
 														{#if (votesState.data?.votes ?? []).length === 0}
-															<p class="text-sm text-base-content/70">No votes for {votesState.data?.activeAgendaPointTitle}.</p>
+															<p class="text-sm text-base-content/70">{m.votes_no_votes_for_agenda_point({ agendaPoint: votesState.data?.activeAgendaPointTitle ?? "" })}</p>
 														{:else}
 															<div class="space-y-3">
 																{#each votesState.data?.votes ?? [] as vote}
@@ -1775,22 +1776,22 @@
 																			{/if}
 
 																			<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
-																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Live Submission Tally</div>
+																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">{m.votes_live_submission_tally()}</div>
 																				<div class="grid gap-1 text-sm sm:grid-cols-2">
 																					<div class="flex items-center justify-between gap-2">
-																						<span>Eligible</span>
+																						<span>{m.votes_eligible()}</span>
 																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).eligibleCount.toString()}</span>
 																					</div>
 																					<div class="flex items-center justify-between gap-2">
-																						<span>Casts</span>
+																						<span>{m.votes_casts()}</span>
 																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).castCount.toString()}</span>
 																					</div>
 																					<div class="flex items-center justify-between gap-2">
-																						<span>Counted Ballots</span>
+																						<span>{m.votes_counted_ballots()}</span>
 																						<span class="badge badge-outline badge-sm">{voteStatsFor(vote).ballotCount.toString()}</span>
 																					</div>
 																					<div class="flex items-center justify-between gap-2">
-																						<span>Outstanding</span>
+																						<span>{m.votes_outstanding()}</span>
 																						<span class={voteOutstandingCount(vote) > 0n ? 'badge badge-sm badge-warning' : 'badge badge-sm badge-success'}>{voteOutstandingCount(vote).toString()}</span>
 																					</div>
 																				</div>
@@ -1798,7 +1799,7 @@
 
 																			{#if vote.state === 'draft'}
 																				<div class="flex flex-wrap gap-2">
-																					<button type="button" class="btn btn-sm btn-success" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await openVote(vote.voteId); }}>Open Vote</button>
+																					<button type="button" class="btn btn-sm btn-success" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await openVote(vote.voteId); }}>{m.votes_open_vote()}</button>
 																				</div>
 																				<details
 																					class="collapse collapse-arrow border border-base-300 bg-base-200/30"
@@ -1811,29 +1812,29 @@
 																					}}
 																					data-vote-draft-editor={vote.voteId}
 																				>
-																					<summary class="collapse-title text-sm">Edit Draft</summary>
+																					<summary class="collapse-title text-sm">{m.votes_edit_draft()}</summary>
 																					<div class="collapse-content">
 																						<form class="grid gap-2 md:grid-cols-2" onsubmit={async (event) => await submitUpdateDraftVoteForm(event, vote.voteId)}>
 																							<input class="input input-bordered input-sm md:col-span-2" name="name" value={vote.name} required />
 																							<select class="select select-bordered select-sm" name="visibility">
-																								<option value="open" selected={vote.visibility === 'open'}>Open</option>
-																								<option value="secret" selected={vote.visibility === 'secret'}>Secret</option>
+																								<option value="open" selected={vote.visibility === 'open'}>{m.votes_visibility_open()}</option>
+																								<option value="secret" selected={vote.visibility === 'secret'}>{m.votes_visibility_secret()}</option>
 																							</select>
 																							<div class="join">
 																								<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value={vote.minSelections.toString()} required />
 																								<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value={vote.maxSelections.toString()} required />
 																							</div>
 																							<div class="md:col-span-2 space-y-1" data-vote-option-list>
-																								<div class="text-xs font-semibold uppercase text-base-content/70">Choices</div>
+																								<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_choices_label()}</div>
 																								{#each voteLabelsForEdit(vote) as label, index}
 																									<div data-vote-option-row>
-																										<input class="input input-bordered input-sm w-full" name="option_label" value={label} data-vote-option-input placeholder={`Choice ${index + 1}`} autocomplete="off" />
+																										<input class="input input-bordered input-sm w-full" name="option_label" value={label} data-vote-option-input placeholder={m.votes_choice_n_placeholder({ n: index + 1 })} autocomplete="off" />
 																									</div>
 																								{/each}
-																								<div class="text-xs text-base-content/70" data-vote-option-hint>Leave an empty field at the end to add another choice.</div>
+																								<div class="text-xs text-base-content/70" data-vote-option-hint>{m.votes_edit_draft_hint()}</div>
 																							</div>
 																							<div class="md:col-span-2 flex flex-wrap gap-2">
-																								<button type="submit" class="btn btn-sm btn-primary">Save Draft</button>
+																								<button type="submit" class="btn btn-sm btn-primary">{m.votes_save_draft()}</button>
 																							</div>
 																						</form>
 																					</div>
@@ -1842,16 +1843,16 @@
 
 																			{#if vote.state === 'open' || vote.state === 'counting'}
 																				<div class="flex flex-wrap gap-2">
-																					<button type="button" class="btn btn-sm btn-warning" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await closeVote(vote.voteId); }}>Close Vote</button>
+																					<button type="button" class="btn btn-sm btn-warning" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await closeVote(vote.voteId); }}>{m.votes_close_vote()}</button>
 																				</div>
 																			{/if}
 
 																			<div class="rounded-box border border-base-300 bg-base-200/20 p-2 space-y-2">
-																				<div class="text-xs font-semibold uppercase text-base-content/70">Manual Submission</div>
+																				<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_manual_submission()}</div>
 																				{#if vote.visibility === 'open'}
 																					{#if vote.state === 'open'}
 																						<div class="space-y-2" id={`open-ballot-form-${vote.voteId}`} data-testid="manage-vote-open-ballot-form">
-																							<div class="text-xs font-semibold uppercase text-base-content/70">Open Ballot Entry</div>
+																							<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_open_ballot_entry()}</div>
 																							<div class={vote.maxSelections === 1n ? 'grid gap-1 text-sm grid-cols-1' : 'grid gap-1 text-sm grid-cols-2'}>
 																								{#each vote.options as option}
 																									<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
@@ -1865,10 +1866,10 @@
 																								{/each}
 																							</div>
 																							{#if attendeeRows().length === 0}
-																								<p class="text-xs text-warning">No attendees available for manual entry.</p>
+																								<p class="text-xs text-warning">{m.votes_no_attendees_for_entry()}</p>
 																							{:else}
 																								<div class="join w-full">
-																									<input id={`open-ballot-attendee-${vote.voteId}`} class="input input-bordered input-sm join-item w-full" list={`vote-manual-open-attendee-list-${vote.voteId}`} placeholder="Search attendee" required data-testid="open-ballot-attendee-query" />
+																									<input id={`open-ballot-attendee-${vote.voteId}`} class="input input-bordered input-sm join-item w-full" list={`vote-manual-open-attendee-list-${vote.voteId}`} placeholder={m.votes_search_attendee()} required data-testid="open-ballot-attendee-query" />
 																									<button type="button" class="btn btn-sm btn-primary join-item" data-testid="open-ballot-submit" onclick={async () => {
 																										const container = document.getElementById(`open-ballot-form-${vote.voteId}`);
 																										const attendeeInput = document.getElementById(`open-ballot-attendee-${vote.voteId}`) as HTMLInputElement | null;
@@ -1877,50 +1878,50 @@
 																										await countOpenBallot(vote.voteId, attendeeQuery, checked);
 																										if (attendeeInput) attendeeInput.value = '';
 																										container?.querySelectorAll(`[name="open-option-${vote.voteId}"]`).forEach((el) => { (el as HTMLInputElement).checked = false; });
-																									}}>Submit Ballot</button>
+																									}}>{m.votes_submit_ballot()}</button>
 																								</div>
 																								<datalist id={`vote-manual-open-attendee-list-${vote.voteId}`}>
 																									{#each attendeeRows() as attendee}
 																										<option value={`${attendee.attendeeNumber.toString()} ${attendee.fullName}`}></option>
 																									{/each}
 																								</datalist>
-																								<p class="text-xs text-base-content/70">Quick-cast uses attendee number followed by the attendee name.</p>
+																								<p class="text-xs text-base-content/70">{m.votes_quick_cast_hint()}</p>
 																							{/if}
 																						</div>
 																					{:else}
-																						<p class="text-xs text-base-content/70">Manual open-ballot entry is available while the vote is open.</p>
+																						<p class="text-xs text-base-content/70">{m.votes_open_ballot_hint()}</p>
 																					{/if}
 																				{:else}
-																					<p class="text-xs text-base-content/70">Secret ballots can be registered first and counted later.</p>
+																					<p class="text-xs text-base-content/70">{m.votes_secret_ballot_hint()}</p>
 																					{#if vote.state === 'open' || vote.state === 'counting'}
 																						<div class={vote.state === 'open' ? 'grid gap-2 md:grid-cols-2' : 'grid gap-2 md:grid-cols-1'}>
 																							{#if vote.state === 'open'}
 																								<div class="rounded-box border border-base-300 p-2 space-y-2" id={`register-cast-form-${vote.voteId}`} data-testid="manage-vote-register-cast-form">
-																									<div class="text-xs font-semibold uppercase text-base-content/70">1. Register Cast</div>
+																									<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_register_cast_step()}</div>
 																									{#if attendeeRows().length === 0}
-																										<p class="text-xs text-warning">No attendees are available for cast registration.</p>
+																										<p class="text-xs text-warning">{m.votes_no_attendees_for_cast()}</p>
 																									{:else}
 																										<div class="join w-full">
-																											<input id={`register-cast-attendee-${vote.voteId}`} class="input input-bordered input-sm join-item w-full" list={`vote-manual-secret-attendee-list-${vote.voteId}`} placeholder="Search attendee" required data-testid="register-cast-attendee-query" />
+																											<input id={`register-cast-attendee-${vote.voteId}`} class="input input-bordered input-sm join-item w-full" list={`vote-manual-secret-attendee-list-${vote.voteId}`} placeholder={m.votes_search_attendee()} required data-testid="register-cast-attendee-query" />
 																											<button type="button" class="btn btn-sm join-item" data-testid="register-cast-submit" onclick={async () => {
 																												const attendeeInput = document.getElementById(`register-cast-attendee-${vote.voteId}`) as HTMLInputElement | null;
 																												const attendeeQuery = attendeeInput?.value ?? '';
 																												await registerCast(vote.voteId, attendeeQuery);
 																												if (attendeeInput) attendeeInput.value = '';
-																											}}>Register Cast</button>
+																											}}>{m.votes_register_cast()}</button>
 																										</div>
 																										<datalist id={`vote-manual-secret-attendee-list-${vote.voteId}`}>
 																											{#each attendeeRows() as attendee}
 																												<option value={`${attendee.attendeeNumber.toString()} ${attendee.fullName}`}></option>
 																											{/each}
 																										</datalist>
-																										<p class="text-xs text-base-content/70">Quick registration uses attendee number followed by the attendee name.</p>
+																										<p class="text-xs text-base-content/70">{m.votes_quick_registration_hint()}</p>
 																									{/if}
 																								</div>
 																							{/if}
 																							<div class="rounded-box border border-base-300 p-2 space-y-2" id={`count-secret-form-${vote.voteId}`} data-testid="manage-vote-count-secret-form">
-																								<div class="text-xs font-semibold uppercase text-base-content/70">2. Count Secret Ballot</div>
-																								<input id={`secret-receipt-${vote.voteId}`} class="input input-bordered input-sm w-full" placeholder="Receipt token (optional)" data-testid="count-secret-receipt-token" />
+																								<div class="text-xs font-semibold uppercase text-base-content/70">{m.votes_count_secret_step()}</div>
+																								<input id={`secret-receipt-${vote.voteId}`} class="input input-bordered input-sm w-full" placeholder={m.votes_receipt_token_optional()} data-testid="count-secret-receipt-token" />
 																								<div class="grid grid-cols-2 gap-1 text-sm">
 																									{#each vote.options as option}
 																										<label class="label cursor-pointer justify-start gap-2 rounded border border-base-300 px-2 py-1">
@@ -1941,26 +1942,26 @@
 																									await countSecretBallot(vote.voteId, receiptToken, checked);
 																									if (receiptInput) receiptInput.value = '';
 																									container?.querySelectorAll(`[name="secret-option-${vote.voteId}"]`).forEach((el) => { (el as HTMLInputElement).checked = false; });
-																								}}>Count Ballot</button>
+																								}}>{m.votes_count_ballot()}</button>
 																							</div>
 																						</div>
 																					{:else}
-																						<p class="text-xs text-base-content/70">Manual secret actions are available while vote is open or counting.</p>
+																						<p class="text-xs text-base-content/70">{m.votes_secret_actions_hint()}</p>
 																					{/if}
 																				{/if}
 																			</div>
 
 																			{#if vote.state === 'closed'}
 																				<div class="flex flex-wrap gap-2">
-																					<button type="button" class="btn btn-sm btn-outline" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await archiveVote(vote.voteId); }}>Archive Vote</button>
+																					<button type="button" class="btn btn-sm btn-outline" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await archiveVote(vote.voteId); }}>{m.votes_archive_vote()}</button>
 																				</div>
 																			{/if}
 
 																			{#if vote.state === 'counting'}
-																				<p class="text-sm text-warning">Results are blocked while vote is in counting state.</p>
+																				<p class="text-sm text-warning">{m.votes_counting_phase_message()}</p>
 																			{:else if voteShouldShowTallies(vote)}
 																				<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
-																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">Final Tallies</div>
+																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">{m.votes_final_tallies()}</div>
 																					<ul class="space-y-1 text-sm">
 																						{#each voteTalliesFor(vote) as row}
 																							<li class="flex items-center justify-between gap-2">
@@ -1969,7 +1970,7 @@
 																							</li>
 																						{/each}
 																					</ul>
-																					<div class="mt-2 text-xs text-base-content/70">eligible={voteStatsFor(vote).eligibleCount.toString()} casts={voteStatsFor(vote).castCount.toString()} ballots={voteStatsFor(vote).ballotCount.toString()}</div>
+																					<div class="mt-2 text-xs text-base-content/70">{m.votes_summary_counts({ eligible: voteStatsFor(vote).eligibleCount.toString(), casts: voteStatsFor(vote).castCount.toString(), ballots: voteStatsFor(vote).ballotCount.toString() })}</div>
 																				</div>
 																			{/if}
 																		</div>
@@ -1988,7 +1989,7 @@
 						<div id="moderate-left-panel-attendees" data-moderate-left-panel="attendees" class={moderateLeftTab === 'attendees' ? 'h-full min-h-0 overflow-y-auto pr-1' : 'hidden h-full min-h-0 overflow-y-auto pr-1'}>
 							<section class="min-h-0" data-testid="manage-attendees-card">
 								<div class="mb-3 flex items-center justify-between gap-2">
-									<h2 class="text-lg font-semibold">Attendees</h2>
+									<h2 class="text-lg font-semibold">{m.meeting_moderate_attendees_tab()}</h2>
 									<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
 										<form class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
 											<label class="label cursor-pointer justify-start gap-3" for="manage_signup_open">
@@ -1997,7 +1998,7 @@
 												{:else}
 													<input class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
 												{/if}
-												<span>Guest signup</span>
+												<span>{m.meeting_moderate_guest_signup_label()}</span>
 											</label>
 										</form>
 										<form class="inline-flex" data-testid="manage-self-signup-form" onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
@@ -2010,18 +2011,18 @@
 									<div class="mb-4">
 										<form class="grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end" data-testid="manage-add-guest-form" onsubmit={addGuestAttendee}>
 											<div class="w-full min-w-0 flex-1">
-												<label class="label p-0 text-sm font-medium" for="full_name">Add guest</label>
-												<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder="Display name" required disabled={attendeeActionPending !== ''} />
+												<label class="label p-0 text-sm font-medium" for="full_name">{m.meeting_moderate_add_guest_label()}</label>
+												<input class="input input-bordered input-sm w-full" type="text" id="full_name" name="full_name" placeholder={m.meeting_moderate_display_name_placeholder()} required disabled={attendeeActionPending !== ''} />
 											</div>
 											<label class="label cursor-pointer justify-start gap-2 p-0 sm:mb-1 whitespace-nowrap" for="manage_guest_gender_quoted">
-												<span class="text-sm font-medium">FLINTA*</span>
+												<span class="text-sm font-medium">{m.meeting_join_quoted_label()}</span>
 												<input class="checkbox checkbox-sm" type="checkbox" id="manage_guest_gender_quoted" name="gender_quoted" value="true" disabled={attendeeActionPending !== ''} />
 											</label>
-											<button class="btn btn-sm sm:mb-1" type="submit" disabled={attendeeActionPending !== ''}>Add</button>
+											<button class="btn btn-sm sm:mb-1" type="submit" disabled={attendeeActionPending !== ''}>{m.meeting_moderate_add_guest_button()}</button>
 										</form>
 									</div>
 									{#if attendeeRows().length === 0}
-										<p class="text-sm text-base-content/70">No attendees are registered yet.</p>
+										<p class="text-sm text-base-content/70">{m.meeting_moderate_no_attendees()}</p>
 									{:else}
 										<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="manage-attendee-grid">
 											{#each attendeeRows() as attendee}
@@ -2034,7 +2035,7 @@
 																{#if attendee.isGuest || attendee.isChair || attendee.quoted}
 																	<div class="mt-1 hidden flex-wrap items-center gap-1 sm:flex">
 																		{#if attendee.isGuest}
-																			<span class="badge badge-neutral badge-sm">Guest</span>
+																			<span class="badge badge-neutral badge-sm">{m.meeting_moderate_guest_badge()}</span>
 																		{/if}
 																		{#if attendee.isChair}
 																			<span class="tooltip tooltip-right" data-tip="Chairperson">
@@ -2064,18 +2065,18 @@
 															<form class="inline-flex">
 																<label class="label cursor-pointer justify-start gap-2 p-0">
 																	<input class={attendee.isChair ? 'toggle toggle-sm toggle-primary' : 'toggle toggle-sm'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await toggleAttendeeChair(attendee); }} />
-																	<span class="text-xs leading-none">Chairperson</span>
+																	<span class="text-xs leading-none">{m.meeting_live_chair()}</span>
 																</label>
 															</form>
 															{#if attendee.isGuest}
 																<form class="inline-flex">
 																	<label class="label cursor-pointer justify-start gap-2 p-0">
 																		<input class={attendee.quoted ? 'toggle toggle-sm toggle-info' : 'toggle toggle-sm'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await toggleAttendeeQuoted(attendee); }} />
-																		<span class="text-xs leading-none">FLINTA*</span>
+																		<span class="text-xs leading-none">{m.meeting_join_quoted_label()}</span>
 																	</label>
 																</form>
 															{:else}
-																<div class="inline-flex items-center text-xs leading-none text-base-content/50">FLINTA* unavailable</div>
+																<div class="inline-flex items-center text-xs leading-none text-base-content/50">{m.meeting_moderate_flinta_unavailable()}</div>
 															{/if}
 														</div>
 													</div>
@@ -2089,50 +2090,50 @@
 						<div id="moderate-left-panel-settings" data-moderate-left-panel="settings" class={moderateLeftTab === 'settings' ? 'h-full min-h-0 overflow-y-auto pr-1' : 'hidden h-full min-h-0 overflow-y-auto pr-1'}>
 							<section class="min-h-0 space-y-3" data-testid="manage-settings-card">
 								<div class="flex flex-wrap items-end justify-between gap-2">
-									<h2 class="text-lg font-semibold">Settings</h2>
-									<p class="text-sm text-base-content/70">Configure meeting defaults and agenda-point overrides.</p>
+									<h2 class="text-lg font-semibold">{m.meeting_moderate_settings_tab()}</h2>
+									<p class="text-sm text-base-content/70">{m.meeting_moderate_settings_description()}</p>
 								</div>
 								<div id="moderate-settings-shell" class="rounded-box border border-base-300 bg-base-200/30 p-3" data-active-tab={moderateSettingsTab} data-settings-tabs-wired="true">
 									<div role="tablist" class="tabs tabs-box tabs-sm w-full bg-base-100">
-										<button type="button" class={moderateSettingsTab === 'meeting' ? 'tab tab-active flex-1 justify-center' : 'tab flex-1 justify-center'} data-moderate-settings-tab="meeting" onclick={() => (moderateSettingsTab = 'meeting')}>Meeting</button>
-										<button type="button" class={moderateSettingsTab === 'agenda' ? 'tab tab-active flex-1 justify-center' : 'tab flex-1 justify-center'} data-moderate-settings-tab="agenda" onclick={() => (moderateSettingsTab = 'agenda')}>Agenda Point</button>
+										<button type="button" class={moderateSettingsTab === 'meeting' ? 'tab tab-active flex-1 justify-center' : 'tab flex-1 justify-center'} data-moderate-settings-tab="meeting" onclick={() => (moderateSettingsTab = 'meeting')}>{m.meeting_moderate_settings_meeting_tab()}</button>
+										<button type="button" class={moderateSettingsTab === 'agenda' ? 'tab tab-active flex-1 justify-center' : 'tab flex-1 justify-center'} data-moderate-settings-tab="agenda" onclick={() => (moderateSettingsTab = 'agenda')}>{m.meeting_moderate_settings_agenda_tab()}</button>
 									</div>
 									<div class="mt-3 min-h-0">
 										<div data-moderate-settings-panel="meeting" class={moderateSettingsTab === 'meeting' ? '' : 'hidden'}>
-											<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Meeting Defaults</div>
+											<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">{m.meeting_moderate_meeting_defaults()}</div>
 											<div id="meeting-settings-container">
 												<div class="space-y-3">
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
-														<h3 class="mb-2 text-sm font-semibold">Quotation Settings</h3>
+														<h3 class="mb-2 text-sm font-semibold">{m.meeting_manage_agenda_point_quotation_settings()}</h3>
 														<form class="grid gap-3 md:grid-cols-2">
 															<div class="space-y-1">
-																<label for="gender_quotation_enabled">FLINTA* quotation</label>
+																<label for="gender_quotation_enabled">{m.meeting_moderate_flinta_quotation_label()}</label>
 																<select class="select select-bordered select-sm" id="gender_quotation_enabled" name="gender_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.genderQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
 																	{#if moderationState.data.settings?.genderQuotationEnabled ?? true}
-																		<option selected value="true">Enabled</option>
-																		<option value="false">Disabled</option>
+																		<option selected value="true">{m.meeting_moderate_enabled()}</option>
+																		<option value="false">{m.meeting_moderate_disabled()}</option>
 																	{:else}
-																		<option value="true">Enabled</option>
-																		<option selected value="false">Disabled</option>
+																		<option value="true">{m.meeting_moderate_enabled()}</option>
+																		<option selected value="false">{m.meeting_moderate_disabled()}</option>
 																	{/if}
 																</select>
 															</div>
 															<div class="space-y-1">
-																<label for="first_speaker_quotation_enabled">First-speaker bonus</label>
+																<label for="first_speaker_quotation_enabled">{m.meeting_moderate_first_speaker_bonus_label()}</label>
 																<select class="select select-bordered select-sm" id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.firstSpeakerQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
 																	{#if moderationState.data.settings?.firstSpeakerQuotationEnabled ?? true}
-																		<option selected value="true">Enabled</option>
-																		<option value="false">Disabled</option>
+																		<option selected value="true">{m.meeting_moderate_enabled()}</option>
+																		<option value="false">{m.meeting_moderate_disabled()}</option>
 																	{:else}
-																		<option value="true">Enabled</option>
-																		<option selected value="false">Disabled</option>
+																		<option value="true">{m.meeting_moderate_enabled()}</option>
+																		<option selected value="false">{m.meeting_moderate_disabled()}</option>
 																	{/if}
 																</select>
 															</div>
 														</form>
 													</div>
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
-														<h3 class="mb-2 text-sm font-semibold">Moderator</h3>
+														<h3 class="mb-2 text-sm font-semibold">{m.meeting_manage_agenda_point_moderator()}</h3>
 														<form class="flex flex-wrap items-end gap-3">
 															<select class="select select-bordered select-sm" id="meeting_moderator_attendee_id" name="attendee_id" disabled={settingsActionPending !== ''} onchange={updateMeetingModerator}>
 																{#if !(moderationState.data.settings?.moderatorAttendeeId ?? '')}
@@ -2154,9 +2155,9 @@
 											</div>
 										</div>
 										<div data-moderate-settings-panel="agenda" class={moderateSettingsTab === 'agenda' ? '' : 'hidden'}>
-											<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Agenda Point Overrides</div>
+											<div class="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">{m.meeting_moderate_agenda_point_overrides()}</div>
 											<div id="moderate-speaker-settings-container">
-												<p class="text-sm text-base-content/70">No active agenda point. Activate one above to configure agenda-point settings.</p>
+												<p class="text-sm text-base-content/70">{m.meeting_manage_no_active_agenda_for_settings()}</p>
 											</div>
 										</div>
 									</div>
@@ -2176,7 +2177,7 @@
 					>
 						<div class="card-body flex min-h-0 flex-col p-4">
 							<div class="mb-3 flex items-center justify-between gap-2">
-								<h2 class="text-lg font-semibold">Speakers Queue</h2>
+								<h2 class="text-lg font-semibold">{m.meeting_manage_speakers_list()}</h2>
 								<button
 									type="button"
 									class="btn btn-ghost btn-xs"
@@ -2189,7 +2190,7 @@
 							</div>
 							<div id="speakers-list-container" class="flex min-h-0 flex-1 flex-col">
 								{#if !moderationState.data.activeAgendaPoint}
-									<p class="text-sm text-base-content/70">No active agenda point.</p>
+									<p class="text-sm text-base-content/70">{m.meeting_manage_no_active_agenda_for_speakers()}</p>
 								{:else if speakerState.data?.speakers?.length}
 									<div class="mb-2 flex flex-wrap items-center justify-between gap-2" data-testid="manage-speakers-quick-controls">
 										<div class="flex flex-wrap items-center gap-2">
@@ -2240,7 +2241,7 @@
 														aria-label="Start next speaker"
 														disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
 													>
-														<LegacyIcon name="arrow-forward" class="ui-icon--left" />Start Next Speaker
+														<LegacyIcon name="arrow-forward" class="ui-icon--left" />{m.meeting_moderate_start_next_speaker()}
 													</button>
 												</form>
 											{/if}
@@ -2254,7 +2255,7 @@
 											aria-label="Scroll to active position"
 											onclick={scrollToInitialSpeaker}
 										>
-											<LegacyIcon name="history" class="ui-icon--left" />Scroll To Active Position
+											<LegacyIcon name="history" class="ui-icon--left" />{m.meeting_moderate_scroll_to_active()}
 										</button>
 									</div>
 									<ul class="list rounded-box border border-base-300 bg-base-100 mt-2 flex-1 overflow-y-auto pr-1 live-speaker-list" data-initial-scroll-top="0" data-manage-speakers-viewport data-testid="manage-speakers-viewport">
@@ -2262,7 +2263,7 @@
 											{@const prevSpeaker = speakerState.data.speakers[i - 1]}
 											{#if speaker.state !== 'DONE' && prevSpeaker?.state === 'DONE'}
 												<li class="list-row py-0">
-													<div class="divider my-0 text-xs text-base-content/40 col-span-full">Upcoming</div>
+													<div class="divider my-0 text-xs text-base-content/40 col-span-full">{m.meeting_moderate_upcoming_divider()}</div>
 												</li>
 											{/if}
 											<li
@@ -2305,7 +2306,7 @@
 																	<span class="tooltip tooltip-right" data-tip="Priority">
 																		<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
 																	</span>
-																	<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">Priority</span>
+																	<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{m.meeting_live_badge_priority()}</span>
 																{/if}
 															</div>
 														{/if}
@@ -2395,7 +2396,7 @@
 													disabled={speakerActionPending !== '' || !activeSpeaker()}
 												>
 													<LegacyIcon name="check-circle" class="ui-icon--left" />
-													End Speech
+													{m.meeting_live_yield_speech()}
 												</button>
 											{:else if nextWaitingSpeaker()}
 												<button
@@ -2419,12 +2420,12 @@
 													disabled={speakerActionPending !== '' || !nextWaitingSpeaker()}
 												>
 													<LegacyIcon name="arrow-forward" class="ui-icon--left" />
-													Start Next
+													{m.meeting_moderate_start_next()}
 												</button>
 											{/if}
 										</div>
 									</div>
-									<p class="text-sm text-base-content/70">No speakers are queued right now.</p>
+									<p class="text-sm text-base-content/70">{m.meeting_live_no_speakers()}</p>
 								{/if}
 							</div>
 						</div>
@@ -2436,14 +2437,14 @@
 					>
 						<div class="card-body flex min-h-0 flex-col gap-3 overflow-hidden p-4">
 							<div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
-								<h2 class="text-lg font-semibold">Add Speaker</h2>
+								<h2 class="text-lg font-semibold">{m.meeting_manage_add_speaker()}</h2>
 								<div class="join min-w-0 w-full max-w-full sm:w-auto sm:min-w-[24rem]">
 									<input
 										class="input input-bordered input-sm join-item min-w-0 flex-1"
 										type="text"
 										id="speaker-add-search-input"
 										name="q"
-										placeholder="Search name or number"
+										placeholder={m.meeting_moderate_search_attendee_placeholder()}
 										bind:value={speakerSearch}
 										bind:this={searchInput}
 										onkeydown={handleSpeakerSearchEnter}
@@ -2467,8 +2468,8 @@
 												<div class="font-medium">{attendee.fullName}</div>
 												<div class="text-sm text-base-content/70">
 													#{attendee.attendeeNumber.toString()}
-													{#if attendee.isGuest} • Guest{/if}
-													{#if attendee.quoted} • Quoted{/if}
+													{#if attendee.isGuest} • {m.meeting_moderate_guest_badge()}{/if}
+													{#if attendee.quoted} • {m.meeting_join_quoted_label()}{/if}
 												</div>
 											</div>
 											<div class="join join-horizontal">
@@ -2496,7 +2497,7 @@
 										</div>
 									{/each}
 									{#if sortedCandidates().length === 0}
-										<p class="text-sm text-base-content/70">No matching attendees found.</p>
+										<p class="text-sm text-base-content/70">{m.meeting_moderate_no_matching_attendees()}</p>
 									{/if}
 								</div>
 							</div>

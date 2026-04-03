@@ -9,6 +9,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { onDestroy } from 'svelte';
+	import * as m from '$lib/paraglide/messages';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -30,7 +31,7 @@
 		if (!qrState.data) return;
 		pageActions.set([], {
 			backHref: moderateHref,
-			title: 'Guest Join QR',
+			title: m.meeting_join_qr_title(),
 			subtitle: `${qrState.data.meetingName} - ${qrState.data.committeeName}`
 		});
 	});
@@ -60,14 +61,14 @@
 		<AppAlert message={qrState.error} />
 	{:else if qrState.data}
 		<div class="space-y-2">
-			<h1 class="text-3xl font-bold">Guest Join QR</h1>
+			<h1 class="text-3xl font-bold">{m.meeting_join_qr_title()}</h1>
 			<p class="text-base-content/70">{qrState.data.meetingName} - {qrState.data.committeeName}</p>
 		</div>
 
-		<p>Guests can scan this QR code to open the join page with the meeting secret prefilled.</p>
+		<p>{m.meeting_join_qr_description()}</p>
 		<p>
 			<a class="plain-text-link link link-hover" href={qrState.data.joinUrl}>{qrState.data.joinUrl}</a>
 		</p>
-		<img id="join-qr-code" src={qrState.data.qrCodeDataUrl} alt="Guest Join QR Code" />
+		<img id="join-qr-code" src={qrState.data.qrCodeDataUrl} alt={m.meeting_join_qr_alt()} />
 	{/if}
 </div>
