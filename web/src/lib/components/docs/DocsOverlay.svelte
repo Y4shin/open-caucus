@@ -1,5 +1,11 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import {
+		buildDocsOverlayHref,
+		buildStandaloneDocsHref,
+		clearDocsOverlayHref
+	} from '$lib/docs/navigation.js';
 
 	type Crumb = {
 		title: string;
@@ -33,7 +39,8 @@
 		html = '',
 		error = '',
 		notFound = false,
-		searchHits = null
+		searchHits = null,
+		overlayMode = false
 	}: {
 		title: string;
 		locale: string;
@@ -51,21 +58,41 @@
 		error?: string;
 		notFound?: boolean;
 		searchHits?: SearchHit[] | null;
+		overlayMode?: boolean;
 	} = $props();
 
 	function closeDocs() {
+		if (overlayMode) {
+			goto(clearDocsOverlayHref(page.url));
+			return;
+		}
 		if (window.history.length > 1) {
 			window.history.back();
 			return;
 		}
 		goto('/home');
 	}
+
 	const resolvedPathDisplay = $derived(
 		pathDisplay || (crumbs.length ? crumbs.map((crumb) => crumb.title).join(' / ') : '')
 	);
 
 	function hasVisibleHeading() {
 		return html.toLowerCase().includes('<h1');
+	}
+
+	function docsHref(refOrPath: string, options?: { heading?: string; query?: string }) {
+		if (overlayMode) {
+			return buildDocsOverlayHref(refOrPath, page.url, options);
+		}
+		return buildStandaloneDocsHref(refOrPath, options);
+	}
+
+	function submitSearch(event: SubmitEvent) {
+		event.preventDefault();
+		const form = event.currentTarget as HTMLFormElement | null;
+		const queryValue = String(form ? new FormData(form).get('q') ?? '' : '').trim();
+		goto(docsHref('search', { query: queryValue }));
 	}
 </script>
 
@@ -95,7 +122,7 @@
 					<button type="button" class="btn btn-ghost btn-xs" data-docs-close onclick={closeDocs}>Close</button>
 				</div>
 			</div>
-			<form class="mt-3 flex gap-2" action="/docs/search" method="GET">
+			<form class="mt-3 flex gap-2" action="/docs/search" method="GET" onsubmit={submitSearch}>
 				<input class="input input-bordered input-sm flex-1" type="search" name="q" value={query} placeholder="Search documentation" />
 			</form>
 			<details class="collapse collapse-arrow mt-3 border border-base-300 bg-base-200/30" open>
@@ -107,7 +134,7 @@
 								{#if index > 0}
 									<span>/</span>
 								{/if}
-								<a href={`/docs/${crumb.path}`} class={crumb.current ? 'hover:underline font-semibold text-primary' : 'hover:underline'}>{crumb.title}</a>
+								<a href={docsHref(crumb.path)} class={crumb.current ? 'hover:underline font-semibold text-primary' : 'hover:underline'}>{crumb.title}</a>
 							{/each}
 						</div>
 					{/if}
@@ -118,7 +145,7 @@
 									{#if node.children.length}
 										<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={node.expanded || node.current}>
 											<summary class="collapse-title py-2 pr-8 text-sm">
-												<a href={`/docs/${node.path}`} class={node.current ? 'font-medium text-primary hover:underline' : 'font-medium hover:underline'}>
+												<a href={docsHref(node.path)} class={node.current ? 'font-medium text-primary hover:underline' : 'font-medium hover:underline'}>
 													{node.title}
 												</a>
 											</summary>
@@ -130,7 +157,7 @@
 										</details>
 									{:else}
 										<a
-											href={`/docs/${node.path}`}
+											href={docsHref(node.path)}
 											class={node.current
 												? 'block rounded px-2 py-1 text-sm hover:bg-base-200 bg-base-200 font-semibold text-primary'
 												: 'block rounded px-2 py-1 text-sm hover:bg-base-200'}
@@ -159,7 +186,7 @@
 						<ul class="space-y-2">
 							{#each searchHits as hit}
 								<li class="rounded-box border border-base-300 bg-base-100 p-2">
-									<a class="font-medium text-sm" href={`/docs/${hit.ref}`}>{hit.title}</a>
+									<a class="font-medium text-sm" href={docsHref(hit.ref)}>{hit.title}</a>
 									<p class="text-xs text-base-content/70">{hit.ref}</p>
 									{#if hit.snippet}
 										<p class="text-xs text-base-content/80">{hit.snippet}</p>

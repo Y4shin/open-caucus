@@ -4,6 +4,7 @@ package e2e_test
 
 import (
 	"context"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
@@ -20,15 +21,18 @@ func normalizeWhitespace(raw string) string {
 
 var betweenTagsWhitespace = regexp.MustCompile(`>\s+<`)
 var svelteCommentNodes = regexp.MustCompile(`<!---->`)
+var trailingClassSpace = regexp.MustCompile(`class="([^"]*)\s+"`)
 var legacyLiveVoteCompatTemplate = regexp.MustCompile(`(?s)<template><div[^>]*id="live-votes-panel".*?</template>`)
 var legacyDocsOOBHelpAttrs = regexp.MustCompile(`\s+hx-get="/docs/oob[^"]*"|\s+hx-swap="none"`)
 var legacyLiveVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/live/partial"|\s+hx-target="#live-votes-panel"|\s+hx-trigger="reload"|\s+sse-swap="votes-updated"|\s+hx-swap="outerHTML"`)
-var legacyModerateVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/partial"|\s+hx-post="/committee/[^"]*/votes(?:/[^"]*)?"|\s+hx-target="#moderate-votes-panel"|\s+hx-trigger="reload"|\s+hx-swap="outerHTML"`)
+var legacyModerateVotePanelAttrs = regexp.MustCompile(`\s+hx-get="/committee/[^"]*/votes/partial"|\s+hx-post="/committee/[^"]*/votes(?:/[^"]*)?"|\s+hx-target="#moderate-votes-panel"|\s+hx-trigger="reload"|\s+hx-swap="outerHTML"|\s+data-vote-(?:accordion|draft-editor)="[^"]*"|\s+open=""`)
 var legacyModerateAttendeePanelAttrs = regexp.MustCompile(`\s+hx-(?:post|target|swap|vals|trigger|confirm|on::after-request)="[^"]*"|\s+data-testid="manage-self-signup-form"`)
+var overlayDocsHrefAttrs = regexp.MustCompile(`href="/[^"]*docs=([^"&]+)(?:&docs_heading=([^"&]+))?[^"]*"`)
 
 func normalizeHTML(raw string) string {
 	trimmed := strings.TrimSpace(raw)
 	trimmed = svelteCommentNodes.ReplaceAllString(trimmed, "")
+	trimmed = trailingClassSpace.ReplaceAllString(trimmed, `class="$1"`)
 	trimmed = betweenTagsWhitespace.ReplaceAllString(trimmed, "><")
 	return trimmed
 }
@@ -38,7 +42,28 @@ func normalizeLegacyLiveVoteCompat(raw string) string {
 }
 
 func normalizeLegacyDocsHelpAttrs(raw string) string {
-	return normalizeHTML(legacyDocsOOBHelpAttrs.ReplaceAllString(raw, ""))
+	normalized := legacyDocsOOBHelpAttrs.ReplaceAllString(raw, "")
+	normalized = strings.ReplaceAll(normalized, "&amp;", "&")
+	normalized = overlayDocsHrefAttrs.ReplaceAllStringFunc(normalized, func(match string) string {
+		parts := overlayDocsHrefAttrs.FindStringSubmatch(match)
+		if len(parts) < 2 {
+			return match
+		}
+		path, err := url.QueryUnescape(parts[1])
+		if err != nil {
+			path = parts[1]
+		}
+		href := "/docs/" + path
+		if len(parts) > 2 && parts[2] != "" {
+			heading, err := url.QueryUnescape(parts[2])
+			if err != nil {
+				heading = parts[2]
+			}
+			href += "#" + heading
+		}
+		return `href="` + href + `"`
+	})
+	return normalizeHTML(normalized)
 }
 
 func normalizeLegacyLiveVotePanelAttrs(raw string) string {
@@ -686,7 +711,10 @@ func TestDocsAndReceipts_UIParityWithLegacy(t *testing.T) {
 	}
 
 	assertEqualHTML(t, "docs title", locatorOuterHTML(t, newBrowserPage, "#app-docs-target h2"), locatorOuterHTML(t, legacyBrowserPage, "#app-docs-target h2"))
-	assertEqualHTML(t, "docs browse details", locatorOuterHTML(t, newBrowserPage, "#app-docs-target details"), locatorOuterHTML(t, legacyBrowserPage, "#app-docs-target details"))
+	assertEqualHTML(t, "docs browse details",
+		normalizeLegacyDocsHelpAttrs(locatorOuterHTML(t, newBrowserPage, "#app-docs-target details")),
+		normalizeLegacyDocsHelpAttrs(locatorOuterHTML(t, legacyBrowserPage, "#app-docs-target details")),
+	)
 
 	if err := newBrowserPage.Locator("#app-docs-target input[type='search']").Fill("agenda"); err != nil {
 		t.Fatalf("fill new docs search: %v", err)
@@ -717,7 +745,10 @@ func TestDocsAndReceipts_UIParityWithLegacy(t *testing.T) {
 			!strings.Contains(className, "htmx-added") &&
 			!strings.Contains(className, "htmx-settling"), nil
 	}, "legacy docs search results HTMX classes to settle")
-	assertEqualHTML(t, "docs search container", locatorOuterHTML(t, newBrowserPage, "#app-docs-target #docs-search-results"), locatorOuterHTML(t, legacyBrowserPage, "#app-docs-target #docs-search-results"))
+	assertEqualHTML(t, "docs search container",
+		normalizeLegacyDocsHelpAttrs(locatorOuterHTML(t, newBrowserPage, "#app-docs-target #docs-search-results")),
+		normalizeLegacyDocsHelpAttrs(locatorOuterHTML(t, legacyBrowserPage, "#app-docs-target #docs-search-results")),
+	)
 
 	gotoAndWaitForSelector(t, newBrowserPage, newTS.URL+"/receipts", "#receipts-vault-content")
 	gotoAndWaitForSelector(t, legacyBrowserPage, legacyTS.URL+"/receipts", "#receipts-vault-content")

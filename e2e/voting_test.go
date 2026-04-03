@@ -446,6 +446,68 @@ func TestVoting_OpenVote_ModeratorAndAttendeeHappyPath(t *testing.T) {
 	}
 }
 
+func TestVoting_DraftEditorStaysOpenAcrossVoteRefreshes(t *testing.T) {
+	ts := newTestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
+	ts.seedMeeting(t, "test-committee", "Draft Vote Meeting", "")
+	meetingID := ts.getMeetingID(t, "test-committee", "Draft Vote Meeting")
+	apID := ts.seedAgendaPoint(t, "test-committee", "Draft Vote Meeting", "Budget")
+	ts.activateAgendaPoint(t, "test-committee", "Draft Vote Meeting", apID)
+
+	page := newPage(t)
+	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
+	if _, err := page.Goto(moderateURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto moderate page: %v", err)
+	}
+	urlBefore := page.URL()
+
+	createDraftVoteFromModeratorUI(t, page, "Persistent Draft Vote", "open", 1, 1)
+
+	accordion := moderatorVoteAccordion(t, page, "Persistent Draft Vote")
+	draftEditor := accordion.Locator("[data-vote-draft-editor]").First()
+	ensureDetailsOpen(t, draftEditor)
+
+	editorForm := draftEditor.Locator("form").First()
+	if err := editorForm.WaitFor(); err != nil {
+		t.Fatalf("wait draft editor form: %v", err)
+	}
+	optionInput := editorForm.Locator("input[name='option_label']").First()
+	if err := optionInput.Fill("Approve"); err != nil {
+		t.Fatalf("fill updated draft option label: %v", err)
+	}
+	if err := editorForm.Locator("button:has-text('Save Draft')").Click(); err != nil {
+		t.Fatalf("save draft vote: %v", err)
+	}
+
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		content, err := accordion.TextContent()
+		if err != nil {
+			return false, err
+		}
+		return strings.Contains(content, "Approve"), nil
+	}, "updated draft vote option label to appear")
+
+	if !detailsOpenState(t, accordion) {
+		t.Fatalf("vote accordion closed immediately after saving the draft")
+	}
+	if !detailsOpenState(t, draftEditor) {
+		t.Fatalf("draft editor closed immediately after saving the draft")
+	}
+
+	time.Sleep(2500 * time.Millisecond)
+
+	if !detailsOpenState(t, accordion) {
+		t.Fatalf("vote accordion closed after background refresh")
+	}
+	if !detailsOpenState(t, draftEditor) {
+		t.Fatalf("draft editor closed after background refresh")
+	}
+	if page.URL() != urlBefore {
+		t.Fatalf("moderator URL changed while editing draft vote: before=%s after=%s", urlBefore, page.URL())
+	}
+}
+
 func TestVoting_CreateRejectedWithoutActiveAgenda(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")

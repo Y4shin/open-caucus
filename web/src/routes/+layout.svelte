@@ -1,18 +1,71 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { getLocale, locales, setLocale } from '$lib/paraglide/runtime';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import DocsOverlay from '$lib/components/docs/DocsOverlay.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import { docsClient } from '$lib/api/index.js';
+	import {
+		DOCS_HEADING_PARAM,
+		DOCS_PATH_PARAM,
+		DOCS_QUERY_PARAM,
+		buildDocsOverlayHref
+	} from '$lib/docs/navigation.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
+	import { getDisplayError } from '$lib/utils/errors.js';
+	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+
+	interface Crumb {
+		title: string;
+		path: string;
+		current: boolean;
+	}
+
+	interface NavNode {
+		title: string;
+		path: string;
+		current: boolean;
+		expanded: boolean;
+		children: NavNode[];
+	}
+
+	interface SearchHit {
+		ref: string;
+		path: string;
+		heading?: string;
+		title: string;
+		snippet?: string;
+	}
+
+	interface DocsOverlayData {
+		title: string;
+		locale: string;
+		pathDisplay: string;
+		crumbs: Crumb[];
+		tree: NavNode[];
+		html?: string;
+		query?: string;
+		searchHits?: SearchHit[] | null;
+		error?: string;
+		notFound?: boolean;
+	}
 
 	let { children } = $props();
 	let mobileMenuOpen = $state(false);
 	let themePreference = $state<'auto' | 'light' | 'dark'>('auto');
+	let docsOverlayState = $state(createRemoteState<DocsOverlayData>());
+	let docsOverlayRequestId = 0;
 
 	const themeStorageKey = 'conference-tool.theme';
+	const docsOverlayPath = $derived(page.url.searchParams.get(DOCS_PATH_PARAM) ?? '');
+	const docsOverlayHeading = $derived(page.url.searchParams.get(DOCS_HEADING_PARAM) ?? '');
+	const docsOverlayQuery = $derived(page.url.searchParams.get(DOCS_QUERY_PARAM) ?? '');
+	const standaloneDocsRoute = $derived(page.url.pathname.startsWith('/docs'));
+	const docsOverlayOpen = $derived(!standaloneDocsRoute && docsOverlayPath !== '');
 
 	onMount(() => {
 		void import('htmx.org').then((mod) => {
@@ -62,7 +115,7 @@
 
 	function openDocs(event: Event) {
 		event.preventDefault();
-		goto('/docs/index');
+		goto(buildDocsOverlayHref('index', page.url));
 	}
 
 	function isActiveLocale(lang: (typeof locales)[number]) {
@@ -72,6 +125,79 @@
 	async function switchLocale(lang: (typeof locales)[number]) {
 		document.cookie = `locale=${lang}; path=/; max-age=${365 * 24 * 60 * 60}; samesite=lax`;
 		await setLocale(lang);
+	}
+
+	$effect(() => {
+		const overlayPath = docsOverlayPath;
+		const overlayHeading = docsOverlayHeading;
+		const overlayQuery = docsOverlayQuery;
+		const isStandaloneDocsRoute = standaloneDocsRoute;
+
+		if (isStandaloneDocsRoute || !overlayPath) {
+			docsOverlayState.data = null;
+			docsOverlayState.error = '';
+			docsOverlayState.loading = false;
+			return;
+		}
+
+		void loadDocsOverlay(overlayPath, overlayHeading, overlayQuery);
+	});
+
+	async function loadDocsOverlay(path: string, heading: string, query: string) {
+		const requestId = ++docsOverlayRequestId;
+		docsOverlayState.loading = true;
+		docsOverlayState.error = '';
+		try {
+			if (path === 'search') {
+				const [shellResponse, searchResponse] = await Promise.all([
+					docsClient.getPage({ path: 'index' }),
+					docsClient.search({ query, limit: 10 })
+				]);
+				if (requestId !== docsOverlayRequestId) return;
+				const shell = shellResponse.page;
+				if (!shell) {
+					docsOverlayState.data = null;
+					docsOverlayState.error = 'Failed to load the documentation shell.';
+					return;
+				}
+				docsOverlayState.data = {
+					title: shell.title,
+					locale: shell.locale,
+					pathDisplay: shell.pathDisplay,
+					crumbs: shell.crumbs as Crumb[],
+					tree: shell.tree as NavNode[],
+					query,
+					searchHits: (searchResponse.hits ?? []) as SearchHit[]
+				};
+				return;
+			}
+
+			const response = await docsClient.getPage({ path, heading });
+			if (requestId !== docsOverlayRequestId) return;
+			const docsPage = response.page;
+			if (!docsPage) {
+				docsOverlayState.data = null;
+				docsOverlayState.error = 'Failed to load the documentation page.';
+				return;
+			}
+			docsOverlayState.data = {
+				title: docsPage.title,
+				locale: docsPage.locale,
+				pathDisplay: docsPage.pathDisplay,
+				crumbs: docsPage.crumbs as Crumb[],
+				tree: docsPage.tree as NavNode[],
+				html: docsPage.html,
+				searchHits: null
+			};
+		} catch (err) {
+			if (requestId !== docsOverlayRequestId) return;
+			docsOverlayState.data = null;
+			docsOverlayState.error = getDisplayError(err, 'Failed to load the documentation.');
+		} finally {
+			if (requestId === docsOverlayRequestId) {
+				docsOverlayState.loading = false;
+			}
+		}
 	}
 </script>
 
@@ -200,10 +326,52 @@
 		</nav>
 		<div class="mx-auto flex w-full max-w-screen-xl min-h-0 flex-1 flex-col p-5">
 			<div class="relative flex min-h-0 flex-1 flex-col gap-4 md:flex-row md:items-stretch">
-				<section id="app-docs-target" class="hidden"></section>
 				<main class="page-main flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-4">
 					{@render children()}
 				</main>
+				{#if docsOverlayOpen && docsOverlayState.data}
+					<DocsOverlay
+						title={docsOverlayState.data.title}
+						locale={docsOverlayState.data.locale}
+						pathDisplay={docsOverlayState.data.pathDisplay}
+						crumbs={docsOverlayState.data.crumbs}
+						tree={docsOverlayState.data.tree}
+						html={docsOverlayState.data.html ?? ''}
+						query={docsOverlayState.data.query ?? ''}
+						error={docsOverlayState.data.error ?? ''}
+						notFound={docsOverlayState.data.notFound ?? false}
+						searchHits={docsOverlayState.data.searchHits ?? null}
+						overlayMode
+					/>
+				{:else if docsOverlayOpen && docsOverlayState.loading}
+					<section
+						id="app-docs-target"
+						class="fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]"
+						data-docs-open="1"
+					>
+						<div class="absolute inset-0 bg-neutral-950/70 md:hidden"></div>
+						<div class="absolute inset-x-0 bottom-0 flex h-[67dvh] min-h-[22rem] max-h-[90dvh] min-w-0 flex-col rounded-t-2xl border border-base-300 bg-base-100 shadow-2xl md:relative md:inset-auto md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:border-l md:border-base-300">
+							<div class="flex min-h-0 flex-1 items-center justify-center p-4 md:p-5">
+								<span class="loading loading-spinner loading-lg" aria-label="Loading documentation"></span>
+							</div>
+						</div>
+					</section>
+				{:else if docsOverlayOpen && docsOverlayState.error}
+					<section
+						id="app-docs-target"
+						class="fixed inset-0 z-50 md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[33.333vw]"
+						data-docs-open="1"
+					>
+						<div class="absolute inset-0 bg-neutral-950/70 md:hidden"></div>
+						<div class="absolute inset-x-0 bottom-0 flex h-[67dvh] min-h-[22rem] max-h-[90dvh] min-w-0 flex-col rounded-t-2xl border border-base-300 bg-base-100 shadow-2xl md:relative md:inset-auto md:h-full md:min-h-0 md:max-h-none md:rounded-none md:border-0 md:border-l md:border-base-300">
+							<div class="p-4 md:p-5">
+								<div role="alert" class="alert alert-error">
+									<span>{docsOverlayState.error}</span>
+								</div>
+							</div>
+						</div>
+					</section>
+				{/if}
 			</div>
 		</div>
 		<footer class="page-footer hidden border-t border-base-300 bg-base-100/70 md:block">

@@ -84,3 +84,143 @@
 	position: relative;
 	z-index: 1;
 }
+
+.docs-markdown {
+	color: oklch(var(--bc) / 0.92);
+	font-size: 0.94rem;
+	line-height: 1.65;
+}
+
+.docs-markdown > * + * {
+	margin-top: 0.9rem;
+}
+
+.docs-markdown h1,
+.docs-markdown h2,
+.docs-markdown h3,
+.docs-markdown h4,
+.docs-markdown h5,
+.docs-markdown h6 {
+	color: oklch(var(--bc) / 0.98);
+	font-weight: 700;
+	line-height: 1.28;
+	margin-top: 1.25rem;
+	margin-bottom: 0.55rem;
+	text-wrap: balance;
+}
+
+.docs-markdown h1 {
+	font-size: 1.35rem;
+}
+
+.docs-markdown h2 {
+	font-size: 1.15rem;
+}
+
+.docs-markdown h3 {
+	font-size: 1.04rem;
+}
+
+.docs-markdown p,
+.docs-markdown li {
+	color: oklch(var(--bc) / 0.9);
+}
+
+.docs-markdown a {
+	color: oklch(var(--p));
+	text-decoration: underline;
+	text-decoration-color: oklch(var(--p) / 0.5);
+	text-underline-offset: 0.16em;
+	transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+
+.docs-markdown a:hover {
+	color: oklch(var(--pf));
+	text-decoration-color: oklch(var(--pf));
+}
+
+.docs-markdown ul,
+.docs-markdown ol {
+	padding-left: 1.2rem;
+	margin-top: 0.7rem;
+	margin-bottom: 0.7rem;
+}
+
+.docs-markdown ul {
+	list-style: disc;
+}
+
+.docs-markdown ol {
+	list-style: decimal;
+}
+
+.docs-markdown li + li {
+	margin-top: 0.35rem;
+}
+
+.docs-markdown blockquote {
+	border-left: 3px solid oklch(var(--b3));
+	color: oklch(var(--bc) / 0.78);
+	margin: 1rem 0;
+	padding-left: 0.85rem;
+}
+
+.docs-markdown code {
+	border: 1px solid oklch(var(--b3));
+	border-radius: 0.35rem;
+	background: oklch(var(--b2) / 0.55);
+	padding: 0.06rem 0.32rem;
+	font-size: 0.86em;
+}
+
+.docs-markdown pre {
+	border: 1px solid oklch(var(--b3));
+	border-radius: 0.55rem;
+	background: oklch(var(--b2) / 0.6);
+	margin: 1rem 0;
+	padding: 0.8rem 0.9rem;
+	overflow-x: auto;
+}
+
+.docs-markdown pre code {
+	border: 0;
+	background: transparent;
+	padding: 0;
+	font-size: 0.84rem;
+}
+
+.docs-markdown img {
+	border: 1px solid oklch(var(--b3));
+	border-radius: 0.6rem;
+	margin: 1rem 0;
+	max-width: 100%;
+	height: auto;
+}
+
+.docs-markdown table {
+	border-collapse: collapse;
+	width: 100%;
+	margin: 1rem 0;
+	overflow: hidden;
+	border-radius: 0.6rem;
+	border: 1px solid oklch(var(--b3));
+}
+
+.docs-markdown th,
+.docs-markdown td {
+	border-bottom: 1px solid oklch(var(--b3));
+	padding: 0.48rem 0.58rem;
+	text-align: left;
+	vertical-align: top;
+}
+
+.docs-markdown th {
+	background: oklch(var(--b2) / 0.7);
+	font-weight: 600;
+}
+
+.docs-markdown hr {
+	border: 0;
+	border-top: 1px solid oklch(var(--b3));
+	margin: 1.15rem 0;
+}

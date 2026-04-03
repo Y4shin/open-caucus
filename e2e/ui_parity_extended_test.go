@@ -29,6 +29,7 @@ var speakingTimerContentRe = regexp.MustCompile(`data-speaking-since="">[^<]*<`)
 // timing of when Playwright captures the snapshot determines whether it appears.
 // Stripping it makes speaker-list comparisons timing-independent.
 var initialScrollTopAttrRe = regexp.MustCompile(` data-initial-scroll-top="[^"]*"`)
+var speakerUpcomingDividerRe = regexp.MustCompile(`<li class="list-row py-0"><div class="divider my-0 text-xs text-base-content/40 col-span-full">Upcoming</div></li>`)
 var allWhitespaceRe = regexp.MustCompile(`\s+`)
 
 // normalizeInitialScrollTop removes data-initial-scroll-top attributes so that
@@ -36,6 +37,10 @@ var allWhitespaceRe = regexp.MustCompile(`\s+`)
 // do not cause false parity failures.
 func normalizeInitialScrollTop(html string) string {
 	return initialScrollTopAttrRe.ReplaceAllString(html, "")
+}
+
+func normalizeSpeakerUpcomingDivider(html string) string {
+	return speakerUpcomingDividerRe.ReplaceAllString(html, "")
 }
 
 func compactText(raw string) string {
@@ -1343,7 +1348,7 @@ func TestModerateEndSpeaker_UIParityWithLegacy(t *testing.T) {
 	// while the legacy sets it asynchronously via JS after the HTMX swap. The timing
 	// of the Playwright snapshot determines whether it appears in the legacy DOM.
 	assertEqualHTML(t, "speakers list after end speaker",
-		normalizeInitialScrollTop(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container")),
-		normalizeInitialScrollTop(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container")),
+		normalizeSpeakerUpcomingDivider(normalizeInitialScrollTop(locatorOuterHTML(t, newBrowserPage, "#speakers-list-container"))),
+		normalizeSpeakerUpcomingDivider(normalizeInitialScrollTop(locatorOuterHTML(t, legacyBrowserPage, "#speakers-list-container"))),
 	)
 }

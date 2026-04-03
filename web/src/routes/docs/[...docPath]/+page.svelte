@@ -35,6 +35,7 @@
 	}
 
 	const docPath = $derived(page.params.docPath || 'index');
+	const docHeading = $derived(page.url.searchParams.get('heading') ?? '');
 	let docsState = $state(createRemoteState<DocsPageData>());
 
 	onDestroy(() => {
@@ -56,7 +57,7 @@
 		docsState.loading = true;
 		docsState.error = '';
 		try {
-			const response = await docsClient.getPage({ path: docPath });
+			const response = await docsClient.getPage({ path: docPath, heading: docHeading });
 			docsState.data = (response.page ?? null) as DocsPageData | null;
 		} catch (err) {
 			docsState.error = getDisplayError(err, 'Failed to load the documentation page.');

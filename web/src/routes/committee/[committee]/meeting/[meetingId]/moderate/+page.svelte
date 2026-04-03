@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { buildDocsOverlayHref } from '$lib/docs/navigation.js';
 	import { onDestroy } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
@@ -279,6 +280,8 @@
 	let voteActionPending = $state('');
 	let settingsActionPending = $state('');
 	let createVoteDetailsOpen = $state(false);
+	let voteAccordionOpen = $state<Record<string, boolean>>({});
+	let draftVoteEditorOpen = $state<Record<string, boolean>>({});
 	let creatingAgenda = $state(false);
 	let agendaEditOpen = $state(false);
 	let agendaParentId = $state('');
@@ -438,6 +441,7 @@
 			attendeeState.data = attendeeRes.attendees;
 			agendaState.data = agendaRes.agendaPoints;
 			votesState.data = votesRes.view ?? null;
+			syncVotePanelOpenState(votesRes.view?.votes ?? []);
 			for (const vote of votesRes.view?.votes ?? []) {
 				if (vote.state !== 'draft') continue;
 				if (!(vote.voteId in draftOptionTexts)) {
@@ -506,6 +510,7 @@
 		try {
 			const res = await voteClient.getVotesPanel({ committeeSlug: slug, meetingId });
 			votesState.data = res.view ?? null;
+			syncVotePanelOpenState(res.view?.votes ?? []);
 		} catch {
 			// Silent refresh
 		}
@@ -725,15 +730,11 @@
 	}
 
 	function openDocs(path: string) {
-		goto(`/docs/${path}`);
+		goto(buildDocsOverlayHref(path, page.url));
 	}
 
 	function openDocsWithHeading(path: string, heading?: string) {
-		const url = new URL(`/docs/${path}`, window.location.origin);
-		if (heading) {
-			url.searchParams.set('heading', heading);
-		}
-		goto(`${url.pathname}${url.search}`);
+		goto(buildDocsOverlayHref(path, page.url, { heading }));
 	}
 
 	function preserveEmptyClass(node: HTMLElement, enabled: boolean) {
@@ -1511,6 +1512,32 @@
 		return ['Yes', 'No', 'Abstain', ''];
 	}
 
+	function voteAccordionDefaultOpen(vote: VoteDefinitionRecord) {
+		return vote.state === 'open' || vote.state === 'counting';
+	}
+
+	function syncVotePanelOpenState(votes: VoteDefinitionRecord[]) {
+		const nextVoteAccordionOpen: Record<string, boolean> = {};
+		const nextDraftVoteEditorOpen: Record<string, boolean> = {};
+		for (const vote of votes) {
+			nextVoteAccordionOpen[vote.voteId] =
+				voteAccordionOpen[vote.voteId] ?? voteAccordionDefaultOpen(vote);
+			if (vote.state === 'draft') {
+				nextDraftVoteEditorOpen[vote.voteId] = draftVoteEditorOpen[vote.voteId] ?? false;
+			}
+		}
+		voteAccordionOpen = nextVoteAccordionOpen;
+		draftVoteEditorOpen = nextDraftVoteEditorOpen;
+	}
+
+	function setVoteAccordionOpen(voteId: string, open: boolean) {
+		voteAccordionOpen = { ...voteAccordionOpen, [voteId]: open };
+	}
+
+	function setDraftVoteEditorOpen(voteId: string, open: boolean) {
+		draftVoteEditorOpen = { ...draftVoteEditorOpen, [voteId]: open };
+	}
+
 	function voteLabelsForEdit(vote: VoteDefinitionRecord) {
 		const labels = vote.options.map((option) => option.label);
 		if (labels.length < 2) {
@@ -1684,7 +1711,7 @@
 				id="moderate-left-controls"
 				data-meeting-id={meetingId}
 				data-tabs-wired="true"
-				class="order-2 card min-h-0 min-w-0 overflow-hidden border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:self-stretch"
+				class="order-2 card min-h-0 min-w-0 overflow-hidden border border-base-300 bg-base-100 shadow-sm lg:order-1 lg:h-full lg:self-stretch"
 			>
 				<div class="card-body flex h-full min-h-0 flex-col overflow-hidden p-4">
 					<div role="tablist" class="tabs tabs-border tabs-sm grid w-full grid-cols-4 [--tab-p:0.35rem] sm:[--tab-p:0.75rem]">
@@ -2043,7 +2070,17 @@
 														{:else}
 															<div class="space-y-3">
 																{#each votesState.data?.votes ?? [] as vote}
-																	<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={vote.state === 'open' || vote.state === 'counting'}>
+																	<details
+																		class="collapse collapse-arrow border border-base-300 bg-base-100"
+																		open={voteAccordionOpen[vote.voteId] ?? voteAccordionDefaultOpen(vote)}
+																		ontoggle={(event) => {
+																			setVoteAccordionOpen(
+																				vote.voteId,
+																				(event.currentTarget as HTMLDetailsElement).open
+																			);
+																		}}
+																		data-vote-accordion={vote.voteId}
+																	>
 																		<summary class="collapse-title py-3 pr-10">
 																			<div class="flex flex-wrap items-center gap-2">
 																				<h4 class="font-semibold">{vote.name}</h4>
@@ -2097,7 +2134,17 @@
 																				<div class="flex flex-wrap gap-2">
 																					<button type="button" class="btn btn-sm btn-success" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await openVote(vote.voteId); }}>Open Vote</button>
 																				</div>
-																				<details class="collapse collapse-arrow border border-base-300 bg-base-200/30">
+																				<details
+																					class="collapse collapse-arrow border border-base-300 bg-base-200/30"
+																					open={draftVoteEditorOpen[vote.voteId] ?? false}
+																					ontoggle={(event) => {
+																						setDraftVoteEditorOpen(
+																							vote.voteId,
+																							(event.currentTarget as HTMLDetailsElement).open
+																						);
+																					}}
+																					data-vote-draft-editor={vote.voteId}
+																				>
 																					<summary class="collapse-title text-sm">Edit Draft</summary>
 																					<div class="collapse-content">
 																						<form class="grid gap-2 md:grid-cols-2" onsubmit={async (event) => await submitUpdateDraftVoteForm(event, vote.voteId)}>
@@ -2278,7 +2325,7 @@
 									<h2 class="text-lg font-semibold">Attendees</h2>
 									<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
 										<form class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
-											<label class="label cursor-pointer justify-start gap-3 " for="manage_signup_open">
+											<label class="label cursor-pointer justify-start gap-3" for="manage_signup_open">
 												{#if moderationState.data.attendees?.signupOpen}
 													<input checked class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
 												{:else}
@@ -2559,7 +2606,7 @@
 												</li>
 											{/if}
 											<li
-												class="list-row min-w-0 items-center gap-3 {speaker.state === 'DONE' ? 'opacity-50' : ''}"
+												class="list-row min-w-0 items-center gap-3"
 												data-testid="live-speaker-item"
 												data-speaker-state={speaker.state.toLowerCase()}
 												data-speaker-mine="false"
@@ -2571,7 +2618,7 @@
 													{:else if speaker.state === 'WAITING'}
 														{waitingDisplayNumber(speaker.speakerId)}
 													{:else if speaker.state === 'DONE'}
-														<span class="font-mono text-xs whitespace-nowrap">{formatDuration(speaker.durationSeconds)}</span>
+														{doneDisplayNumber(speaker.speakerId)}
 													{/if}
 												</div>
 												<div class="list-col-grow min-w-0">
