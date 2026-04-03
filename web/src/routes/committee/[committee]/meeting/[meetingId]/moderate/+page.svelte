@@ -65,7 +65,7 @@
 	let agendaImportFingerprint = $state('');
 	let agendaImportWarning = $state('');
 	let agendaImportBusy = $state(false);
-	let agendaImportStep = $state<'source' | 'correction' | 'diff'>('source');
+	let agendaImportStep = $state<'input' | 'diff'>('input');
 	let moderateSettingsTab = $state<'meeting' | 'agenda'>('meeting');
 	let voteName = $state('');
 	let voteVisibility = $state<'open' | 'secret'>('open');
@@ -850,16 +850,15 @@
 
 	function openAgendaImportDialog() {
 		agendaImportOpen = true;
-		agendaImportStep = 'source';
+		agendaImportStep = 'input';
 		agendaImportWarning = '';
-		agendaImportLines = [];
 		agendaImportFingerprint = currentAgendaFingerprint();
 		agendaImportDialogEl?.showModal();
 	}
 
 	function closeAgendaImportDialog() {
 		agendaImportOpen = false;
-		agendaImportStep = 'source';
+		agendaImportStep = 'input';
 		agendaImportWarning = '';
 		agendaImportDialogEl?.close();
 	}
@@ -875,8 +874,7 @@
 	}
 
 	function agendaImportCurrentStep() {
-		if (agendaImportStep === 'correction') return 2;
-		if (agendaImportStep === 'diff') return 3;
+		if (agendaImportStep === 'diff') return 2;
 		return 1;
 	}
 
@@ -947,16 +945,10 @@
 		return points;
 	}
 
-	async function extractAgendaImport() {
-		const parsed = parseAgendaImportSource(agendaImportSource.trim());
-		if (parsed.length === 0) {
-			agendaImportWarning = 'No agenda lines were detected.';
-			return;
-		}
-		agendaImportWarning = '';
-		agendaImportLines = parsed;
-		agendaImportStep = 'correction';
-	}
+	$effect(() => {
+		const source = agendaImportSource.trim();
+		agendaImportLines = source.length > 0 ? parseAgendaImportSource(source) : [];
+	});
 
 	function toggleAgendaImportLine(index: number) {
 		agendaImportLines = agendaImportLines.map((line, currentIndex) =>
@@ -965,8 +957,12 @@
 	}
 
 	function generateAgendaDiff() {
+		if (agendaImportLines.length === 0) {
+			agendaImportWarning = m.agenda_import_error_empty_source();
+			return;
+		}
 		if (buildImportedAgenda(agendaImportLines).length === 0) {
-			agendaImportWarning = 'No agenda headings are selected for import.';
+			agendaImportWarning = m.agenda_import_error_no_headings_after_correction();
 			return;
 		}
 		agendaImportWarning = '';
@@ -1547,7 +1543,7 @@
 												bind:this={agendaImportDialogEl}
 												onclose={() => {
 													agendaImportOpen = false;
-													agendaImportStep = 'source';
+													agendaImportStep = 'input';
 													agendaImportWarning = '';
 												}}
 											>
@@ -1563,63 +1559,46 @@
 														<div class="space-y-4" data-agenda-import-flow data-agenda-import-step={agendaImportCurrentStep().toString()}>
 															<ul class="steps steps-horizontal w-full">
 																<li class={agendaImportCurrentStep() >= 1 ? 'step step-primary' : 'step'} data-agenda-import-step-item="1">{m.agenda_import_step_source()}</li>
-																<li class={agendaImportCurrentStep() >= 2 ? 'step step-primary' : 'step'} data-agenda-import-step-item="2">{m.agenda_import_step_correction()}</li>
-																<li class={agendaImportCurrentStep() >= 3 ? 'step step-primary' : 'step'} data-agenda-import-step-item="3">{m.agenda_import_step_diff()}</li>
+																<li class={agendaImportCurrentStep() >= 2 ? 'step step-primary' : 'step'} data-agenda-import-step-item="2">{m.agenda_import_step_diff()}</li>
 															</ul>
-															{#if agendaImportCurrentStep() === 1}
-																<div data-agenda-import-panel="1" class="">
-																	<form class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
-																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">{m.agenda_import_source_label()}</label>
-																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder={m.agenda_import_source_placeholder()} bind:value={agendaImportSource}></textarea>
-																		<div class="flex flex-wrap items-center gap-2">
+															{#if agendaImportStep === 'input'}
+																<div data-agenda-import-panel="1">
+																	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+																		<div class="space-y-3">
+																			<label class="label p-0 text-sm font-medium" for="agenda-import-source">{m.agenda_import_source_label()}</label>
+																			<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered h-64 w-full" placeholder={m.agenda_import_source_placeholder()} bind:value={agendaImportSource}></textarea>
 																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
-																			<button type="submit" class="btn btn-sm btn-outline">{m.agenda_import_extract_button()}</button>
 																		</div>
-																	</form>
-																</div>
-															{:else}
-																<div data-agenda-import-panel="1" class="hidden">
-																	<form class="space-y-3" onsubmit={async (event) => { event.preventDefault(); await extractAgendaImport(); }}>
-																		<label class="label p-0 text-sm font-medium" for="agenda-import-source">Source text</label>
-																		<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered min-h-40 w-full" placeholder="Paste markdown or plaintext agenda here." bind:value={agendaImportSource}></textarea>
-																		<div class="flex flex-wrap items-center gap-2">
-																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
-																			<button type="submit" class="btn btn-sm btn-outline">Extract Agenda</button>
+																		<div class="space-y-2">
+																			<h4 class="text-sm font-medium">{m.agenda_import_correction_heading()}</h4>
+																			<p class="text-xs text-base-content/70">{m.agenda_import_correction_hint()}</p>
+																			{#if agendaImportLines.length > 0}
+																				<div class="max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
+																					<ul class="space-y-1" data-agenda-import-lines>
+																						{#each agendaImportLines as line, index}
+																							<li>
+																								<button type="button" class={line.state === 'heading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-primary/30 bg-primary/10' : line.state === 'subheading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-info/30 bg-info/10' : 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-base-300 bg-base-100 opacity-60'} data-import-line-row data-state={line.state} onclick={() => toggleAgendaImportLine(index)}>
+																									<span class="w-20 shrink-0 text-xs font-medium tabular-nums text-base-content/60" data-import-line-prefix>{importPrefix(agendaImportLines, index)}</span>
+																									<span class="min-w-0 flex-1 truncate text-sm" title={line.text}>{line.text}</span>
+																								</button>
+																							</li>
+																						{/each}
+																					</ul>
+																				</div>
+																			{:else}
+																				<div class="flex h-32 items-center justify-center rounded-box border border-dashed border-base-300 text-sm text-base-content/40">
+																					{m.agenda_import_source_placeholder()}
+																				</div>
+																			{/if}
 																		</div>
-																	</form>
-																</div>
-															{/if}
-															{#if agendaImportLines.length > 0}
-																<div data-agenda-import-panel="2" class={agendaImportCurrentStep() === 2 ? '' : 'hidden'}>
-																	<form id="agenda-import-correction-form" class="space-y-3" onsubmit={(event) => { event.preventDefault(); generateAgendaDiff(); }}>
-																		<input type="hidden" name="source_text" value={agendaImportSource} />
-																		<h4 class="text-base font-semibold">{m.agenda_import_correction_heading()}</h4>
-																		<p class="text-sm text-base-content/70">{m.agenda_import_correction_hint()}</p>
-																		<div class="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
-																			<ul class="space-y-2" data-agenda-import-lines>
-																				{#each agendaImportLines as line, index}
-																					<li>
-																						<input type="hidden" name="line_no" value={line.lineNo.toString()} />
-																						<input type="hidden" name="line_text" value={line.text} />
-																						<input type="hidden" name="line_detected_state" value={line.state} />
-																						<input type="hidden" name="line_state" value={line.state} data-import-line-state />
-																						<button type="button" class={line.state === 'heading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-primary/30 bg-primary/10' : line.state === 'subheading' ? 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-info/30 bg-info/10' : 'flex w-full items-center gap-3 rounded-box border px-3 py-2 text-left transition-colors border-base-300 bg-base-100 opacity-60'} data-import-line-row data-state={line.state} onclick={() => toggleAgendaImportLine(index)}>
-																							<span class="w-24 shrink-0 text-xs font-medium tabular-nums text-base-content/60" data-import-line-prefix>{importPrefix(agendaImportLines, index)}</span>
-																							<span class="min-w-0 flex-1 truncate text-sm" title={line.text}>{line.text}</span>
-																						</button>
-																					</li>
-																				{/each}
-																			</ul>
-																		</div>
-																		<div class="flex flex-wrap gap-2">
-																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'source')}>{m.agenda_import_back_button()}</button>
-																			<button type="submit" class="btn btn-sm">{m.agenda_import_generate_diff_button()}</button>
-																		</div>
-																	</form>
+																	</div>
+																	<div class="mt-4 flex flex-wrap gap-2">
+																		<button type="button" class="btn btn-sm" onclick={generateAgendaDiff}>{m.agenda_import_generate_diff_button()}</button>
+																	</div>
 																</div>
 															{/if}
 															{#if agendaImportStep === 'diff' && buildImportedAgenda(agendaImportLines).length > 0}
-																<div data-agenda-import-panel="3" class={agendaImportCurrentStep() === 3 ? '' : 'hidden'}>
+																<div data-agenda-import-panel="2">
 																	<div class="space-y-3">
 																		<h4 class="text-base font-semibold">{m.agenda_import_diff_heading()}</h4>
 																		<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-2">
@@ -1657,7 +1636,7 @@
 																		</div>
 																		<div class="alert alert-warning text-sm">{m.agenda_import_destructive_warning()}</div>
 																		<div class="flex flex-wrap gap-2">
-																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="2" onclick={() => (agendaImportStep = 'correction')}>{m.agenda_import_back_button()}</button>
+																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'input')}>{m.agenda_import_back_button()}</button>
 																			<form class="inline-flex" onsubmit={(event) => { event.preventDefault(); void applyAgendaImport(); }}>
 																				<button type="submit" class="btn btn-sm btn-primary" disabled={agendaImportBusy}>{m.agenda_import_accept_button()}</button>
 																			</form>
