@@ -81,9 +81,26 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 
 ---
 
+### 3.5 VotesPanelSection component — DONE
+- **Component**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/VotesPanelSection.svelte` (co-located)
+- **Applied to**: `moderate/+page.svelte` tools-tab votes panel
+- **Pattern extracted**: Full votes panel — create-vote accordion form + VoteCard list, all vote state (`voteActionPending`, `createVoteDetailsOpen`, `voteAccordionOpen`, `draftVoteEditorOpen`), all vote functions
+- **Props**: `votesPanel`, `votesLoading`, `votesError`, `attendees`, `slug`, `meetingId`, `onError`, `onNotice`
+- **Side effects**: Removed 20+ dead/relocated vote functions and bound-state variables from parent; `syncVotePanelOpenState` replaced by `$effect` inside component
+
+### 3.6 SpeakersSection component — DONE
+- **Component**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/SpeakersSection.svelte` (co-located)
+- **Applied to**: `moderate/+page.svelte` right column (`#moderate-speakers-card` + `#moderate-attendees-card`)
+- **Pattern extracted**: Full right column — speaker list with timer/badges/controls, add-speaker search panel with candidates; all speaker state (`speakerActionPending`, `speakingSinceMs`, `nowMs`, `speakerSearch`, `searchInput`) and all speaker functions
+- **Props**: `speakers`, `attendees`, `hasActivePoint`, `slug`, `meetingId`, `onError`
+- **Side effects**: Clock `$effect` and `syncSpeakingSince` moved inside component; removed `speakerActionPending` and all speaker functions from parent
+- **Line count**: 1520 → 644 (−876 lines)
+
+---
+
 ## What Remains
 
-The moderate page is now 1520 lines. The `join/+page.svelte` (211 lines) has no card/panel sections worth extracting. No further component extraction is warranted without deeper architectural changes.
+The moderate page is now 644 lines. The `join/+page.svelte` (211 lines) has no card/panel sections worth extracting. No further component extraction is warranted without deeper architectural changes.
 
 ---
 
@@ -118,6 +135,8 @@ The moderate page is now 1520 lines. The `join/+page.svelte` (211 lines) has no 
 | VoteCard | `ui/VoteCard.svelte` | Phase 3 |
 | AgendaPointCard | `ui/AgendaPointCard.svelte` | Phase 3 |
 | AgendaSection | `moderate/AgendaSection.svelte` | Phase 3 (co-located) |
+| VotesPanelSection | `moderate/VotesPanelSection.svelte` | Phase 3 (co-located) |
+| SpeakersSection | `moderate/SpeakersSection.svelte` | Phase 3 (co-located) |
 
 ---
 
