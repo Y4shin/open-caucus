@@ -50,6 +50,13 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 
 ## Phase 3: Moderate page domain components
 
+### 3.2 VoteCard component — DONE
+- **Component**: `web/src/lib/components/ui/VoteCard.svelte`
+- **Applied to**: `moderate/+page.svelte` votes panel (lines ~1832–2064 collapsed to `<VoteCard>`)
+- **Pattern extracted**: Full per-vote accordion — header badges, options list, live tally, draft editor, open/close/archive actions, manual open-ballot form, manual secret-ballot form, final tallies
+- **Props**: `vote`, `open`, `draftEditorOpen`, `attendees`, `onToggle`, `onDraftEditorToggle`, `onOpenVote`, `onCloseVote`, `onArchiveVote`, `onUpdateDraft`, `onCountOpenBallot`, `onRegisterCast`, `onCountSecretBallot`
+- **Side effect**: Removed now-unused pure functions from parent (`voteStateLabel`, `voteVisibilityLabel`, `voteBoundsLabel`, `voteLabelsForEdit`, `voteStatsFor`, `voteTalliesFor`, `voteOutstandingCount`, `voteShouldShowTallies`, `emptyVoteStats`)
+
 ### 3.1 AttendeeRow component — DONE
 - **Component**: `web/src/lib/components/ui/AttendeeRow.svelte`
 - **Applied to**: `moderate/+page.svelte` attendee list (lines ~2113–2171 collapsed to `<AttendeeRow>`)
@@ -60,9 +67,8 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 
 ## What Remains (further ideas)
 
-The moderate page is still ~2570 lines. Further opportunities if a future agent wants to continue:
-- Extract the **AgendaPointList** section (lines ~1450–1650) into a component — complex due to many callbacks (create, move, edit, delete, activate) and the import dialog
-- Extract the **VoteCard** per-vote accordion (lines ~1800–2070) into a component — very complex with many callbacks; would need ~15 props
+The moderate page is now ~2480 lines. Remaining opportunities:
+- Extract the **AgendaPointCard** (the per-point card inside the edit dialog, lines ~1510–1555) into a component — contains move/activate/edit/delete/tools buttons per point
 - The `join/+page.svelte` (211 lines) has no card/panel sections — no AppCard extraction needed there
 
 ---
@@ -95,6 +101,7 @@ The moderate page is still ~2570 lines. Further opportunities if a future agent 
 | SpeakerBadges | `ui/SpeakerBadges.svelte` | Phase 2 |
 | votes utils | `utils/votes.ts` | Phase 2 |
 | AttendeeRow | `ui/AttendeeRow.svelte` | Phase 3 |
+| VoteCard | `ui/VoteCard.svelte` | Phase 3 |
 
 ---
 
