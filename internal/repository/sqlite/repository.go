@@ -2004,32 +2004,95 @@ func (r *Repository) SetSpeakerPriority(ctx context.Context, id int64, priority 
 }
 
 // RecomputeSpeakerOrder recomputes and persists order_position for all WAITING speakers on an agenda point.
-// Sort key: ropm first, then priority DESC, gender_quoted DESC, first_speaker DESC, requested_at ASC.
+//
+// Ordering rules:
+//  1. ROPM (points of order) always come first.
+//  2. Within the same speaker type, priority speakers come first.
+//  3. When gender quotation is enabled, the FLINTA* and non-FLINTA* lists are interleaved
+//     (round-robin) with FLINTA* going first. Within each gender group, first-speaker
+//     quotation gives priority, then by request time.
+//  4. When gender quotation is disabled, all speakers are sorted together by first-speaker
+//     quotation, then by request time.
 func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID int64) error {
 	rows, err := r.Queries.GetWaitingSpeakersForAgendaPoint(ctx, agendaPointID)
 	if err != nil {
 		return fmt.Errorf("recompute speaker order fetch: %w", err)
 	}
 
-	sort.Slice(rows, func(i, j int) bool {
-		a, b := rows[i], rows[j]
-		aRopm, bRopm := a.Type == "ropm", b.Type == "ropm"
-		if aRopm != bRopm {
-			return aRopm
+	// Determine effective gender quotation setting for this agenda point.
+	genderQuotationEnabled := true // default
+	ap, err := r.Queries.GetAgendaPointByID(ctx, agendaPointID)
+	if err == nil {
+		if ap.GenderQuotationEnabled.Valid {
+			genderQuotationEnabled = ap.GenderQuotationEnabled.Bool
+		} else {
+			meeting, mErr := r.Queries.GetMeetingByID(ctx, ap.MeetingID)
+			if mErr == nil {
+				genderQuotationEnabled = meeting.GenderQuotationEnabled
+			}
 		}
+	}
+
+	// withinGroupLess sorts speakers within a gender group:
+	// priority DESC, first_speaker DESC, requested_at ASC.
+	withinGroupLess := func(a, b client.SpeakersList) bool {
 		if a.Priority != b.Priority {
 			return a.Priority
-		}
-		if a.GenderQuoted != b.GenderQuoted {
-			return a.GenderQuoted
 		}
 		if a.FirstSpeaker != b.FirstSpeaker {
 			return a.FirstSpeaker
 		}
 		return a.RequestedAt < b.RequestedAt
-	})
+	}
 
-	for i, row := range rows {
+	// Separate ROPM from regular speakers.
+	var ropm, regular []client.SpeakersList
+	for _, row := range rows {
+		if row.Type == "ropm" {
+			ropm = append(ropm, row)
+		} else {
+			regular = append(regular, row)
+		}
+	}
+
+	// Sort ROPM speakers (no gender interleaving, just priority + first-speaker + time).
+	sort.Slice(ropm, func(i, j int) bool { return withinGroupLess(ropm[i], ropm[j]) })
+
+	// Sort regular speakers with gender interleaving when enabled.
+	var orderedRegular []client.SpeakersList
+	if genderQuotationEnabled {
+		var quoted, nonQuoted []client.SpeakersList
+		for _, row := range regular {
+			if row.GenderQuoted {
+				quoted = append(quoted, row)
+			} else {
+				nonQuoted = append(nonQuoted, row)
+			}
+		}
+		sort.Slice(quoted, func(i, j int) bool { return withinGroupLess(quoted[i], quoted[j]) })
+		sort.Slice(nonQuoted, func(i, j int) bool { return withinGroupLess(nonQuoted[i], nonQuoted[j]) })
+
+		// Interleave: FLINTA* first, then non-FLINTA*, alternating.
+		qi, ni := 0, 0
+		for qi < len(quoted) || ni < len(nonQuoted) {
+			if qi < len(quoted) {
+				orderedRegular = append(orderedRegular, quoted[qi])
+				qi++
+			}
+			if ni < len(nonQuoted) {
+				orderedRegular = append(orderedRegular, nonQuoted[ni])
+				ni++
+			}
+		}
+	} else {
+		orderedRegular = regular
+		sort.Slice(orderedRegular, func(i, j int) bool { return withinGroupLess(orderedRegular[i], orderedRegular[j]) })
+	}
+
+	// Combine: ROPM first, then interleaved regular.
+	ordered := append(ropm, orderedRegular...)
+
+	for i, row := range ordered {
 		if err := r.Queries.SetSpeakerOrderPosition(ctx, client.SetSpeakerOrderPositionParams{
 			ID:            row.ID,
 			OrderPosition: int64(i + 1),

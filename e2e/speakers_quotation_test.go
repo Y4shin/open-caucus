@@ -97,28 +97,35 @@ func seedSpeakerOrderingScenario(t *testing.T, withActiveSpeaker bool) (*testSer
 		time.Sleep(5 * time.Millisecond)
 	}
 
-	waitingNames := []string{
-		"Waiting PO Priority",
-		"Waiting PO Plain",
-		"Waiting Regular Priority",
-		"Waiting Regular Quoted",
-		"Waiting Regular First",
-		"Waiting Regular Plain",
-	}
-	addSpeaker(waitingNames[0], "ropm", true, false, true)
+	// Add waiting speakers in an arbitrary order; RecomputeSpeakerOrder
+	// will sort them according to the interleaving rules.
+	addSpeaker("Waiting PO Priority", "ropm", true, false, true)
 	time.Sleep(5 * time.Millisecond)
-	addSpeaker(waitingNames[1], "ropm", false, false, false)
+	addSpeaker("Waiting PO Plain", "ropm", false, false, false)
 	time.Sleep(5 * time.Millisecond)
-	addSpeaker(waitingNames[2], "regular", false, false, true)
+	addSpeaker("Waiting Regular Priority", "regular", false, false, true)
 	time.Sleep(5 * time.Millisecond)
-	addSpeaker(waitingNames[3], "regular", true, false, false)
+	addSpeaker("Waiting Regular Quoted", "regular", true, false, false)
 	time.Sleep(5 * time.Millisecond)
-	addSpeaker(waitingNames[4], "regular", false, true, false)
+	addSpeaker("Waiting Regular First", "regular", false, true, false)
 	time.Sleep(5 * time.Millisecond)
-	addSpeaker(waitingNames[5], "regular", false, false, false)
+	addSpeaker("Waiting Regular Plain", "regular", false, false, false)
 
 	if err := ts.repo.RecomputeSpeakerOrder(context.Background(), apIDInt); err != nil {
 		t.Fatalf("recompute speaker order: %v", err)
+	}
+
+	// Expected order after interleaving:
+	//   1. ROPM: priority first, then by time
+	//   2. Regular: FLINTA* and non-FLINTA* interleaved (FLINTA* first),
+	//      within each gender group sorted by priority, first-speaker, time
+	waitingNames := []string{
+		"Waiting PO Priority",      // ropm, priority
+		"Waiting PO Plain",         // ropm, plain
+		"Waiting Regular Quoted",   // regular, FLINTA* (interleave slot 1)
+		"Waiting Regular Priority", // regular, non-FLINTA* (interleave slot 1), priority
+		"Waiting Regular First",    // regular, non-FLINTA* (interleave slot 2), first speaker
+		"Waiting Regular Plain",    // regular, non-FLINTA* (interleave slot 3)
 	}
 
 	expected := append([]string{}, doneNames...)

@@ -374,9 +374,16 @@
 		selectedOptionIds = [...selectedOptionIds, optionId];
 	}
 
+	function isSelectionCountValid(vote: LiveVoteCardView): boolean {
+		const min = Number(vote.vote?.minSelections ?? 0n);
+		const max = Number(vote.vote?.maxSelections ?? 0n);
+		const count = selectedOptionIds.length;
+		return count >= min && count <= max;
+	}
+
 	async function submitBallot(vote: LiveVoteCardView) {
 		const voteRecord = vote.vote;
-		if (!voteRecord || selectedOptionIds.length === 0 || submittingVote) return;
+		if (!voteRecord || submittingVote || !isSelectionCountValid(vote)) return;
 
 		submittingVote = true;
 		actionError = '';
@@ -811,10 +818,15 @@
 															</label>
 														{/each}
 													</div>
+													{#if Number(vote.vote?.minSelections ?? 0n) !== Number(vote.vote?.maxSelections ?? 0n)}
+														<p class="text-xs text-base-content/60">{m.votes_select_between({ min: Number(vote.vote?.minSelections ?? 0n), max: Number(vote.vote?.maxSelections ?? 0n) })}</p>
+													{:else if Number(vote.vote?.minSelections ?? 0n) > 1}
+														<p class="text-xs text-base-content/60">{m.votes_select_exactly({ count: Number(vote.vote?.minSelections ?? 0n) })}</p>
+													{/if}
 													<button
 														type="button"
 														class="btn btn-sm btn-primary"
-														disabled={!vote.isEligible || submittingVote}
+														disabled={!vote.isEligible || submittingVote || !isSelectionCountValid(vote)}
 														onclick={() => {
 															void submitBallot(vote);
 														}}

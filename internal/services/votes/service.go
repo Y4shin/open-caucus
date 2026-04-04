@@ -448,6 +448,14 @@ func (s *Service) SubmitBallot(ctx context.Context, committeeSlug, meetingIDStr,
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid option id")
 	}
 
+	numSelected := int64(len(selectedOptionIDs))
+	if numSelected < vote.MinSelections {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("too few selections: got %d, minimum is %d", numSelected, vote.MinSelections))
+	}
+	if numSelected > vote.MaxSelections {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("too many selections: got %d, maximum is %d", numSelected, vote.MaxSelections))
+	}
+
 	attendeeID, err := s.resolveAttendeeForBallot(ctx, meetingID, onBehalfOfIDStr)
 	if err != nil {
 		return nil, err
@@ -764,6 +772,17 @@ func (s *Service) CountSecretBallot(ctx context.Context, committeeSlug, meetingI
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid option id")
 	}
+	vote, err := s.repo.GetVoteDefinitionByID(ctx, voteID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "vote not found")
+	}
+	numSelected := int64(len(optionIDs))
+	if numSelected < vote.MinSelections {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("too few selections: got %d, minimum is %d", numSelected, vote.MinSelections))
+	}
+	if numSelected > vote.MaxSelections {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("too many selections: got %d, maximum is %d", numSelected, vote.MaxSelections))
+	}
 	if receiptToken == "" {
 		receiptToken, _ = generateReceiptToken()
 	}
@@ -806,6 +825,17 @@ func (s *Service) CountOpenBallot(ctx context.Context, committeeSlug, meetingIDS
 	optionIDs, err := parseIDList(selectedOptionIDStrs)
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid option id")
+	}
+	vote, err := s.repo.GetVoteDefinitionByID(ctx, voteID)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindNotFound, "vote not found")
+	}
+	numSelected := int64(len(optionIDs))
+	if numSelected < vote.MinSelections {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("too few selections: got %d, minimum is %d", numSelected, vote.MinSelections))
+	}
+	if numSelected > vote.MaxSelections {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("too many selections: got %d, maximum is %d", numSelected, vote.MaxSelections))
 	}
 	receiptToken, _ := generateReceiptToken()
 	if _, err := s.repo.SubmitOpenBallot(ctx, repository.OpenBallotSubmission{

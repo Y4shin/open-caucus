@@ -1,150 +1,60 @@
-# Frontend Component Refactoring Progress
-
-## Goal
-
-Extract reusable Svelte components from large, inline-heavy pages to reduce duplication and improve maintainability. All changes must pass E2E tests.
+# Bug Fixes & Improvements Progress
 
 ## Status: In Progress
 
 ---
 
-## Completed
+## Bugs
 
-*(none yet)*
+### 1. Login page card extends to bottom — DONE
+- **File**: `web/src/routes/login/+page.svelte`
+- **Fix**: Replaced `h-full` with `min-h-full` and `align-center` (invalid) with `items-center` for proper vertical centering. Moved error alert inside the fieldset for consistency.
 
----
+### 2. Admin login page styling & back button — DONE
+- **Files**: `web/src/routes/admin/login/+page.svelte`, `web/messages/en.json`, `web/messages/de.json`
+- **Fix**: Wrapped admin login form in matching fieldset/legend card styling. Added "Back to Login" button. Added `admin_login_legend` and `admin_login_back_button` i18n keys.
 
-## Phase 1: Cross-page UI primitives
+### 3. Moderate attendee row layout — DONE
+- **File**: `web/src/lib/components/ui/AttendeeRow.svelte`
+- **Fix**: Moved Chair/FLINTA* toggles from a separate row below buttons into the same inline flex row (hidden on small screens). Changed toggles to `toggle-xs` for compact layout.
 
-### 1.1 PaginationNav — DONE
-- **Component**: `web/src/lib/components/ui/PaginationNav.svelte`
-- **Applied to**: `admin/+page.svelte`, `admin/accounts/+page.svelte`, `admin/committee/[slug]/+page.svelte`, `committee/[committee]/+page.svelte`
-- **Pattern extracted**: The static disabled pagination control (prev / 1 / next) was copy-pasted verbatim across 4 files.
+### 4. QR code SVG icon malformed — DONE
+- **File**: `web/src/lib/components/ui/LegacyIcon.svelte`
+- **Fix**: Replaced the broken QR code SVG path with a cleaner Material Symbols variant that renders the three finder patterns and data modules correctly.
 
-### 1.2 DataTable — DONE
-- **Component**: `web/src/lib/components/ui/DataTable.svelte`
-- **Applied to**: `admin/+page.svelte`, `admin/accounts/+page.svelte`, `admin/committee/[slug]/+page.svelte`
-- **Pattern extracted**: `<table class="data-table table table-zebra w-full">` with `header` and `body` Svelte 5 snippets.
+### 5. Past speakers don't show speaking time — DONE
+- **File**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/SpeakersSection.svelte`
+- **Fix**: Replaced `doneDisplayNumber()` (position index) with `formatDuration(speaker.durationSeconds)` to show mm:ss speaking time for DONE speakers.
 
-### 1.3 AppCard adoption in admin pages — DONE
-- **Component**: `web/src/lib/components/ui/AppCard.svelte` (already existed, was unused)
-- **Applied to**: `admin/+page.svelte`, `admin/accounts/+page.svelte`, `admin/committee/[slug]/+page.svelte`
-- **Pattern extracted**: Inline `<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">` replaced with `<AppCard>`.
+### 6. Help page dark mode images not switching — DONE
+- **File**: `web/src/routes/+layout.svelte`
+- **Fix**: `applyTheme()` now writes a `conference-tool-theme` cookie (`light`/`dark`) alongside localStorage. The backend already reads this cookie in `VariantFromRequest()` to resolve image variants, but the frontend was never setting it.
 
----
+### 7. Speaker search adds wrong participant — DONE
+- **File**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/SpeakersSection.svelte`
+- **Fix**: `handleSpeakerSearchEnter()` now reads the input value directly from `event.target` and recomputes the candidate ranking inline, avoiding stale `bind:value` state that could cause the wrong attendee to be selected.
 
-## Phase 2: Meeting & Moderate pages
+### 8. Speaker ordering — FLINTA* always on top instead of interleaved — DONE
+- **File**: `internal/repository/sqlite/repository.go`
+- **Fix**: Rewrote `RecomputeSpeakerOrder()` to look up the effective gender quotation setting and, when enabled, interleave FLINTA* and non-FLINTA* speakers in round-robin fashion (FLINTA* first). Within each gender group, speakers are sorted by priority, first-speaker status, then request time. Updated E2E test expectations in `speakers_quotation_test.go`.
 
-### 2.1 SpeakerBadges component — DONE
-- **Component**: `web/src/lib/components/ui/SpeakerBadges.svelte`
-- **Applied to**: `meeting/+page.svelte` (2 occurrences, also fixed a redundant double `{#if}`), `moderate/+page.svelte` (1 occurrence)
-- **Pattern extracted**: The badge row for ROPM, quoted, firstSpeaker, priority, and "you" was copy-pasted verbatim.
-- **Props**: `speakerType`, `quoted`, `firstSpeaker`, `priority`, `mine` (optional, default false)
+### 9. Voting form allows wrong number of choices — DONE
+- **Files**: `internal/services/votes/service.go`, `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte`
+- **Fix**: Added min/max selection count validation to `SubmitBallot()`, `CountOpenBallot()`, and `CountSecretBallot()` on the backend. Frontend submit button is now disabled when selection count is out of range, and selection hints are shown using existing i18n keys.
 
-### 2.2 Vote badge utilities — DONE
-- **Module**: `web/src/lib/utils/votes.ts`
-- **Exports**: `voteStateBadgeClass(state)`, `voteVisibilityBadgeClass(visibility)`
-- **Applied to**: both `meeting/+page.svelte` and `moderate/+page.svelte` — removed local duplicates.
-
----
-
-## Phase 3: Moderate page domain components
-
-### 3.2 VoteCard component — DONE
-- **Component**: `web/src/lib/components/ui/VoteCard.svelte`
-- **Applied to**: `moderate/+page.svelte` votes panel (lines ~1832–2064 collapsed to `<VoteCard>`)
-- **Pattern extracted**: Full per-vote accordion — header badges, options list, live tally, draft editor, open/close/archive actions, manual open-ballot form, manual secret-ballot form, final tallies
-- **Props**: `vote`, `open`, `draftEditorOpen`, `attendees`, `onToggle`, `onDraftEditorToggle`, `onOpenVote`, `onCloseVote`, `onArchiveVote`, `onUpdateDraft`, `onCountOpenBallot`, `onRegisterCast`, `onCountSecretBallot`
-- **Side effect**: Removed now-unused pure functions from parent (`voteStateLabel`, `voteVisibilityLabel`, `voteBoundsLabel`, `voteLabelsForEdit`, `voteStatsFor`, `voteTalliesFor`, `voteOutstandingCount`, `voteShouldShowTallies`, `emptyVoteStats`)
-
-### 3.1 AttendeeRow component — DONE
-- **Component**: `web/src/lib/components/ui/AttendeeRow.svelte`
-- **Applied to**: `moderate/+page.svelte` attendee list (lines ~2113–2171 collapsed to `<AttendeeRow>`)
-- **Pattern extracted**: Full attendee list item with number, name, badges, recovery link, remove button, chair toggle, FLINTA toggle
-- **Props**: `attendee: AttendeeRecord`, `attendeeActionPending: string`, `onRemove`, `onToggleChair`, `onToggleQuoted`, `recoveryURL`
+### 10. GOPATH issue in nix flake — DONE
+- **File**: `flake.nix`
+- **Fix**: Added `export GOPATH` to shellHook to override the broken relative `GOPATH=go` from `~/.config/go/env` (managed by home-manager).
 
 ---
 
-### 3.3 AgendaPointCard component — DONE
-- **Component**: `web/src/lib/components/ui/AgendaPointCard.svelte`
-- **Applied to**: `moderate/+page.svelte` agenda edit dialog point list
-- **Pattern extracted**: Per-point card with number badge, title, active/child badges, move-up/down/activate/edit/delete/tools actions, inline edit form
-- **Props**: `point`, `isEditing`, `editTitle` (bindable), `canMoveUp`, `canMoveDown`, `slug`, `meetingId`, `isBusy`, `onSave`, `onCancelEdit`, `onMoveUp`, `onMoveDown`, `onActivate`, `onStartEdit`, `onDelete`
+## Features (from IMPROVEMENTS.md)
 
-### 3.4 AgendaSection component — DONE
-- **Component**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/AgendaSection.svelte` (co-located, not in ui/)
-- **Applied to**: `moderate/+page.svelte` left-panel agenda tab (replaced ~712 lines)
-- **Pattern extracted**: Full agenda left panel — compact sidebar list, agenda edit dialog (add-point form + AgendaPointCard list), agenda import dialog (2-step: input/preview + diff table). All 23 agenda-specific state variables, 2 `$derived` values, and 25 functions moved inside the component.
-- **Props**: `agendaPoints: AgendaPointRecord[]`, `slug`, `meetingId`, `anyDialogOpen` (bindable — used by parent auto-refresh interval), `onError`, `onReload`, `onSetActivePoint`
-- **Side effects**: Removed `runAgendaAction` from parent; replaced `agendaEditOpen || agendaImportOpen` interval guard with `bind:anyDialogOpen={agendaAnyDialogOpen}`. Component directly imports and calls `agendaClient`.
-- **Line count**: 2232 → 1520 (−712 lines)
+*(not yet started)*
 
----
-
-### 3.5 VotesPanelSection component — DONE
-- **Component**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/VotesPanelSection.svelte` (co-located)
-- **Applied to**: `moderate/+page.svelte` tools-tab votes panel
-- **Pattern extracted**: Full votes panel — create-vote accordion form + VoteCard list, all vote state (`voteActionPending`, `createVoteDetailsOpen`, `voteAccordionOpen`, `draftVoteEditorOpen`), all vote functions
-- **Props**: `votesPanel`, `votesLoading`, `votesError`, `attendees`, `slug`, `meetingId`, `onError`, `onNotice`
-- **Side effects**: Removed 20+ dead/relocated vote functions and bound-state variables from parent; `syncVotePanelOpenState` replaced by `$effect` inside component
-
-### 3.6 SpeakersSection component — DONE
-- **Component**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/SpeakersSection.svelte` (co-located)
-- **Applied to**: `moderate/+page.svelte` right column (`#moderate-speakers-card` + `#moderate-attendees-card`)
-- **Pattern extracted**: Full right column — speaker list with timer/badges/controls, add-speaker search panel with candidates; all speaker state (`speakerActionPending`, `speakingSinceMs`, `nowMs`, `speakerSearch`, `searchInput`) and all speaker functions
-- **Props**: `speakers`, `attendees`, `hasActivePoint`, `slug`, `meetingId`, `onError`
-- **Side effects**: Clock `$effect` and `syncSpeakingSince` moved inside component; removed `speakerActionPending` and all speaker functions from parent
-- **Line count**: 1520 → 644 (−876 lines)
-
----
-
-## What Remains
-
-The moderate page is now 644 lines. The `join/+page.svelte` (211 lines) has no card/panel sections worth extracting. No further component extraction is warranted without deeper architectural changes.
-
----
-
-## File Line Counts (before refactoring)
-
-| File | Lines |
-|------|-------|
-| moderate/+page.svelte | 2614 |
-| meeting/+page.svelte | 906 |
-| admin/committee/[slug]/+page.svelte | 375 |
-| committee/[committee]/+page.svelte | 302 |
-| admin/+page.svelte | 190 |
-| admin/accounts/+page.svelte | 186 |
-| join/+page.svelte | 211 |
-| agenda-point/tools/+page.svelte | 248 |
-
----
-
-## Components Inventory
-
-| Component | File | Status |
-|-----------|------|--------|
-| AppAlert | `ui/AppAlert.svelte` | Pre-existing |
-| AppCard | `ui/AppCard.svelte` | Pre-existing, now used |
-| AppSpinner | `ui/AppSpinner.svelte` | Pre-existing |
-| LegacyIcon | `ui/LegacyIcon.svelte` | Pre-existing |
-| PaginationNav | `ui/PaginationNav.svelte` | Phase 1 |
-| DataTable | `ui/DataTable.svelte` | Phase 1 |
-| SpeakerBadges | `ui/SpeakerBadges.svelte` | Phase 2 |
-| votes utils | `utils/votes.ts` | Phase 2 |
-| AttendeeRow | `ui/AttendeeRow.svelte` | Phase 3 |
-| VoteCard | `ui/VoteCard.svelte` | Phase 3 |
-| AgendaPointCard | `ui/AgendaPointCard.svelte` | Phase 3 |
-| AgendaSection | `moderate/AgendaSection.svelte` | Phase 3 (co-located) |
-| VotesPanelSection | `moderate/VotesPanelSection.svelte` | Phase 3 (co-located) |
-| SpeakersSection | `moderate/SpeakersSection.svelte` | Phase 3 (co-located) |
-
----
-
-## Notes for Next Agent
-
-- The project uses **Svelte 5** (snippets replace slots — use `{#snippet name()}...{/snippet}` and `{@render name()}`)
-- The project uses **DaisyUI** + Tailwind for styling
-- All user-facing text uses **Paraglide** i18n via `import * as m from '$lib/paraglide/messages'`
-- Run e2e tests with `task test:e2e` (requires Playwright browsers via `task playwright:install`)
-- Commit regularly with descriptive messages
-- AppCard accepts `title?: string` and `class?: string` props; the admin pages need `class="mb-4 bg-base-100 shadow-sm"` to get the right look
+- New Meeting Wizard
+- QR Codes as Dialogs
+- Receipts show actual voting behaviour
+- Receipts in the meeting view page
+- Record when agenda points are entered and left
+- Admin pages layout cleanup

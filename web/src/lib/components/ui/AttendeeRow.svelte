@@ -21,7 +21,7 @@
 </script>
 
 <li class="list-row grid-cols-1 items-center gap-3" data-testid="manage-attendee-card">
-	<div class="col-span-full w-full min-w-0 space-y-2">
+	<div class="col-span-full w-full min-w-0">
 		<div class="flex min-w-0 items-center gap-2">
 			<div class="w-12 shrink-0 text-base-content/70">#{attendee.attendeeNumber.toString()}</div>
 			<div class="min-w-0 flex-1 overflow-x-hidden">
@@ -44,8 +44,20 @@
 					</div>
 				{/if}
 			</div>
-			<div class="ml-auto shrink-0 self-center">
-				<div class="join sm:join-vertical">
+			<div class="flex shrink-0 items-center gap-3">
+				<div class="hidden flex-col gap-1 sm:flex">
+					<label class="label cursor-pointer justify-start gap-2 p-0">
+						<input class={attendee.isChair ? 'toggle toggle-xs toggle-primary' : 'toggle toggle-xs'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await onToggleChair(attendee); }} />
+						<span class="text-xs leading-none">{m.meeting_live_chair()}</span>
+					</label>
+					{#if attendee.isGuest}
+						<label class="label cursor-pointer justify-start gap-2 p-0">
+							<input class={attendee.quoted ? 'toggle toggle-xs toggle-info' : 'toggle toggle-xs'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await onToggleQuoted(attendee); }} />
+							<span class="text-xs leading-none">{m.meeting_join_quoted_label()}</span>
+						</label>
+					{/if}
+				</div>
+				<div class="join join-vertical">
 					{#if attendee.isGuest}
 						<a href={recoveryURL(attendee.attendeeId)} class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link"><LegacyIcon name="history" class="h-4 w-4" /></a>
 					{/if}
@@ -54,24 +66,6 @@
 					</form>
 				</div>
 			</div>
-		</div>
-		<div class="flex items-center justify-between gap-3">
-			<form class="inline-flex">
-				<label class="label cursor-pointer justify-start gap-2 p-0">
-					<input class={attendee.isChair ? 'toggle toggle-sm toggle-primary' : 'toggle toggle-sm'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await onToggleChair(attendee); }} />
-					<span class="text-xs leading-none">{m.meeting_live_chair()}</span>
-				</label>
-			</form>
-			{#if attendee.isGuest}
-				<form class="inline-flex">
-					<label class="label cursor-pointer justify-start gap-2 p-0">
-						<input class={attendee.quoted ? 'toggle toggle-sm toggle-info' : 'toggle toggle-sm'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await onToggleQuoted(attendee); }} />
-						<span class="text-xs leading-none">{m.meeting_join_quoted_label()}</span>
-					</label>
-				</form>
-			{:else}
-				<div class="inline-flex items-center text-xs leading-none text-base-content/50">{m.meeting_moderate_flinta_unavailable()}</div>
-			{/if}
 		</div>
 	</div>
 </li>

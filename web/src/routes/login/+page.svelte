@@ -33,13 +33,14 @@
 	}
 </script>
 
-{#if errorMsg}
-	<AppAlert message={errorMsg} />
-{/if}
-
-<div class="w-full h-full flex justify-center align-center">
+<div class="flex min-h-full items-center justify-center">
 	<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4 gap-2">
 		<legend class="fieldset-legend">{m.login_legend()}</legend>
+
+		{#if errorMsg}
+			<AppAlert message={errorMsg} />
+		{/if}
+
 		{#if session.passwordEnabled}
 			<form method="POST" action="/login" class="flex flex-col gap-2" onsubmit={handleLogin}>
 				<label class="label" for="username">{m.login_username_label()}</label>

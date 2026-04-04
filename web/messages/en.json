@@ -30,6 +30,8 @@
 	"login_button": "Login",
 	"login_oauth_button": "Login with OAuth",
 	"admin_login_title": "Admin Login",
+	"admin_login_legend": "Admin Login",
+	"admin_login_back_button": "Back to Login",
 	"admin_login_username_label": "Username:",
 	"admin_login_password_label": "Password:",
 	"admin_login_button": "Login",

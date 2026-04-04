@@ -111,6 +111,7 @@
           #export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
           #export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"
           shellHook = ''
+            export GOPATH="''${GOPATH:-$HOME/go}"
             export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
             export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
             export PLAYWRIGHT_DRIVER_PATH="${pkgs.playwright-driver}"

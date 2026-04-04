@@ -89,15 +89,18 @@
 		} catch {
 			// Ignore storage failures.
 		}
+		let resolvedTheme: 'light' | 'dark';
 		if (preference === 'dark') {
 			document.documentElement.setAttribute('data-theme', 'dark');
-			return;
-		}
-		if (preference === 'light') {
+			resolvedTheme = 'dark';
+		} else if (preference === 'light') {
 			document.documentElement.setAttribute('data-theme', 'corporate');
-			return;
+			resolvedTheme = 'light';
+		} else {
+			document.documentElement.removeAttribute('data-theme');
+			resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 		}
-		document.documentElement.removeAttribute('data-theme');
+		document.cookie = `conference-tool-theme=${resolvedTheme};path=/;max-age=31536000;SameSite=Lax`;
 	}
 
 	async function logout(event: Event) {

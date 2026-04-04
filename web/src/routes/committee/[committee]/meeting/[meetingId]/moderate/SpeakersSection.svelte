@@ -81,15 +81,11 @@
 		return 0;
 	}
 
-	function doneDisplayNumber(speakerId: string) {
-		let position = 0;
-		for (const s of speakers ?? []) {
-			if (s.state === 'DONE') {
-				position++;
-				if (s.speakerId === speakerId) return position;
-			}
-		}
-		return 0;
+	function formatDuration(seconds: number | bigint) {
+		const total = Math.max(0, Number(seconds));
+		const mins = Math.floor(total / 60);
+		const secs = total % 60;
+		return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 	}
 
 	function formatElapsed(totalMs: number) {
@@ -228,7 +224,20 @@
 	async function handleSpeakerSearchEnter(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
 		event.preventDefault();
-		const topCandidate = sortedCandidates()[0];
+		// Read the input value directly to avoid stale bind:value state.
+		const currentQuery = (event.target as HTMLInputElement)?.value ?? speakerSearch;
+		const candidates = [...attendees]
+			.filter((a) => candidateRank(a, currentQuery) < Number.POSITIVE_INFINITY)
+			.sort((left, right) => {
+				const rankDiff = candidateRank(left, currentQuery) - candidateRank(right, currentQuery);
+				if (rankDiff !== 0) return rankDiff;
+				const lengthDiff = left.fullName.length - right.fullName.length;
+				if (lengthDiff !== 0) return lengthDiff;
+				const nameDiff = left.fullName.localeCompare(right.fullName);
+				if (nameDiff !== 0) return nameDiff;
+				return Number(left.attendeeNumber - right.attendeeNumber);
+			});
+		const topCandidate = candidates[0];
 		if (!topCandidate || hasOpenSpeaker(topCandidate.attendeeId, 'regular')) return;
 		await addCandidate(topCandidate.attendeeId, 'regular');
 	}
@@ -342,7 +351,7 @@
 									{:else if speaker.state === 'WAITING'}
 										{waitingDisplayNumber(speaker.speakerId)}
 									{:else if speaker.state === 'DONE'}
-										{doneDisplayNumber(speaker.speakerId)}
+										<span class="font-mono text-xs whitespace-nowrap">{formatDuration(speaker.durationSeconds)}</span>
 									{/if}
 								</div>
 								<div class="list-col-grow min-w-0">
