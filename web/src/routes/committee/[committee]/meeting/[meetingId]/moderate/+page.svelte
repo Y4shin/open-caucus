@@ -21,17 +21,10 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import * as m from '$lib/paraglide/messages';
+	import AgendaImportPreview from './AgendaImportPreview.svelte';
 
-	type AgendaImportState = 'ignore' | 'heading' | 'subheading';
-	type AgendaImportLine = {
-		lineNo: number;
-		text: string;
-		state: AgendaImportState;
-	};
-	type AgendaImportPoint = {
-		title: string;
-		children: string[];
-	};
+	import type { AgendaImportState, AgendaImportLine, AgendaImportPoint, SubDiffOp, TopDiffOp, SubDiffRow, AgendaDiffRow } from './agenda-import.js';
+	import { parseAgendaImportSource, buildImportedAgenda, matchTitlePairs, computeSubDiff, computeAgendaDiff } from './agenda-import.js';
 
 	const slug = $derived(page.params.committee);
 	const meetingId = $derived(page.params.meetingId);
@@ -60,12 +53,27 @@
 	let creatingVote = $state(false);
 	let agendaTitle = $state('');
 	let agendaImportOpen = $state(false);
-	let agendaImportSource = $state('');
-	let agendaImportLines = $state<AgendaImportLine[]>([]);
+	let agendaImportRawText = $state('');
+	let agendaImportLineStates = $state(new Map<number, AgendaImportState>());
+	let agendaImportParsedText = $state('');
+	let agendaImportFormat = $state<'markdown' | 'plaintext'>('plaintext');
+	let agendaImportFormatManuallySet = $state(false);
+	let agendaImportLines = $derived(
+		parseAgendaImportSource(agendaImportParsedText, agendaImportFormat).map((line) => ({
+			...line,
+			state: agendaImportLineStates.get(line.lineNo) ?? line.state
+		}))
+	);
+	let agendaImportDiff = $derived(
+		buildImportedAgenda(agendaImportLines).length > 0
+			? computeAgendaDiff(agendaState.data ?? [], buildImportedAgenda(agendaImportLines))
+			: []
+	);
 	let agendaImportFingerprint = $state('');
 	let agendaImportWarning = $state('');
 	let agendaImportBusy = $state(false);
 	let agendaImportStep = $state<'input' | 'diff'>('input');
+	let agendaDiffHoverId = $state<string | null>(null);
 	let moderateSettingsTab = $state<'meeting' | 'agenda'>('meeting');
 	let voteName = $state('');
 	let voteVisibility = $state<'open' | 'secret'>('open');
@@ -852,6 +860,11 @@
 		agendaImportOpen = true;
 		agendaImportStep = 'input';
 		agendaImportWarning = '';
+		agendaImportRawText = '';
+		agendaImportParsedText = '';
+		agendaImportLineStates = new Map();
+		agendaImportFormat = 'plaintext';
+		agendaImportFormatManuallySet = false;
 		agendaImportFingerprint = currentAgendaFingerprint();
 		agendaImportDialogEl?.showModal();
 	}
@@ -860,6 +873,11 @@
 		agendaImportOpen = false;
 		agendaImportStep = 'input';
 		agendaImportWarning = '';
+		agendaImportRawText = '';
+		agendaImportParsedText = '';
+		agendaImportLineStates = new Map();
+		agendaImportFormat = 'plaintext';
+		agendaImportFormatManuallySet = false;
 		agendaImportDialogEl?.close();
 	}
 
@@ -878,21 +896,29 @@
 		return 1;
 	}
 
-	function detectSourceFormat(source: string): 'markdown' | 'plaintext' | null {
+	function setLinesFromSource(source: string) {
 		const trimmed = source.trim();
-		if (!trimmed) return null;
-		if (/^#{1,6}\s/m.test(trimmed) || /^[-*+]\s+\S/m.test(trimmed)) return 'markdown';
-		return 'plaintext';
+		if (!trimmed) return;
+		if (!agendaImportFormatManuallySet) {
+			agendaImportFormat =
+				/^#{1,6}\s/m.test(trimmed) || /^[-*+]\s+\S/m.test(trimmed) ? 'markdown' : 'plaintext';
+		}
+		agendaImportLineStates = new Map();
+		agendaImportRawText = trimmed;
+		agendaImportParsedText = trimmed;
 	}
 
-	let detectedFormat = $derived(detectSourceFormat(agendaImportSource));
+	function setAgendaImportFormat(fmt: 'markdown' | 'plaintext') {
+		agendaImportFormat = fmt;
+		agendaImportFormatManuallySet = true;
+		agendaImportLineStates = new Map();
+	}
 
-	function importStateLabel(state: AgendaImportState): string {
-		switch (state) {
-			case 'heading': return m.agenda_import_state_heading();
-			case 'subheading': return m.agenda_import_state_subheading();
-			default: return m.agenda_import_state_ignore();
-		}
+	function runAgendaImportDetection() {
+		const trimmed = agendaImportRawText.trim();
+		if (!trimmed) return;
+		agendaImportLineStates = new Map();
+		agendaImportParsedText = trimmed;
 	}
 
 	function nextImportState(state: AgendaImportState): AgendaImportState {
@@ -906,74 +932,25 @@
 		}
 	}
 
-	function importPrefix(lines: AgendaImportLine[], index: number) {
-		let top = 0;
-		let sub = 0;
-		for (let i = 0; i <= index; i += 1) {
-			const line = lines[i];
-			if (line.state === 'heading') {
-				top += 1;
-				sub = 0;
-			} else if (line.state === 'subheading' && top > 0) {
-				sub += 1;
-			}
-		}
-		const line = lines[index];
-		if (line.state === 'heading' && top > 0) return `TOP ${top}`;
-		if (line.state === 'subheading' && top > 0 && sub > 0) return `TOP ${top}.${sub}`;
-		return '';
-	}
-
-	function parseAgendaImportSource(source: string) {
-		return source
-			.split('\n')
-			.map((line, index) => ({ raw: line.trim(), lineNo: index + 1 }))
-			.filter((line) => line.raw.length > 0)
-			.map(({ raw, lineNo }) => {
-				const match = raw.match(/^(?:TOP\s*)?(\d+(?:\.\d+)?)[:.) -]*\s*(.+)$/i);
-				if (match) {
-					return {
-						lineNo,
-						text: match[2].trim(),
-						state: match[1].includes('.') ? 'subheading' : 'heading'
-					} satisfies AgendaImportLine;
-				}
-				return {
-					lineNo,
-					text: raw,
-					state: 'ignore'
-				} satisfies AgendaImportLine;
-			});
-	}
-
-	function buildImportedAgenda(lines: AgendaImportLine[]) {
-		const points: AgendaImportPoint[] = [];
-		let currentTop: AgendaImportPoint | null = null;
-		for (const line of lines) {
-			if (line.state === 'heading') {
-				currentTop = { title: line.text, children: [] };
-				points.push(currentTop);
-				continue;
-			}
-			if (line.state === 'subheading' && currentTop) {
-				currentTop.children.push(line.text);
-			}
-		}
-		return points;
-	}
-
-	$effect(() => {
-		const source = agendaImportSource.trim();
-		agendaImportLines = source.length > 0 ? parseAgendaImportSource(source) : [];
-	});
 
 	function toggleAgendaImportLine(index: number) {
-		agendaImportLines = agendaImportLines.map((line, currentIndex) =>
-			currentIndex === index ? { ...line, state: nextImportState(line.state) } : line
-		);
+		const line = agendaImportLines[index];
+		if (!line) return;
+		agendaImportLineStates = new Map(agendaImportLineStates).set(line.lineNo, nextImportState(line.state));
+	}
+
+	function resetAgendaImportSource() {
+		agendaImportRawText = '';
+		agendaImportParsedText = '';
+		agendaImportLineStates = new Map();
+		agendaImportFormat = 'plaintext';
+		agendaImportFormatManuallySet = false;
 	}
 
 	function generateAgendaDiff() {
+		// Sync any unsaved edits from the textarea before computing the diff
+		const trimmed = agendaImportRawText.trim();
+		if (trimmed) agendaImportParsedText = trimmed;
 		if (agendaImportLines.length === 0) {
 			agendaImportWarning = m.agenda_import_error_empty_source();
 			return;
@@ -989,47 +966,90 @@
 
 	async function applyAgendaImport() {
 		if (agendaImportBusy) return;
-
-		const imported = buildImportedAgenda(agendaImportLines);
-		if (imported.length === 0) {
-			agendaImportWarning = 'No agenda headings are selected for import.';
+		const diff = agendaImportDiff;
+		if (diff.length === 0 || diff.every(r => r.op === 'unchanged')) {
+			agendaImportWarning = 'No changes to apply.';
 			return;
 		}
-
 		agendaImportBusy = true;
 		agendaImportWarning = '';
 		try {
 			const latestFingerprint = await fetchAgendaFingerprint();
 			if (agendaImportFingerprint !== latestFingerprint) {
-				agendaImportWarning = 'Agenda changed while you reviewed this diff';
+				agendaImportWarning = m.agenda_import_warning_stale_diff();
 				return;
 			}
 
-			for (const point of agendaState.data ?? []) {
-				await agendaClient.deleteAgendaPoint({
-					committeeSlug: slug,
-					meetingId,
-					agendaPointId: point.agendaPointId
-				});
-			}
-
-			for (const point of imported) {
-				const top = await agendaClient.createAgendaPoint({
-					committeeSlug: slug,
-					meetingId,
-					title: point.title
-				});
-				const parentId = top.agendaPoint?.agendaPointId;
-				if (!parentId) continue;
-				for (const child of point.children) {
-					await agendaClient.createAgendaPoint({
-						committeeSlug: slug,
-						meetingId,
-						title: child,
-						parentAgendaPointId: parentId
-					});
+			// Phase 1: delete removed top-level points
+			for (const row of diff) {
+				if (row.op === 'deleted' && row.existingId) {
+					await agendaClient.deleteAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId: row.existingId });
 				}
 			}
+
+			// Phase 2: rename surviving top-level points
+			for (const row of diff) {
+				if (row.existingId && row.importedTitle && row.existingTitle !== row.importedTitle) {
+					await agendaClient.updateAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId: row.existingId, title: row.importedTitle });
+				}
+			}
+
+			// Phase 3: apply sub-point changes for surviving top-level points
+			for (const row of diff) {
+				if (!row.existingId || row.op === 'deleted') continue;
+				for (const sub of row.subDiff) {
+					if (sub.op === 'deleted' && sub.existingId) {
+						await agendaClient.deleteAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId: sub.existingId });
+					} else if (sub.op === 'renamed' && sub.existingId && sub.importedTitle) {
+						await agendaClient.updateAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId: sub.existingId, title: sub.importedTitle });
+					} else if (sub.op === 'added' && sub.importedTitle) {
+						await agendaClient.createAgendaPoint({ committeeSlug: slug, meetingId, title: sub.importedTitle, parentAgendaPointId: row.existingId });
+					} else if (sub.op === 'newParent' && sub.existingId && sub.importedTitle) {
+						// Move to new parent: delete from old parent, recreate under this one
+						await agendaClient.deleteAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId: sub.existingId });
+						await agendaClient.createAgendaPoint({ committeeSlug: slug, meetingId, title: sub.importedTitle, parentAgendaPointId: row.existingId });
+					}
+				}
+			}
+
+			// Phase 4: add new top-level points with their sub-points
+			const addedTopIds: string[] = [];
+			for (const row of diff) {
+				if (row.op !== 'added' || !row.importedTitle) continue;
+				const res = await agendaClient.createAgendaPoint({ committeeSlug: slug, meetingId, title: row.importedTitle });
+				const newId = res.agendaPoint?.agendaPointId;
+				if (!newId) continue;
+				addedTopIds.push(newId);
+				for (const sub of row.subDiff) {
+					if (sub.op === 'added' && sub.importedTitle) {
+						await agendaClient.createAgendaPoint({ committeeSlug: slug, meetingId, title: sub.importedTitle, parentAgendaPointId: newId });
+					}
+				}
+			}
+
+			// Phase 5: reorder top-level points to match imported order
+			const desiredIds: string[] = [];
+			let addedIter = 0;
+			for (const row of diff) {
+				if (row.op === 'deleted') continue;
+				if (row.existingId) desiredIds.push(row.existingId);
+				else if (addedIter < addedTopIds.length) desiredIds.push(addedTopIds[addedIter++]);
+			}
+			if (desiredIds.length > 1) {
+				const freshRes = await agendaClient.listAgendaPoints({ committeeSlug: slug, meetingId });
+				const currentOrder = freshRes.agendaPoints.map(p => p.agendaPointId);
+				for (let i = 0; i < desiredIds.length; i++) {
+					const targetId = desiredIds[i];
+					let j = currentOrder.indexOf(targetId);
+					while (j > i) {
+						await agendaClient.moveAgendaPoint({ committeeSlug: slug, meetingId, agendaPointId: targetId, direction: 'up' });
+						currentOrder.splice(j, 1);
+						currentOrder.splice(j - 1, 0, targetId);
+						j--;
+					}
+				}
+			}
+
 			closeAgendaImportDialog();
 			loadAgenda();
 		} catch (err) {
@@ -1044,7 +1064,7 @@
 		const file = input?.files?.[0];
 		if (!file) return;
 		file.text().then((content) => {
-			agendaImportSource = content;
+			setLinesFromSource(content);
 		});
 	}
 
@@ -1579,107 +1599,176 @@
 																<li class={agendaImportCurrentStep() >= 2 ? 'step step-primary' : 'step'} data-agenda-import-step-item="2">{m.agenda_import_step_diff()}</li>
 															</ul>
 															{#if agendaImportStep === 'input'}
-																<div data-agenda-import-panel="1">
-																	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-																		<div class="space-y-3">
-																			<label class="label p-0 text-sm font-medium" for="agenda-import-source">{m.agenda_import_source_label()}</label>
-																			<textarea id="agenda-import-source" name="source_text" class="textarea textarea-bordered h-64 w-full" placeholder={m.agenda_import_source_placeholder()} bind:value={agendaImportSource}></textarea>
-																			<input type="file" class="file-input file-input-bordered file-input-sm max-w-full" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file data-target="agenda-import-source" onchange={handleAgendaImportFile} />
+																<div data-agenda-import-panel="1" class="space-y-3">
+																	<div class="flex items-center justify-between gap-2">
+																		<div class="flex items-center gap-2">
+																			<h4 class="text-sm font-medium">{m.agenda_import_correction_heading()}</h4>
 																		</div>
-																		<div class="space-y-2">
-																			<div class="flex items-center justify-between gap-2">
-																				<h4 class="text-sm font-medium">{m.agenda_import_correction_heading()}</h4>
-																				{#if detectedFormat !== null}
-																					<span class="badge badge-sm badge-ghost font-normal">
-																						{detectedFormat === 'markdown' ? m.agenda_import_format_markdown() : m.agenda_import_format_plaintext()}
-																					</span>
-																				{/if}
-																			</div>
-																			<p class="text-xs text-base-content/70">{m.agenda_import_correction_hint()}</p>
-																			{#if agendaImportLines.length > 0}
-																				<div class="max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2">
-																					<ul class="space-y-1.5" data-agenda-import-lines>
-																						{#each agendaImportLines as line, index}
-																							{@const prefix = importPrefix(agendaImportLines, index)}
-																							<li class={line.state === 'subheading' ? 'flex items-start gap-2 pl-4' : 'flex items-start gap-2'}>
-																								<button
-																									type="button"
-																									class={line.state === 'heading' ? 'inline-flex shrink-0 items-center gap-1 rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20' : line.state === 'subheading' ? 'inline-flex shrink-0 items-center gap-1 rounded border border-info/30 bg-info/10 px-2 py-0.5 text-xs font-medium text-info transition-colors hover:bg-info/20' : 'inline-flex shrink-0 items-center gap-1 rounded border border-base-300 bg-base-200 px-2 py-0.5 text-xs font-medium text-base-content/50 transition-colors hover:bg-base-300'}
-																									data-import-line-row
-																									data-state={line.state}
-																									onclick={() => toggleAgendaImportLine(index)}
-																								>
-																									{#if prefix}
-																										<span class="font-mono tabular-nums" data-import-line-prefix>{prefix}</span>
-																										<span class="text-current opacity-40">·</span>
-																									{/if}
-																									<span>{importStateLabel(line.state)}</span>
-																								</button>
-																								<span class={line.state === 'ignore' ? 'min-w-0 flex-1 truncate pt-0.5 text-sm text-base-content/40' : 'min-w-0 flex-1 truncate pt-0.5 text-sm'} title={line.text}>{line.text}</span>
-																							</li>
-																						{/each}
-																					</ul>
-																				</div>
-																			{:else}
-																				<div class="flex h-32 items-center justify-center rounded-box border border-dashed border-base-300 text-sm text-base-content/40">
-																					{m.agenda_import_preview_empty()}
-																				</div>
+																		<div class="flex items-center gap-2">
+																			<input type="file" class="file-input file-input-bordered file-input-sm" accept=".txt,.md,text/plain,text/markdown" data-agenda-import-file onchange={handleAgendaImportFile} />
+																			{#if agendaImportRawText.trim()}
+																				<button type="button" class="btn btn-xs btn-ghost" onclick={resetAgendaImportSource}>{m.agenda_import_back_button()}</button>
 																			{/if}
 																		</div>
 																	</div>
-																	<div class="mt-4 flex flex-wrap gap-2">
-																		<button type="button" class="btn btn-sm" onclick={generateAgendaDiff}>{m.agenda_import_generate_diff_button()}</button>
-																	</div>
-																</div>
-															{/if}
-															{#if agendaImportStep === 'diff' && buildImportedAgenda(agendaImportLines).length > 0}
-																<div data-agenda-import-panel="2">
-																	<div class="space-y-3">
-																		<h4 class="text-base font-semibold">{m.agenda_import_diff_heading()}</h4>
-																		<div id="agenda-import-diff-grid" class="rounded-box border border-base-300 bg-base-100 p-2">
-																			<style>
-																				#agenda-import-diff-grid [data-diff-cell] {
-																					transition: filter 120ms ease, box-shadow 120ms ease;
-																				}
-																				#agenda-import-diff-grid [data-diff-cell][data-hovered="true"] {
-																					filter: brightness(0.95);
-																					box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
-																				}
-																			</style>
-																			<div class="mb-2 hidden grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 px-1 text-xs font-semibold uppercase tracking-wide text-base-content/60 md:grid">
-																				<div>{m.agenda_import_diff_column_current()}</div>
-																				<div class="text-center">Change</div>
-																				<div>{m.agenda_import_diff_column_imported()}</div>
-																			</div>
-																			<ul class="space-y-2">
-																				{#each buildImportedAgenda(agendaImportLines) as point}
-																					<li class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] gap-2 text-sm">
-																						<div class="min-h-12 rounded-box border border-dashed border-base-300/70 bg-base-200/20"></div>
-																						<div class="flex min-h-12 items-center justify-center"><span class="tooltip tooltip-top text-success" data-tip="Add"><LegacyIcon name="arrow-forward" class="h-5 w-5" /></span></div>
-																						<div class="min-h-12 rounded-box border border-success/30 bg-success/10 p-2" data-diff-cell data-diff-hover-key={point.title}>
-																							<div class="mb-1 text-xs font-medium uppercase tracking-wide text-base-content/60 md:hidden">Imported</div>
-																							<div class="flex items-start justify-between gap-2">
-																								<div class="min-w-0 flex-1">
-																									<div class="text-xs text-base-content/70">TOP</div>
-																									<div class="truncate">{point.title}</div>
-																								</div>
-																							</div>
-																						</div>
-																					</li>
-																				{/each}
-																			</ul>
+																	<AgendaImportPreview
+																		bind:rawText={agendaImportRawText}
+																		lines={agendaImportLines}
+																		onToggle={toggleAgendaImportLine}
+																		onPasteText={setLinesFromSource}
+																	/>
+																	<div class="flex flex-wrap items-center justify-between gap-2">
+																		<div class="join">
+																			<button
+																				type="button"
+																				class={['join-item btn btn-sm', agendaImportFormat === 'plaintext' ? 'btn-active' : 'btn-ghost'].join(' ')}
+																				onclick={() => setAgendaImportFormat('plaintext')}
+																			>{m.agenda_import_format_plaintext()}</button>
+																			<button
+																				type="button"
+																				class={['join-item btn btn-sm', agendaImportFormat === 'markdown' ? 'btn-active' : 'btn-ghost'].join(' ')}
+																				onclick={() => setAgendaImportFormat('markdown')}
+																			>{m.agenda_import_format_markdown()}</button>
 																		</div>
-																		<div class="alert alert-warning text-sm">{m.agenda_import_destructive_warning()}</div>
-																		<div class="flex flex-wrap gap-2">
-																			<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'input')}>{m.agenda_import_back_button()}</button>
-																			<form class="inline-flex" onsubmit={(event) => { event.preventDefault(); void applyAgendaImport(); }}>
-																				<button type="submit" class="btn btn-sm btn-primary" disabled={agendaImportBusy}>{m.agenda_import_accept_button()}</button>
-																			</form>
-																			<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>{m.agenda_import_deny_button()}</button>
+																		<div class="flex gap-2">
+																			<button type="button" class="btn btn-sm btn-outline" onclick={runAgendaImportDetection} disabled={!agendaImportRawText.trim()}>{m.agenda_import_detect_button()}</button>
+																			<button type="button" class="btn btn-sm btn-primary" onclick={generateAgendaDiff} disabled={agendaImportLines.length === 0}>{m.agenda_import_generate_diff_button()}</button>
 																		</div>
 																	</div>
 																</div>
 															{/if}
+															{#if agendaImportStep === 'diff'}
+						<div data-agenda-import-panel="2">
+							<div class="space-y-3">
+								<h4 class="text-base font-semibold">{m.agenda_import_diff_heading()}</h4>
+								{#if agendaImportDiff.every(r => r.op === 'unchanged')}
+									<div class="alert alert-info text-sm">{m.agenda_import_diff_no_changes()}</div>
+								{:else}
+									<div class="rounded-box border border-base-300 bg-base-100">
+										<div class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] border-b border-base-300 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-base-content/50">
+											<div>{m.agenda_import_diff_column_current()}</div>
+											<div class="text-center">{m.agenda_import_diff_column_change()}</div>
+											<div>{m.agenda_import_diff_column_imported()}</div>
+										</div>
+										<ul>
+											{#each agendaImportDiff as row, rowIdx}
+												{@const topKey = `t:${rowIdx}`}
+												{@const topHovered = agendaDiffHoverId === topKey}
+												{@const exTopNum = agendaImportDiff.slice(0, rowIdx + 1).filter(r => r.existingTitle !== null).length}
+												{@const impTopNum = agendaImportDiff.slice(0, rowIdx + 1).filter(r => r.importedTitle !== null).length}
+												<li
+													class={['grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] border-t border-base-300/60 text-sm',
+														row.op === 'unchanged' ? 'opacity-40' : ''].join(' ')}
+												>
+													<div
+														class={['min-h-10 px-3 py-2 transition-colors',
+															topHovered ? 'bg-base-200/60' : '',
+															row.op === 'deleted' ? 'text-error' : ''].join(' ')}
+														role="presentation"
+														onmouseenter={() => (agendaDiffHoverId = topKey)}
+														onmouseleave={() => (agendaDiffHoverId = null)}
+													>
+														{#if row.existingTitle !== null}
+															<div class="text-xs text-base-content/40">TOP {exTopNum}</div>
+															<div class="font-medium">{row.existingTitle}</div>
+														{/if}
+													</div>
+													<div class="flex min-h-10 flex-col items-center justify-center gap-0.5 px-1">
+											{#if row.op === 'added'}
+												<span class="rounded bg-success/15 px-1.5 py-0.5 text-xs font-semibold text-success">{m.agenda_import_diff_op_added()}</span>
+											{:else if row.op === 'deleted'}
+												<span class="rounded bg-error/15 px-1.5 py-0.5 text-xs font-semibold text-error">{m.agenda_import_diff_op_deleted()}</span>
+											{:else if row.op === 'renamed'}
+												<span class="rounded bg-warning/15 px-1.5 py-0.5 text-xs font-semibold text-warning">{m.agenda_import_diff_op_renamed()}</span>
+											{:else if row.op === 'reordered'}
+												<span class="rounded bg-info/15 px-1.5 py-0.5 text-xs font-semibold text-info">{m.agenda_import_diff_op_reordered()}</span>
+											{:else if row.op === 'renamed+reordered'}
+												<span class="rounded bg-warning/15 px-1.5 py-0.5 text-xs font-semibold text-warning">{m.agenda_import_diff_op_renamed_reordered()}</span>
+											{:else if row.op === 'newRoot'}
+												<span class="rounded bg-secondary/15 px-1.5 py-0.5 text-xs font-semibold text-secondary">{m.agenda_import_diff_op_new_root()}</span>
+											{/if}
+													</div>
+													<div
+														class={['min-h-10 px-3 py-2 transition-colors',
+															topHovered ? 'bg-base-200/60' : '',
+															row.op === 'added' ? 'text-success' : ''].join(' ')}
+														role="presentation"
+														onmouseenter={() => (agendaDiffHoverId = topKey)}
+														onmouseleave={() => (agendaDiffHoverId = null)}
+													>
+														{#if row.importedTitle !== null}
+															<div class="text-xs text-base-content/40">TOP {impTopNum}</div>
+															<div class="font-medium">{row.importedTitle}</div>
+														{/if}
+													</div>
+												</li>
+												{#each row.subDiff as sub, subIdx}
+													{@const subKey = `s:${rowIdx}:${subIdx}`}
+													{@const subHovered = agendaDiffHoverId === subKey}
+													<li
+														class={['grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,2fr)] border-t border-base-300/40 text-sm',
+															sub.op === 'unchanged' ? 'opacity-40' : ''].join(' ')}
+													>
+														<div
+															class={['min-h-8 py-1.5 pl-8 pr-3 transition-colors',
+																subHovered ? 'bg-base-200/60' : '',
+																sub.op === 'deleted' ? 'text-error' : 'text-base-content/70'].join(' ')}
+															role="presentation"
+															onmouseenter={() => (agendaDiffHoverId = subKey)}
+															onmouseleave={() => (agendaDiffHoverId = null)}
+														>
+															{#if sub.existingTitle !== null}
+																<div class="text-xs italic">{sub.existingTitle}</div>
+															{/if}
+														</div>
+														<div class="flex min-h-8 flex-col items-center justify-center px-1">
+															{#if sub.op !== 'unchanged'}
+											{#if sub.op === 'added'}
+												<span class="rounded bg-success/15 px-1.5 py-0.5 text-xs font-semibold text-success">{m.agenda_import_diff_op_added()}</span>
+											{:else if sub.op === 'deleted'}
+												<span class="rounded bg-error/15 px-1.5 py-0.5 text-xs font-semibold text-error">{m.agenda_import_diff_op_deleted()}</span>
+											{:else if sub.op === 'renamed'}
+												<span class="rounded bg-warning/15 px-1.5 py-0.5 text-xs font-semibold text-warning">{m.agenda_import_diff_op_renamed()}</span>
+											{:else if sub.op === 'reordered'}
+												<span class="rounded bg-info/15 px-1.5 py-0.5 text-xs font-semibold text-info">{m.agenda_import_diff_op_reordered()}</span>
+											{:else if sub.op === 'renamed+reordered'}
+												<span class="rounded bg-warning/15 px-1.5 py-0.5 text-xs font-semibold text-warning">{m.agenda_import_diff_op_renamed_reordered()}</span>
+											{:else if sub.op === 'newParent'}
+												<span class="rounded bg-secondary/15 px-1.5 py-0.5 text-xs font-semibold text-secondary">{m.agenda_import_diff_op_new_parent()}</span>
+											{/if}
+															{/if}
+														</div>
+														<div
+															class={['min-h-8 py-1.5 pl-8 pr-3 transition-colors',
+																subHovered ? 'bg-base-200/60' : '',
+																sub.op === 'added' ? 'text-success' : 'text-base-content/70'].join(' ')}
+															role="presentation"
+															onmouseenter={() => (agendaDiffHoverId = subKey)}
+															onmouseleave={() => (agendaDiffHoverId = null)}
+														>
+															{#if sub.importedTitle !== null}
+																<div class="text-xs italic">{sub.importedTitle}</div>
+															{/if}
+														</div>
+													</li>
+												{/each}
+											{/each}
+										</ul>
+									</div>
+									{#if agendaImportDiff.some(r => r.op === 'deleted')}
+										<div class="alert alert-warning text-sm">{m.agenda_import_diff_has_deletions_warning()}</div>
+									{/if}
+								{/if}
+								<div class="flex flex-wrap gap-2">
+									<button type="button" class="btn btn-sm btn-ghost" data-agenda-import-back="1" onclick={() => (agendaImportStep = 'input')}>{m.agenda_import_back_button()}</button>
+									<form class="inline-flex" onsubmit={(event) => { event.preventDefault(); void applyAgendaImport(); }}>
+										<button type="submit" class="btn btn-sm btn-primary" disabled={agendaImportBusy || agendaImportDiff.every(r => r.op === 'unchanged')}>{m.agenda_import_accept_button()}</button>
+									</form>
+									<button type="button" class="btn btn-sm btn-ghost" data-manage-dialog-close onclick={closeAgendaImportDialog}>{m.agenda_import_deny_button()}</button>
+								</div>
+							</div>
+						</div>
+					{/if}
 														</div>
 													</div>
 												</div>

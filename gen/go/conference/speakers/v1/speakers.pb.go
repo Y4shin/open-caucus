@@ -874,7 +874,7 @@ const file_conference_speakers_v1_speakers_proto_rawDesc = "" +
 	"\rRemoveSpeaker\x12,.conference.speakers.v1.RemoveSpeakerRequest\x1a-.conference.speakers.v1.RemoveSpeakerResponse\x12{\n" +
 	"\x12SetSpeakerSpeaking\x121.conference.speakers.v1.SetSpeakerSpeakingRequest\x1a2.conference.speakers.v1.SetSpeakerSpeakingResponse\x12o\n" +
 	"\x0eSetSpeakerDone\x12-.conference.speakers.v1.SetSpeakerDoneRequest\x1a..conference.speakers.v1.SetSpeakerDoneResponse\x12{\n" +
-	"\x12SetSpeakerPriority\x121.conference.speakers.v1.SetSpeakerPriorityRequest\x1a2.conference.speakers.v1.SetSpeakerPriorityResponseBLZJgithub.com/Y4shin/open-caucus/gen/go/conference/speakers/v1;speakersv1b\x06proto3"
+	"\x12SetSpeakerPriority\x121.conference.speakers.v1.SetSpeakerPriorityRequest\x1a2.conference.speakers.v1.SetSpeakerPriorityResponseBHZFgithub.com/Y4shin/open-caucus/gen/go/conference/speakers/v1;speakersv1b\x06proto3"
 
 var (
 	file_conference_speakers_v1_speakers_proto_rawDescOnce sync.Once

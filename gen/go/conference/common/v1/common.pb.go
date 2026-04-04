@@ -719,7 +719,7 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x14\n" +
 	"\x05label\x18\x03 \x01(\tR\x05label\x12!\n" +
 	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\x12!\n" +
-	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrlBHZFgithub.com/Y4shin/open-caucus/gen/go/conference/common/v1;commonv1b\x06proto3"
+	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrlBDZBgithub.com/Y4shin/open-caucus/gen/go/conference/common/v1;commonv1b\x06proto3"
 
 var (
 	file_conference_common_v1_common_proto_rawDescOnce sync.Once

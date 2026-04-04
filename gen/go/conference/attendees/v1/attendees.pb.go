@@ -1322,7 +1322,7 @@ const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
 	"\x0eDeleteAttendee\x12..conference.attendees.v1.DeleteAttendeeRequest\x1a/.conference.attendees.v1.DeleteAttendeeResponse\x12q\n" +
 	"\x0eSetChairperson\x12..conference.attendees.v1.SetChairpersonRequest\x1a/.conference.attendees.v1.SetChairpersonResponse\x12b\n" +
 	"\tSetQuoted\x12).conference.attendees.v1.SetQuotedRequest\x1a*.conference.attendees.v1.SetQuotedResponse\x12\x80\x01\n" +
-	"\x13GetAttendeeRecovery\x123.conference.attendees.v1.GetAttendeeRecoveryRequest\x1a4.conference.attendees.v1.GetAttendeeRecoveryResponseBNZLgithub.com/Y4shin/open-caucus/gen/go/conference/attendees/v1;attendeesv1b\x06proto3"
+	"\x13GetAttendeeRecovery\x123.conference.attendees.v1.GetAttendeeRecoveryRequest\x1a4.conference.attendees.v1.GetAttendeeRecoveryResponseBJZHgithub.com/Y4shin/open-caucus/gen/go/conference/attendees/v1;attendeesv1b\x06proto3"
 
 var (
 	file_conference_attendees_v1_attendees_proto_rawDescOnce sync.Once

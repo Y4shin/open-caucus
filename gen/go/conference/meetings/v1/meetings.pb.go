@@ -984,7 +984,7 @@ const file_conference_meetings_v1_meetings_proto_rawDesc = "" +
 	"\x0eGetJoinMeeting\x12-.conference.meetings.v1.GetJoinMeetingRequest\x1a..conference.meetings.v1.GetJoinMeetingResponse\x12o\n" +
 	"\x0eGetLiveMeeting\x12-.conference.meetings.v1.GetLiveMeetingRequest\x1a..conference.meetings.v1.GetLiveMeetingResponse\x12u\n" +
 	"\x10GetMeetingJoinQr\x12/.conference.meetings.v1.GetMeetingJoinQrRequest\x1a0.conference.meetings.v1.GetMeetingJoinQrResponse\x12w\n" +
-	"\x16SubscribeMeetingEvents\x125.conference.meetings.v1.SubscribeMeetingEventsRequest\x1a$.conference.meetings.v1.MeetingEvent0\x01BLZJgithub.com/Y4shin/open-caucus/gen/go/conference/meetings/v1;meetingsv1b\x06proto3"
+	"\x16SubscribeMeetingEvents\x125.conference.meetings.v1.SubscribeMeetingEventsRequest\x1a$.conference.meetings.v1.MeetingEvent0\x01BHZFgithub.com/Y4shin/open-caucus/gen/go/conference/meetings/v1;meetingsv1b\x06proto3"
 
 var (
 	file_conference_meetings_v1_meetings_proto_rawDescOnce sync.Once

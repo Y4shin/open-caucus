@@ -1572,7 +1572,7 @@ const file_conference_agenda_v1_agenda_proto_rawDesc = "" +
 	"\x14SetCurrentAttachment\x121.conference.agenda.v1.SetCurrentAttachmentRequest\x1a2.conference.agenda.v1.SetCurrentAttachmentResponse\x12}\n" +
 	"\x14ClearCurrentDocument\x121.conference.agenda.v1.ClearCurrentDocumentRequest\x1a2.conference.agenda.v1.ClearCurrentDocumentResponse\x12q\n" +
 	"\x10DeleteAttachment\x12-.conference.agenda.v1.DeleteAttachmentRequest\x1a..conference.agenda.v1.DeleteAttachmentResponse\x12t\n" +
-	"\x11UpdateAgendaPoint\x12..conference.agenda.v1.UpdateAgendaPointRequest\x1a/.conference.agenda.v1.UpdateAgendaPointResponseBHZFgithub.com/Y4shin/open-caucus/gen/go/conference/agenda/v1;agendav1b\x06proto3"
+	"\x11UpdateAgendaPoint\x12..conference.agenda.v1.UpdateAgendaPointRequest\x1a/.conference.agenda.v1.UpdateAgendaPointResponseBDZBgithub.com/Y4shin/open-caucus/gen/go/conference/agenda/v1;agendav1b\x06proto3"
 
 var (
 	file_conference_agenda_v1_agenda_proto_rawDescOnce sync.Once
