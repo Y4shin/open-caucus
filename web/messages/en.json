@@ -420,6 +420,7 @@
 	"votes_submit_open_ballot": "Submit Open Ballot",
 	"votes_submit_secret_ballot": "Submit Secret Ballot",
 	"votes_no_live_votes": "No open or recently closed votes right now.",
+	"votes_my_receipts": "My Receipts",
 	"votes_receipt_vault_title": "Receipt Vault",
 	"votes_receipt_vault_description": "Receipts are stored locally in your browser. This page verifies them against public vote verification endpoints.",
 	"votes_clear_all": "Clear All",

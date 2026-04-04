@@ -16,7 +16,7 @@
 	import type { LiveVoteCardView, LiveVotePanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { voteStateBadgeClass, voteVisibilityBadgeClass } from '$lib/utils/votes.js';
-	import { saveReceipt } from '$lib/utils/receipts.js';
+	import { listReceipts, saveReceipt, verifyReceipt, type StoredReceipt } from '$lib/utils/receipts.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import * as m from '$lib/paraglide/messages';
 
@@ -33,6 +33,41 @@
 	let submittingVote = $state(false);
 	let selectedOptionIds = $state<string[]>([]);
 	let nowMs = $state(Date.now());
+
+	// Receipts dialog state
+	let receiptsDialogEl = $state<HTMLDialogElement | null>(null);
+	let meetingReceipts = $state<StoredReceipt[]>([]);
+	let receiptVerifyingId = $state('');
+	let receiptVerifyResults = $state<Record<string, string>>({});
+
+	function openReceiptsDialog() {
+		const allReceipts = listReceipts();
+		const voteIds = new Set(
+			(voteState.data?.closedVotes ?? [])
+				.concat(voteState.data?.activeVote ? [voteState.data.activeVote] : [])
+				.map((v) => v.vote?.voteId ?? '')
+				.filter(Boolean)
+		);
+		meetingReceipts = allReceipts.filter((r) => voteIds.has(r.voteId));
+		receiptVerifyResults = {};
+		receiptsDialogEl?.showModal();
+	}
+
+	async function verifyMeetingReceipt(receipt: StoredReceipt) {
+		receiptVerifyingId = receipt.id;
+		try {
+			const payload = await verifyReceipt(receipt);
+			const labels =
+				payload && 'choiceLabels' in payload && Array.isArray(payload.choiceLabels)
+					? payload.choiceLabels.join(', ')
+					: '';
+			receiptVerifyResults[receipt.id] = `OK: ${labels || 'no choices'}`;
+		} catch (err) {
+			receiptVerifyResults[receipt.id] = `Error: ${err instanceof Error ? err.message : 'Verification failed.'}`;
+		} finally {
+			receiptVerifyingId = '';
+		}
+	}
 	let speakingSinceMs = $state<Record<string, number>>({});
 	let canModerate = $state(false);
 
@@ -739,15 +774,18 @@
 					<div id="live-votes-panel" class="space-y-3">
 						<div class="flex items-center justify-between gap-2">
 							<h2 class="text-lg font-semibold">{m.votes_votes()}</h2>
-							<button
-								type="button"
-								class="btn btn-xs btn-outline"
-								onclick={() => {
-									void loadVotes();
-								}}
-							>
-								{m.common_refresh()}
+							<div class="flex gap-1">
+								<button type="button" class="btn btn-xs btn-outline" onclick={openReceiptsDialog}>{m.votes_my_receipts()}</button>
+								<button
+									type="button"
+									class="btn btn-xs btn-outline"
+									onclick={() => {
+										void loadVotes();
+									}}
+								>
+									{m.common_refresh()}
 							</button>
+							</div>
 						</div>
 						{#if !voteState.data?.hasActiveAgenda}
 							<p class="text-sm text-base-content/70">{m.meeting_live_no_active_agenda()}</p>
@@ -847,3 +885,43 @@
 		</div>
 	{/if}
 </div>
+
+<dialog id="meeting-receipts-dialog" class="modal" bind:this={receiptsDialogEl}>
+	<div class="modal-box max-w-lg">
+		<div class="mb-4 flex items-center justify-between">
+			<h3 class="text-lg font-semibold">{m.votes_my_receipts()}</h3>
+			<button type="button" class="btn btn-sm btn-ghost" onclick={() => receiptsDialogEl?.close()}>{m.common_close()}</button>
+		</div>
+		{#if meetingReceipts.length === 0}
+			<p class="text-sm text-base-content/70">{m.votes_no_stored_receipts()}</p>
+		{:else}
+			<div class="space-y-2">
+				{#each meetingReceipts as receipt}
+					<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="badge badge-outline badge-sm">{receipt.kind}</span>
+							<span class="font-semibold">{receipt.voteName}</span>
+						</div>
+						<div class="text-xs text-base-content/70 break-all">{receipt.receiptToken}</div>
+						<div class="flex flex-wrap items-center gap-2">
+							<button
+								class="btn btn-xs btn-primary"
+								type="button"
+								disabled={receiptVerifyingId === receipt.id}
+								onclick={() => verifyMeetingReceipt(receipt)}
+							>
+								{receiptVerifyingId === receipt.id ? m.votes_verifying() : m.votes_verify()}
+							</button>
+							{#if receiptVerifyResults[receipt.id]}
+								<span class={receiptVerifyResults[receipt.id].startsWith('Error') ? 'text-xs text-error' : 'text-xs text-success'}>
+									{receiptVerifyResults[receipt.id]}
+								</span>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
+</dialog>

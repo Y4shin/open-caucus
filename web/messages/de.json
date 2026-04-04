@@ -420,6 +420,7 @@
 	"votes_submit_open_ballot": "Offenen Stimmzettel einreichen",
 	"votes_submit_secret_ballot": "Geheimen Stimmzettel einreichen",
 	"votes_no_live_votes": "Derzeit keine offenen oder kürzlich geschlossenen Abstimmungen.",
+	"votes_my_receipts": "Meine Belege",
 	"votes_receipt_vault_title": "Empfangstresor",
 	"votes_receipt_vault_description": "Empfangsbestätigungen werden lokal in deinem Browser gespeichert. Diese Seite prüft sie gegen öffentliche Abstimmungs-Verifizierungsendpunkte.",
 	"votes_clear_all": "Alle löschen",
