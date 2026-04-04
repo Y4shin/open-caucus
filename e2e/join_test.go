@@ -375,7 +375,7 @@ func TestGuestSignup_Quoted_SetsSpeakerQuotedBadge(t *testing.T) {
 	}
 }
 
-func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
+func TestManageJoinQRDialog_ContainsSecretJoinURL(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Alice Chair", "chairperson")
@@ -384,15 +384,25 @@ func TestManageJoinQRPage_ContainsSecretJoinURL(t *testing.T) {
 
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
-	if _, err := page.Goto(manageJoinQRURL(ts.URL, "test-committee", meetingID)); err != nil {
-		t.Fatalf("goto manage join qr page: %v", err)
+	if _, err := page.Goto(manageURL(ts.URL, "test-committee", meetingID)); err != nil {
+		t.Fatalf("goto manage page: %v", err)
 	}
 
-	if err := page.Locator("#join-qr-code").WaitFor(); err != nil {
-		t.Fatalf("expected QR image: %v", err)
+	// Switch to attendees tab where the QR button lives
+	if err := page.Locator("[data-moderate-left-tab='attendees']").Click(); err != nil {
+		t.Fatalf("click attendees tab: %v", err)
 	}
 
-	href, err := page.Locator("main a.plain-text-link").First().GetAttribute("href")
+	// Open the join QR dialog
+	if err := page.Locator("button[title='Show signup QR']").Click(); err != nil {
+		t.Fatalf("click show signup QR button: %v", err)
+	}
+
+	if err := page.Locator("#join-qr-dialog #join-qr-code").WaitFor(); err != nil {
+		t.Fatalf("expected QR image in dialog: %v", err)
+	}
+
+	href, err := page.Locator("#join-qr-dialog a.link").First().GetAttribute("href")
 	if err != nil {
 		t.Fatalf("read join URL href: %v", err)
 	}

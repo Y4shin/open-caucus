@@ -13,8 +13,8 @@
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
-	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
-	import { MeetingEventKind } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
+	import type { AttendeeRecord, AttendeeRecoveryView } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
+	import { MeetingEventKind, type MeetingJoinQrView } from '$lib/gen/conference/meetings/v1/meetings_pb.js';
 	import type { ModerationView } from '$lib/gen/conference/moderation/v1/moderation_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
 	import type { VotesPanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
@@ -38,6 +38,16 @@
 	let agendaAnyDialogOpen = $state(false);
 	let moderateSettingsTab = $state<'meeting' | 'agenda'>('meeting');
 	let moderateLeftTab = $state<'agenda' | 'tools' | 'attendees' | 'settings'>('agenda');
+
+	// QR dialog state
+	let joinQrDialogEl = $state<HTMLDialogElement | null>(null);
+	let joinQrData = $state<MeetingJoinQrView | null>(null);
+	let joinQrLoading = $state(false);
+	let joinQrCopied = $state(false);
+	let recoveryDialogEl = $state<HTMLDialogElement | null>(null);
+	let recoveryData = $state<AttendeeRecoveryView | null>(null);
+	let recoveryLoading = $state(false);
+	let recoveryCopied = $state(false);
 
 	onDestroy(() => {
 		pageActions.clear();
@@ -222,12 +232,57 @@
 		}
 	}
 
-	function attendeeRecoveryURL(attendeeId: string) {
-		return `/committee/${slug}/meeting/${meetingId}/attendee/${attendeeId}/recovery`;
+	async function openJoinQrDialog() {
+		joinQrData = null;
+		joinQrLoading = true;
+		joinQrCopied = false;
+		joinQrDialogEl?.showModal();
+		try {
+			const res = await meetingClient.getMeetingJoinQr({
+				committeeSlug: slug,
+				meetingId,
+				baseUrl: page.url.origin
+			});
+			joinQrData = res.view ?? null;
+		} catch {
+			joinQrData = null;
+		} finally {
+			joinQrLoading = false;
+		}
 	}
 
-	function manageJoinQrURL() {
-		return `/committee/${slug}/meeting/${meetingId}/moderate/join-qr`;
+	async function copyJoinUrl() {
+		if (!joinQrData?.joinUrl) return;
+		await navigator.clipboard.writeText(joinQrData.joinUrl);
+		joinQrCopied = true;
+		setTimeout(() => (joinQrCopied = false), 2000);
+	}
+
+	async function openRecoveryDialog(attendeeId: string) {
+		recoveryData = null;
+		recoveryLoading = true;
+		recoveryCopied = false;
+		recoveryDialogEl?.showModal();
+		try {
+			const res = await attendeeClient.getAttendeeRecovery({
+				committeeSlug: slug,
+				meetingId,
+				attendeeId,
+				baseUrl: page.url.origin
+			});
+			recoveryData = res.view ?? null;
+		} catch {
+			recoveryData = null;
+		} finally {
+			recoveryLoading = false;
+		}
+	}
+
+	async function copyRecoveryUrl() {
+		if (!recoveryData?.loginUrl) return;
+		await navigator.clipboard.writeText(recoveryData.loginUrl);
+		recoveryCopied = true;
+		setTimeout(() => (recoveryCopied = false), 2000);
 	}
 
 	async function addGuestAttendee(event: SubmitEvent) {
@@ -511,7 +566,7 @@
 										<form class="inline-flex" data-testid="manage-self-signup-form" onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
 											<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Sign yourself up" title="Sign yourself up" aria-label="Sign yourself up" disabled={attendeeActionPending !== ''}><LegacyIcon name="person-raised" class="h-4 w-4" /></button>
 										</form>
-										<a href={manageJoinQrURL()} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR"><LegacyIcon name="qr-code" class="h-4 w-4" /></a>
+										<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR" onclick={openJoinQrDialog}><LegacyIcon name="qr-code" class="h-4 w-4" /></button>
 									</div>
 								</div>
 								<div id="attendee-list-container">
@@ -539,7 +594,7 @@
 													onRemove={removeAttendee}
 													onToggleChair={toggleAttendeeChair}
 													onToggleQuoted={toggleAttendeeQuoted}
-													recoveryURL={attendeeRecoveryURL}
+													onRecovery={openRecoveryDialog}
 												/>
 											{/each}
 										</ul>
@@ -643,3 +698,52 @@
 
 	{/if}
 </div>
+
+<dialog id="join-qr-dialog" class="modal" bind:this={joinQrDialogEl} onclose={() => { joinQrData = null; }}>
+	<div class="modal-box max-w-md text-center">
+		<div class="mb-4 flex items-center justify-between">
+			<h3 class="text-lg font-semibold">{m.meeting_join_qr_title()}</h3>
+			<button type="button" class="btn btn-sm btn-ghost" onclick={() => joinQrDialogEl?.close()}>{m.common_close()}</button>
+		</div>
+		{#if joinQrLoading}
+			<AppSpinner label="Loading QR code" />
+		{:else if joinQrData}
+			<p class="mb-3 text-sm text-base-content/70">{m.meeting_join_qr_description()}</p>
+			<img id="join-qr-code" class="mx-auto mb-3 max-w-[256px]" src={joinQrData.qrCodeDataUrl} alt={m.meeting_join_qr_alt()} />
+			<p class="mb-3 break-all text-xs text-base-content/60">
+				<a class="link link-hover" href={joinQrData.joinUrl}>{joinQrData.joinUrl}</a>
+			</p>
+			<button type="button" class="btn btn-sm btn-outline" onclick={copyJoinUrl}>
+				{joinQrCopied ? m.common_copied() : m.common_copy_url()}
+			</button>
+		{:else}
+			<AppAlert message="Failed to load the join QR code." />
+		{/if}
+	</div>
+	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
+</dialog>
+
+<dialog id="recovery-qr-dialog" class="modal" bind:this={recoveryDialogEl} onclose={() => { recoveryData = null; }}>
+	<div class="modal-box max-w-md text-center">
+		<div class="mb-4 flex items-center justify-between">
+			<h3 class="text-lg font-semibold">{m.meeting_attendee_recovery_title()}</h3>
+			<button type="button" class="btn btn-sm btn-ghost" onclick={() => recoveryDialogEl?.close()}>{m.common_close()}</button>
+		</div>
+		{#if recoveryLoading}
+			<AppSpinner label="Loading recovery link" />
+		{:else if recoveryData}
+			<p class="mb-1 font-medium">{recoveryData.attendeeName}</p>
+			<p class="mb-3 text-sm text-base-content/70">{m.meeting_attendee_recovery_description()}</p>
+			<img id="attendee-recovery-qr" class="mx-auto mb-3 max-w-[256px]" src={recoveryData.qrCodeDataUrl} alt={m.meeting_attendee_recovery_alt()} />
+			<p class="mb-3 break-all text-xs text-base-content/60">
+				<a id="attendee-recovery-link" class="link link-hover" href={recoveryData.loginUrl}>{recoveryData.loginUrl}</a>
+			</p>
+			<button type="button" class="btn btn-sm btn-outline" onclick={copyRecoveryUrl}>
+				{recoveryCopied ? m.common_copied() : m.common_copy_url()}
+			</button>
+		{:else}
+			<AppAlert message="Failed to load the recovery link." />
+		{/if}
+	</div>
+	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
+</dialog>

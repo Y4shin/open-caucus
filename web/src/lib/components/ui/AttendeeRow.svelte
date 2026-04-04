@@ -9,14 +9,14 @@
 		onRemove,
 		onToggleChair,
 		onToggleQuoted,
-		recoveryURL
+		onRecovery
 	}: {
 		attendee: AttendeeRecord;
 		attendeeActionPending: string;
 		onRemove: (attendeeId: string, fullName: string) => Promise<void>;
 		onToggleChair: (attendee: AttendeeRecord) => Promise<void>;
 		onToggleQuoted: (attendee: AttendeeRecord) => Promise<void>;
-		recoveryURL: (attendeeId: string) => string;
+		onRecovery: (attendeeId: string) => void;
 	} = $props();
 </script>
 
@@ -59,7 +59,7 @@
 				</div>
 				<div class="join join-vertical">
 					{#if attendee.isGuest}
-						<a href={recoveryURL(attendee.attendeeId)} class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link"><LegacyIcon name="history" class="h-4 w-4" /></a>
+						<button type="button" class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link" onclick={() => onRecovery(attendee.attendeeId)}><LegacyIcon name="history" class="h-4 w-4" /></button>
 					{/if}
 					<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await onRemove(attendee.attendeeId, attendee.fullName); }}>
 						<button type="submit" class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Remove attendee" title="Remove attendee" aria-label="Remove attendee" disabled={attendeeActionPending !== ''}><LegacyIcon name="trash" class="h-4 w-4" /></button>

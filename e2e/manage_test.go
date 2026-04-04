@@ -440,9 +440,9 @@ func TestManagePage_ToggleChair(t *testing.T) {
 	}, "chair toggle to become unchecked")
 }
 
-// TestManagePage_GuestRecoveryLink verifies that guest cards provide a
-// recovery-link page with a direct login URL and QR code.
-func TestManagePage_GuestRecoveryLink(t *testing.T) {
+// TestManagePage_GuestRecoveryDialog verifies that guest cards open a
+// recovery dialog with a direct login URL and QR code.
+func TestManagePage_GuestRecoveryDialog(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
@@ -460,17 +460,17 @@ func TestManagePage_GuestRecoveryLink(t *testing.T) {
 	if err := card.WaitFor(); err != nil {
 		t.Fatalf("expected guest attendee card: %v", err)
 	}
-	if err := card.Locator("a[title='Recovery link']").Click(); err != nil {
+	if err := card.Locator("button[title='Recovery link']").Click(); err != nil {
 		t.Fatalf("click recovery link: %v", err)
 	}
-	if err := page.Locator("#attendee-recovery-link").WaitFor(); err != nil {
-		t.Fatalf("expected attendee recovery link on page: %v", err)
+	if err := page.Locator("#recovery-qr-dialog #attendee-recovery-link").WaitFor(); err != nil {
+		t.Fatalf("expected attendee recovery link in dialog: %v", err)
 	}
-	if err := page.Locator("#attendee-recovery-qr").WaitFor(); err != nil {
-		t.Fatalf("expected attendee recovery QR on page: %v", err)
+	if err := page.Locator("#recovery-qr-dialog #attendee-recovery-qr").WaitFor(); err != nil {
+		t.Fatalf("expected attendee recovery QR in dialog: %v", err)
 	}
 
-	href, err := page.Locator("#attendee-recovery-link").GetAttribute("href")
+	href, err := page.Locator("#recovery-qr-dialog #attendee-recovery-link").GetAttribute("href")
 	if err != nil {
 		t.Fatalf("get attendee recovery href: %v", err)
 	}
