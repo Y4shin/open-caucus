@@ -48,13 +48,22 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 
 ---
 
-## What Remains (Phase 3 ideas)
+## Phase 3: Moderate page domain components
 
-The moderate page is still 2600+ lines. Further opportunities if a future agent wants to continue:
-- Extract the **AgendaPointList** section (lines ~1460–1650) into a component
-- Extract the **VoteCard** per-vote accordion (lines ~1800–2100) into a component
-- Extract the **AttendeeRow** (the large attendee list row in manage tab, lines ~2130–2185) into a component
-- The `join/+page.svelte` (211 lines) has some inline form patterns that could use `AppCard`
+### 3.1 AttendeeRow component — DONE
+- **Component**: `web/src/lib/components/ui/AttendeeRow.svelte`
+- **Applied to**: `moderate/+page.svelte` attendee list (lines ~2113–2171 collapsed to `<AttendeeRow>`)
+- **Pattern extracted**: Full attendee list item with number, name, badges, recovery link, remove button, chair toggle, FLINTA toggle
+- **Props**: `attendee: AttendeeRecord`, `attendeeActionPending: string`, `onRemove`, `onToggleChair`, `onToggleQuoted`, `recoveryURL`
+
+---
+
+## What Remains (further ideas)
+
+The moderate page is still ~2570 lines. Further opportunities if a future agent wants to continue:
+- Extract the **AgendaPointList** section (lines ~1450–1650) into a component — complex due to many callbacks (create, move, edit, delete, activate) and the import dialog
+- Extract the **VoteCard** per-vote accordion (lines ~1800–2070) into a component — very complex with many callbacks; would need ~15 props
+- The `join/+page.svelte` (211 lines) has no card/panel sections — no AppCard extraction needed there
 
 ---
 
@@ -85,6 +94,7 @@ The moderate page is still 2600+ lines. Further opportunities if a future agent 
 | DataTable | `ui/DataTable.svelte` | Phase 1 |
 | SpeakerBadges | `ui/SpeakerBadges.svelte` | Phase 2 |
 | votes utils | `utils/votes.ts` | Phase 2 |
+| AttendeeRow | `ui/AttendeeRow.svelte` | Phase 3 |
 
 ---
 
