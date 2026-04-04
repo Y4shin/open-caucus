@@ -1,6 +1,6 @@
 # Bug Fixes & Improvements Progress
 
-## Status: In Progress (New Meeting Wizard remaining)
+## Status: Complete
 
 ---
 
@@ -41,7 +41,9 @@
 - Action columns right-aligned with proper button groups
 - Consistent card headings, centered pagination, removed inline pipe separators
 
-## Features — Remaining
-
 ### New Meeting Wizard
-- Multi-step creation wizard: basic data → agenda editor → participant import → overview/confirm
+- 4-step dialog wizard: Basics → Agenda → Participants → Review
+- Text-based agenda input with auto-parsing of numbered/indented items into top-level and sub-points
+- Text-based participant import with [Chair]/[FLINTA] flag detection (also * and ^ suffixes)
+- Live preview for both agenda and participant steps
+- Sequential API calls create meeting, agenda points, and attendees with flags
