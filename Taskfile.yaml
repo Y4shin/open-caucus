@@ -139,6 +139,7 @@ tasks:
     desc: Run all tests including E2E (requires Playwright browsers installed)
     cmds:
       - task: test
+      - task: test:web
       - task: test:e2e
 
   test:e2e:
