@@ -71,11 +71,19 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 - **Pattern extracted**: Per-point card with number badge, title, active/child badges, move-up/down/activate/edit/delete/tools actions, inline edit form
 - **Props**: `point`, `isEditing`, `editTitle` (bindable), `canMoveUp`, `canMoveDown`, `slug`, `meetingId`, `isBusy`, `onSave`, `onCancelEdit`, `onMoveUp`, `onMoveDown`, `onActivate`, `onStartEdit`, `onDelete`
 
+### 3.4 AgendaSection component — DONE
+- **Component**: `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/AgendaSection.svelte` (co-located, not in ui/)
+- **Applied to**: `moderate/+page.svelte` left-panel agenda tab (replaced ~712 lines)
+- **Pattern extracted**: Full agenda left panel — compact sidebar list, agenda edit dialog (add-point form + AgendaPointCard list), agenda import dialog (2-step: input/preview + diff table). All 23 agenda-specific state variables, 2 `$derived` values, and 25 functions moved inside the component.
+- **Props**: `agendaPoints: AgendaPointRecord[]`, `slug`, `meetingId`, `anyDialogOpen` (bindable — used by parent auto-refresh interval), `onError`, `onReload`, `onSetActivePoint`
+- **Side effects**: Removed `runAgendaAction` from parent; replaced `agendaEditOpen || agendaImportOpen` interval guard with `bind:anyDialogOpen={agendaAnyDialogOpen}`. Component directly imports and calls `agendaClient`.
+- **Line count**: 2232 → 1520 (−712 lines)
+
 ---
 
 ## What Remains
 
-The moderate page has been substantially refactored. The `join/+page.svelte` (211 lines) has no card/panel sections worth extracting. Further work would require deeper architectural changes (e.g., extracting the full agenda edit section including its dialogs and import flow).
+The moderate page is now 1520 lines. The `join/+page.svelte` (211 lines) has no card/panel sections worth extracting. No further component extraction is warranted without deeper architectural changes.
 
 ---
 
@@ -109,6 +117,7 @@ The moderate page has been substantially refactored. The `join/+page.svelte` (21
 | AttendeeRow | `ui/AttendeeRow.svelte` | Phase 3 |
 | VoteCard | `ui/VoteCard.svelte` | Phase 3 |
 | AgendaPointCard | `ui/AgendaPointCard.svelte` | Phase 3 |
+| AgendaSection | `moderate/AgendaSection.svelte` | Phase 3 (co-located) |
 
 ---
 
@@ -119,5 +128,4 @@ The moderate page has been substantially refactored. The `join/+page.svelte` (21
 - All user-facing text uses **Paraglide** i18n via `import * as m from '$lib/paraglide/messages'`
 - Run e2e tests with `task test:e2e` (requires Playwright browsers via `task playwright:install`)
 - Commit regularly with descriptive messages
-- The `moderate/+page.svelte` (2614 lines) is the biggest opportunity but also most complex — approach carefully
 - AppCard accepts `title?: string` and `class?: string` props; the admin pages need `class="mb-4 bg-base-100 shadow-sm"` to get the right look
