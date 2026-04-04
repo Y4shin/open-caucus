@@ -88,23 +88,21 @@
 		<AppAlert message={accountsState.error} />
 	{/if}
 
-	<div id="account-list-container">
-		{#if createAccountError}
-			<AppAlert message={createAccountError} />
-		{/if}
-		<AppCard class="bg-base-100 shadow-sm mb-4">
-			<h2>{m.admin_accounts_add_heading()}</h2>
+	<div id="account-list-container" class="space-y-4">
+		<AppCard class="bg-base-100 shadow-sm">
+			<h2 class="text-base font-semibold mb-3">{m.admin_accounts_add_heading()}</h2>
 			<form
 				id="create-account-form"
+				class="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
 				onsubmit={(event) => {
 					event.preventDefault();
 					createAccount();
 				}}
 			>
 				<div>
-					<label for="username">{m.admin_accounts_username_label()}</label>
+					<label class="label text-sm font-medium" for="username">{m.admin_accounts_username_label()}</label>
 					<input
-						class="input input-bordered input-sm"
+						class="input input-bordered input-sm w-full"
 						type="text"
 						id="username"
 						name="username"
@@ -116,9 +114,9 @@
 					/>
 				</div>
 				<div>
-					<label for="full_name">{m.admin_accounts_fullname_label()}</label>
+					<label class="label text-sm font-medium" for="full_name">{m.admin_accounts_fullname_label()}</label>
 					<input
-						class="input input-bordered input-sm"
+						class="input input-bordered input-sm w-full"
 						type="text"
 						id="full_name"
 						name="full_name"
@@ -131,9 +129,9 @@
 				</div>
 				{#if session.passwordEnabled}
 					<div>
-						<label for="password">{m.admin_accounts_password_label()}</label>
+						<label class="label text-sm font-medium" for="password">{m.admin_accounts_password_label()}</label>
 						<input
-							class="input input-bordered input-sm"
+							class="input input-bordered input-sm w-full"
 							type="password"
 							id="password"
 							name="password"
@@ -145,13 +143,16 @@
 						/>
 					</div>
 				{/if}
-				<button class="btn btn-sm" type="submit" disabled={createAccountPending}>{m.admin_accounts_create_button()}</button>
+				<button class="btn btn-sm btn-primary" type="submit" disabled={createAccountPending}>{m.admin_accounts_create_button()}</button>
 			</form>
+			{#if createAccountError}
+				<div class="mt-3"><AppAlert message={createAccountError} /></div>
+			{/if}
 		</AppCard>
-		<AppCard class="bg-base-100 shadow-sm mb-4">
-			<h2>{m.admin_accounts_existing_heading()}</h2>
+		<AppCard class="bg-base-100 shadow-sm">
+			<h2 class="text-base font-semibold mb-3">{m.admin_accounts_existing_heading()}</h2>
 			{#if accountsState.data?.length === 0}
-				<p>{m.admin_accounts_empty_state()}</p>
+				<p class="text-sm text-base-content/70">{m.admin_accounts_empty_state()}</p>
 			{:else}
 				<DataTable>
 					{#snippet header()}
@@ -166,13 +167,21 @@
 							<tr>
 								<td>{account.username}</td>
 								<td>{account.fullName}</td>
-								<td>{account.isAdmin ? m.common_yes() : m.common_no()}</td>
+								<td>
+									{#if account.isAdmin}
+										<span class="badge badge-success badge-sm">{m.common_yes()}</span>
+									{:else}
+										<span class="badge badge-ghost badge-sm">{m.common_no()}</span>
+									{/if}
+								</td>
 							</tr>
 						{/each}
 					{/snippet}
 				</DataTable>
 			{/if}
-			<PaginationNav />
+			<div class="mt-3 flex justify-center">
+				<PaginationNav />
+			</div>
 		</AppCard>
 	</div>
 {/if}

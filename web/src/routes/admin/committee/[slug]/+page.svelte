@@ -183,20 +183,22 @@
 			<AppAlert message={committeeState.error} />
 		{/if}
 		{#if committeeState.data}
-			<AppCard class="bg-base-100 shadow-sm mb-4">
-				<h2>{m.admin_committee_users_assign_heading()}</h2>
+			<div class="space-y-4">
+			<AppCard class="bg-base-100 shadow-sm">
+				<h2 class="text-base font-semibold mb-3">{m.admin_committee_users_assign_heading()}</h2>
 				{#if committeeState.data.assignableAccounts.length === 0}
-					<p>{m.admin_committee_users_no_assignable_accounts()}</p>
+					<p class="text-sm text-base-content/70">{m.admin_committee_users_no_assignable_accounts()}</p>
 				{:else}
 					<form
+						class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end"
 						onsubmit={(event) => {
 							event.preventDefault();
 							assignExistingAccount();
 						}}
 					>
 						<div>
-							<label for="account_id">{m.admin_committee_users_account_label()}</label>
-							<select class="select select-bordered select-sm" id="account_id" name="account_id" bind:value={selectedAccountId} required>
+							<label class="label text-sm font-medium" for="account_id">{m.admin_committee_users_account_label()}</label>
+							<select class="select select-bordered select-sm w-full" id="account_id" name="account_id" bind:value={selectedAccountId} required>
 								<option value="">{m.admin_committee_users_account_placeholder()}</option>
 								{#each committeeState.data.assignableAccounts as account}
 									<option value={account.accountId}>{account.fullName} ({account.username})</option>
@@ -204,26 +206,24 @@
 							</select>
 						</div>
 						<div>
-							<label for="role">{m.admin_committee_users_role_label()}</label>
-							<select class="select select-bordered select-sm" id="role" name="role" bind:value={selectedAccountRole} required>
+							<label class="label text-sm font-medium" for="role">{m.admin_committee_users_role_label()}</label>
+							<select class="select select-bordered select-sm w-full" id="role" name="role" bind:value={selectedAccountRole} required>
 								<option value="member">{m.admin_committee_users_role_member()}</option>
 								<option value="chairperson">{m.admin_committee_users_role_chairperson()}</option>
 							</select>
 						</div>
-						<div>
-							<label>
-								<input class="checkbox checkbox-sm" type="checkbox" name="quoted" value="true" bind:checked={selectedAccountQuoted} />
-								{m.admin_committee_users_quoted_label()}
-							</label>
-						</div>
-						<button class="btn btn-sm" type="submit" disabled={assignAccountPending}>{m.admin_committee_users_assign_button()}</button>
+						<label class="label cursor-pointer justify-start gap-2 p-0 sm:mb-1">
+							<input class="checkbox checkbox-sm" type="checkbox" name="quoted" value="true" bind:checked={selectedAccountQuoted} />
+							<span class="text-sm">{m.admin_committee_users_quoted_label()}</span>
+						</label>
+						<button class="btn btn-sm btn-primary" type="submit" disabled={assignAccountPending}>{m.admin_committee_users_assign_button()}</button>
 					</form>
 				{/if}
 			</AppCard>
-			<AppCard class="bg-base-100 shadow-sm mb-4">
-				<h2>{m.admin_committee_users_existing_heading()}</h2>
+			<AppCard class="bg-base-100 shadow-sm">
+				<h2 class="text-base font-semibold mb-3">{m.admin_committee_users_existing_heading()}</h2>
 				{#if committeeState.data.users.length === 0}
-					<p>{m.admin_committee_users_empty_state()}</p>
+					<p class="text-sm text-base-content/70">{m.admin_committee_users_empty_state()}</p>
 				{:else}
 					<DataTable>
 						{#snippet header()}
@@ -232,7 +232,7 @@
 								<th>{m.admin_committee_users_col_fullname()}</th>
 								<th>{m.admin_committee_users_col_role()}</th>
 								<th>{m.admin_committee_users_col_quoted()}</th>
-								<th>{m.admin_committee_users_col_actions()}</th>
+								<th class="text-right">{m.admin_committee_users_col_actions()}</th>
 							</tr>
 						{/snippet}
 						{#snippet body()}
@@ -244,7 +244,6 @@
 										<select
 											class="select select-bordered select-xs"
 											name="role"
-											form={"membership-update-" + user.userId}
 											disabled={user.isOauthManaged}
 											value={membershipDrafts[user.userId]?.role ?? user.role}
 											onchange={(event) => {
@@ -256,87 +255,68 @@
 											<option value="chairperson" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'chairperson'}>{m.admin_committee_users_role_chairperson()}</option>
 										</select>
 										{#if user.isOauthManaged}
-											<div class="text-xs text-base-content/70 mt-1">{m.admin_committee_users_oauth_managed_role_hint()}</div>
+											<p class="text-[0.65rem] text-base-content/50 mt-0.5">{m.admin_committee_users_oauth_managed_role_hint()}</p>
 										{/if}
 									</td>
 									<td>
-										<input type="hidden" name="quoted" value="false" form={"membership-update-" + user.userId} />
 										<input
 											class="checkbox checkbox-sm"
 											type="checkbox"
 											name="quoted"
-											value="true"
 											checked={membershipDrafts[user.userId]?.quoted ?? user.quoted}
-											form={"membership-update-" + user.userId}
 											onchange={(event) => {
 												const next = (event.currentTarget as HTMLInputElement).checked;
 												membershipDrafts[user.userId] = { ...(membershipDrafts[user.userId] ?? { role: user.role, quoted: user.quoted }), quoted: next };
 											}}
 										/>
 									</td>
-									<td>
-										<form
-											id={"membership-update-" + user.userId}
-											class="inline-form inline"
-											onsubmit={(event) => {
-												event.preventDefault();
-												saveMembership(user.userId);
-											}}
-										>
-											{#if user.isOauthManaged}
-												<input type="hidden" name="role" value={user.role} />
-											{/if}
-											<button class="btn btn-sm" type="submit" disabled={saveMembershipPendingId === user.userId}>{m.admin_committee_users_update_button()}</button>
-										</form>
-										<form
-											class="inline-form inline ml-1"
-											onsubmit={(event) => {
-												event.preventDefault();
-												deleteMembership(user);
-											}}
-										>
-											<button class="btn btn-sm" type="submit" disabled={deleteMembershipPendingId === user.userId}>{m.admin_committee_users_delete_button()}</button>
-										</form>
+									<td class="text-right">
+										<div class="flex items-center justify-end gap-1">
+											<button class="btn btn-xs btn-primary btn-outline" type="button" disabled={saveMembershipPendingId === user.userId} onclick={() => saveMembership(user.userId)}>{m.admin_committee_users_update_button()}</button>
+											<button class="btn btn-xs btn-error btn-outline" type="button" disabled={deleteMembershipPendingId === user.userId} onclick={() => deleteMembership(user)}>{m.admin_committee_users_delete_button()}</button>
+										</div>
 									</td>
 								</tr>
 							{/each}
 						{/snippet}
 					</DataTable>
 				{/if}
-				<PaginationNav />
+				<div class="mt-3 flex justify-center">
+					<PaginationNav />
+				</div>
 			</AppCard>
 			{#if session.oauthEnabled}
-				<AppCard class="bg-base-100 shadow-sm mb-4">
-					<h2>{m.admin_committee_users_oauth_rules_heading()}</h2>
+				<AppCard class="bg-base-100 shadow-sm">
+					<h2 class="text-base font-semibold mb-3">{m.admin_committee_users_oauth_rules_heading()}</h2>
 					<form
-						class="flex flex-wrap gap-2 items-end"
+						class="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end mb-3"
 						onsubmit={(event) => {
 							event.preventDefault();
 							createOAuthRule();
 						}}
 					>
 						<div>
-							<label for="group_name">{m.admin_committee_users_oauth_group_label()}</label>
-							<input class="input input-bordered input-sm" type="text" id="group_name" name="group_name" bind:value={oauthGroupName} required />
+							<label class="label text-sm font-medium" for="group_name">{m.admin_committee_users_oauth_group_label()}</label>
+							<input class="input input-bordered input-sm w-full" type="text" id="group_name" name="group_name" bind:value={oauthGroupName} required />
 						</div>
 						<div>
-							<label for="oauth_rule_role">{m.admin_committee_users_role_label()}</label>
-							<select class="select select-bordered select-sm" id="oauth_rule_role" name="role" bind:value={oauthRole} required>
+							<label class="label text-sm font-medium" for="oauth_rule_role">{m.admin_committee_users_role_label()}</label>
+							<select class="select select-bordered select-sm w-full" id="oauth_rule_role" name="role" bind:value={oauthRole} required>
 								<option value="member">{m.admin_committee_users_role_member()}</option>
 								<option value="chairperson">{m.admin_committee_users_role_chairperson()}</option>
 							</select>
 						</div>
-						<button class="btn btn-sm" type="submit" disabled={createRulePending}>{m.admin_committee_users_oauth_rule_add_button()}</button>
+						<button class="btn btn-sm btn-primary" type="submit" disabled={createRulePending}>{m.admin_committee_users_oauth_rule_add_button()}</button>
 					</form>
 					{#if (committeeState.data?.oauthRules.length ?? 0) === 0}
-						<p class="mt-2">{m.admin_committee_users_oauth_rules_empty()}</p>
+						<p class="text-sm text-base-content/70">{m.admin_committee_users_oauth_rules_empty()}</p>
 					{:else}
 						<DataTable>
 							{#snippet header()}
 								<tr>
 									<th>{m.admin_committee_users_oauth_group_label()}</th>
 									<th>{m.admin_committee_users_col_role()}</th>
-									<th>{m.admin_committee_users_col_actions()}</th>
+									<th class="text-right">{m.admin_committee_users_col_actions()}</th>
 								</tr>
 							{/snippet}
 							{#snippet body()}
@@ -344,16 +324,8 @@
 									<tr>
 										<td>{rule.groupName}</td>
 										<td>{rule.role}</td>
-										<td>
-											<form
-												class="inline-form inline"
-												onsubmit={(event) => {
-													event.preventDefault();
-													deleteOAuthRule(rule);
-												}}
-											>
-												<button class="btn btn-sm" type="submit" disabled={deleteRulePendingId === rule.ruleId}>{m.admin_dashboard_delete_button()}</button>
-											</form>
+										<td class="text-right">
+											<button class="btn btn-xs btn-error btn-outline" type="button" disabled={deleteRulePendingId === rule.ruleId} onclick={() => deleteOAuthRule(rule)}>{m.admin_dashboard_delete_button()}</button>
 										</td>
 									</tr>
 								{/each}
@@ -362,6 +334,7 @@
 					{/if}
 				</AppCard>
 			{/if}
+			</div>
 		{/if}
 	{/if}
 </div>

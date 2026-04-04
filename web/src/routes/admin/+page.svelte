@@ -92,18 +92,19 @@
 	<AppAlert message={dashboardState.error} />
 {:else}
 	<AppCard class="bg-base-100 shadow-sm mb-4">
-		<h3>{m.admin_dashboard_add_committee_heading()}</h3>
+		<h3 class="text-base font-semibold mb-3">{m.admin_dashboard_add_committee_heading()}</h3>
 		<form
 			id="create-committee-form"
+			class="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
 			onsubmit={(event) => {
 				event.preventDefault();
 				createCommittee();
 			}}
 		>
 			<div>
-				<label for="name">{m.admin_dashboard_name_label()}</label>
+				<label class="label text-sm font-medium" for="name">{m.admin_dashboard_name_label()}</label>
 				<input
-					class="input input-bordered input-sm"
+					class="input input-bordered input-sm w-full"
 					type="text"
 					id="name"
 					name="name"
@@ -115,9 +116,9 @@
 				/>
 			</div>
 			<div>
-				<label for="slug">{m.admin_dashboard_slug_label()}</label>
+				<label class="label text-sm font-medium" for="slug">{m.admin_dashboard_slug_label()}</label>
 				<input
-					class="input input-bordered input-sm"
+					class="input input-bordered input-sm w-full"
 					type="text"
 					id="slug"
 					name="slug"
@@ -128,20 +129,20 @@
 					required
 					pattern="[a-z0-9\-]+"
 				/>
-				<small>{m.admin_dashboard_slug_help()}</small>
+				<p class="mt-1 text-xs text-base-content/60">{m.admin_dashboard_slug_help()}</p>
 			</div>
-			{#if createCommitteeError}
-				<AppAlert message={createCommitteeError} />
-			{/if}
-			<button class="btn btn-sm" type="submit" disabled={createCommitteePending}>{m.admin_dashboard_create_button()}</button>
+			<button class="btn btn-sm btn-primary" type="submit" disabled={createCommitteePending}>{m.admin_dashboard_create_button()}</button>
 		</form>
+		{#if createCommitteeError}
+			<div class="mt-3"><AppAlert message={createCommitteeError} /></div>
+		{/if}
 	</AppCard>
 
 	<AppCard class="bg-base-100 shadow-sm mb-4">
-		<h3>{m.admin_dashboard_existing_heading()}</h3>
+		<h3 class="text-base font-semibold mb-3">{m.admin_dashboard_existing_heading()}</h3>
 		<div id="committee-list-container">
 			{#if dashboardState.data?.length === 0}
-				<p>{m.admin_dashboard_empty_state()}</p>
+				<p class="text-sm text-base-content/70">{m.admin_dashboard_empty_state()}</p>
 			{:else}
 				<div id="committee-list">
 					<DataTable>
@@ -149,24 +150,19 @@
 							<tr>
 								<th>{m.admin_dashboard_col_name()}</th>
 								<th>{m.admin_dashboard_col_slug()}</th>
-								<th>{m.admin_dashboard_col_actions()}</th>
+								<th class="text-right">{m.admin_dashboard_col_actions()}</th>
 							</tr>
 						{/snippet}
 						{#snippet body()}
 							{#each dashboardState.data ?? [] as committee}
 								<tr>
 									<td>{committee.name}</td>
-									<td>{committee.slug}</td>
-									<td>
-										<a href={"/admin/committee/" + committee.slug}>{m.admin_dashboard_manage_users_link()}</a>{' |'}<form
-											class="inline-form inline"
-											onsubmit={(event) => {
-												event.preventDefault();
-												deleteCommittee(committee.slug);
-											}}
-										>
-											<button class="btn btn-sm" type="submit" disabled={deleteCommitteePendingSlug === committee.slug}>{m.admin_dashboard_delete_button()}</button>
-										</form>
+									<td><code class="text-xs">{committee.slug}</code></td>
+									<td class="text-right">
+										<div class="flex items-center justify-end gap-1">
+											<a class="btn btn-xs btn-ghost" href={"/admin/committee/" + committee.slug}>{m.admin_dashboard_manage_users_link()}</a>
+											<button class="btn btn-xs btn-error btn-outline" type="button" disabled={deleteCommitteePendingSlug === committee.slug} onclick={() => deleteCommittee(committee.slug)}>{m.admin_dashboard_delete_button()}</button>
+										</div>
 									</td>
 								</tr>
 							{/each}
@@ -175,7 +171,7 @@
 				</div>
 			{/if}
 		</div>
-		<div class="centered-pagination-wrap flex justify-center">
+		<div class="mt-3 flex justify-center">
 			<PaginationNav />
 		</div>
 	</AppCard>
