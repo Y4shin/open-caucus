@@ -4,6 +4,7 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { committeeClient, moderationClient } from '$lib/api/index.js';
 	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
@@ -262,17 +263,7 @@
 						{/each}
 					</ul>
 					<div class="mt-3 flex justify-center">
-						<nav class="pagination-nav join">
-							<button type="button" disabled class="ui-icon-label btn btn-sm">
-								<LegacyIcon name="left" class="ui-icon--left" />
-								<span class="ui-icon-text">{m.pagination_previous()}</span>
-							</button>
-							<button class="btn btn-sm" type="button" disabled>1</button>
-							<button type="button" disabled class="ui-icon-label btn btn-sm">
-								<span class="ui-icon-text">{m.pagination_next()}</span>
-								<LegacyIcon name="right" class="ui-icon--right" />
-							</button>
-						</nav>
+						<PaginationNav />
 					</div>
 				{/if}
 			</section>

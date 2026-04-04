@@ -3,7 +3,9 @@
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
-	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AppCard from '$lib/components/ui/AppCard.svelte';
+	import DataTable from '$lib/components/ui/DataTable.svelte';
+	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
 	import { adminClient } from '$lib/api/index.js';
 	import type { AccountRecord, CommitteeRecord, CommitteeUserRecord, OAuthRuleRecord } from '$lib/gen/conference/admin/v1/admin_pb.js';
 	import { session } from '$lib/stores/session.svelte.js';
@@ -181,7 +183,7 @@
 			<AppAlert message={committeeState.error} />
 		{/if}
 		{#if committeeState.data}
-			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+			<AppCard class="bg-base-100 shadow-sm mb-4">
 				<h2>{m.admin_committee_users_assign_heading()}</h2>
 				{#if committeeState.data.assignableAccounts.length === 0}
 					<p>{m.admin_committee_users_no_assignable_accounts()}</p>
@@ -217,14 +219,14 @@
 						<button class="btn btn-sm" type="submit" disabled={assignAccountPending}>{m.admin_committee_users_assign_button()}</button>
 					</form>
 				{/if}
-			</section>
-			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+			</AppCard>
+			<AppCard class="bg-base-100 shadow-sm mb-4">
 				<h2>{m.admin_committee_users_existing_heading()}</h2>
 				{#if committeeState.data.users.length === 0}
 					<p>{m.admin_committee_users_empty_state()}</p>
 				{:else}
-					<table class="data-table table table-zebra w-full">
-						<thead>
+					<DataTable>
+						{#snippet header()}
 							<tr>
 								<th>{m.admin_committee_users_col_username()}</th>
 								<th>{m.admin_committee_users_col_fullname()}</th>
@@ -232,9 +234,9 @@
 								<th>{m.admin_committee_users_col_quoted()}</th>
 								<th>{m.admin_committee_users_col_actions()}</th>
 							</tr>
-						</thead>
-						<tbody>
-							{#each committeeState.data.users as user}
+						{/snippet}
+						{#snippet body()}
+							{#each committeeState.data?.users ?? [] as user}
 								<tr>
 									<td>{user.username}</td>
 									<td>{user.fullName}</td>
@@ -298,23 +300,13 @@
 									</td>
 								</tr>
 							{/each}
-						</tbody>
-					</table>
+						{/snippet}
+					</DataTable>
 				{/if}
-				<nav class="pagination-nav join">
-					<button type="button" disabled class="ui-icon-label btn btn-sm">
-						<LegacyIcon name="left" class="ui-icon--left" />
-						<span class="ui-icon-text">{m.pagination_previous()}</span>
-					</button>
-					<button class="btn btn-sm" type="button" disabled>1</button>
-					<button type="button" disabled class="ui-icon-label btn btn-sm">
-						<span class="ui-icon-text">{m.pagination_next()}</span>
-						<LegacyIcon name="right" class="ui-icon--right" />
-					</button>
-				</nav>
-			</section>
+				<PaginationNav />
+			</AppCard>
 			{#if session.oauthEnabled}
-				<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+				<AppCard class="bg-base-100 shadow-sm mb-4">
 					<h2>{m.admin_committee_users_oauth_rules_heading()}</h2>
 					<form
 						class="flex flex-wrap gap-2 items-end"
@@ -336,19 +328,19 @@
 						</div>
 						<button class="btn btn-sm" type="submit" disabled={createRulePending}>{m.admin_committee_users_oauth_rule_add_button()}</button>
 					</form>
-					{#if committeeState.data.oauthRules.length === 0}
+					{#if (committeeState.data?.oauthRules.length ?? 0) === 0}
 						<p class="mt-2">{m.admin_committee_users_oauth_rules_empty()}</p>
 					{:else}
-						<table class="data-table table table-zebra w-full mt-2">
-							<thead>
+						<DataTable>
+							{#snippet header()}
 								<tr>
 									<th>{m.admin_committee_users_oauth_group_label()}</th>
 									<th>{m.admin_committee_users_col_role()}</th>
 									<th>{m.admin_committee_users_col_actions()}</th>
 								</tr>
-							</thead>
-							<tbody>
-								{#each committeeState.data.oauthRules as rule}
+							{/snippet}
+							{#snippet body()}
+								{#each committeeState.data?.oauthRules ?? [] as rule}
 									<tr>
 										<td>{rule.groupName}</td>
 										<td>{rule.role}</td>
@@ -365,10 +357,10 @@
 										</td>
 									</tr>
 								{/each}
-							</tbody>
-						</table>
+							{/snippet}
+						</DataTable>
 					{/if}
-				</section>
+				</AppCard>
 			{/if}
 		{/if}
 	{/if}

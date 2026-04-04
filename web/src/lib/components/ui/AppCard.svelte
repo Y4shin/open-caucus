@@ -10,7 +10,7 @@
 	} = $props();
 </script>
 
-<section class={`rounded-box border border-base-300 bg-base-200 p-4 ${className}`.trim()}>
+<section class={`rounded-box border border-base-300 p-4 ${className}`.trim()}>
 		{#if title}
 			<h2 class="mb-3 text-lg font-semibold">{title}</h2>
 		{/if}

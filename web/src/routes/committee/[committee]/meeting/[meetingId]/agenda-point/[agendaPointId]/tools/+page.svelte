@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import { agendaClient } from '$lib/api/index.js';
 	import type { AgendaPointToolsView, AttachmentRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
@@ -155,7 +156,7 @@
 		{/if}
 
 		{#if toolsState.data}
-			<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+			<AppCard class="bg-base-100 shadow-sm mb-4">
 				<h2>{m.attachment_heading()}</h2>
 				<div id="attachment-list-ap-{agendaPointId}">
 					<h4>{m.meeting_moderate_attachments_for({ agendaPoint: toolsState.data.agendaPointTitle })}</h4>
@@ -242,7 +243,7 @@
 						</ul>
 					{/if}
 				</div>
-			</section>
+			</AppCard>
 		{/if}
 	{/if}
 </div>

@@ -7,7 +7,9 @@
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
-	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AppCard from '$lib/components/ui/AppCard.svelte';
+	import DataTable from '$lib/components/ui/DataTable.svelte';
+	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	type AccountRow = {
@@ -90,7 +92,7 @@
 		{#if createAccountError}
 			<AppAlert message={createAccountError} />
 		{/if}
-		<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+		<AppCard class="bg-base-100 shadow-sm mb-4">
 			<h2>{m.admin_accounts_add_heading()}</h2>
 			<form
 				id="create-account-form"
@@ -145,21 +147,21 @@
 				{/if}
 				<button class="btn btn-sm" type="submit" disabled={createAccountPending}>{m.admin_accounts_create_button()}</button>
 			</form>
-		</section>
-		<section class="panel card bg-base-100 border border-base-300 shadow-sm rounded-box p-4 mb-4">
+		</AppCard>
+		<AppCard class="bg-base-100 shadow-sm mb-4">
 			<h2>{m.admin_accounts_existing_heading()}</h2>
 			{#if accountsState.data?.length === 0}
 				<p>{m.admin_accounts_empty_state()}</p>
 			{:else}
-				<table class="data-table table table-zebra w-full">
-					<thead>
+				<DataTable>
+					{#snippet header()}
 						<tr>
 							<th>{m.admin_accounts_col_username()}</th>
 							<th>{m.admin_accounts_col_fullname()}</th>
 							<th>{m.admin_accounts_col_admin()}</th>
 						</tr>
-					</thead>
-					<tbody>
+					{/snippet}
+					{#snippet body()}
 						{#each accountsState.data ?? [] as account}
 							<tr>
 								<td>{account.username}</td>
@@ -167,20 +169,10 @@
 								<td>{account.isAdmin ? m.common_yes() : m.common_no()}</td>
 							</tr>
 						{/each}
-					</tbody>
-				</table>
+					{/snippet}
+				</DataTable>
 			{/if}
-			<nav class="pagination-nav join">
-				<button type="button" disabled class="ui-icon-label btn btn-sm">
-					<LegacyIcon name="left" class="ui-icon--left" />
-					<span class="ui-icon-text">{m.pagination_previous()}</span>
-				</button>
-				<button class="btn btn-sm" type="button" disabled>1</button>
-				<button type="button" disabled class="ui-icon-label btn btn-sm">
-					<span class="ui-icon-text">{m.pagination_next()}</span>
-					<LegacyIcon name="right" class="ui-icon--right" />
-				</button>
-			</nav>
-		</section>
+			<PaginationNav />
+		</AppCard>
 	</div>
 {/if}
