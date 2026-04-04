@@ -18,9 +18,9 @@ func TestShellLanguageSelector_SwitchesLocaleAndPersistsCookies(t *testing.T) {
 
 	// setLocale() triggers window.location.reload() — wait for that navigation to
 	// settle before asserting anything about the post-switch state.
-	if _, err := page.RunAndWaitForNavigation(func() error {
+	if _, err := page.ExpectNavigation(func() error {
 		return page.Locator("footer button:has-text('DE')").First().Click()
-	}, playwright.PageRunAndWaitForNavigationOptions{
+	}, playwright.PageExpectNavigationOptions{
 		WaitUntil: playwright.WaitUntilStateDomcontentloaded,
 	}); err != nil {
 		t.Fatalf("click DE and wait for page reload: %v", err)

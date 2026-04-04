@@ -130,6 +130,7 @@
 
 	<!-- Textarea — natural editing, arrow keys, selection all work here -->
 	<textarea
+		id="agenda-import-source"
 		bind:this={textareaEl}
 		bind:value={rawText}
 		class="block w-full resize-none bg-transparent text-sm leading-6 outline-none"
@@ -157,6 +158,7 @@
 				{@const prefix = importPrefix(contentIdx)}
 				<button
 					type="button"
+					data-import-line-row
 					class={[
 						'pointer-events-auto absolute inset-x-0 flex items-center gap-1 px-2 text-xs font-semibold transition-opacity hover:opacity-80',
 						line.state === 'heading'
@@ -169,8 +171,8 @@
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => onToggle(contentIdx)}
 				>
+					<span class="font-mono tabular-nums" data-import-line-prefix>{prefix}</span>
 					{#if prefix}
-						<span class="font-mono tabular-nums">{prefix}</span>
 						<span class="opacity-50">·</span>
 					{/if}
 					<span>{importStateLabel(line.state)}</span>

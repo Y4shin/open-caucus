@@ -85,7 +85,7 @@ func openAgendaImportDialog(t *testing.T, page playwright.Page) {
 
 func agendaImportLinePrefixText(t *testing.T, page playwright.Page, rowIndex int) string {
 	t.Helper()
-	text, err := page.Locator("#agenda-import-correction-form [data-import-line-row]").Nth(rowIndex).Locator("[data-import-line-prefix]").TextContent()
+	text, err := page.Locator("#moderate-agenda-import-dialog [data-import-line-row]").Nth(rowIndex).Locator("[data-import-line-prefix]").TextContent()
 	if err != nil {
 		t.Fatalf("read import line prefix for row %d: %v", rowIndex, err)
 	}
@@ -353,13 +353,13 @@ func TestAgendaImport_ExtractDiffAccept(t *testing.T) {
 	if err := source.Fill("TOP1 A\nTOP2 B\nTOP3 C"); err != nil {
 		t.Fatalf("fill import source: %v", err)
 	}
-	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
-		t.Fatalf("click Extract Agenda: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Detect')").Click(); err != nil {
+		t.Fatalf("click Detect: %v", err)
 	}
-	if err := page.Locator("#agenda-import-correction-form").WaitFor(); err != nil {
-		t.Fatalf("wait correction form: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog [data-import-line-row]").First().WaitFor(); err != nil {
+		t.Fatalf("wait for detected lines: %v", err)
 	}
-	if err := page.Locator("#agenda-import-correction-form button:has-text('Generate Diff')").Click(); err != nil {
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Generate Diff')").Click(); err != nil {
 		t.Fatalf("click Generate Diff: %v", err)
 	}
 	if err := page.Locator("#moderate-agenda-import-dialog h4:has-text('Agenda Diff')").WaitFor(); err != nil {
@@ -393,14 +393,14 @@ func TestAgendaImport_CorrectionClickUpdatesDetectedNumbering(t *testing.T) {
 	if err := page.Locator("#agenda-import-source").Fill("TOP1 A\nTOP2 B\nTOP3 C"); err != nil {
 		t.Fatalf("fill import source: %v", err)
 	}
-	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
-		t.Fatalf("click Extract Agenda: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Detect')").Click(); err != nil {
+		t.Fatalf("click Detect: %v", err)
 	}
-	if err := page.Locator("#agenda-import-correction-form").WaitFor(); err != nil {
-		t.Fatalf("wait correction form: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog [data-import-line-row]").First().WaitFor(); err != nil {
+		t.Fatalf("wait for detected lines: %v", err)
 	}
 
-	rows := page.Locator("#agenda-import-correction-form [data-import-line-row]")
+	rows := page.Locator("#moderate-agenda-import-dialog [data-import-line-row]")
 	count, err := rows.Count()
 	if err != nil {
 		t.Fatalf("count correction rows: %v", err)
@@ -460,13 +460,13 @@ func TestAgendaImport_StaleAcceptShowsWarning(t *testing.T) {
 	if err := source.Fill("TOP1 A\nTOP2 Inserted Point\nTOP3 C"); err != nil {
 		t.Fatalf("fill import source: %v", err)
 	}
-	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
-		t.Fatalf("click Extract Agenda: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Detect')").Click(); err != nil {
+		t.Fatalf("click Detect: %v", err)
 	}
-	if err := page.Locator("#agenda-import-correction-form").WaitFor(); err != nil {
-		t.Fatalf("wait correction form: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog [data-import-line-row]").First().WaitFor(); err != nil {
+		t.Fatalf("wait for detected lines: %v", err)
 	}
-	if err := page.Locator("#agenda-import-correction-form button:has-text('Generate Diff')").Click(); err != nil {
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Generate Diff')").Click(); err != nil {
 		t.Fatalf("click Generate Diff: %v", err)
 	}
 	if err := page.Locator("#moderate-agenda-import-dialog h4:has-text('Agenda Diff')").WaitFor(); err != nil {
@@ -511,10 +511,13 @@ func TestAgendaImport_DenyLeavesAgendaUnchanged(t *testing.T) {
 	if err := page.Locator("#agenda-import-source").Fill("TOP1 A\nTOP2 Denied Point\nTOP3 C"); err != nil {
 		t.Fatalf("fill source: %v", err)
 	}
-	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Extract Agenda')").Click(); err != nil {
-		t.Fatalf("click Extract Agenda: %v", err)
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Detect')").Click(); err != nil {
+		t.Fatalf("click Detect: %v", err)
 	}
-	if err := page.Locator("#agenda-import-correction-form button:has-text('Generate Diff')").Click(); err != nil {
+	if err := page.Locator("#moderate-agenda-import-dialog [data-import-line-row]").First().WaitFor(); err != nil {
+		t.Fatalf("wait for detected lines: %v", err)
+	}
+	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Generate Diff')").Click(); err != nil {
 		t.Fatalf("click Generate Diff: %v", err)
 	}
 	if err := page.Locator("#moderate-agenda-import-dialog button:has-text('Deny')").Click(); err != nil {

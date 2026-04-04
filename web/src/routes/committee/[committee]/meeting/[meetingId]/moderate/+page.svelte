@@ -2061,7 +2061,7 @@
 																			{/if}
 
 																			{#if vote.state === 'counting'}
-																				<p class="text-sm text-warning">{m.votes_counting_phase_message()}</p>
+																				<p class="text-sm text-warning">{m.votes_results_blocked_counting()}</p>
 																			{:else if voteShouldShowTallies(vote)}
 																				<div class="rounded-box border border-base-300 bg-base-200/30 p-2">
 																					<div class="mb-1 text-xs font-semibold uppercase text-base-content/70">{m.votes_final_tallies()}</div>

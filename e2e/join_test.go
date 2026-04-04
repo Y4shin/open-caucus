@@ -104,8 +104,8 @@ func TestJoinPage_GuestFormShowsFLINTALabel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read FLINTA label text: %v", err)
 	}
-	if strings.TrimSpace(text) != "FLINTA*" {
-		t.Fatalf("expected FLINTA label text %q, got %q", "FLINTA*", strings.TrimSpace(text))
+	if strings.TrimSpace(text) != "FLINTA*:" {
+		t.Fatalf("expected FLINTA label text %q, got %q", "FLINTA*:", strings.TrimSpace(text))
 	}
 }
 
