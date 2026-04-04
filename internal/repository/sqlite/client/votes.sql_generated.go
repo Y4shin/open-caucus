@@ -312,18 +312,22 @@ func (q *Queries) GetOpenVoteVerificationRows(ctx context.Context, arg GetOpenVo
 	return items, nil
 }
 
-const getSecretVoteVerification = `-- name: GetSecretVoteVerification :one
+const getSecretVoteVerification = `-- name: GetSecretVoteVerification :many
 SELECT
     vd.id                 AS vote_definition_id,
     vd.name               AS vote_name,
     vb.receipt_token,
     vb.encrypted_commitment,
     vb.commitment_cipher,
-    vb.commitment_version
+    vb.commitment_version,
+    vo.id                 AS option_id,
+    vo.label              AS option_label
 FROM vote_ballots vb
 JOIN vote_definitions vd ON vd.id = vb.vote_definition_id
+LEFT JOIN vote_ballot_selections vbs ON vbs.ballot_id = vb.id AND vbs.vote_definition_id = vb.vote_definition_id
+LEFT JOIN vote_options vo ON vo.id = vbs.option_id AND vo.vote_definition_id = vb.vote_definition_id
 WHERE vb.vote_definition_id = ? AND vb.receipt_token = ? AND vb.attendee_id IS NULL
-LIMIT 1
+ORDER BY vo.position ASC, vo.id ASC
 `
 
 type GetSecretVoteVerificationParams struct {
@@ -338,20 +342,40 @@ type GetSecretVoteVerificationRow struct {
 	EncryptedCommitment []byte
 	CommitmentCipher    sql.NullString
 	CommitmentVersion   sql.NullInt64
+	OptionID            sql.NullInt64
+	OptionLabel         sql.NullString
 }
 
-func (q *Queries) GetSecretVoteVerification(ctx context.Context, arg GetSecretVoteVerificationParams) (GetSecretVoteVerificationRow, error) {
-	row := q.db.QueryRowContext(ctx, getSecretVoteVerification, arg.VoteDefinitionID, arg.ReceiptToken)
-	var i GetSecretVoteVerificationRow
-	err := row.Scan(
-		&i.VoteDefinitionID,
-		&i.VoteName,
-		&i.ReceiptToken,
-		&i.EncryptedCommitment,
-		&i.CommitmentCipher,
-		&i.CommitmentVersion,
-	)
-	return i, err
+func (q *Queries) GetSecretVoteVerification(ctx context.Context, arg GetSecretVoteVerificationParams) ([]GetSecretVoteVerificationRow, error) {
+	rows, err := q.db.QueryContext(ctx, getSecretVoteVerification, arg.VoteDefinitionID, arg.ReceiptToken)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetSecretVoteVerificationRow
+	for rows.Next() {
+		var i GetSecretVoteVerificationRow
+		if err := rows.Scan(
+			&i.VoteDefinitionID,
+			&i.VoteName,
+			&i.ReceiptToken,
+			&i.EncryptedCommitment,
+			&i.CommitmentCipher,
+			&i.CommitmentVersion,
+			&i.OptionID,
+			&i.OptionLabel,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getVoteCastByVoteAndAttendee = `-- name: GetVoteCastByVoteAndAttendee :one

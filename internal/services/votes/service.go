@@ -562,6 +562,11 @@ func (s *Service) VerifySecretReceipt(ctx context.Context, voteIDStr, receiptTok
 		return nil, mapVerifyError(err)
 	}
 
+	choiceOptionIDs := make([]string, len(verification.ChoiceOptionIDs))
+	for i, id := range verification.ChoiceOptionIDs {
+		choiceOptionIDs[i] = strconv.FormatInt(id, 10)
+	}
+
 	return &votesv1.VerifySecretReceiptResponse{
 		VoteId:                 strconv.FormatInt(verification.VoteDefinitionID, 10),
 		VoteName:               verification.VoteName,
@@ -569,6 +574,8 @@ func (s *Service) VerifySecretReceipt(ctx context.Context, voteIDStr, receiptTok
 		EncryptedCommitmentB64: base64.StdEncoding.EncodeToString(verification.EncryptedCommitment),
 		CommitmentCipher:       verification.CommitmentCipher,
 		CommitmentVersion:      verification.CommitmentVersion,
+		ChoiceLabels:           verification.ChoiceLabels,
+		ChoiceOptionIds:        choiceOptionIDs,
 	}, nil
 }
 

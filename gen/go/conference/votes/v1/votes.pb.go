@@ -1839,6 +1839,8 @@ type VerifySecretReceiptResponse struct {
 	EncryptedCommitmentB64 string                 `protobuf:"bytes,4,opt,name=encrypted_commitment_b64,json=encryptedCommitmentB64,proto3" json:"encrypted_commitment_b64,omitempty"`
 	CommitmentCipher       string                 `protobuf:"bytes,5,opt,name=commitment_cipher,json=commitmentCipher,proto3" json:"commitment_cipher,omitempty"`
 	CommitmentVersion      int64                  `protobuf:"varint,6,opt,name=commitment_version,json=commitmentVersion,proto3" json:"commitment_version,omitempty"`
+	ChoiceLabels           []string               `protobuf:"bytes,7,rep,name=choice_labels,json=choiceLabels,proto3" json:"choice_labels,omitempty"`
+	ChoiceOptionIds        []string               `protobuf:"bytes,8,rep,name=choice_option_ids,json=choiceOptionIds,proto3" json:"choice_option_ids,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -1913,6 +1915,20 @@ func (x *VerifySecretReceiptResponse) GetCommitmentVersion() int64 {
 		return x.CommitmentVersion
 	}
 	return 0
+}
+
+func (x *VerifySecretReceiptResponse) GetChoiceLabels() []string {
+	if x != nil {
+		return x.ChoiceLabels
+	}
+	return nil
+}
+
+func (x *VerifySecretReceiptResponse) GetChoiceOptionIds() []string {
+	if x != nil {
+		return x.ChoiceOptionIds
+	}
+	return nil
 }
 
 type RegisterCastRequest struct {
@@ -2433,14 +2449,16 @@ const file_conference_votes_v1_votes_proto_rawDesc = "" +
 	"\x11choice_option_ids\x18\a \x03(\tR\x0fchoiceOptionIds\"Z\n" +
 	"\x1aVerifySecretReceiptRequest\x12\x17\n" +
 	"\avote_id\x18\x01 \x01(\tR\x06voteId\x12#\n" +
-	"\rreceipt_token\x18\x02 \x01(\tR\freceiptToken\"\x8e\x02\n" +
+	"\rreceipt_token\x18\x02 \x01(\tR\freceiptToken\"\xdf\x02\n" +
 	"\x1bVerifySecretReceiptResponse\x12\x17\n" +
 	"\avote_id\x18\x01 \x01(\tR\x06voteId\x12\x1b\n" +
 	"\tvote_name\x18\x02 \x01(\tR\bvoteName\x12#\n" +
 	"\rreceipt_token\x18\x03 \x01(\tR\freceiptToken\x128\n" +
 	"\x18encrypted_commitment_b64\x18\x04 \x01(\tR\x16encryptedCommitmentB64\x12+\n" +
 	"\x11commitment_cipher\x18\x05 \x01(\tR\x10commitmentCipher\x12-\n" +
-	"\x12commitment_version\x18\x06 \x01(\x03R\x11commitmentVersion\"\x95\x01\n" +
+	"\x12commitment_version\x18\x06 \x01(\x03R\x11commitmentVersion\x12#\n" +
+	"\rchoice_labels\x18\a \x03(\tR\fchoiceLabels\x12*\n" +
+	"\x11choice_option_ids\x18\b \x03(\tR\x0fchoiceOptionIds\"\x95\x01\n" +
 	"\x13RegisterCastRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +

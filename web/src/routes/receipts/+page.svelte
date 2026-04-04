@@ -79,15 +79,11 @@
 		error = '';
 		try {
 			const payload = await verifyReceipt(receipt);
-			if (receipt.kind === 'open') {
-				const labels =
-					payload && 'choiceLabels' in payload && Array.isArray(payload.choiceLabels)
-						? payload.choiceLabels.join(', ')
-						: '';
-				verifyResults[receipt.id] = `${textOkPrefix}${labels || textNoChoices}`;
-			} else {
-				verifyResults[receipt.id] = `${textOkPrefix}${textCommitmentReturned}`;
-			}
+			const labels =
+				payload && 'choiceLabels' in payload && Array.isArray(payload.choiceLabels)
+					? payload.choiceLabels.join(', ')
+					: '';
+			verifyResults[receipt.id] = `${textOkPrefix}${labels || textNoChoices}`;
 		} catch (err) {
 			verifyResults[receipt.id] = `${textErrorPrefix}${err instanceof Error ? err.message : 'Verification failed.'}`;
 		} finally {

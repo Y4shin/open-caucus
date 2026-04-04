@@ -117,6 +117,8 @@ type VoteSecretVerification struct {
 	EncryptedCommitment []byte
 	CommitmentCipher    string
 	CommitmentVersion   int64
+	ChoiceLabels        []string
+	ChoiceOptionIDs     []int64
 }
 
 // VoteTallyRow aggregates count per option for one vote.

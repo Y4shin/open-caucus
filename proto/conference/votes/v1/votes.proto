@@ -255,6 +255,8 @@ message VerifySecretReceiptResponse {
   string encrypted_commitment_b64 = 4;
   string commitment_cipher = 5;
   int64 commitment_version = 6;
+  repeated string choice_labels = 7;
+  repeated string choice_option_ids = 8;
 }
 
 message RegisterCastRequest {

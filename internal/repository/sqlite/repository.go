@@ -2844,28 +2844,41 @@ func (r *Repository) VerifySecretBallotByReceipt(ctx context.Context, voteDefini
 		return nil, err
 	}
 
-	row, err := r.Queries.GetSecretVoteVerification(ctx, client.GetSecretVoteVerificationParams{
+	rows, err := r.Queries.GetSecretVoteVerification(ctx, client.GetSecretVoteVerificationParams{
 		VoteDefinitionID: voteDefinitionID,
 		ReceiptToken:     receiptToken,
 	})
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("secret ballot not found")
-		}
 		return nil, fmt.Errorf("verify secret vote ballot: %w", err)
 	}
-	if !row.CommitmentCipher.Valid || !row.CommitmentVersion.Valid {
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("secret ballot not found")
+	}
+
+	first := rows[0]
+	if !first.CommitmentCipher.Valid || !first.CommitmentVersion.Valid {
 		return nil, fmt.Errorf("secret ballot commitment metadata incomplete")
 	}
 
-	return &model.VoteSecretVerification{
-		VoteDefinitionID:    row.VoteDefinitionID,
-		VoteName:            row.VoteName,
-		ReceiptToken:        row.ReceiptToken,
-		EncryptedCommitment: row.EncryptedCommitment,
-		CommitmentCipher:    row.CommitmentCipher.String,
-		CommitmentVersion:   row.CommitmentVersion.Int64,
-	}, nil
+	result := &model.VoteSecretVerification{
+		VoteDefinitionID:    first.VoteDefinitionID,
+		VoteName:            first.VoteName,
+		ReceiptToken:        first.ReceiptToken,
+		EncryptedCommitment: first.EncryptedCommitment,
+		CommitmentCipher:    first.CommitmentCipher.String,
+		CommitmentVersion:   first.CommitmentVersion.Int64,
+		ChoiceLabels:        make([]string, 0, len(rows)),
+		ChoiceOptionIDs:     make([]int64, 0, len(rows)),
+	}
+	for _, row := range rows {
+		if row.OptionID.Valid {
+			result.ChoiceOptionIDs = append(result.ChoiceOptionIDs, row.OptionID.Int64)
+		}
+		if row.OptionLabel.Valid {
+			result.ChoiceLabels = append(result.ChoiceLabels, row.OptionLabel.String)
+		}
+	}
+	return result, nil
 }
 
 // GetVoteTallies aggregates per-option ballot counts.

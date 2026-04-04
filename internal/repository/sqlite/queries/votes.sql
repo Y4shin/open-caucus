@@ -156,18 +156,22 @@ LEFT JOIN vote_options vo ON vo.id = vbs.option_id AND vo.vote_definition_id = v
 WHERE vb.vote_definition_id = ? AND vb.receipt_token = ? AND vb.attendee_id IS NOT NULL
 ORDER BY vo.position ASC, vo.id ASC;
 
--- name: GetSecretVoteVerification :one
+-- name: GetSecretVoteVerification :many
 SELECT
     vd.id                 AS vote_definition_id,
     vd.name               AS vote_name,
     vb.receipt_token,
     vb.encrypted_commitment,
     vb.commitment_cipher,
-    vb.commitment_version
+    vb.commitment_version,
+    vo.id                 AS option_id,
+    vo.label              AS option_label
 FROM vote_ballots vb
 JOIN vote_definitions vd ON vd.id = vb.vote_definition_id
+LEFT JOIN vote_ballot_selections vbs ON vbs.ballot_id = vb.id AND vbs.vote_definition_id = vb.vote_definition_id
+LEFT JOIN vote_options vo ON vo.id = vbs.option_id AND vo.vote_definition_id = vb.vote_definition_id
 WHERE vb.vote_definition_id = ? AND vb.receipt_token = ? AND vb.attendee_id IS NULL
-LIMIT 1;
+ORDER BY vo.position ASC, vo.id ASC;
 
 -- name: GetVoteTallies :many
 SELECT
