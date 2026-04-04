@@ -65,11 +65,17 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 
 ---
 
-## What Remains (further ideas)
+### 3.3 AgendaPointCard component — DONE
+- **Component**: `web/src/lib/components/ui/AgendaPointCard.svelte`
+- **Applied to**: `moderate/+page.svelte` agenda edit dialog point list
+- **Pattern extracted**: Per-point card with number badge, title, active/child badges, move-up/down/activate/edit/delete/tools actions, inline edit form
+- **Props**: `point`, `isEditing`, `editTitle` (bindable), `canMoveUp`, `canMoveDown`, `slug`, `meetingId`, `isBusy`, `onSave`, `onCancelEdit`, `onMoveUp`, `onMoveDown`, `onActivate`, `onStartEdit`, `onDelete`
 
-The moderate page is now ~2480 lines. Remaining opportunities:
-- Extract the **AgendaPointCard** (the per-point card inside the edit dialog, lines ~1510–1555) into a component — contains move/activate/edit/delete/tools buttons per point
-- The `join/+page.svelte` (211 lines) has no card/panel sections — no AppCard extraction needed there
+---
+
+## What Remains
+
+The moderate page has been substantially refactored. The `join/+page.svelte` (211 lines) has no card/panel sections worth extracting. Further work would require deeper architectural changes (e.g., extracting the full agenda edit section including its dialogs and import flow).
 
 ---
 
@@ -102,6 +108,7 @@ The moderate page is now ~2480 lines. Remaining opportunities:
 | votes utils | `utils/votes.ts` | Phase 2 |
 | AttendeeRow | `ui/AttendeeRow.svelte` | Phase 3 |
 | VoteCard | `ui/VoteCard.svelte` | Phase 3 |
+| AgendaPointCard | `ui/AgendaPointCard.svelte` | Phase 3 |
 
 ---
 

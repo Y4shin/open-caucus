@@ -6,6 +6,7 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AgendaPointCard from '$lib/components/ui/AgendaPointCard.svelte';
 	import AttendeeRow from '$lib/components/ui/AttendeeRow.svelte';
 	import SpeakerBadges from '$lib/components/ui/SpeakerBadges.svelte';
 	import VoteCard from '$lib/components/ui/VoteCard.svelte';
@@ -1451,48 +1452,23 @@
 													{:else}
 														<div class="grid gap-3">
 															{#each agendaPointsFlat() as point}
-																<div id={`agenda-point-card-${point.agendaPointId}`} class={point.isActive ? `card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm bg-primary/5 border-primary/40${point.parentId ? ' ml-5' : ''}` : point.parentId ? 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm ml-5' : 'card rounded-box border border-base-300 bg-base-100 p-3 shadow-sm'} data-testid="manage-agenda-point-card">
-																	{#if editingAgendaPointId === point.agendaPointId}
-																		<form class="flex items-center gap-2" data-testid="manage-agenda-point-edit-form" onsubmit={async (event) => { event.preventDefault(); await saveEditAgendaPoint(point.agendaPointId); }}>
-																			<input class="input input-bordered input-sm flex-1" type="text" name="title" bind:value={editingAgendaPointTitle} required disabled={isAgendaBusy(`edit-${point.agendaPointId}`)} data-testid="manage-agenda-point-edit-input" />
-																			<button type="submit" class="btn btn-sm btn-primary" disabled={isAgendaBusy(`edit-${point.agendaPointId}`)}>{m.common_save()}</button>
-																			<button type="button" class="btn btn-sm btn-ghost" onclick={cancelEditAgendaPoint}>{m.common_cancel()}</button>
-																		</form>
-																	{:else}
-																		<div class="flex items-start gap-3">
-																			<span class="badge badge-outline shrink-0">{legacyAgendaDisplayNumber(point)}</span>
-																			<div class="min-w-0 flex-1">
-																				<div class="truncate font-semibold">{point.title}</div>
-																				<div class="mt-1 flex flex-wrap gap-1">
-																					{#if point.parentId}
-																						<span class="badge badge-outline">{m.agenda_point_child_badge()}</span>
-																					{/if}
-																					{#if point.isActive}
-																						<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">{m.meeting_manage_agenda_point_active_badge()}</span>
-																					{/if}
-																				</div>
-																			</div>
-																		</div>
-																		<div class="mt-2 flex items-center gap-2">
-																			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'up'); }}>
-																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move up" title="Move up" aria-label="Move up" disabled={!agendaPointCanMoveUp(point) || isAgendaBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
-																			</form>
-																			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await moveAgendaPoint(point.agendaPointId, 'down'); }}>
-																				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move down" title="Move down" aria-label="Move down" disabled={!agendaPointCanMoveDown(point) || isAgendaBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
-																			</form>
-																			{#if !point.isActive}
-																				<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await activateAgendaPoint(point.agendaPointId, point.isActive); }}>
-																					<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isAgendaBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
-																				</form>
-																			{/if}
-																			<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda point" title="Edit agenda point" aria-label="Edit agenda point" data-testid="manage-agenda-point-edit-btn" onclick={() => startEditAgendaPoint(point)}><LegacyIcon name="edit" class="h-4 w-4" /></button>
-																			<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Open tools" title="Open tools" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
-																			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await deleteAgendaPoint(point.agendaPointId); }}>
-																				<button type="submit" class="btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Delete agenda point" title="Delete agenda point" aria-label="Delete agenda point" disabled={isAgendaBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
-																			</form>
-																		</div>
-																	{/if}
-																</div>
+																<AgendaPointCard
+																	{point}
+																	isEditing={editingAgendaPointId === point.agendaPointId}
+																	bind:editTitle={editingAgendaPointTitle}
+																	canMoveUp={agendaPointCanMoveUp(point)}
+																	canMoveDown={agendaPointCanMoveDown(point)}
+																	{slug}
+																	{meetingId}
+																	isBusy={isAgendaBusy}
+																	onSave={async () => saveEditAgendaPoint(point.agendaPointId)}
+																	onCancelEdit={cancelEditAgendaPoint}
+																	onMoveUp={async () => moveAgendaPoint(point.agendaPointId, 'up')}
+																	onMoveDown={async () => moveAgendaPoint(point.agendaPointId, 'down')}
+																	onActivate={async () => activateAgendaPoint(point.agendaPointId, point.isActive)}
+																	onStartEdit={() => startEditAgendaPoint(point)}
+																	onDelete={async () => deleteAgendaPoint(point.agendaPointId)}
+																/>
 															{/each}
 														</div>
 													{/if}
