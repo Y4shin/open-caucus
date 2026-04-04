@@ -90,23 +90,44 @@ func TestChairpersonCreateMeeting(t *testing.T) {
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 
-	if err := page.Locator("#meeting-list-container [data-testid='committee-create-form']").WaitFor(); err != nil {
-		t.Fatalf("create meeting form not found: %v", err)
+	// Click the "Create Meeting" button to open the wizard dialog
+	createBtn := page.Locator("[data-testid='committee-create-form']")
+	if err := createBtn.WaitFor(); err != nil {
+		t.Fatalf("create meeting button not found: %v", err)
+	}
+	if err := createBtn.Click(); err != nil {
+		t.Fatalf("click create meeting button: %v", err)
 	}
 
-	urlBefore := page.URL()
-
-	if err := page.Locator("#meeting-list-container input[name=name]").Fill("Budget Meeting"); err != nil {
+	// Step 1: Fill meeting name and proceed
+	if err := page.Locator("#wizard-name").Fill("Budget Meeting"); err != nil {
 		t.Fatalf("fill meeting name: %v", err)
 	}
-	if err := page.Locator("#meeting-list-container [data-testid='committee-create-form'] button[type=submit]").Click(); err != nil {
-		t.Fatalf("submit create meeting: %v", err)
+	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+		t.Fatalf("click next (step 1): %v", err)
 	}
+
+	// Step 2: Skip agenda, proceed
+	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+		t.Fatalf("click next (step 2): %v", err)
+	}
+
+	// Step 3: Skip participants, proceed
+	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+		t.Fatalf("click next (step 3): %v", err)
+	}
+
+	// Step 4: Review — click Create
+	urlBefore := page.URL()
+	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+		t.Fatalf("click create (step 4): %v", err)
+	}
+
 	if err := meetingCard(page, "Budget Meeting").WaitFor(); err != nil {
 		t.Fatalf("expected meeting card to appear: %v", err)
 	}
 	if page.URL() != urlBefore {
-		t.Errorf("HTMX swap caused unexpected navigation: before=%s after=%s", urlBefore, page.URL())
+		t.Errorf("wizard caused unexpected navigation: before=%s after=%s", urlBefore, page.URL())
 	}
 }
 

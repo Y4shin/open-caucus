@@ -5,6 +5,7 @@
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
+	import MeetingWizard from './MeetingWizard.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { committeeClient, moderationClient } from '$lib/api/index.js';
 	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
@@ -15,14 +16,10 @@
 	const slug = $derived(page.params.committee);
 
 	let committeeState = $state(createRemoteState<CommitteeOverview>());
-	let createName = $state('');
-	let createDescription = $state('');
-	let createSignupOpen = $state(false);
-	let createPending = $state(false);
-	let createError = $state('');
 	let actionError = $state('');
 	let localActiveMeetingId = $state<string | null>(null);
 	let signupTogglePendingMeetingId = $state('');
+	let wizardRef = $state<ReturnType<typeof MeetingWizard> | null>(null);
 
 	$effect(() => {
 		if (!session.loaded) return;
@@ -55,28 +52,6 @@
 
 	const canManage = $derived(committeeState.data?.committee?.isChairperson || committeeState.data?.committee?.isAdmin);
 	const activeMeetingItem = $derived(committeeState.data?.meetings.find((m) => m.canViewLive) ?? null);
-
-	async function createMeeting(e: Event) {
-		e.preventDefault();
-		if (!createName.trim() || createPending) return;
-		createPending = true;
-		createError = '';
-		try {
-			await committeeClient.createMeeting({
-				committeeSlug: slug,
-				name: createName.trim(),
-				description: createDescription.trim()
-			});
-			createName = '';
-			createDescription = '';
-			createSignupOpen = false;
-			await loadCommittee();
-		} catch (err) {
-			createError = getDisplayError(err, 'Failed to create meeting.');
-		} finally {
-			createPending = false;
-		}
-	}
 
 	async function toggleActive(e: Event, meetingId: string) {
 		e.preventDefault();
@@ -141,51 +116,14 @@
 	{#if actionError}
 		<AppAlert message={actionError} />
 	{/if}
-	{#if createError}
-		<AppAlert message={createError} />
-	{/if}
-
 	{#if canManage}
-		<div id="meeting-list-container" class="grid items-start gap-4 md:grid-cols-[20rem_minmax(0,1fr)]">
-			<form
-				class="fieldset w-full rounded-box border border-base-300 bg-base-200 p-4"
-				data-testid="committee-create-form"
-				onsubmit={createMeeting}
-			>
-				<legend class="fieldset-legend">{m.committee_create_meeting_heading()}</legend>
-				<label class="label" for="name">{m.committee_name_label()}</label>
-				<input
-					class="input input-bordered input-sm w-full"
-					type="text"
-					id="name"
-					name="name"
-					placeholder={m.committee_name_label()}
-					bind:value={createName}
-					required
-				/>
-				<label class="label" for="description">{m.committee_description_label()}</label>
-				<input
-					class="input input-bordered input-sm w-full"
-					id="description"
-					name="description"
-					placeholder={m.committee_description_label()}
-					bind:value={createDescription}
-				/>
-				<label class="label cursor-pointer justify-start gap-3">
-					<input
-						type="checkbox"
-						id="signup_open"
-						name="signup_open"
-						class="toggle toggle-primary toggle-sm"
-						bind:checked={createSignupOpen}
-					/>
-					<span>{m.committee_signup_label()}</span>
-				</label>
-				<button class="btn btn-primary btn-sm" type="submit" disabled={createPending}>{m.committee_create_button()}</button>
-			</form>
+		<div id="meeting-list-container" class="space-y-4">
 
 			<section class="min-w-0 rounded-box border border-base-300 bg-base-200 p-4">
-				<h3 class="mb-3 text-lg font-semibold">{m.committee_meetings_heading()}</h3>
+				<div class="mb-3 flex items-center justify-between gap-2">
+					<h3 class="text-lg font-semibold">{m.committee_meetings_heading()}</h3>
+					<button type="button" class="btn btn-sm btn-primary" data-testid="committee-create-form" onclick={() => wizardRef?.open()}>{m.committee_create_button()}</button>
+				</div>
 				{#if committeeState.data.meetings.length === 0}
 					<p class="text-base-content/70">{m.committee_empty_state()}</p>
 				{:else}
@@ -290,4 +228,8 @@
 			{/if}
 		</section>
 	{/if}
+{/if}
+
+{#if canManage}
+	<MeetingWizard bind:this={wizardRef} slug={slug ?? ''} onCreated={loadCommittee} />
 {/if}
