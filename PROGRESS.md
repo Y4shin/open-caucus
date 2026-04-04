@@ -35,11 +35,26 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 
 ## Phase 2: Meeting & Moderate pages
 
-*(planned)*
+### 2.1 SpeakerBadges component — DONE
+- **Component**: `web/src/lib/components/ui/SpeakerBadges.svelte`
+- **Applied to**: `meeting/+page.svelte` (2 occurrences, also fixed a redundant double `{#if}`), `moderate/+page.svelte` (1 occurrence)
+- **Pattern extracted**: The badge row for ROPM, quoted, firstSpeaker, priority, and "you" was copy-pasted verbatim.
+- **Props**: `speakerType`, `quoted`, `firstSpeaker`, `priority`, `mine` (optional, default false)
 
-### 2.1 SpeakerList / AgendaList components
-- Large meeting page (906 lines) and moderate page (2614 lines) have domain-specific repeated patterns.
-- To be extracted in a follow-up pass.
+### 2.2 Vote badge utilities — DONE
+- **Module**: `web/src/lib/utils/votes.ts`
+- **Exports**: `voteStateBadgeClass(state)`, `voteVisibilityBadgeClass(visibility)`
+- **Applied to**: both `meeting/+page.svelte` and `moderate/+page.svelte` — removed local duplicates.
+
+---
+
+## What Remains (Phase 3 ideas)
+
+The moderate page is still 2600+ lines. Further opportunities if a future agent wants to continue:
+- Extract the **AgendaPointList** section (lines ~1460–1650) into a component
+- Extract the **VoteCard** per-vote accordion (lines ~1800–2100) into a component
+- Extract the **AttendeeRow** (the large attendee list row in manage tab, lines ~2130–2185) into a component
+- The `join/+page.svelte` (211 lines) has some inline form patterns that could use `AppCard`
 
 ---
 
@@ -68,6 +83,8 @@ Extract reusable Svelte components from large, inline-heavy pages to reduce dupl
 | LegacyIcon | `ui/LegacyIcon.svelte` | Pre-existing |
 | PaginationNav | `ui/PaginationNav.svelte` | Phase 1 |
 | DataTable | `ui/DataTable.svelte` | Phase 1 |
+| SpeakerBadges | `ui/SpeakerBadges.svelte` | Phase 2 |
+| votes utils | `utils/votes.ts` | Phase 2 |
 
 ---
 

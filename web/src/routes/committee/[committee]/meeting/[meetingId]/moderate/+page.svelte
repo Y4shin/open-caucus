@@ -6,6 +6,7 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import SpeakerBadges from '$lib/components/ui/SpeakerBadges.svelte';
 	import { agendaClient, attendeeClient, meetingClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { session } from '$lib/stores/session.svelte.js';
@@ -19,6 +20,7 @@
 		VotesPanelView
 	} from '$lib/gen/conference/votes/v1/votes_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
+	import { voteStateBadgeClass, voteVisibilityBadgeClass } from '$lib/utils/votes.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import * as m from '$lib/paraglide/messages';
 	import AgendaImportPreview from './AgendaImportPreview.svelte';
@@ -1179,26 +1181,6 @@
 		});
 	}
 
-	function voteStateBadgeClass(state: string) {
-		switch (state) {
-			case 'draft':
-				return 'badge badge-neutral badge-sm';
-			case 'open':
-				return 'badge badge-success badge-sm';
-			case 'counting':
-				return 'badge badge-warning badge-sm';
-			case 'closed':
-				return 'badge badge-info badge-sm';
-			case 'archived':
-				return 'badge badge-ghost badge-sm';
-			default:
-				return 'badge badge-sm';
-		}
-	}
-
-	function voteVisibilityBadgeClass(visibility: string) {
-		return visibility === 'secret' ? 'badge badge-warning badge-outline badge-sm' : 'badge badge-primary badge-outline badge-sm';
-	}
 
 	function voteStateLabel(state: string) {
 		switch (state) {
@@ -2390,27 +2372,7 @@
 														<div class="truncate font-semibold" data-testid="live-speaker-name">{speaker.fullName}</div>
 														{#if speakerHasBadges(speaker)}
 															<div class="flex shrink-0 flex-wrap items-center gap-1">
-																{#if speaker.speakerType === 'ropm'}
-																	<span class="tooltip tooltip-right" data-tip="Point of order">
-																		<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
-																	</span>
-																{/if}
-																{#if speaker.quoted}
-																	<span class="tooltip tooltip-right" data-tip="FLINTA*">
-																		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
-																	</span>
-																{/if}
-																{#if speaker.firstSpeaker}
-																	<span class="tooltip tooltip-right" data-tip="First Time">
-																		<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
-																	</span>
-																{/if}
-																{#if speaker.priority}
-																	<span class="tooltip tooltip-right" data-tip="Priority">
-																		<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
-																	</span>
-																	<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{m.meeting_live_badge_priority()}</span>
-																{/if}
+																<SpeakerBadges speakerType={speaker.speakerType} quoted={speaker.quoted} firstSpeaker={speaker.firstSpeaker} priority={speaker.priority} />
 															</div>
 														{/if}
 													</div>
