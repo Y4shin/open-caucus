@@ -636,6 +636,7 @@
 					{slug}
 					{meetingId}
 					onError={(msg) => (actionError = msg)}
+					onReload={loadSpeakers}
 				/>
 			</div>
 		</div>

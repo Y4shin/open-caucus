@@ -4,6 +4,7 @@
 	import { buildDocsOverlayHref } from '$lib/docs/navigation.js';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import SpeakerBadges from '$lib/components/ui/SpeakerBadges.svelte';
+	import { untrack } from 'svelte';
 	import { speakerClient } from '$lib/api/index.js';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import type { SpeakerQueueView } from '$lib/gen/conference/speakers/v1/speakers_pb.js';
@@ -16,7 +17,8 @@
 		hasActivePoint,
 		slug,
 		meetingId,
-		onError
+		onError,
+		onReload
 	}: {
 		speakers: SpeakerQueueView['speakers'] | undefined;
 		attendees: AttendeeRecord[];
@@ -24,6 +26,7 @@
 		slug: string;
 		meetingId: string;
 		onError: (msg: string) => void;
+		onReload: () => void;
 	} = $props();
 
 	let speakerActionPending = $state('');
@@ -40,19 +43,10 @@
 	});
 
 	$effect(() => {
-		if (speakers) syncSpeakingSince(speakers);
-	});
-
-	function activeSpeaker() {
-		return speakers?.find((speaker) => speaker.state === 'SPEAKING') ?? null;
-	}
-
-	function nextWaitingSpeaker() {
-		return speakers?.find((speaker) => speaker.state === 'WAITING') ?? null;
-	}
-
-	function syncSpeakingSince(spkrs: SpeakerQueueView['speakers']) {
-		const next = { ...speakingSinceMs };
+		if (!speakers) return;
+		const spkrs = speakers;
+		const current = untrack(() => speakingSinceMs);
+		const next = { ...current };
 		const activeIds = new Set(spkrs.map((s) => s.speakerId));
 		for (const s of spkrs) {
 			if (s.state === 'SPEAKING' && next[s.speakerId] == null) {
@@ -63,6 +57,14 @@
 			if (!activeIds.has(speakerId)) delete next[speakerId];
 		}
 		speakingSinceMs = next;
+	});
+
+	function activeSpeaker() {
+		return speakers?.find((speaker) => speaker.state === 'SPEAKING') ?? null;
+	}
+
+	function nextWaitingSpeaker() {
+		return speakers?.find((speaker) => speaker.state === 'WAITING') ?? null;
 	}
 
 	function waitingDisplayNumber(speakerId: string) {
@@ -174,9 +176,11 @@
 		speakerActionPending = key;
 		try {
 			await action();
+			onReload();
 			return true;
 		} catch (err) {
 			onError(getDisplayError(err, 'Failed to update the speakers queue.'));
+			onReload();
 			return false;
 		} finally {
 			speakerActionPending = '';
@@ -197,8 +201,10 @@
 				meetingId,
 				speakerId: current.speakerId
 			});
+			onReload();
 		} catch (err) {
 			onError(getDisplayError(err, 'Failed to update the speakers queue.'));
+			onReload();
 		} finally {
 			speakerActionPending = '';
 		}

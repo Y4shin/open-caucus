@@ -2,6 +2,7 @@
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import VoteCard from '$lib/components/ui/VoteCard.svelte';
+	import { untrack } from 'svelte';
 	import { voteClient } from '$lib/api/index.js';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import type { VoteDefinitionRecord, VotesPanelView } from '$lib/gen/conference/votes/v1/votes_pb.js';
@@ -28,27 +29,37 @@
 		onNotice: (msg: string) => void;
 	} = $props();
 
-	let voteActionPending = $state('');
 	let createVoteDetailsOpen = $state(false);
 	let voteAccordionOpen = $state<Record<string, boolean>>({});
 	let draftVoteEditorOpen = $state<Record<string, boolean>>({});
 
 	$effect(() => {
-		if (votesPanel?.votes) syncVotePanelOpenState(votesPanel.votes);
+		const votes = votesPanel?.votes;
+		if (!votes) return;
+		const currentAccordion = untrack(() => voteAccordionOpen);
+		const currentDraft = untrack(() => draftVoteEditorOpen);
+		const nextVoteAccordionOpen: Record<string, boolean> = {};
+		const nextDraftVoteEditorOpen: Record<string, boolean> = {};
+		for (const vote of votes) {
+			nextVoteAccordionOpen[vote.voteId] =
+				currentAccordion[vote.voteId] ?? voteAccordionDefaultOpen(vote);
+			if (vote.state === 'draft') {
+				nextDraftVoteEditorOpen[vote.voteId] = currentDraft[vote.voteId] ?? false;
+			}
+		}
+		voteAccordionOpen = nextVoteAccordionOpen;
+		draftVoteEditorOpen = nextDraftVoteEditorOpen;
 	});
 
-	async function runVoteAction(key: string, action: () => Promise<void>) {
+	async function runVoteAction(_key: string, action: () => Promise<void>) {
 		onError('');
 		onNotice('');
-		voteActionPending = key;
 		try {
 			await action();
 			return true;
 		} catch (err) {
 			onError(getDisplayError(err, 'Failed to update the votes panel.'));
 			return false;
-		} finally {
-			voteActionPending = '';
 		}
 	}
 
@@ -63,20 +74,6 @@
 
 	function voteAccordionDefaultOpen(vote: VoteDefinitionRecord) {
 		return vote.state === 'open' || vote.state === 'counting';
-	}
-
-	function syncVotePanelOpenState(votes: VoteDefinitionRecord[]) {
-		const nextVoteAccordionOpen: Record<string, boolean> = {};
-		const nextDraftVoteEditorOpen: Record<string, boolean> = {};
-		for (const vote of votes) {
-			nextVoteAccordionOpen[vote.voteId] =
-				voteAccordionOpen[vote.voteId] ?? voteAccordionDefaultOpen(vote);
-			if (vote.state === 'draft') {
-				nextDraftVoteEditorOpen[vote.voteId] = draftVoteEditorOpen[vote.voteId] ?? false;
-			}
-		}
-		voteAccordionOpen = nextVoteAccordionOpen;
-		draftVoteEditorOpen = nextDraftVoteEditorOpen;
 	}
 
 	function setVoteAccordionOpen(voteId: string, open: boolean) {
@@ -125,8 +122,6 @@
 			});
 			form.reset();
 			createVoteDetailsOpen = false;
-			const res = await voteClient.getVotesPanel({ committeeSlug: slug, meetingId });
-			syncVotePanelOpenState(res.view?.votes ?? []);
 		});
 	}
 
