@@ -51,6 +51,8 @@ message AgendaPointRecord {
   bool gender_quotation = 7;
   bool first_speaker_quotation = 8;
   repeated AgendaPointRecord sub_points = 9;
+  string entered_at = 10; // RFC3339 timestamp when this point was activated
+  string left_at = 11;    // RFC3339 timestamp when this point was deactivated
 }
 
 message AttachmentRecord {

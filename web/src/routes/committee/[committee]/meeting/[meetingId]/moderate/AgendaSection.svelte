@@ -461,6 +461,9 @@
 					<li class={point.isActive ? 'list-row items-center gap-3 bg-primary/10' : point.parentId ? 'list-row items-center gap-3 pl-8' : 'list-row items-center gap-3'}>
 						<span class="badge badge-outline">{legacyAgendaDisplayNumber(point)}</span>
 						<span class={point.isActive ? 'flex-1 truncate font-semibold' : 'flex-1 truncate'}>{point.title}</span>
+						{#if point.enteredAt}
+							<span class="shrink-0 font-mono text-[0.65rem] text-base-content/50">{new Date(point.enteredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+						{/if}
 						{#if point.isActive}
 							<span class="badge badge-success badge-sm">{m.meeting_manage_agenda_point_active_badge()}</span>
 						{:else}

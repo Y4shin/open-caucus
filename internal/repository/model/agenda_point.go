@@ -12,4 +12,6 @@ type AgendaPoint struct {
 	FirstSpeakerQuotationEnabled *bool  // nil = inherit from meeting
 	ModeratorID                  *int64 // nil if not set
 	CurrentAttachmentID          *int64
+	EnteredAt                    *string // ISO8601 timestamp when this point was activated
+	LeftAt                       *string // ISO8601 timestamp when this point was deactivated
 }

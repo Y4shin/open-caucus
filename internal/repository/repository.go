@@ -165,6 +165,8 @@ type Repository interface {
 	MoveAgendaPointDown(ctx context.Context, meetingID, agendaPointID int64) error
 	ApplyAgendaPoints(ctx context.Context, meetingID int64, points []AgendaApplyPoint, deleteIDs []int64) error
 	SetCurrentAgendaPoint(ctx context.Context, meetingID int64, agendaPointID *int64) error
+	SetAgendaPointEnteredAt(ctx context.Context, agendaPointID int64, ts string) error
+	SetAgendaPointLeftAt(ctx context.Context, agendaPointID int64, ts string) error
 	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
 	ClearCurrentDocument(ctx context.Context, agendaPointID int64) error
 	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error

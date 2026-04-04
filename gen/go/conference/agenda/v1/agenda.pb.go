@@ -35,6 +35,8 @@ type AgendaPointRecord struct {
 	GenderQuotation       bool                   `protobuf:"varint,7,opt,name=gender_quotation,json=genderQuotation,proto3" json:"gender_quotation,omitempty"`
 	FirstSpeakerQuotation bool                   `protobuf:"varint,8,opt,name=first_speaker_quotation,json=firstSpeakerQuotation,proto3" json:"first_speaker_quotation,omitempty"`
 	SubPoints             []*AgendaPointRecord   `protobuf:"bytes,9,rep,name=sub_points,json=subPoints,proto3" json:"sub_points,omitempty"`
+	EnteredAt             string                 `protobuf:"bytes,10,opt,name=entered_at,json=enteredAt,proto3" json:"entered_at,omitempty"` // RFC3339 timestamp when this point was activated
+	LeftAt                string                 `protobuf:"bytes,11,opt,name=left_at,json=leftAt,proto3" json:"left_at,omitempty"`          // RFC3339 timestamp when this point was deactivated
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -130,6 +132,20 @@ func (x *AgendaPointRecord) GetSubPoints() []*AgendaPointRecord {
 		return x.SubPoints
 	}
 	return nil
+}
+
+func (x *AgendaPointRecord) GetEnteredAt() string {
+	if x != nil {
+		return x.EnteredAt
+	}
+	return ""
+}
+
+func (x *AgendaPointRecord) GetLeftAt() string {
+	if x != nil {
+		return x.LeftAt
+	}
+	return ""
 }
 
 type AttachmentRecord struct {
@@ -1451,7 +1467,7 @@ var File_conference_agenda_v1_agenda_proto protoreflect.FileDescriptor
 
 const file_conference_agenda_v1_agenda_proto_rawDesc = "" +
 	"\n" +
-	"!conference/agenda/v1/agenda.proto\x12\x14conference.agenda.v1\x1a!conference/common/v1/common.proto\"\xf9\x02\n" +
+	"!conference/agenda/v1/agenda.proto\x12\x14conference.agenda.v1\x1a!conference/common/v1/common.proto\"\xb1\x03\n" +
 	"\x11AgendaPointRecord\x12&\n" +
 	"\x0fagenda_point_id\x18\x01 \x01(\tR\ragendaPointId\x12%\n" +
 	"\x0edisplay_number\x18\x02 \x01(\tR\rdisplayNumber\x12\x14\n" +
@@ -1462,7 +1478,11 @@ const file_conference_agenda_v1_agenda_proto_rawDesc = "" +
 	"\x10gender_quotation\x18\a \x01(\bR\x0fgenderQuotation\x126\n" +
 	"\x17first_speaker_quotation\x18\b \x01(\bR\x15firstSpeakerQuotation\x12F\n" +
 	"\n" +
-	"sub_points\x18\t \x03(\v2'.conference.agenda.v1.AgendaPointRecordR\tsubPoints\"\xc4\x01\n" +
+	"sub_points\x18\t \x03(\v2'.conference.agenda.v1.AgendaPointRecordR\tsubPoints\x12\x1d\n" +
+	"\n" +
+	"entered_at\x18\n" +
+	" \x01(\tR\tenteredAt\x12\x17\n" +
+	"\aleft_at\x18\v \x01(\tR\x06leftAt\"\xc4\x01\n" +
 	"\x10AttachmentRecord\x12#\n" +
 	"\rattachment_id\x18\x01 \x01(\tR\fattachmentId\x12\x17\n" +
 	"\ablob_id\x18\x02 \x01(\tR\x06blobId\x12\x1a\n" +

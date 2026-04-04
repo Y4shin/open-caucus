@@ -39,6 +39,8 @@ type AgendaPoint struct {
 	FirstSpeakerQuotationEnabled sql.NullBool
 	ModeratorID                  sql.NullInt64
 	CurrentAttachmentID          sql.NullInt64
+	EnteredAt                    sql.NullString
+	LeftAt                       sql.NullString
 }
 
 type Attendee struct {

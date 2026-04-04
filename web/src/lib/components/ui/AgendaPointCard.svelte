@@ -69,6 +69,15 @@
 					{#if point.isActive}
 						<span class="badge badge-outline badge-success" data-testid="manage-agenda-active-badge">{m.meeting_manage_agenda_point_active_badge()}</span>
 					{/if}
+					{#if point.enteredAt}
+						<span class="badge badge-ghost badge-sm font-mono text-[0.65rem]" data-testid="manage-agenda-entered-at">{new Date(point.enteredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+					{/if}
+					{#if point.leftAt && point.enteredAt}
+						{@const durationMs = new Date(point.leftAt).getTime() - new Date(point.enteredAt).getTime()}
+						{@const durationMin = Math.floor(durationMs / 60000)}
+						{@const durationSec = Math.floor((durationMs % 60000) / 1000)}
+						<span class="badge badge-ghost badge-sm font-mono text-[0.65rem]">{String(durationMin).padStart(2, '0')}:{String(durationSec).padStart(2, '0')}</span>
+					{/if}
 				</div>
 			</div>
 		</div>

@@ -1400,6 +1400,13 @@ func nullInt64ToPtr(n sql.NullInt64) *int64 {
 	return &n.Int64
 }
 
+func nullStringToPtr(n sql.NullString) *string {
+	if !n.Valid {
+		return nil
+	}
+	return &n.String
+}
+
 func nullStringValue(n sql.NullString, fallback string) string {
 	if n.Valid && n.String != "" {
 		return n.String
@@ -1441,6 +1448,8 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 		FirstSpeakerQuotationEnabled: nullBoolToPtr(ap.FirstSpeakerQuotationEnabled),
 		ModeratorID:                  nullInt64ToPtr(ap.ModeratorID),
 		CurrentAttachmentID:          nullInt64ToPtr(ap.CurrentAttachmentID),
+		EnteredAt:                    nullStringToPtr(ap.EnteredAt),
+		LeftAt:                       nullStringToPtr(ap.LeftAt),
 	}
 }
 
@@ -1792,6 +1801,22 @@ func (r *Repository) SetCurrentAgendaPoint(ctx context.Context, meetingID int64,
 		return fmt.Errorf("set current agenda point: %w", err)
 	}
 	return nil
+}
+
+// SetAgendaPointEnteredAt records the time an agenda point was activated.
+func (r *Repository) SetAgendaPointEnteredAt(ctx context.Context, agendaPointID int64, ts string) error {
+	return r.Queries.SetAgendaPointEnteredAt(ctx, client.SetAgendaPointEnteredAtParams{
+		EnteredAt: sql.NullString{String: ts, Valid: true},
+		ID:        agendaPointID,
+	})
+}
+
+// SetAgendaPointLeftAt records the time an agenda point was deactivated.
+func (r *Repository) SetAgendaPointLeftAt(ctx context.Context, agendaPointID int64, ts string) error {
+	return r.Queries.SetAgendaPointLeftAt(ctx, client.SetAgendaPointLeftAtParams{
+		LeftAt: sql.NullString{String: ts, Valid: true},
+		ID:     agendaPointID,
+	})
 }
 
 // SetCurrentAttachment sets an agenda point's current attachment.

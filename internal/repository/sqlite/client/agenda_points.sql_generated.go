@@ -37,7 +37,7 @@ INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, NULL, ?, ?)
 RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-          current_attachment_id
+          current_attachment_id, entered_at, left_at
 `
 
 type CreateAgendaPointParams struct {
@@ -62,6 +62,8 @@ func (q *Queries) CreateAgendaPoint(ctx context.Context, arg CreateAgendaPointPa
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.CurrentAttachmentID,
+		&i.EnteredAt,
+		&i.LeftAt,
 	)
 	return i, err
 }
@@ -71,7 +73,7 @@ INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, ?, ?, ?)
 RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-          current_attachment_id
+          current_attachment_id, entered_at, left_at
 `
 
 type CreateSubAgendaPointParams struct {
@@ -102,6 +104,8 @@ func (q *Queries) CreateSubAgendaPoint(ctx context.Context, arg CreateSubAgendaP
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.CurrentAttachmentID,
+		&i.EnteredAt,
+		&i.LeftAt,
 	)
 	return i, err
 }
@@ -118,7 +122,7 @@ func (q *Queries) DeleteAgendaPoint(ctx context.Context, id int64) error {
 const getAgendaPointByID = `-- name: GetAgendaPointByID :one
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points WHERE id = ?
 `
 
@@ -138,6 +142,8 @@ func (q *Queries) GetAgendaPointByID(ctx context.Context, id int64) (AgendaPoint
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.CurrentAttachmentID,
+		&i.EnteredAt,
+		&i.LeftAt,
 	)
 	return i, err
 }
@@ -174,7 +180,7 @@ func (q *Queries) GetMaxSubAgendaPointPosition(ctx context.Context, arg GetMaxSu
 const listAgendaPointsForMeeting = `-- name: ListAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NULL
 ORDER BY position ASC
@@ -202,6 +208,8 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.CurrentAttachmentID,
+			&i.EnteredAt,
+			&i.LeftAt,
 		); err != nil {
 			return nil, err
 		}
@@ -219,7 +227,7 @@ func (q *Queries) ListAgendaPointsForMeeting(ctx context.Context, meetingID int6
 const listSubAgendaPointsForMeeting = `-- name: ListSubAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NOT NULL
 ORDER BY parent_id ASC, position ASC
@@ -247,6 +255,8 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.CurrentAttachmentID,
+			&i.EnteredAt,
+			&i.LeftAt,
 		); err != nil {
 			return nil, err
 		}
@@ -264,7 +274,7 @@ func (q *Queries) ListSubAgendaPointsForMeeting(ctx context.Context, meetingID i
 const listSubAgendaPointsForParent = `-- name: ListSubAgendaPointsForParent :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id = ?
 ORDER BY position ASC
@@ -297,6 +307,8 @@ func (q *Queries) ListSubAgendaPointsForParent(ctx context.Context, arg ListSubA
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.CurrentAttachmentID,
+			&i.EnteredAt,
+			&i.LeftAt,
 		); err != nil {
 			return nil, err
 		}
@@ -309,6 +321,20 @@ func (q *Queries) ListSubAgendaPointsForParent(ctx context.Context, arg ListSubA
 		return nil, err
 	}
 	return items, nil
+}
+
+const setAgendaPointEnteredAt = `-- name: SetAgendaPointEnteredAt :exec
+UPDATE agenda_points SET entered_at = ? WHERE id = ?
+`
+
+type SetAgendaPointEnteredAtParams struct {
+	EnteredAt sql.NullString
+	ID        int64
+}
+
+func (q *Queries) SetAgendaPointEnteredAt(ctx context.Context, arg SetAgendaPointEnteredAtParams) error {
+	_, err := q.db.ExecContext(ctx, setAgendaPointEnteredAt, arg.EnteredAt, arg.ID)
+	return err
 }
 
 const setAgendaPointFirstSpeakerQuotation = `-- name: SetAgendaPointFirstSpeakerQuotation :exec
@@ -336,6 +362,20 @@ type SetAgendaPointGenderQuotationParams struct {
 
 func (q *Queries) SetAgendaPointGenderQuotation(ctx context.Context, arg SetAgendaPointGenderQuotationParams) error {
 	_, err := q.db.ExecContext(ctx, setAgendaPointGenderQuotation, arg.GenderQuotationEnabled, arg.ID)
+	return err
+}
+
+const setAgendaPointLeftAt = `-- name: SetAgendaPointLeftAt :exec
+UPDATE agenda_points SET left_at = ? WHERE id = ?
+`
+
+type SetAgendaPointLeftAtParams struct {
+	LeftAt sql.NullString
+	ID     int64
+}
+
+func (q *Queries) SetAgendaPointLeftAt(ctx context.Context, arg SetAgendaPointLeftAtParams) error {
+	_, err := q.db.ExecContext(ctx, setAgendaPointLeftAt, arg.LeftAt, arg.ID)
 	return err
 }
 

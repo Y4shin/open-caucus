@@ -11,19 +11,19 @@ INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, NULL, ?, ?)
 RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-          current_attachment_id;
+          current_attachment_id, entered_at, left_at;
 
 -- name: CreateSubAgendaPoint :one
 INSERT INTO agenda_points (meeting_id, parent_id, position, title)
 VALUES (?, ?, ?, ?)
 RETURNING id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
           gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-          current_attachment_id;
+          current_attachment_id, entered_at, left_at;
 
 -- name: ListAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NULL
 ORDER BY position ASC;
@@ -31,7 +31,7 @@ ORDER BY position ASC;
 -- name: ListSubAgendaPointsForMeeting :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id IS NOT NULL
 ORDER BY parent_id ASC, position ASC;
@@ -39,7 +39,7 @@ ORDER BY parent_id ASC, position ASC;
 -- name: ListSubAgendaPointsForParent :many
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points
 WHERE meeting_id = ? AND parent_id = ?
 ORDER BY position ASC;
@@ -47,7 +47,7 @@ ORDER BY position ASC;
 -- name: GetAgendaPointByID :one
 SELECT id, meeting_id, parent_id, position, title, created_at, updated_at, current_speaker_id,
        gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id,
-       current_attachment_id
+       current_attachment_id, entered_at, left_at
 FROM agenda_points WHERE id = ?;
 
 -- name: UpdateAgendaPointTitle :exec
@@ -95,3 +95,9 @@ WHERE id = ?;
 UPDATE agenda_points
 SET current_attachment_id = NULL
 WHERE id = ?;
+
+-- name: SetAgendaPointEnteredAt :exec
+UPDATE agenda_points SET entered_at = ? WHERE id = ?;
+
+-- name: SetAgendaPointLeftAt :exec
+UPDATE agenda_points SET left_at = ? WHERE id = ?;

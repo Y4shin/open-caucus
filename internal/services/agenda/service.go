@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	agendav1 "github.com/Y4shin/open-caucus/gen/go/conference/agenda/v1"
 	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
@@ -232,6 +233,19 @@ func (s *Service) ActivateAgendaPoint(ctx context.Context, committeeSlug, meetin
 			return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid agenda point id")
 		}
 		apID = &id
+	}
+
+	// Record timestamps: mark the old point as left and the new one as entered.
+	now := time.Now().UTC().Format(time.RFC3339)
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load meeting", err)
+	}
+	if meeting.CurrentAgendaPointID != nil {
+		_ = s.repo.SetAgendaPointLeftAt(ctx, *meeting.CurrentAgendaPointID, now)
+	}
+	if apID != nil {
+		_ = s.repo.SetAgendaPointEnteredAt(ctx, *apID, now)
 	}
 
 	if err := s.repo.SetCurrentAgendaPoint(ctx, meetingID, apID); err != nil {
@@ -554,6 +568,14 @@ func toAgendaPointRecord(ap *model.AgendaPoint, displayNumber string, currentID 
 	if ap.FirstSpeakerQuotationEnabled != nil {
 		firstSpeakerQ = *ap.FirstSpeakerQuotationEnabled
 	}
+	enteredAt := ""
+	if ap.EnteredAt != nil {
+		enteredAt = *ap.EnteredAt
+	}
+	leftAt := ""
+	if ap.LeftAt != nil {
+		leftAt = *ap.LeftAt
+	}
 	return &agendav1.AgendaPointRecord{
 		AgendaPointId:         strconv.FormatInt(ap.ID, 10),
 		DisplayNumber:         displayNumber,
@@ -563,5 +585,7 @@ func toAgendaPointRecord(ap *model.AgendaPoint, displayNumber string, currentID 
 		ParentId:              parentID,
 		GenderQuotation:       genderQ,
 		FirstSpeakerQuotation: firstSpeakerQ,
+		EnteredAt:             enteredAt,
+		LeftAt:                leftAt,
 	}
 }
