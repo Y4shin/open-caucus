@@ -317,7 +317,7 @@
 										</div>
 									</div>
 								</div>
-								<p class="mt-2 text-xs text-base-content/70">Powered by Open Caucus v{PUBLIC_APP_VERSION}</p>
+								<p class="mt-2 text-xs text-base-content/70">Powered by Open Caucus {PUBLIC_APP_VERSION}</p>
 							</div>
 						</div>
 					{/if}
@@ -376,7 +376,7 @@
 		</div>
 		<footer class="page-footer hidden border-t border-base-300 bg-base-100/70 md:block">
 			<div class="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-3 px-4 py-3 text-sm text-base-content/70 lg:px-5">
-				<span class="text-xs sm:text-sm">Powered by Open Caucus v{PUBLIC_APP_VERSION}</span>
+				<span class="text-xs sm:text-sm">Powered by Open Caucus {PUBLIC_APP_VERSION}</span>
 				<div class="flex items-center gap-2">
 					<button class="btn btn-ghost btn-sm" type="button" onclick={openDocs}>{m.common_help()}</button>
 					<div class="join">
