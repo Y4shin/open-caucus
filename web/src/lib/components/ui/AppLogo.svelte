@@ -1,11 +1,11 @@
 <script lang="ts">
-	let { class: className = 'h-6 w-auto' }: { class?: string } = $props();
+	let { class: className = 'h-8 w-auto' }: { class?: string } = $props();
 </script>
 
 <svg
 	class={className}
 	xmlns="http://www.w3.org/2000/svg"
-	viewBox="80 135 882 795"
+	viewBox="60 115 922 835"
 	fill="none"
 	aria-hidden="true"
 	focusable="false"

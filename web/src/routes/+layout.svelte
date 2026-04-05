@@ -216,10 +216,10 @@
 			{/if}
 			<div class="flex-1">
 				<div class="min-w-0 md:hidden">
-					<h1><AppLogo class="h-6 w-auto" /></h1>
+					<h1><AppLogo class="h-8 w-auto" /></h1>
 				</div>
 				<div class="min-w-0 hidden md:flex md:items-center md:gap-2">
-					<h1><AppLogo class="h-6 w-auto" /></h1>
+					<h1><AppLogo class="h-8 w-auto" /></h1>
 					{#if pageActions.title}
 						<span class="truncate text-base font-semibold text-base-content/70">— {pageActions.title}</span>
 					{/if}
