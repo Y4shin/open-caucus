@@ -38,6 +38,7 @@ Use this for normal day-to-day agenda maintenance during a meeting.
    - Use **Move up** and **Move down** on agenda cards.
 3. Activate the current discussion point:
    - Click **Activate agenda point** on the correct item.
+   - The entry time is recorded and shown next to each point in the sidebar. When you switch to another point, the duration is also recorded.
 4. Open point-specific actions:
    - Click **Open tools** on the agenda card.
 5. Remove obsolete points:

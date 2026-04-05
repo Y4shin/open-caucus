@@ -53,14 +53,14 @@ Chairpersons who manage the live speakers queue and speaking rules.
 - Added speakers appear immediately in **Speakers List**.
 - Only one person is marked as currently speaking.
 - Priority changes move waiting speakers in the visible order.
-- Completed speeches stay visible for the active agenda point.
+- Completed speeches stay visible with their speaking duration (mm:ss) shown next to their name.
 
 ## Configure Moderator and Quotation Rules
 
 ### Meeting-level settings
 
 1. Open the **Settings** tab and stay on **Meeting**.
-2. Set **FLINTA* quotation** to enabled or disabled.
+2. Set **FLINTA* quotation** to enabled or disabled. When enabled, the queue alternates between FLINTA* and non-FLINTA* speakers (round-robin), with FLINTA* going first. Within each group, first-speaker bonus and request time determine order.
 3. Set **First-speaker bonus** to enabled or disabled.
 4. Choose a **Moderator** from the attendee list, or keep `-- none --`.
 

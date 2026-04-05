@@ -35,7 +35,7 @@ Anyone who has vote receipts in their browser and wants to verify them.
 3. Click **Verify**.
 4. Read the result message:
    - open vote receipts show the counted choice labels
-   - secret vote receipts show confirmation that the receipt exists
+   - secret vote receipts also show your actual voting choices, confirming both participation and what you voted for
 5. Repeat for other receipts as needed.
 
 ### What you should see
@@ -57,8 +57,8 @@ Use this only if you intentionally want to remove local receipt history from thi
   You may be in a different browser/profile than the one used for voting.
 - Verification fails:
   Check that the vote is already closed and try again.
-- Secret vote verification does not show choice labels:
-  This is expected; secret receipts confirm participation, not public choice display.
+- Secret vote verification shows unexpected choices:
+  Secret receipts now display your actual voting choices for personal verification. This is only visible to you via your receipt token.
 - You cleared receipts by mistake:
   Local receipts cannot be restored from this page.
 

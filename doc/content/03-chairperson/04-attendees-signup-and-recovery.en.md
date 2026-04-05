@@ -36,15 +36,15 @@ Chairpersons who manage attendee signup during a live meeting.
    - Keep it on while people are joining.
    - Switch it off when joining should stop.
 2. Share the join page quickly:
-   - Click **Show signup QR**.
-   - Ask guests to scan the QR code to open the join page.
+   - Click **Show signup QR** to open a dialog with the join QR code.
+   - Use **Copy URL** to copy the join link to your clipboard, or ask guests to scan the QR code.
 3. Add a guest manually (if needed):
    - In **Add guest**, enter the display name.
    - Optionally set **Gender quoted**.
    - Click **Add**.
 4. Update attendee flags:
-   - Use the attendee switches to set **Chair** where needed.
-   - For guests, use **Gender quoted** if required by your rules.
+   - Use the **Chair** and **FLINTA*** toggles next to each attendee's action buttons.
+   - For guests, use the **FLINTA*** toggle if required by your quotation rules.
 5. Remove duplicates or mistakes:
    - Click **Remove attendee** on the wrong entry and confirm.
 
@@ -53,7 +53,7 @@ Chairpersons who manage attendee signup during a live meeting.
 - Signup status changes immediately.
 - Added guests appear in the attendee list right away.
 - Chair and gender-quoted switches update each attendee row.
-- QR opens a join page guests can use on their phone.
+- QR code and join link appear in a dialog with a **Copy URL** button.
 
 ## Recovery for Guests Who Lost Access
 
@@ -61,9 +61,9 @@ Use this only for guest attendees.
 
 ### Step-by-step
 
-1. In the attendee list, find the guest and open **Recovery link**.
-2. On the recovery page, copy the recovery link or show the recovery QR code.
-3. Share that link/QR directly with the same guest.
+1. In the attendee list, find the guest and click **Recovery link**.
+2. A dialog opens with the recovery QR code and link. Use **Copy URL** to copy it to your clipboard.
+3. Share the link or QR directly with the same guest.
 4. Ask the guest to open it and continue to attendee login.
 
 ### What to confirm

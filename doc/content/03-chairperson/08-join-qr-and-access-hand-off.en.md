@@ -22,18 +22,18 @@ Chairpersons handling participant onboarding during a live meeting.
 ## Layout on desktop vs mobile
 
 - Desktop:
-  You can open join/recovery pages while still keeping moderation nearby.
+  Join QR and recovery dialogs open over the moderation page so you stay in context.
 - Mobile:
-  Open one hand-off page at a time, share it, then return to moderation.
+  Dialogs fill most of the screen. Close the dialog when done to return to moderation.
 
 ## New Guest Join via QR
 
 ### Step-by-step
 
 1. In **Attendees**, click **Show signup QR**.
-2. On the QR page, use either:
-   - the join link, or
-   - the QR code image.
+2. A dialog opens with the QR code and join link. Use either:
+   - **Copy URL** to copy the join link to your clipboard, or
+   - the QR code image for guests to scan.
 3. Ask the guest to open it and complete guest signup.
 4. Confirm the guest appears in the attendee list.
 
@@ -50,9 +50,9 @@ Use this when a guest was already in the meeting but lost access (for example af
 ### Step-by-step
 
 1. In the attendee list, find the guest and click **Recovery link**.
-2. On the recovery page, share either:
-   - the recovery link, or
-   - the recovery QR code.
+2. A dialog opens with the recovery QR code and link. Use either:
+   - **Copy URL** to copy the recovery link to your clipboard, or
+   - the QR code image for the guest to scan.
 3. Ask the same guest to open it directly.
 4. Confirm the guest returns to the live page under the same attendee identity.
 

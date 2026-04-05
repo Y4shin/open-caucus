@@ -19,10 +19,11 @@ Users with an admin account who manage committees, accounts, and platform polici
 
 ## Step-by-step
 
-1. Open the admin login page.
+1. Open the admin login page. The form appears in a centered card matching the regular login design.
 2. Sign in with the available method:
    - Password login: enter username/password and click **Login**.
    - Single sign-on login: click **Login with OAuth**.
+   - If you reached the admin login by mistake, click **Back to Login** to return to the regular login page.
 3. Confirm you are redirected to the admin dashboard.
 4. Review dashboard summaries (committees and accounts) to check everything looks correct.
 5. Use dashboard actions for the next step:

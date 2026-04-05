@@ -47,14 +47,15 @@ Members and guests who are already inside the live meeting page.
 
 ### Open vote
 
-1. Select your option(s) within the shown limits.
-2. Click **Submit Open Ballot** before the vote closes.
+1. Select your option(s) within the shown limits. A hint below the options shows the allowed selection range.
+2. The **Submit Open Ballot** button is enabled only when your selection count is valid.
+3. Click **Submit Open Ballot** before the vote closes.
 
 ### Secret vote
 
-1. Select your option(s).
+1. Select your option(s). A hint shows the allowed range if more than one choice is required.
 2. Click **Submit Secret Ballot**.
-3. Keep your receipt/token if shown.
+3. Your receipt token is saved automatically. Use the **My Receipts** button in the votes section to review and verify your receipts in a dialog.
 
 ## If something goes wrong
 
@@ -63,7 +64,7 @@ Members and guests who are already inside the live meeting page.
 - Vote card shows not eligible:
   Ask the chairperson whether you joined before the vote opened.
 - Submit button is disabled:
-  Check whether the vote is still open and your selection is valid.
+  Check that the vote is still open and your selection count is within the allowed range shown by the hint text.
 - Current document is missing:
   The chairperson may not have set one for this agenda point yet.
 - Mobile feels hard to track:

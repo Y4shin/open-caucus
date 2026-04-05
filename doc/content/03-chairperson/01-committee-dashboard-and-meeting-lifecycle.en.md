@@ -22,9 +22,12 @@ Chairpersons who run committee meetings and need to control meeting status.
 ## Step-by-step
 
 1. Create a meeting:
-   - In **Create New Meeting**, enter **Name** and optional **Description**.
-   - If participants should be able to join immediately, enable **Open for signup**.
-   - Click **Create Meeting**.
+   - Click the **Create Meeting** button to open the meeting wizard.
+   - The wizard guides you through four steps:
+     1. **Basics** — enter **Name** and optional **Description**. Enable **Open for signup** if participants should be able to join immediately.
+     2. **Agenda** — optionally enter the agenda. Type or paste items one per line; use numbering (1.1, 1.2) or indentation for sub-items. Click the chips on the right to classify each line as heading, subheading, or ignore. Switch between Plaintext and Markdown format with the toggle.
+     3. **Participants** — optionally pre-add attendees. Enter names one per line. Append `[Chair]` for chairpersons and `[FLINTA]` for FLINTA* quotation.
+     4. **Review** — confirm all details and click **Create Meeting**.
 2. Set the current meeting:
    - In the meetings list, switch on **Active** for the meeting you are running now.
    - Confirm only one meeting is marked **Active**.
