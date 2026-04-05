@@ -4,6 +4,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import DocsOverlay from '$lib/components/docs/DocsOverlay.svelte';
+	import AppLogo from '$lib/components/ui/AppLogo.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import { docsClient } from '$lib/api/index.js';
 	import {
@@ -215,12 +216,13 @@
 			{/if}
 			<div class="flex-1">
 				<div class="min-w-0 md:hidden">
-					<h1 class="truncate text-base font-semibold sm:text-lg">{m.common_app_name()}</h1>
+					<h1><AppLogo class="h-6 w-auto" /></h1>
 				</div>
-				<div class="min-w-0 hidden md:block">
-					<h1 class="truncate text-base font-semibold sm:text-lg">
-						{m.common_app_name()}{pageActions.title ? ` - ${pageActions.title}` : ''}
-					</h1>
+				<div class="min-w-0 hidden md:flex md:items-center md:gap-2">
+					<h1><AppLogo class="h-6 w-auto" /></h1>
+					{#if pageActions.title}
+						<span class="truncate text-base font-semibold text-base-content/70">— {pageActions.title}</span>
+					{/if}
 				</div>
 			</div>
 			<div class="flex-none flex flex-row items-center gap-2">
