@@ -15,8 +15,13 @@ Open Caucus pushes a typed event to every connected client. Events are
 **invalidation signals** — they tell you *what* changed so you can re-fetch the
 relevant data. They do not carry the changed data itself.
 
-There are no outbound webhooks to external URLs. Events are delivered over a
-long-lived Connect RPC server-stream (HTTP/2).
+Events can be consumed in two ways:
+
+- **Connect RPC stream** — a long-lived HTTP/2 server-stream for connected
+  browser clients (described below).
+- **Outbound webhooks** — HTTP POST requests to one or more external URLs,
+  configured via environment variables. Useful for integrating with automation
+  tools such as n8n, Zapier, or custom backends.
 
 ### Subscribing
 
@@ -88,6 +93,77 @@ for await (const event of stream) {
 - If your client reads too slowly, events may be dropped. The recommended
   pattern is to treat each event as "something changed" and always re-fetch
   current state rather than building up incremental state from events.
+
+---
+
+## Outbound Webhooks
+
+### Overview
+
+When `WEBHOOK_URLS` is set, Open Caucus POSTs a JSON payload to every
+configured URL each time a meeting event is published. Delivery is
+fire-and-forget — failed requests are logged and dropped with no retry.
+
+### Configuration
+
+| Variable | Required | Description |
+|---|---|---|
+| `WEBHOOK_URLS` | Yes | Comma-separated list of URLs to POST events to. Leave unset (or empty) to disable webhooks entirely. |
+| `WEBHOOK_SECRET` | No | Shared secret sent as the `X-Webhook-Secret` header on every request. Omit to send no secret header. |
+| `WEBHOOK_TIMEOUT_SECONDS` | No | Per-request HTTP timeout in seconds. Default: `10`. |
+
+Example:
+
+```
+WEBHOOK_URLS=https://n8n.example.com/webhook/meeting-events,https://hooks.example.com/fallback
+WEBHOOK_SECRET=supersecret
+WEBHOOK_TIMEOUT_SECONDS=5
+```
+
+### Payload
+
+Every request is a `POST` with `Content-Type: application/json`:
+
+```json
+{
+  "event":      "speakers.updated",
+  "meeting_id": 42,
+  "timestamp":  "2026-04-05T12:34:56Z"
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `event` | string | One of the event kind strings listed in the table below. |
+| `meeting_id` | integer \| null | ID of the affected meeting. `null` for broker events not scoped to a meeting. |
+| `timestamp` | string (RFC 3339) | UTC time at which the dispatcher fired the request. |
+
+### Event kind strings
+
+| `event` value | Fired when |
+|---|---|
+| `speakers.updated` | Speaker added, removed, started, ended, notes edited, queue reordered |
+| `votes.updated` | Vote opened, closed, eligibility changed, ballot cast |
+| `agenda.updated` | Agenda point created, updated, deleted, activated, attachment added/removed |
+| `attendees.updated` | Attendee signed up (self or manual), guest added |
+| `moderate-updated` | Signup toggled open/closed, quotation settings changed, moderator assigned |
+
+### Headers
+
+| Header | Always sent | Description |
+|---|---|---|
+| `Content-Type` | Yes | Always `application/json`. |
+| `X-Webhook-Secret` | Only when `WEBHOOK_SECRET` is set | Use this to verify the request originates from your Open Caucus instance. |
+
+### Behaviour notes
+
+- A separate goroutine is spawned per URL per event, so a slow or unreachable
+  URL does not block other URLs or delay the application.
+- There is no retry queue. If a request fails (network error, non-2xx response),
+  it is logged at `WARN` level and dropped.
+- Webhooks are disabled entirely when `WEBHOOK_URLS` is empty — no HTTP calls
+  are made.
+- The dispatcher stops cleanly when the server shuts down.
 
 ---
 

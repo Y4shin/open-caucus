@@ -145,7 +145,7 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 
 	// Admin service
 	adminPath, adminHandler := adminv1connect.NewAdminServiceHandler(
-		NewAdminHandler(adminservice.New(repo)),
+		NewAdminHandler(adminservice.New(repo, nil)),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+adminPath, mw.Get("session")(http.StripPrefix("/api", adminHandler)))

@@ -44,9 +44,12 @@ var serveCmd = &cobra.Command{
 		}
 		defer rt.Close()
 
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		if len(rt.cfg.Webhook.URLs) > 0 {
 			d := webhooks.New(rt.cfg.Webhook)
-			d.Start(context.Background(), rt.broker)
+			d.Start(ctx, rt.broker)
 		}
 
 		return runHTTPServer(rt.cfg, newSPAServer(rt))
@@ -153,7 +156,7 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	apiMux.Handle(voteAPIPath, rt.middleware.Get("session")(voteAPIHandler))
 
 	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
-		apiconnect.NewAdminHandler(adminservice.New(rt.repo)),
+		apiconnect.NewAdminHandler(adminservice.New(rt.repo, webhooks.NewCommitteeDispatcher(rt.cfg.Webhook))),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(adminAPIPath, rt.middleware.Get("session")(adminAPIHandler))

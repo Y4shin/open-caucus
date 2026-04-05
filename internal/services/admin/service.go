@@ -2,6 +2,7 @@ package adminservice
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,14 +12,18 @@ import (
 	"github.com/Y4shin/open-caucus/internal/repository"
 	"github.com/Y4shin/open-caucus/internal/repository/model"
 	"github.com/Y4shin/open-caucus/internal/session"
+	"github.com/Y4shin/open-caucus/internal/webhooks"
 )
 
 type Service struct {
-	repo repository.Repository
+	repo     repository.Repository
+	webhooks webhooks.CommitteeEventDispatcher
 }
 
-func New(repo repository.Repository) *Service {
-	return &Service{repo: repo}
+// New creates an admin Service. Pass nil for dispatcher to disable committee
+// webhook notifications.
+func New(repo repository.Repository, dispatcher webhooks.CommitteeEventDispatcher) *Service {
+	return &Service{repo: repo, webhooks: dispatcher}
 }
 
 // GetAdminDashboard returns total accounts and committees.
@@ -164,6 +169,10 @@ func (s *Service) CreateCommittee(ctx context.Context, name, slug string) (*admi
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to reload committee", err)
 	}
 
+	if s.webhooks != nil {
+		s.webhooks.CommitteeCreated(ctx, committee)
+	}
+
 	return &adminv1.CreateCommitteeResponse{Committee: toCommitteeRecord(committee, 0)}, nil
 }
 
@@ -177,8 +186,44 @@ func (s *Service) DeleteCommittee(ctx context.Context, slug string) (*adminv1.De
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "slug is required")
 	}
 
+	// Gather webhook data before the delete (CASCADE removes OIDC rules too).
+	var (
+		deletedCommittee  *model.Committee
+		deletedGroupInfos []webhooks.DeletedGroupInfo
+	)
+	if s.webhooks != nil {
+		c, err := s.repo.GetCommitteeBySlug(ctx, slug)
+		if err != nil {
+			slog.Warn("committee webhook: failed to fetch committee before delete", "slug", slug, "err", err)
+		} else {
+			deletedCommittee = c
+			committeeRules, err := s.repo.ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx, slug)
+			if err != nil {
+				slog.Warn("committee webhook: failed to fetch OIDC rules before delete", "slug", slug, "err", err)
+			} else {
+				allRules, err := s.repo.ListAllOAuthCommitteeGroupRules(ctx)
+				if err != nil {
+					slog.Warn("committee webhook: failed to fetch all OIDC rules before delete", "slug", slug, "err", err)
+				} else {
+					deletedGroupInfos = make([]webhooks.DeletedGroupInfo, len(committeeRules))
+					for i, r := range committeeRules {
+						deletedGroupInfos[i] = webhooks.DeletedGroupInfo{
+							GroupName:       r.GroupName,
+							Role:            r.Role,
+							StillReferenced: groupReferencedByOthers(allRules, r.GroupName, c.ID),
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if err := s.repo.DeleteCommitteeBySlug(ctx, slug); err != nil {
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to delete committee", err)
+	}
+
+	if s.webhooks != nil && deletedCommittee != nil {
+		s.webhooks.CommitteeDeleted(ctx, deletedCommittee, deletedGroupInfos)
 	}
 
 	return &adminv1.DeleteCommitteeResponse{}, nil
@@ -403,6 +448,21 @@ func (s *Service) CreateOAuthRule(ctx context.Context, slug, groupName, role str
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to create oauth rule", err)
 	}
 
+	if s.webhooks != nil {
+		committee, err := s.repo.GetCommitteeBySlug(ctx, slug)
+		if err != nil {
+			slog.Warn("committee webhook: failed to fetch committee after OIDC rule create", "slug", slug, "err", err)
+		} else {
+			allRules, err := s.repo.ListAllOAuthCommitteeGroupRules(ctx)
+			if err != nil {
+				slog.Warn("committee webhook: failed to fetch all OIDC rules after create", "slug", slug, "err", err)
+			} else {
+				referencedByOthers := groupReferencedByOthers(allRules, rule.GroupName, committee.ID)
+				s.webhooks.OIDCGroupAdded(ctx, committee, rule, referencedByOthers)
+			}
+		}
+	}
+
 	return &adminv1.CreateOAuthRuleResponse{Rule: toOAuthRuleRecord(rule)}, nil
 }
 
@@ -417,8 +477,43 @@ func (s *Service) DeleteOAuthRule(ctx context.Context, slug, ruleIDStr string) (
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid rule id")
 	}
 
+	// Gather webhook data before the delete.
+	var (
+		deletedRuleCommittee *model.Committee
+		deletedRule          *model.OAuthCommitteeGroupRule
+	)
+	if s.webhooks != nil {
+		c, err := s.repo.GetCommitteeBySlug(ctx, slug)
+		if err != nil {
+			slog.Warn("committee webhook: failed to fetch committee before OIDC rule delete", "slug", slug, "err", err)
+		} else {
+			deletedRuleCommittee = c
+			rules, err := s.repo.ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx, slug)
+			if err != nil {
+				slog.Warn("committee webhook: failed to fetch OIDC rules before delete", "slug", slug, "err", err)
+			} else {
+				for _, r := range rules {
+					if r.ID == ruleID {
+						deletedRule = r
+						break
+					}
+				}
+			}
+		}
+	}
+
 	if err := s.repo.DeleteOAuthCommitteeGroupRuleByIDAndCommitteeSlug(ctx, ruleID, slug); err != nil {
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to delete oauth rule", err)
+	}
+
+	if s.webhooks != nil && deletedRuleCommittee != nil && deletedRule != nil {
+		allRules, err := s.repo.ListAllOAuthCommitteeGroupRules(ctx)
+		if err != nil {
+			slog.Warn("committee webhook: failed to fetch all OIDC rules after delete", "slug", slug, "err", err)
+		} else {
+			stillReferenced := groupReferencedByOthers(allRules, deletedRule.GroupName, deletedRuleCommittee.ID)
+			s.webhooks.OIDCGroupRemoved(ctx, deletedRuleCommittee, deletedRule, stillReferenced)
+		}
 	}
 
 	return &adminv1.DeleteOAuthRuleResponse{}, nil
@@ -474,6 +569,17 @@ func toOAuthRuleRecord(r *model.OAuthCommitteeGroupRule) *adminv1.OAuthRuleRecor
 		GroupName: r.GroupName,
 		Role:      r.Role,
 	}
+}
+
+// groupReferencedByOthers reports whether groupName appears in any rule that
+// belongs to a committee other than excludeCommitteeID.
+func groupReferencedByOthers(allRules []*model.OAuthCommitteeGroupRule, groupName string, excludeCommitteeID int64) bool {
+	for _, r := range allRules {
+		if r.GroupName == groupName && r.CommitteeID != excludeCommitteeID {
+			return true
+		}
+	}
+	return false
 }
 
 // pageToLimitOffset converts 1-based page number and page size to limit/offset.
