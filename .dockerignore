@@ -26,15 +26,18 @@ CLAUDE.md
 AGENTS.md
 .mcp.json
 
-# Documentation
-doc/
+# Documentation scratch area — not compiled into the binary
 docs-rewrite/
 README.md
+# doc/ is intentionally NOT excluded: doc/embed.go embeds content/ and assets/
+# into the binary and must be present in the build context.
 
-# Dev-only tooling config
+# Dev-only tooling
+# tools/docscapture/ is intentionally NOT excluded: it is imported by cmd/docs_capture.go.
+# tools/vote-fuzzer/ is a standalone dev tool with no imports from cmd/, safe to exclude.
 .air.vite.toml
 Taskfile.yaml
-tools/
+tools/vote-fuzzer/
 
 # Environment files — never bake secrets into the image
 .env
