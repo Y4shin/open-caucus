@@ -248,7 +248,7 @@
 		{:else if step === 2}
 			<div class="space-y-3">
 				<div class="flex items-center justify-between gap-2">
-					<p class="text-sm text-base-content/70">{m.wizard_agenda_description()}</p>
+					<p class="text-sm text-base-content/70">{agendaFormat === 'markdown' ? m.wizard_agenda_description_markdown() : m.wizard_agenda_description_plaintext()}</p>
 					<div class="join">
 						<button type="button" class={agendaFormat === 'plaintext' ? 'join-item btn btn-xs btn-primary' : 'join-item btn btn-xs btn-ghost'} onclick={() => setAgendaFormat('plaintext')}>Plaintext</button>
 						<button type="button" class={agendaFormat === 'markdown' ? 'join-item btn btn-xs btn-primary' : 'join-item btn btn-xs btn-ghost'} onclick={() => setAgendaFormat('markdown')}>Markdown</button>
