@@ -1,9 +1,12 @@
 <script lang="ts">
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
-	import { agendaClient, attendeeClient, committeeClient } from '$lib/api/index.js';
+	import { agendaClient, attendeeClient, committeeClient, moderationClient } from '$lib/api/index.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import * as m from '$lib/paraglide/messages';
+	import AgendaImportPreview from './meeting/[meetingId]/moderate/AgendaImportPreview.svelte';
+	import type { AgendaImportState } from './meeting/[meetingId]/moderate/agenda-import.js';
+	import { parseAgendaImportSource, buildImportedAgenda } from './meeting/[meetingId]/moderate/agenda-import.js';
 
 	let {
 		slug,
@@ -23,48 +26,61 @@
 	let meetingDescription = $state('');
 	let signupOpen = $state(false);
 
-	// Step 2: Agenda (text-based)
-	let agendaText = $state('');
+	// Step 2: Agenda — reuses the inline editor from the import dialog
+	let agendaRawText = $state('');
+	let agendaParsedText = $state('');
+	let agendaFormat = $state<'markdown' | 'plaintext'>('plaintext');
+	let agendaFormatManuallySet = $state(false);
+	let agendaLineStates = $state(new Map<number, AgendaImportState>());
+
+	let agendaLines = $derived(
+		parseAgendaImportSource(agendaParsedText, agendaFormat).map((line) => ({
+			...line,
+			state: agendaLineStates.get(line.lineNo) ?? line.state
+		}))
+	);
+	let parsedAgenda = $derived(buildImportedAgenda(agendaLines));
+
+	function setAgendaFromSource(source: string) {
+		const trimmed = source.trim();
+		if (!trimmed) return;
+		if (!agendaFormatManuallySet) {
+			agendaFormat =
+				/^#{1,6}\s/m.test(trimmed) || /^[-*+]\s+\S/m.test(trimmed) ? 'markdown' : 'plaintext';
+		}
+		agendaLineStates = new Map();
+		agendaRawText = trimmed;
+		agendaParsedText = trimmed;
+	}
+
+	function toggleAgendaLine(index: number) {
+		const line = agendaLines[index];
+		if (!line) return;
+		const nextState: AgendaImportState =
+			line.state === 'ignore' ? 'heading' : line.state === 'heading' ? 'subheading' : 'ignore';
+		agendaLineStates = new Map(agendaLineStates).set(line.lineNo, nextState);
+	}
+
+	function setAgendaFormat(fmt: 'markdown' | 'plaintext') {
+		agendaFormat = fmt;
+		agendaFormatManuallySet = true;
+		agendaLineStates = new Map();
+	}
+
+	// Sync parsed text when raw text changes (user edits the textarea directly)
+	$effect(() => {
+		if (agendaRawText !== agendaParsedText) {
+			agendaParsedText = agendaRawText;
+		}
+	});
 
 	// Step 3: Participants (text-based)
 	let participantsText = $state('');
-
-	// Parsed state
-	interface ParsedAgendaPoint {
-		title: string;
-		children: string[];
-	}
 
 	interface ParsedParticipant {
 		name: string;
 		isChair: boolean;
 		isQuoted: boolean;
-	}
-
-	function parseAgenda(text: string): ParsedAgendaPoint[] {
-		const lines = text.split('\n').map((l) => l.trimEnd()).filter((l) => l.trim().length > 0);
-		const points: ParsedAgendaPoint[] = [];
-		let current: ParsedAgendaPoint | null = null;
-
-		for (const line of lines) {
-			const indent = line.length - line.trimStart().length;
-			const trimmed = line.trim().replace(/^(?:TOP\s*)?(\d+(?:\.\d+)*)[\s:.)\-]+/i, '').trim();
-			if (!trimmed) continue;
-
-			if (indent >= 2 || /^\d+\.\d+/.test(line.trim())) {
-				// Subpoint
-				if (current) {
-					current.children.push(trimmed);
-				} else {
-					current = { title: trimmed, children: [] };
-					points.push(current);
-				}
-			} else {
-				current = { title: trimmed, children: [] };
-				points.push(current);
-			}
-		}
-		return points;
 	}
 
 	function parseParticipants(text: string): ParsedParticipant[] {
@@ -74,7 +90,6 @@
 			let isChair = false;
 			let isQuoted = false;
 
-			// Detect flags in brackets or suffixes
 			const chairPattern = /\[(?:chair|vorsitz|chairperson)\]/i;
 			const quotedPattern = /\[(?:flinta\*?|f|quoted)\]/i;
 
@@ -87,7 +102,6 @@
 				name = name.replace(quotedPattern, '').trim();
 			}
 
-			// Also detect trailing markers like * for FLINTA or ^ for chair
 			if (name.endsWith('*')) {
 				isQuoted = true;
 				name = name.slice(0, -1).trim();
@@ -101,7 +115,6 @@
 		});
 	}
 
-	let parsedAgenda = $derived(parseAgenda(agendaText));
 	let parsedParticipants = $derived(parseParticipants(participantsText));
 
 	export function open() {
@@ -109,7 +122,11 @@
 		meetingName = '';
 		meetingDescription = '';
 		signupOpen = false;
-		agendaText = '';
+		agendaRawText = '';
+		agendaParsedText = '';
+		agendaFormat = 'plaintext';
+		agendaFormatManuallySet = false;
+		agendaLineStates = new Map();
 		participantsText = '';
 		error = '';
 		submitting = false;
@@ -133,7 +150,6 @@
 		submitting = true;
 		error = '';
 		try {
-			// Step 1: Create meeting
 			const meetingRes = await committeeClient.createMeeting({
 				committeeSlug: slug,
 				name: meetingName.trim(),
@@ -142,7 +158,6 @@
 			const meetingId = meetingRes.meeting?.meetingId ?? '';
 			if (!meetingId) throw new Error('Meeting creation returned no ID');
 
-			// Step 2: Create agenda points
 			for (const point of parsedAgenda) {
 				const pointRes = await agendaClient.createAgendaPoint({
 					committeeSlug: slug,
@@ -160,7 +175,6 @@
 				}
 			}
 
-			// Step 3: Create participants
 			for (const participant of parsedParticipants) {
 				const attendeeRes = await attendeeClient.createAttendee({
 					committeeSlug: slug,
@@ -178,12 +192,12 @@
 				}
 			}
 
-			// Enable signup if requested
 			if (signupOpen) {
-				await committeeClient.toggleSignupOpen({
+				await moderationClient.toggleSignupOpen({
 					committeeSlug: slug,
 					meetingId,
-					open: true
+					desiredOpen: true,
+					expectedVersion: 0n
 				});
 			}
 
@@ -233,32 +247,19 @@
 			</div>
 		{:else if step === 2}
 			<div class="space-y-3">
-				<p class="text-sm text-base-content/70">{m.wizard_agenda_description()}</p>
-				<textarea
-					class="textarea textarea-bordered w-full font-mono text-sm"
-					rows="12"
-					placeholder={m.wizard_agenda_placeholder()}
-					bind:value={agendaText}
-				></textarea>
-				{#if parsedAgenda.length > 0}
-					<div class="rounded-box border border-base-300 bg-base-200/30 p-3">
-						<h4 class="mb-2 text-sm font-semibold">{m.wizard_preview()} ({parsedAgenda.length})</h4>
-						<ul class="space-y-1 text-sm">
-							{#each parsedAgenda as point, i}
-								<li>
-									<span class="font-medium">{i + 1}. {point.title}</span>
-									{#if point.children.length > 0}
-										<ul class="ml-4 text-base-content/70">
-											{#each point.children as child, j}
-												<li>{i + 1}.{j + 1} {child}</li>
-											{/each}
-										</ul>
-									{/if}
-								</li>
-							{/each}
-						</ul>
+				<div class="flex items-center justify-between gap-2">
+					<p class="text-sm text-base-content/70">{m.wizard_agenda_description()}</p>
+					<div class="join">
+						<button type="button" class={agendaFormat === 'plaintext' ? 'join-item btn btn-xs btn-primary' : 'join-item btn btn-xs btn-ghost'} onclick={() => setAgendaFormat('plaintext')}>Plaintext</button>
+						<button type="button" class={agendaFormat === 'markdown' ? 'join-item btn btn-xs btn-primary' : 'join-item btn btn-xs btn-ghost'} onclick={() => setAgendaFormat('markdown')}>Markdown</button>
 					</div>
-				{/if}
+				</div>
+				<AgendaImportPreview
+					bind:rawText={agendaRawText}
+					lines={agendaLines}
+					onToggle={toggleAgendaLine}
+					onPasteText={setAgendaFromSource}
+				/>
 			</div>
 		{:else if step === 3}
 			<div class="space-y-3">
