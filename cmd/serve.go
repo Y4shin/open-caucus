@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 	votesv1connect "github.com/Y4shin/open-caucus/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/open-caucus/internal/api/connect"
 	apihttp "github.com/Y4shin/open-caucus/internal/api/http"
+	"github.com/Y4shin/open-caucus/internal/webhooks"
 	adminservice "github.com/Y4shin/open-caucus/internal/services/admin"
 	agendaservice "github.com/Y4shin/open-caucus/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
@@ -41,6 +43,11 @@ var serveCmd = &cobra.Command{
 			return err
 		}
 		defer rt.Close()
+
+		if len(rt.cfg.Webhook.URLs) > 0 {
+			d := webhooks.New(rt.cfg.Webhook)
+			d.Start(context.Background(), rt.broker)
+		}
 
 		return runHTTPServer(rt.cfg, newSPAServer(rt))
 	},
