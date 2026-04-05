@@ -1,6 +1,6 @@
 module github.com/Y4shin/open-caucus
 
-go 1.25.5
+go 1.26.1
 
 require (
 	connectrpc.com/connect v1.19.1

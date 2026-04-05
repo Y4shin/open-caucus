@@ -29,7 +29,7 @@
         };
         # pkgs = nixpkgs.legacyPackages.${system};
         # pkgs-playwright = nixpkgs-playwright.legacyPackages.${system};
-        go = pkgs.go_1_25;
+        go = pkgs.go_1_26;
 
         # Build mcp-gopls from source
         mcp-gopls = pkgs.buildGoModule rec {

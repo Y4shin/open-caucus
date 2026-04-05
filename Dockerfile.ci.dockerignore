@@ -1,0 +1,75 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Nix / direnv
+.direnv
+flake.nix
+flake.lock
+.envrc
+
+# IDE / editor
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# CI / Docker meta
+.github
+docker-compose*.yml
+
+# AI tooling
+.claude
+CLAUDE.md
+AGENTS.md
+.mcp.json
+
+# Dev-only docs (guides are internal)
+docs-rewrite/
+README.md
+
+# Dev-only config
+.air.vite.toml
+Taskfile.yaml
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dev OIDC provider data
+dev/
+
+# User uploads
+uploads/
+
+# E2E tests
+e2e/
+
+# Compiled / local build artifacts
+tmp/
+dist/
+conference-tool
+conference-tool.exe
+web/node_modules
+web/.svelte-kit
+web/build
+node_modules
+
+# Generated code (regenerated inside Docker build)
+**/*_generated.go
+**/*_gen.go
+**/*_templ.go
+
+# Test / coverage artifacts
+coverage.out
+coverage.html
+*.test
+*.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3

@@ -1,0 +1,93 @@
+# syntax=docker/dockerfile:1.7
+
+# ---------------------------------------------------------------------------
+# Stage 1 — Build the app and generate documentation screenshots/GIFs
+# ---------------------------------------------------------------------------
+# Uses Debian Trixie for Playwright browser compatibility (Chromium needs glibc)
+# and up-to-date Node.js.
+FROM golang:1.26.1-trixie AS builder
+
+WORKDIR /src
+
+# System dependencies for Playwright captures and GIF conversion
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs npm ffmpeg gifsicle curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Go dependencies
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
+
+# Node dependencies
+COPY web/package.json web/package-lock.json ./web/
+RUN --mount=type=cache,target=/root/.npm \
+    cd web && npm ci --include=optional --cache /root/.npm --prefer-offline
+
+# Install buf (proto code generator)
+RUN go install github.com/bufbuild/buf/cmd/buf@latest
+
+# Install Playwright Chromium dependencies manually (--with-deps fails on
+# Trixie due to renamed font packages) then install the browser binary.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
+    libcairo2 libasound2 libdbus-1-3 libatspi2.0-0 libxshmfence1 \
+    fonts-liberation fonts-unifont fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go tool github.com/playwright-community/playwright-go/cmd/playwright install chromium
+
+# Copy source
+COPY . .
+
+ARG VERSION=dev
+
+# Generate code (proto bindings, templ, sqlc)
+RUN --mount=type=cache,target=/root/.npm \
+    PATH="$PATH:$PWD/web/node_modules/.bin" buf generate --template buf.gen.yaml
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go generate ./...
+
+# Build web frontend
+RUN --mount=type=cache,target=/root/.npm \
+    cd web && PUBLIC_APP_VERSION=${VERSION} npm run build
+
+# Regenerate documentation screenshots and GIFs
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go run . docs-capture run
+
+# ---------------------------------------------------------------------------
+# Stage 2 — Compile the final binary (with freshly captured doc assets)
+# ---------------------------------------------------------------------------
+FROM golang:1.26.1-alpine AS compiler
+
+WORKDIR /src
+
+COPY --from=builder /src /src
+
+ARG VERSION=dev
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -trimpath \
+    -ldflags="-s -w -X github.com/Y4shin/open-caucus/cmd.version=${VERSION}" \
+    -o /out/conference-tool .
+
+# ---------------------------------------------------------------------------
+# Stage 3 — Minimal runtime image
+# ---------------------------------------------------------------------------
+FROM alpine:3.22
+
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /workspace
+
+COPY --from=compiler /out/conference-tool /usr/local/bin/conference-tool
+
+ENTRYPOINT ["conference-tool"]
+CMD ["serve"]

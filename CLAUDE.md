@@ -9,12 +9,12 @@ A conference management tool built with Go, HTMX, and Templ. The project feature
 ## Development Environment
 
 The project uses Nix flakes with direnv for reproducible development environments. The flake provides:
-- Go 1.25.5
+- Go 1.26.1
 - gopls, gotools, golangci-lint
 - go-task for task running
 - MCP servers (mcp-gopls, mcp-taskfile-server) for AI assistance
 
-Alternatively, ensure Go 1.25.5+ is installed directly.
+Alternatively, ensure Go 1.26.1+ is installed directly.
 
 ## Essential Commands
 
