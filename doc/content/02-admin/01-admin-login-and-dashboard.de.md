@@ -5,6 +5,8 @@ title-de: Admin-Login und Dashboard
 
 # Admin-Login und Dashboard
 
+![Admin-Anmeldeseite](../../assets/captures/app-admin-login.de.light.desktop.png)
+
 Auf dieser Seite öffnest du den Admin-Bereich und stellst sicher, dass du für Admin-Aufgaben bereit bist.
 
 ## Für wen diese Seite gedacht ist

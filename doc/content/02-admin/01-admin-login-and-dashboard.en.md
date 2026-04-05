@@ -5,6 +5,8 @@ title-de: Admin-Login und Dashboard
 
 # Admin Login and Dashboard
 
+![Admin login page](../../assets/captures/app-admin-login.en.light.desktop.png)
+
 Use this page to open the admin area and confirm you are ready for admin tasks.
 
 ## Who this is for

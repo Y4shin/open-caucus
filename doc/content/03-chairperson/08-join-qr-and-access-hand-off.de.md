@@ -5,6 +5,8 @@ title-de: Join QR und Zugangsübergabe
 
 # Join-QR und Zugangsübergabe
 
+![Join-QR-Dialog](../../assets/captures/app-join-qr-dialog.de.light.desktop.png)
+
 Nutze diese Werkzeuge, um Personen schnell beitreten zu lassen und Gästen, die ihren Zugang verloren haben, zu helfen.
 
 ## Für wen diese Seite gedacht ist

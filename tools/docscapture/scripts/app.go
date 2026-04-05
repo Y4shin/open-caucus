@@ -166,10 +166,7 @@ func appScreenshotModerateOverviewScript() Script {
 					if err := page.Locator("#moderate-sse-root").WaitFor(); err != nil {
 						return fmt.Errorf("wait moderate root: %w", err)
 					}
-					if err := highlightMany(page, "#moderate-left-controls", "#speakers-list-container"); err != nil {
-						return err
-					}
-					if err := highlightFirstAvailable(page, "#moderate-votes-panel"); err != nil {
+					if err := highlightMany(page, "#moderate-left-controls", "#moderate-right-resizable-stack"); err != nil {
 						return err
 					}
 					return nil
@@ -389,6 +386,185 @@ func appScreenshotReceiptsVaultScript() Script {
 						return fmt.Errorf("wait receipts controls: %w", err)
 					}
 					if err := highlightMany(page, "#receipts-refresh", "#receipts-clear", "#receipts-list"); err != nil {
+						return err
+					}
+					return nil
+				},
+			})
+		},
+	}
+}
+
+func appScreenshotAdminLoginScript() Script {
+	return Script{
+		Name:        "app.screenshot-admin-login",
+		Description: "Admin login page with card styling and back button",
+		Run: func(ctx context.Context, common docscapture.CommonOptions, variant docscapture.Variant, env *docscapture.Environment) (string, error) {
+			common.BaseURL = env.BaseURL()
+			return docscapture.RunScreenshotScenario(docscapture.ScreenshotScenarioOptions{
+				Common:      common,
+				Variant:     variant,
+				OutputName:  appOutputName("app-admin-login", variant, "png"),
+				FullPage:    true,
+				InitialPath: "/admin/login",
+				Scenario: func(page playwright.Page) error {
+					if err := page.Locator("fieldset.fieldset").WaitFor(); err != nil {
+						return fmt.Errorf("wait admin login card: %w", err)
+					}
+					if err := highlight(page, "fieldset.fieldset"); err != nil {
+						return err
+					}
+					return nil
+				},
+			})
+		},
+	}
+}
+
+func appScreenshotAdminDashboardScript() Script {
+	return Script{
+		Name:        "app.screenshot-admin-dashboard",
+		Description: "Admin dashboard with committee list and responsive form",
+		Run: func(ctx context.Context, common docscapture.CommonOptions, variant docscapture.Variant, env *docscapture.Environment) (string, error) {
+			if _, err := seedAppFixture(ctx, env.Seeder()); err != nil {
+				return "", err
+			}
+			if _, err := env.Seeder().CreateAdminAccount(ctx, "admin-docs", "admin-docs-pass", "Admin Demo"); err != nil {
+				return "", err
+			}
+			common.BaseURL = env.BaseURL()
+			return docscapture.RunScreenshotScenario(docscapture.ScreenshotScenarioOptions{
+				Common:     common,
+				Variant:    variant,
+				OutputName: appOutputName("app-admin-dashboard", variant, "png"),
+				FullPage:   true,
+				Scenario: func(page playwright.Page) error {
+					if err := gotoPath(page, common.BaseURL, "/admin/login"); err != nil {
+						return err
+					}
+					if err := page.Locator("input[name='username']").Fill("admin-docs"); err != nil {
+						return fmt.Errorf("fill admin username: %w", err)
+					}
+					if err := page.Locator("input[name='password']").Fill("admin-docs-pass"); err != nil {
+						return fmt.Errorf("fill admin password: %w", err)
+					}
+					if err := page.Locator("input[name='password']").Press("Enter"); err != nil {
+						return fmt.Errorf("submit admin login: %w", err)
+					}
+					if err := page.WaitForURL(absoluteURL(common.BaseURL, "/admin")); err != nil {
+						return fmt.Errorf("wait admin dashboard: %w", err)
+					}
+					if err := page.Locator("#committee-list").WaitFor(); err != nil {
+						return fmt.Errorf("wait committee list: %w", err)
+					}
+					if err := highlightMany(page, "#create-committee-form", "#committee-list"); err != nil {
+						return err
+					}
+					return nil
+				},
+			})
+		},
+	}
+}
+
+func appScreenshotMeetingWizardScript() Script {
+	return Script{
+		Name:        "app.screenshot-meeting-wizard",
+		Description: "Meeting creation wizard dialog showing the agenda step",
+		Run: func(ctx context.Context, common docscapture.CommonOptions, variant docscapture.Variant, env *docscapture.Environment) (string, error) {
+			fixture, err := seedAppFixture(ctx, env.Seeder())
+			if err != nil {
+				return "", err
+			}
+			common.BaseURL = env.BaseURL()
+			return docscapture.RunScreenshotScenario(docscapture.ScreenshotScenarioOptions{
+				Common:     common,
+				Variant:    variant,
+				OutputName: appOutputName("app-meeting-wizard", variant, "png"),
+				FullPage:   false,
+				Scenario: func(page playwright.Page) error {
+					if err := loginUser(page, common.BaseURL, fixture.ChairUsername, fixture.ChairPassword); err != nil {
+						return err
+					}
+					if err := gotoPath(page, common.BaseURL, committeePath(fixture)); err != nil {
+						return err
+					}
+					createBtn := page.Locator("[data-testid='committee-create-form']")
+					if err := createBtn.WaitFor(); err != nil {
+						return fmt.Errorf("wait create meeting button: %w", err)
+					}
+					if err := createBtn.Click(); err != nil {
+						return fmt.Errorf("click create meeting: %w", err)
+					}
+					// Fill basics and advance to agenda step
+					if err := page.Locator("#wizard-name").Fill("Example Meeting"); err != nil {
+						return fmt.Errorf("fill wizard name: %w", err)
+					}
+					nextBtn := page.Locator("dialog .modal-action button.btn-primary")
+					if err := nextBtn.Click(); err != nil {
+						return fmt.Errorf("click next: %w", err)
+					}
+					// Wait for the agenda step editor to appear
+					if err := page.Locator("[data-agenda-import-lines]").WaitFor(); err != nil {
+						return fmt.Errorf("wait agenda editor: %w", err)
+					}
+					// Type example agenda
+					if err := page.Locator("#agenda-import-source").Fill("1. Opening\n2. Reports\n  2.1 Chair report\n  2.2 Treasurer report\n3. Motions\n4. Closing"); err != nil {
+						return fmt.Errorf("fill agenda: %w", err)
+					}
+					page.WaitForTimeout(500)
+					if err := highlight(page, "dialog .modal-box"); err != nil {
+						return err
+					}
+					return nil
+				},
+			})
+		},
+	}
+}
+
+func appScreenshotJoinQRDialogScript() Script {
+	return Script{
+		Name:        "app.screenshot-join-qr-dialog",
+		Description: "Join QR code dialog with QR image and copy URL button",
+		Run: func(ctx context.Context, common docscapture.CommonOptions, variant docscapture.Variant, env *docscapture.Environment) (string, error) {
+			fixture, err := seedAppFixture(ctx, env.Seeder())
+			if err != nil {
+				return "", err
+			}
+			common.BaseURL = env.BaseURL()
+			return docscapture.RunScreenshotScenario(docscapture.ScreenshotScenarioOptions{
+				Common:     common,
+				Variant:    variant,
+				OutputName: appOutputName("app-join-qr-dialog", variant, "png"),
+				FullPage:   false,
+				Scenario: func(page playwright.Page) error {
+					if err := loginUser(page, common.BaseURL, fixture.ChairUsername, fixture.ChairPassword); err != nil {
+						return err
+					}
+					if err := gotoPath(page, common.BaseURL, moderatePath(fixture)); err != nil {
+						return err
+					}
+					if err := page.Locator("#moderate-sse-root").WaitFor(); err != nil {
+						return fmt.Errorf("wait moderate root: %w", err)
+					}
+					// Switch to attendees tab
+					if err := page.Locator("[data-moderate-left-tab='attendees']").Click(); err != nil {
+						return fmt.Errorf("click attendees tab: %w", err)
+					}
+					// Click show signup QR
+					qrBtn := page.Locator("button[title='Show signup QR']")
+					if err := qrBtn.WaitFor(); err != nil {
+						return fmt.Errorf("wait QR button: %w", err)
+					}
+					if err := qrBtn.Click(); err != nil {
+						return fmt.Errorf("click QR button: %w", err)
+					}
+					// Wait for QR image in dialog
+					if err := page.Locator("#join-qr-dialog #join-qr-code").WaitFor(); err != nil {
+						return fmt.Errorf("wait QR code image: %w", err)
+					}
+					if err := highlight(page, "#join-qr-dialog .modal-box"); err != nil {
 						return err
 					}
 					return nil

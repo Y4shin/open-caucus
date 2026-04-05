@@ -5,6 +5,8 @@ title-de: Join QR und Zugangsübergabe
 
 # Join QR and Access Hand-Off
 
+![Join QR dialog](../../assets/captures/app-join-qr-dialog.en.light.desktop.png)
+
 Use these tools to help people join quickly and to restore access for guests who lost their login.
 
 ## Who this is for

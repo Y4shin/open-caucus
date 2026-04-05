@@ -253,6 +253,17 @@ func (s *Seeder) SetSpeakerSpeaking(ctx context.Context, speakerID, agendaPointI
 	return nil
 }
 
+func (s *Seeder) SetSpeakerDone(ctx context.Context, speakerID int64) error {
+	if err := s.repo.SetSpeakerDone(ctx, speakerID); err != nil {
+		return fmt.Errorf("set speaker %d done: %w", speakerID, err)
+	}
+	return nil
+}
+
+func (s *Seeder) RecomputeSpeakerOrder(ctx context.Context, agendaPointID int64) error {
+	return s.repo.RecomputeSpeakerOrder(ctx, agendaPointID)
+}
+
 func (s *Seeder) CreateAttachment(
 	ctx context.Context,
 	agendaPointID int64,
