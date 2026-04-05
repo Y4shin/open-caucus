@@ -214,12 +214,12 @@
 					<LegacyIcon name="left" />
 				</a>
 			{/if}
-			<div class="flex-1">
-				<div class="min-w-0 md:hidden">
-					<h1><AppLogo class="h-8 w-auto" /></h1>
+			<div class="flex-1 min-w-0">
+				<div class="md:hidden">
+					<h1><AppLogo class="h-8 w-auto shrink-0" /></h1>
 				</div>
-				<div class="min-w-0 hidden md:flex md:items-center md:gap-2">
-					<h1><AppLogo class="h-8 w-auto" /></h1>
+				<div class="hidden md:flex md:items-center md:gap-2 min-w-0">
+					<h1 class="shrink-0"><AppLogo class="h-8 w-auto" /></h1>
 					{#if pageActions.title}
 						<span class="truncate text-base font-semibold text-base-content/70">— {pageActions.title}</span>
 					{/if}
