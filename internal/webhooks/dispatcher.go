@@ -15,7 +15,7 @@ import (
 // Dispatcher subscribes to the broker and fires outbound HTTP webhooks for
 // every SSE event received.
 type Dispatcher struct {
-	urls    []string
+	targets []webhookTarget
 	secret  string
 	client  *http.Client
 }
@@ -28,9 +28,9 @@ func New(cfg *config.WebhookConfig) *Dispatcher {
 		timeout = 10 * time.Second
 	}
 	return &Dispatcher{
-		urls:   cfg.URLs,
-		secret: cfg.Secret,
-		client: &http.Client{Timeout: timeout},
+		targets: parseTargets(cfg.URLs),
+		secret:  cfg.Secret,
+		client:  &http.Client{Timeout: timeout},
 	}
 }
 
@@ -44,7 +44,7 @@ type webhookPayload struct {
 // Start subscribes to b and dispatches webhooks in the background.
 // It returns immediately; cancel ctx to stop.
 func (d *Dispatcher) Start(ctx context.Context, b broker.Broker) {
-	if len(d.urls) == 0 {
+	if len(d.targets) == 0 {
 		return
 	}
 	ch := b.Subscribe(ctx)
@@ -67,32 +67,35 @@ func (d *Dispatcher) dispatch(evt broker.SSEEvent) {
 		return
 	}
 
-	for _, url := range d.urls {
-		go d.post(url, body, evt.Event)
+	for _, t := range d.targets {
+		go d.post(t, body, evt.Event)
 	}
 }
 
-func (d *Dispatcher) post(url string, body []byte, event string) {
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+func (d *Dispatcher) post(t webhookTarget, body []byte, event string) {
+	req, err := http.NewRequest(http.MethodPost, t.URL, bytes.NewReader(body))
 	if err != nil {
-		slog.Warn("webhook: failed to build request", "url", url, "event", event, "err", err)
+		slog.Warn("webhook: failed to build request", "url", t.URL, "event", event, "err", err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if d.secret != "" {
 		req.Header.Set("X-Webhook-Secret", d.secret)
 	}
+	if t.HeaderName != "" {
+		req.Header.Set(t.HeaderName, t.HeaderValue)
+	}
 
-	slog.Debug("webhook: dispatching", "url", url, "event", event)
+	slog.Debug("webhook: dispatching", "url", t.URL, "event", event)
 
 	resp, err := d.client.Do(req)
 	if err != nil {
-		slog.Warn("webhook: request failed", "url", url, "event", event, "err", err)
+		slog.Warn("webhook: request failed", "url", t.URL, "event", event, "err", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		slog.Warn("webhook: unexpected response status", "url", url, "event", event, "status", resp.StatusCode)
+		slog.Warn("webhook: unexpected response status", "url", t.URL, "event", event, "status", resp.StatusCode)
 	}
 }
