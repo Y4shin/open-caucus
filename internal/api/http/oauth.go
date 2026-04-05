@@ -65,7 +65,7 @@ func NewOAuthCallbackHandler(h *OAuthHandler) http.Handler {
 
 		account, err := h.resolveAccount(r.Context(), callbackResult.Principal)
 		if err != nil {
-			slog.Warn("oauth account resolution failed", "subject", callbackResult.Principal.Subject, "err", err)
+			slog.Warn("oauth account resolution failed", "subject", callbackResult.Principal.Subject, "issuer", callbackResult.Principal.Issuer, "username", callbackResult.Principal.Username, "groups", callbackResult.Principal.Groups, "err", err)
 			redirect := "/"
 			if callbackResult.Target == "admin" {
 				redirect = "/admin/login"
@@ -198,7 +198,7 @@ func (h *OAuthHandler) validateRequiredGroups(groups []string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("missing required oauth group")
+	return fmt.Errorf("missing required oauth group: user has groups %v, but needs at least one of %v", groups, h.AuthConfig.OAuthRequiredGroups)
 }
 
 func (h *OAuthHandler) syncAdmin(ctx context.Context, accountID int64, groups []string) error {
