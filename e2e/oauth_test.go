@@ -5,11 +5,18 @@ package e2e_test
 import (
 	"context"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"testing"
 
+	connect "connectrpc.com/connect"
 	playwright "github.com/playwright-community/playwright-go"
+
+	adminv1 "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1"
+	adminv1connect "github.com/Y4shin/open-caucus/gen/go/conference/admin/v1/adminv1connect"
+	sessionv1 "github.com/Y4shin/open-caucus/gen/go/conference/session/v1"
+	sessionv1connect "github.com/Y4shin/open-caucus/gen/go/conference/session/v1/sessionv1connect"
 )
 
 const oauthTestSubject = "id1"
@@ -233,6 +240,69 @@ func TestOAuthCommitteeSync_PicksHighestRoleAcrossMatchingGroups(t *testing.T) {
 	}
 	if membership.Role != "chairperson" {
 		t.Fatalf("expected highest matched role chairperson, got=%q", membership.Role)
+	}
+}
+
+func TestOAuthCommitteeGroupPrefix_EnforcedViaAdminAPI(t *testing.T) {
+	ts := newOAuthTestServer(t, oauthServerOptions{
+		PasswordEnabled:      true,
+		ProvisioningMode:     "auto_create",
+		CommitteeGroupPrefix: "conference-",
+	})
+	ctx := context.Background()
+
+	ts.seedCommittee(t, "Prefix Committee", "prefix-committee")
+
+	// Create a Connect admin client with a cookie jar to hold the session.
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatalf("create cookie jar: %v", err)
+	}
+	httpClient := &http.Client{Jar: jar}
+
+	sessionClient := sessionv1connect.NewSessionServiceClient(httpClient, ts.URL+"/api")
+	adminClient := adminv1connect.NewAdminServiceClient(httpClient, ts.URL+"/api")
+
+	// Log in as admin via the session API.
+	if _, err := sessionClient.Login(ctx, connect.NewRequest(&sessionv1.LoginRequest{
+		Username: testAdminUsername,
+		Password: testAdminPassword,
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	// Creating a rule with a non-matching prefix must fail.
+	_, err = adminClient.CreateOAuthRule(ctx, connect.NewRequest(&adminv1.CreateOAuthRuleRequest{
+		Slug:      "prefix-committee",
+		GroupName: "wrong-prefix-group",
+		Role:      "member",
+	}))
+	if err == nil {
+		t.Fatal("expected error when creating rule with group name that does not match the configured prefix")
+	}
+
+	// Creating a rule with the correct prefix must succeed.
+	resp, err := adminClient.CreateOAuthRule(ctx, connect.NewRequest(&adminv1.CreateOAuthRuleRequest{
+		Slug:      "prefix-committee",
+		GroupName: "conference-members",
+		Role:      "member",
+	}))
+	if err != nil {
+		t.Fatalf("expected success for group matching prefix: %v", err)
+	}
+	if resp.Msg.GetRule().GetGroupName() != "conference-members" {
+		t.Fatalf("unexpected group name: %q", resp.Msg.GetRule().GetGroupName())
+	}
+
+	// GetCommitteeAdmin must expose the prefix.
+	adminResp, err := adminClient.GetCommitteeAdmin(ctx, connect.NewRequest(&adminv1.GetCommitteeAdminRequest{
+		Slug: "prefix-committee",
+	}))
+	if err != nil {
+		t.Fatalf("get committee admin: %v", err)
+	}
+	if got := adminResp.Msg.GetOauthGroupPrefix(); got != "conference-" {
+		t.Fatalf("expected oauth_group_prefix=%q, got=%q", "conference-", got)
 	}
 }
 

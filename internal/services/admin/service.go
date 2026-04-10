@@ -2,8 +2,10 @@ package adminservice
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -16,14 +18,16 @@ import (
 )
 
 type Service struct {
-	repo     repository.Repository
-	webhooks webhooks.CommitteeEventDispatcher
+	repo                    repository.Repository
+	webhooks                webhooks.CommitteeEventDispatcher
+	committeeGroupPrefix    string
 }
 
 // New creates an admin Service. Pass nil for dispatcher to disable committee
-// webhook notifications.
-func New(repo repository.Repository, dispatcher webhooks.CommitteeEventDispatcher) *Service {
-	return &Service{repo: repo, webhooks: dispatcher}
+// webhook notifications. committeeGroupPrefix restricts OIDC group rules to
+// groups starting with the given prefix (empty means no restriction).
+func New(repo repository.Repository, dispatcher webhooks.CommitteeEventDispatcher, committeeGroupPrefix string) *Service {
+	return &Service{repo: repo, webhooks: dispatcher, committeeGroupPrefix: strings.TrimSpace(committeeGroupPrefix)}
 }
 
 // GetAdminDashboard returns total accounts and committees.
@@ -267,9 +271,10 @@ func (s *Service) GetCommitteeAdmin(ctx context.Context, slug string) (*adminv1.
 	}
 
 	return &adminv1.GetCommitteeAdminResponse{
-		Committee:  toCommitteeRecord(committee, total),
-		Users:      userRecords,
-		OauthRules: ruleRecords,
+		Committee:        toCommitteeRecord(committee, total),
+		Users:            userRecords,
+		OauthRules:       ruleRecords,
+		OauthGroupPrefix: s.committeeGroupPrefix,
 	}, nil
 }
 
@@ -441,6 +446,9 @@ func (s *Service) CreateOAuthRule(ctx context.Context, slug, groupName, role str
 
 	if groupName == "" || role == "" {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "group_name and role are required")
+	}
+	if s.committeeGroupPrefix != "" && !strings.HasPrefix(groupName, s.committeeGroupPrefix) {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, fmt.Sprintf("group name must start with %q", s.committeeGroupPrefix))
 	}
 
 	rule, err := s.repo.CreateOAuthCommitteeGroupRuleByCommitteeSlug(ctx, slug, groupName, role)

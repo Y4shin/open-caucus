@@ -50,12 +50,13 @@ import (
 )
 
 type oauthServerOptions struct {
-	PasswordEnabled  bool
-	ProvisioningMode string
-	RequiredGroups   []string
-	AdminGroup       string
-	GroupsClaim      string
-	ProviderGroups   []string
+	PasswordEnabled       bool
+	ProvisioningMode      string
+	RequiredGroups        []string
+	AdminGroup            string
+	GroupsClaim           string
+	ProviderGroups        []string
+	CommitteeGroupPrefix  string
 }
 
 type oauthTestServer struct {
@@ -205,7 +206,7 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 	apiMux.Handle(voteAPIPath, mw.Get("session")(voteAPIHandler))
 
 	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
-		apiconnect.NewAdminHandler(adminservice.New(repo)),
+		apiconnect.NewAdminHandler(adminservice.New(repo, nil, opts.CommitteeGroupPrefix)),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))

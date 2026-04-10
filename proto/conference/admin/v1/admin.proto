@@ -152,6 +152,8 @@ message GetCommitteeAdminResponse {
   CommitteeRecord committee = 1;
   repeated CommitteeUserRecord users = 2;
   repeated OAuthRuleRecord oauth_rules = 3;
+  // Configured OIDC group prefix for committee rules (empty = no restriction).
+  string oauth_group_prefix = 4;
 }
 
 message ListCommitteeUsersRequest {

@@ -62,6 +62,10 @@ type combinedTestClient struct {
 }
 
 func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
+	return newCombinedAPITestServerWithOpts(t, "")
+}
+
+func newCombinedAPITestServerWithOpts(t *testing.T, committeeGroupPrefix string) *combinedTestServer {
 	t.Helper()
 
 	repo, err := sqlite.New(":memory:")
@@ -145,7 +149,7 @@ func newCombinedAPITestServer(t *testing.T) *combinedTestServer {
 
 	// Admin service
 	adminPath, adminHandler := adminv1connect.NewAdminServiceHandler(
-		NewAdminHandler(adminservice.New(repo, nil)),
+		NewAdminHandler(adminservice.New(repo, nil, committeeGroupPrefix)),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+adminPath, mw.Get("session")(http.StripPrefix("/api", adminHandler)))

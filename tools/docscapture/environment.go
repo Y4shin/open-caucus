@@ -265,7 +265,7 @@ func NewEnvironment(rawOpts EnvironmentOptions) (*Environment, error) {
 	apiMux.Handle(voteAPIPath, mw.Get("session")(voteAPIHandler))
 
 	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
-		apiconnect.NewAdminHandler(adminservice.New(repo, nil)),
+		apiconnect.NewAdminHandler(adminservice.New(repo, nil, "")),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(adminAPIPath, mw.Get("session")(adminAPIHandler))

@@ -156,7 +156,7 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	apiMux.Handle(voteAPIPath, rt.middleware.Get("session")(voteAPIHandler))
 
 	adminAPIPath, adminAPIHandler := adminv1connect.NewAdminServiceHandler(
-		apiconnect.NewAdminHandler(adminservice.New(rt.repo, webhooks.NewCommitteeDispatcher(rt.cfg.Webhook))),
+		apiconnect.NewAdminHandler(adminservice.New(rt.repo, webhooks.NewCommitteeDispatcher(rt.cfg.Webhook), rt.cfg.Auth.OAuthCommitteeGroupPrefix)),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(adminAPIPath, rt.middleware.Get("session")(adminAPIHandler))

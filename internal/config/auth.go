@@ -17,7 +17,8 @@ type AuthConfig struct {
 
 	OAuthProvisioningMode string   `mapstructure:"oauth_provisioning_mode" env:"OAUTH_PROVISIONING_MODE" default:"preprovisioned" env_doc:"OAuth provisioning mode (preprovisioned, auto_create)" validate:"oneOf(preprovisioned,auto_create)" env_default:"preprovisioned"`
 	OAuthRequiredGroups   []string `mapstructure:"oauth_required_groups" env:"OAUTH_REQUIRED_GROUPS" default:"" env_doc:"Optional required groups for OAuth provisioning, comma-separated"`
-	OAuthAdminGroup       string   `mapstructure:"oauth_admin_group" env:"OAUTH_ADMIN_GROUP" default:"" env_doc:"Optional group that toggles local admin flag on each OAuth login"`
-	OAuthStateTTLSeconds  int      `mapstructure:"oauth_state_ttl_seconds" env:"OAUTH_STATE_TTL_SECONDS" default:"300" env_doc:"Max age for OAuth state cookie in seconds" validate:"enforceMin(1)" env_default:"300"`
+	OAuthAdminGroup              string   `mapstructure:"oauth_admin_group" env:"OAUTH_ADMIN_GROUP" default:"" env_doc:"Optional group that toggles local admin flag on each OAuth login"`
+	OAuthCommitteeGroupPrefix    string   `mapstructure:"oauth_committee_group_prefix" env:"OAUTH_COMMITTEE_GROUP_PREFIX" default:"" env_doc:"When set, only OIDC groups with this prefix can be used in committee group rules"`
+	OAuthStateTTLSeconds         int      `mapstructure:"oauth_state_ttl_seconds" env:"OAUTH_STATE_TTL_SECONDS" default:"300" env_doc:"Max age for OAuth state cookie in seconds" validate:"enforceMin(1)" env_default:"300"`
 }
 

@@ -1018,12 +1018,14 @@ func (x *GetCommitteeAdminRequest) GetSlug() string {
 }
 
 type GetCommitteeAdminResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Committee     *CommitteeRecord       `protobuf:"bytes,1,opt,name=committee,proto3" json:"committee,omitempty"`
-	Users         []*CommitteeUserRecord `protobuf:"bytes,2,rep,name=users,proto3" json:"users,omitempty"`
-	OauthRules    []*OAuthRuleRecord     `protobuf:"bytes,3,rep,name=oauth_rules,json=oauthRules,proto3" json:"oauth_rules,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Committee  *CommitteeRecord       `protobuf:"bytes,1,opt,name=committee,proto3" json:"committee,omitempty"`
+	Users      []*CommitteeUserRecord `protobuf:"bytes,2,rep,name=users,proto3" json:"users,omitempty"`
+	OauthRules []*OAuthRuleRecord     `protobuf:"bytes,3,rep,name=oauth_rules,json=oauthRules,proto3" json:"oauth_rules,omitempty"`
+	// Configured OIDC group prefix for committee rules (empty = no restriction).
+	OauthGroupPrefix string `protobuf:"bytes,4,opt,name=oauth_group_prefix,json=oauthGroupPrefix,proto3" json:"oauth_group_prefix,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *GetCommitteeAdminResponse) Reset() {
@@ -1075,6 +1077,13 @@ func (x *GetCommitteeAdminResponse) GetOauthRules() []*OAuthRuleRecord {
 		return x.OauthRules
 	}
 	return nil
+}
+
+func (x *GetCommitteeAdminResponse) GetOauthGroupPrefix() string {
+	if x != nil {
+		return x.OauthGroupPrefix
+	}
+	return ""
 }
 
 type ListCommitteeUsersRequest struct {
@@ -1978,12 +1987,13 @@ const file_conference_admin_v1_admin_proto_rawDesc = "" +
 	"\x04slug\x18\x01 \x01(\tR\x04slug\"\x19\n" +
 	"\x17DeleteCommitteeResponse\".\n" +
 	"\x18GetCommitteeAdminRequest\x12\x12\n" +
-	"\x04slug\x18\x01 \x01(\tR\x04slug\"\xe6\x01\n" +
+	"\x04slug\x18\x01 \x01(\tR\x04slug\"\x94\x02\n" +
 	"\x19GetCommitteeAdminResponse\x12B\n" +
 	"\tcommittee\x18\x01 \x01(\v2$.conference.admin.v1.CommitteeRecordR\tcommittee\x12>\n" +
 	"\x05users\x18\x02 \x03(\v2(.conference.admin.v1.CommitteeUserRecordR\x05users\x12E\n" +
 	"\voauth_rules\x18\x03 \x03(\v2$.conference.admin.v1.OAuthRuleRecordR\n" +
-	"oauthRules\"`\n" +
+	"oauthRules\x12,\n" +
+	"\x12oauth_group_prefix\x18\x04 \x01(\tR\x10oauthGroupPrefix\"`\n" +
 	"\x19ListCommitteeUsersRequest\x12\x12\n" +
 	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x1b\n" +

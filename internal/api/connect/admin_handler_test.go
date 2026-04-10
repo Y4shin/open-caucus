@@ -325,3 +325,106 @@ func TestAdminService_CreateListAndDeleteOAuthRule(t *testing.T) {
 		t.Fatalf("expected 0 oauth rules after delete, got %d", len(listResp.Msg.GetRules()))
 	}
 }
+
+func TestAdminService_OAuthRuleGroupPrefix_RejectsWithoutPrefix(t *testing.T) {
+	ts := newCombinedAPITestServerWithOpts(t, "conference-")
+	ts.seedAdmin(t, "admin", "adminpass")
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	_, err := client.admin.CreateOAuthRule(context.Background(), connect.NewRequest(&adminv1.CreateOAuthRuleRequest{
+		Slug:      "test-committee",
+		GroupName: "wrong-prefix-group",
+		Role:      "member",
+	}))
+	if err == nil {
+		t.Fatal("expected error when creating rule with group name that doesn't match prefix")
+	}
+}
+
+func TestAdminService_OAuthRuleGroupPrefix_AcceptsMatchingPrefix(t *testing.T) {
+	ts := newCombinedAPITestServerWithOpts(t, "conference-")
+	ts.seedAdmin(t, "admin", "adminpass")
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	resp, err := client.admin.CreateOAuthRule(context.Background(), connect.NewRequest(&adminv1.CreateOAuthRuleRequest{
+		Slug:      "test-committee",
+		GroupName: "conference-test-chairs",
+		Role:      "chairperson",
+	}))
+	if err != nil {
+		t.Fatalf("create rule with matching prefix: %v", err)
+	}
+	if resp.Msg.GetRule().GetGroupName() != "conference-test-chairs" {
+		t.Fatalf("unexpected group name: %q", resp.Msg.GetRule().GetGroupName())
+	}
+}
+
+func TestAdminService_OAuthRuleGroupPrefix_NoRestrictionWhenEmpty(t *testing.T) {
+	ts := newCombinedAPITestServerWithOpts(t, "")
+	ts.seedAdmin(t, "admin", "adminpass")
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	resp, err := client.admin.CreateOAuthRule(context.Background(), connect.NewRequest(&adminv1.CreateOAuthRuleRequest{
+		Slug:      "test-committee",
+		GroupName: "any-group-name",
+		Role:      "member",
+	}))
+	if err != nil {
+		t.Fatalf("create rule without prefix restriction: %v", err)
+	}
+	if resp.Msg.GetRule().GetGroupName() != "any-group-name" {
+		t.Fatalf("unexpected group name: %q", resp.Msg.GetRule().GetGroupName())
+	}
+}
+
+func TestAdminService_GetCommitteeAdmin_ExposesGroupPrefix(t *testing.T) {
+	ts := newCombinedAPITestServerWithOpts(t, "conference-")
+	ts.seedAdmin(t, "admin", "adminpass")
+	ts.seedCommittee(t, "Test Committee", "test-committee")
+
+	client := newCombinedTestClient(t, ts)
+
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "admin",
+		Password: "adminpass",
+	})); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+
+	resp, err := client.admin.GetCommitteeAdmin(context.Background(), connect.NewRequest(&adminv1.GetCommitteeAdminRequest{
+		Slug: "test-committee",
+	}))
+	if err != nil {
+		t.Fatalf("get committee admin: %v", err)
+	}
+	if got := resp.Msg.GetOauthGroupPrefix(); got != "conference-" {
+		t.Fatalf("expected oauth_group_prefix=%q, got=%q", "conference-", got)
+	}
+}

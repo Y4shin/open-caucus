@@ -18,6 +18,7 @@
 		committee: CommitteeRecord;
 		users: CommitteeUserRecord[];
 		oauthRules: OAuthRuleRecord[];
+		oauthGroupPrefix: string;
 		assignableAccounts: AccountRecord[];
 	}
 
@@ -73,6 +74,7 @@
 				committee: committeeAdmin.committee!,
 				users,
 				oauthRules: committeeAdmin.oauthRules,
+				oauthGroupPrefix: committeeAdmin.oauthGroupPrefix,
 				assignableAccounts
 			};
 		} catch (err) {
@@ -297,7 +299,7 @@
 					>
 						<div>
 							<label class="label text-sm font-medium" for="group_name">{m.admin_committee_users_oauth_group_label()}</label>
-							<input class="input input-bordered input-sm w-full" type="text" id="group_name" name="group_name" bind:value={oauthGroupName} required />
+							<input class="input input-bordered input-sm w-full" type="text" id="group_name" name="group_name" bind:value={oauthGroupName} placeholder={committeeState.data?.oauthGroupPrefix || ''} required />
 						</div>
 						<div>
 							<label class="label text-sm font-medium" for="oauth_rule_role">{m.admin_committee_users_role_label()}</label>
