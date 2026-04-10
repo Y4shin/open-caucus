@@ -74,6 +74,8 @@ func NewOAuthCallbackHandler(h *OAuthHandler) http.Handler {
 			return
 		}
 
+		slog.Info("oauth groups detected", "username", account.Username, "groups", callbackResult.Principal.Groups, "groups_count", len(callbackResult.Principal.Groups))
+
 		if err := h.syncAdmin(r.Context(), account.ID, callbackResult.Principal.Groups); err != nil {
 			http.Error(w, fmt.Sprintf("oauth callback admin sync: %v", err), http.StatusInternalServerError)
 			return
@@ -217,11 +219,13 @@ func (h *OAuthHandler) syncCommittees(ctx context.Context, accountID int64, grou
 	if err != nil {
 		return err
 	}
+	slog.Debug("oauth committee sync: evaluating rules", "account_id", accountID, "groups", groups, "rule_count", len(rules))
 	desiredByCommittee := map[int64]string{}
 	for _, rule := range rules {
 		if !oauthGroupContains(groups, rule.GroupName) {
 			continue
 		}
+		slog.Debug("oauth committee sync: group matched rule", "group", rule.GroupName, "committee_id", rule.CommitteeID, "role", rule.Role)
 		currentRole, exists := desiredByCommittee[rule.CommitteeID]
 		if !exists {
 			desiredByCommittee[rule.CommitteeID] = rule.Role
@@ -238,6 +242,7 @@ func (h *OAuthHandler) syncCommittees(ctx context.Context, accountID int64, grou
 			Role:        role,
 		})
 	}
+	slog.Debug("oauth committee sync: desired memberships", "account_id", accountID, "desired_count", len(desired), "desired", desired)
 	return h.Repository.SyncOAuthCommitteeMemberships(ctx, accountID, desired)
 }
 

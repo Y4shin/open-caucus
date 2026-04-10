@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -287,33 +288,37 @@ func firstAvailableClaim(claims map[string]any, chain []string) string {
 func groupsClaim(claims map[string]any, claimName string) []string {
 	raw, ok := claims[claimName]
 	if !ok {
+		slog.Debug("oauth groups claim: claim not present in token", "claim_name", claimName)
 		return nil
 	}
+	var groups []string
 	switch typed := raw.(type) {
 	case []any:
-		groups := make([]string, 0, len(typed))
+		groups = make([]string, 0, len(typed))
 		for _, item := range typed {
 			if v, ok := item.(string); ok && strings.TrimSpace(v) != "" {
 				groups = append(groups, strings.TrimSpace(v))
 			}
 		}
-		return groups
 	case []string:
-		groups := make([]string, 0, len(typed))
+		groups = make([]string, 0, len(typed))
 		for _, item := range typed {
 			if strings.TrimSpace(item) != "" {
 				groups = append(groups, strings.TrimSpace(item))
 			}
 		}
-		return groups
 	case string:
 		if strings.TrimSpace(typed) == "" {
+			slog.Debug("oauth groups claim: claim is empty string", "claim_name", claimName)
 			return nil
 		}
-		return []string{strings.TrimSpace(typed)}
+		groups = []string{strings.TrimSpace(typed)}
 	default:
+		slog.Debug("oauth groups claim: unexpected claim type", "claim_name", claimName, "raw_type", fmt.Sprintf("%T", raw))
 		return nil
 	}
+	slog.Debug("oauth groups claim: extracted groups", "claim_name", claimName, "groups", groups, "count", len(groups))
+	return groups
 }
 
 func (s *Service) encodeStateCookie(p callbackState) (string, error) {
