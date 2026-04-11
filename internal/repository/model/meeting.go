@@ -15,4 +15,6 @@ type Meeting struct {
 	ModeratorID                  *int64 // nil if not set
 	Version                      int64
 	CreatedAt                    time.Time
+	StartAt                      *time.Time // optional, always UTC
+	EndAt                        *time.Time // optional, always UTC
 }

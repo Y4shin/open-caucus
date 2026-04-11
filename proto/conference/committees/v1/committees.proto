@@ -51,6 +51,8 @@ message CreateMeetingRequest {
   string committee_slug = 1;
   string name = 2;
   string description = 3;
+  optional string start_at = 4; // ISO 8601 / RFC 3339 in UTC
+  optional string end_at = 5;   // ISO 8601 / RFC 3339 in UTC
 }
 
 message CreateMeetingResponse {

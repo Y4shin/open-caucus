@@ -23,8 +23,8 @@ func (q *Queries) CountMeetingsForCommittee(ctx context.Context, slug string) (i
 }
 
 const createMeeting = `-- name: CreateMeeting :exec
-INSERT INTO meetings (committee_id, name, description, secret, signup_open)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO meetings (committee_id, name, description, secret, signup_open, start_at, end_at)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateMeetingParams struct {
@@ -33,6 +33,8 @@ type CreateMeetingParams struct {
 	Description string
 	Secret      string
 	SignupOpen  bool
+	StartAt     sql.NullString
+	EndAt       sql.NullString
 }
 
 func (q *Queries) CreateMeeting(ctx context.Context, arg CreateMeetingParams) error {
@@ -42,6 +44,8 @@ func (q *Queries) CreateMeeting(ctx context.Context, arg CreateMeetingParams) er
 		arg.Description,
 		arg.Secret,
 		arg.SignupOpen,
+		arg.StartAt,
+		arg.EndAt,
 	)
 	return err
 }
@@ -56,7 +60,7 @@ func (q *Queries) DeleteMeeting(ctx context.Context, id int64) error {
 }
 
 const getMeetingByID = `-- name: GetMeetingByID :one
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id, version FROM meetings WHERE id = ?
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id, version, start_at, end_at FROM meetings WHERE id = ?
 `
 
 func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error) {
@@ -76,12 +80,14 @@ func (q *Queries) GetMeetingByID(ctx context.Context, id int64) (Meeting, error)
 		&i.FirstSpeakerQuotationEnabled,
 		&i.ModeratorID,
 		&i.Version,
+		&i.StartAt,
+		&i.EndAt,
 	)
 	return i, err
 }
 
 const listMeetingsForCommittee = `-- name: ListMeetingsForCommittee :many
-SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id, version FROM meetings
+SELECT id, committee_id, name, description, secret, signup_open, created_at, updated_at, current_agenda_point_id, gender_quotation_enabled, first_speaker_quotation_enabled, moderator_id, version, start_at, end_at FROM meetings
 WHERE committee_id = (SELECT id FROM committees WHERE slug = ?)
 ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
@@ -115,6 +121,8 @@ func (q *Queries) ListMeetingsForCommittee(ctx context.Context, arg ListMeetings
 			&i.FirstSpeakerQuotationEnabled,
 			&i.ModeratorID,
 			&i.Version,
+			&i.StartAt,
+			&i.EndAt,
 		); err != nil {
 			return nil, err
 		}
@@ -140,6 +148,21 @@ type SetActiveMeetingParams struct {
 
 func (q *Queries) SetActiveMeeting(ctx context.Context, arg SetActiveMeetingParams) error {
 	_, err := q.db.ExecContext(ctx, setActiveMeeting, arg.CurrentMeetingID, arg.Slug)
+	return err
+}
+
+const setMeetingDatetime = `-- name: SetMeetingDatetime :exec
+UPDATE meetings SET start_at = ?, end_at = ? WHERE id = ?
+`
+
+type SetMeetingDatetimeParams struct {
+	StartAt sql.NullString
+	EndAt   sql.NullString
+	ID      int64
+}
+
+func (q *Queries) SetMeetingDatetime(ctx context.Context, arg SetMeetingDatetimeParams) error {
+	_, err := q.db.ExecContext(ctx, setMeetingDatetime, arg.StartAt, arg.EndAt, arg.ID)
 	return err
 }
 

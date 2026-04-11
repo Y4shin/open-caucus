@@ -295,7 +295,7 @@ func (ts *testServer) seedMeetingFull(t *testing.T, slug, name, description stri
 	if err != nil {
 		t.Fatalf("get committee ID for %q: %v", slug, err)
 	}
-	if err := ts.repo.CreateMeeting(context.Background(), committeeID, name, description, "test-meeting-secret", signupOpen); err != nil {
+	if err := ts.repo.CreateMeeting(context.Background(), committeeID, name, description, "test-meeting-secret", signupOpen, nil, nil); err != nil {
 		t.Fatalf("seed meeting %q: %v", name, err)
 	}
 }

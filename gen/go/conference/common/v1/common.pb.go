@@ -240,6 +240,8 @@ type MeetingReference struct {
 	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 	SignupOpen    bool                   `protobuf:"varint,4,opt,name=signup_open,json=signupOpen,proto3" json:"signup_open,omitempty"`
 	Description   string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	StartAt       *string                `protobuf:"bytes,6,opt,name=start_at,json=startAt,proto3,oneof" json:"start_at,omitempty"` // ISO 8601 / RFC 3339 in UTC
+	EndAt         *string                `protobuf:"bytes,7,opt,name=end_at,json=endAt,proto3,oneof" json:"end_at,omitempty"`       // ISO 8601 / RFC 3339 in UTC
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -305,6 +307,20 @@ func (x *MeetingReference) GetSignupOpen() bool {
 func (x *MeetingReference) GetDescription() string {
 	if x != nil {
 		return x.Description
+	}
+	return ""
+}
+
+func (x *MeetingReference) GetStartAt() string {
+	if x != nil && x.StartAt != nil {
+		return *x.StartAt
+	}
+	return ""
+}
+
+func (x *MeetingReference) GetEndAt() string {
+	if x != nil && x.EndAt != nil {
+		return *x.EndAt
 	}
 	return ""
 }
@@ -678,7 +694,7 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x19\n" +
 	"\bis_admin\x18\x04 \x01(\bR\aisAdmin\x12%\n" +
 	"\x0eis_chairperson\x18\x05 \x01(\bR\risChairperson\x12\x1b\n" +
-	"\tis_member\x18\x06 \x01(\bR\bisMember\"\xaf\x01\n" +
+	"\tis_member\x18\x06 \x01(\bR\bisMember\"\x83\x02\n" +
 	"\x10MeetingReference\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12%\n" +
@@ -686,7 +702,11 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12\x1f\n" +
 	"\vsignup_open\x18\x04 \x01(\bR\n" +
 	"signupOpen\x12 \n" +
-	"\vdescription\x18\x05 \x01(\tR\vdescription\"\x96\x01\n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\x12\x1e\n" +
+	"\bstart_at\x18\x06 \x01(\tH\x00R\astartAt\x88\x01\x01\x12\x1a\n" +
+	"\x06end_at\x18\a \x01(\tH\x01R\x05endAt\x88\x01\x01B\v\n" +
+	"\t_start_atB\t\n" +
+	"\a_end_at\"\x96\x01\n" +
 	"\x12AgendaPointSummary\x12&\n" +
 	"\x0fagenda_point_id\x18\x01 \x01(\tR\ragendaPointId\x12%\n" +
 	"\x0edisplay_number\x18\x02 \x01(\tR\rdisplayNumber\x12\x14\n" +
@@ -757,6 +777,7 @@ func file_conference_common_v1_common_proto_init() {
 	if File_conference_common_v1_common_proto != nil {
 		return
 	}
+	file_conference_common_v1_common_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

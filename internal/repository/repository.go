@@ -109,7 +109,7 @@ type Repository interface {
 	GetMeetingByID(ctx context.Context, id int64) (*model.Meeting, error)
 	ListMeetingsForCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.Meeting, error)
 	CountMeetingsForCommittee(ctx context.Context, slug string) (int64, error)
-	CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error
+	CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool, startAt, endAt *time.Time) error
 	DeleteMeeting(ctx context.Context, id int64) error
 	SetActiveMeeting(ctx context.Context, slug string, meetingID *int64) error
 	SetMeetingSignupOpen(ctx context.Context, id int64, open bool) error
@@ -119,6 +119,7 @@ type Repository interface {
 	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
+	SetMeetingDatetime(ctx context.Context, id int64, startAt, endAt *time.Time) error
 
 	// Binary blobs
 	CreateBlob(ctx context.Context, filename, contentType string, sizeBytes int64, storagePath string) (*model.BinaryBlob, error)

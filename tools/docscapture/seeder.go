@@ -108,7 +108,7 @@ func (s *Seeder) CreateMeeting(ctx context.Context, committeeSlug, name, descrip
 	if secret == "" {
 		secret = "docs-capture-meeting-secret"
 	}
-	if err := s.repo.CreateMeeting(ctx, committeeID, name, description, secret, signupOpen); err != nil {
+	if err := s.repo.CreateMeeting(ctx, committeeID, name, description, secret, signupOpen, nil, nil); err != nil {
 		return fmt.Errorf("create meeting %q in %q: %w", name, committeeSlug, err)
 	}
 	return nil

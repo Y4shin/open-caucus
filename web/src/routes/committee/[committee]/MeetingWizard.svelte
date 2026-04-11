@@ -1,12 +1,15 @@
 <script lang="ts">
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import { agendaClient, attendeeClient, committeeClient, moderationClient } from '$lib/api/index.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import * as m from '$lib/paraglide/messages';
 	import AgendaImportPreview from './meeting/[meetingId]/moderate/AgendaImportPreview.svelte';
 	import type { AgendaImportState } from './meeting/[meetingId]/moderate/agenda-import.js';
 	import { parseAgendaImportSource, buildImportedAgenda } from './meeting/[meetingId]/moderate/agenda-import.js';
+	import { type CalendarDateTime } from '@internationalized/date';
+	import { calendarDateTimeToUTC, formatCalendarDateTime } from '$lib/utils/datetime.js';
 
 	let {
 		slug,
@@ -25,6 +28,8 @@
 	let meetingName = $state('');
 	let meetingDescription = $state('');
 	let signupOpen = $state(false);
+	let meetingStartAt = $state<CalendarDateTime | undefined>(undefined);
+	let meetingEndAt = $state<CalendarDateTime | undefined>(undefined);
 
 	// Step 2: Agenda — reuses the inline editor from the import dialog
 	let agendaRawText = $state('');
@@ -122,6 +127,8 @@
 		meetingName = '';
 		meetingDescription = '';
 		signupOpen = false;
+		meetingStartAt = undefined;
+		meetingEndAt = undefined;
 		agendaRawText = '';
 		agendaParsedText = '';
 		agendaFormat = 'plaintext';
@@ -153,7 +160,9 @@
 			const meetingRes = await committeeClient.createMeeting({
 				committeeSlug: slug,
 				name: meetingName.trim(),
-				description: meetingDescription.trim()
+				description: meetingDescription.trim(),
+				startAt: meetingStartAt ? calendarDateTimeToUTC(meetingStartAt) : undefined,
+				endAt: meetingEndAt ? calendarDateTimeToUTC(meetingEndAt) : undefined
 			});
 			const meetingId = meetingRes.meeting?.meetingId ?? '';
 			if (!meetingId) throw new Error('Meeting creation returned no ID');
@@ -244,6 +253,19 @@
 					<input type="checkbox" class="toggle toggle-primary toggle-sm" bind:checked={signupOpen} />
 					<span class="text-sm">{m.committee_signup_label()}</span>
 				</label>
+				<div class="grid grid-cols-2 gap-3">
+					<DateTimePicker
+						bind:value={meetingStartAt}
+						label={m.wizard_start_at_label()}
+						id="wizard-start"
+					/>
+					<DateTimePicker
+						bind:value={meetingEndAt}
+						label={m.wizard_end_at_label()}
+						id="wizard-end"
+						minValue={meetingStartAt}
+					/>
+				</div>
 			</div>
 		{:else if step === 2}
 			<div class="space-y-3">
@@ -292,6 +314,13 @@
 					<p class="text-sm"><strong>{meetingName}</strong></p>
 					{#if meetingDescription}<p class="text-sm text-base-content/70">{meetingDescription}</p>{/if}
 					{#if signupOpen}<span class="badge badge-outline badge-sm">{m.committee_signup_label()}</span>{/if}
+					{#if meetingStartAt || meetingEndAt}
+						<p class="text-sm text-base-content/70">
+							{#if meetingStartAt}{m.wizard_start_at_label()} {formatCalendarDateTime(meetingStartAt)}{/if}
+							{#if meetingStartAt && meetingEndAt} &mdash; {/if}
+							{#if meetingEndAt}{m.wizard_end_at_label()} {formatCalendarDateTime(meetingEndAt)}{/if}
+						</p>
+					{/if}
 				</div>
 				{#if parsedAgenda.length > 0}
 					<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">

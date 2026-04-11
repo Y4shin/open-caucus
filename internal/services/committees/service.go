@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"strconv"
+	"time"
 
 	committeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1"
 	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
@@ -103,15 +104,8 @@ func (s *Service) GetCommitteeOverview(ctx context.Context, slug string) (*commi
 	overviewMeetings := make([]*committeesv1.CommitteeOverviewMeeting, 0, len(meetings))
 	for _, m := range meetings {
 		isActive := committee.CurrentMeetingID != nil && *committee.CurrentMeetingID == m.ID
-		meetingRef := &commonv1.MeetingReference{
-			MeetingId:     strconv.FormatInt(m.ID, 10),
-			CommitteeSlug: slug,
-			Name:          m.Name,
-			SignupOpen:    m.SignupOpen,
-			Description:   m.Description,
-		}
 		overviewMeetings = append(overviewMeetings, &committeesv1.CommitteeOverviewMeeting{
-			Meeting:     meetingRef,
+			Meeting:     meetingToRef(m, slug),
 			CanModerate: isChairperson || isAdmin,
 			CanJoin:     m.SignupOpen,
 			CanViewLive: isActive,
@@ -133,7 +127,7 @@ func (s *Service) GetCommitteeOverview(ctx context.Context, slug string) (*commi
 	return &committeesv1.GetCommitteeOverviewResponse{Overview: overview}, nil
 }
 
-func (s *Service) CreateMeeting(ctx context.Context, slug, name, description string) (*committeesv1.CreateMeetingResponse, error) {
+func (s *Service) CreateMeeting(ctx context.Context, slug, name, description string, startAt, endAt *time.Time) (*committeesv1.CreateMeetingResponse, error) {
 	committee, err := s.requireCommitteeManager(ctx, slug)
 	if err != nil {
 		return nil, err
@@ -141,11 +135,14 @@ func (s *Service) CreateMeeting(ctx context.Context, slug, name, description str
 	if name == "" {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "meeting name is required")
 	}
+	if startAt != nil && endAt != nil && endAt.Before(*startAt) {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "end time must be after start time")
+	}
 	secret, err := generateMeetingSecret()
 	if err != nil {
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate meeting secret", err)
 	}
-	if err := s.repo.CreateMeeting(ctx, committee.ID, name, description, secret, false); err != nil {
+	if err := s.repo.CreateMeeting(ctx, committee.ID, name, description, secret, false, startAt, endAt); err != nil {
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to create meeting", err)
 	}
 
@@ -155,13 +152,7 @@ func (s *Service) CreateMeeting(ctx context.Context, slug, name, description str
 	}
 
 	return &committeesv1.CreateMeetingResponse{
-		Meeting: &commonv1.MeetingReference{
-			MeetingId:     strconv.FormatInt(meetings[0].ID, 10),
-			CommitteeSlug: slug,
-			Name:          meetings[0].Name,
-			SignupOpen:    meetings[0].SignupOpen,
-			Description:   meetings[0].Description,
-		},
+		Meeting: meetingToRef(meetings[0], slug),
 	}, nil
 }
 
@@ -237,6 +228,25 @@ func (s *Service) requireCommitteeManager(ctx context.Context, slug string) (*mo
 
 	return committee, nil
 }
+
+func meetingToRef(m *model.Meeting, slug string) *commonv1.MeetingReference {
+	ref := &commonv1.MeetingReference{
+		MeetingId:     strconv.FormatInt(m.ID, 10),
+		CommitteeSlug: slug,
+		Name:          m.Name,
+		SignupOpen:    m.SignupOpen,
+		Description:   m.Description,
+	}
+	if m.StartAt != nil {
+		ref.StartAt = ptrOf(m.StartAt.UTC().Format(time.RFC3339))
+	}
+	if m.EndAt != nil {
+		ref.EndAt = ptrOf(m.EndAt.UTC().Format(time.RFC3339))
+	}
+	return ref
+}
+
+func ptrOf[T any](v T) *T { return &v }
 
 func generateMeetingSecret() (string, error) {
 	b := make([]byte, 16)

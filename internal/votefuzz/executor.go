@@ -256,7 +256,7 @@ func seedExecutionFixture(ctx context.Context, repo *reposqlite.Repository, cfg 
 		return executionFixture{}, fmt.Errorf("assign admin to committee: %w", err)
 	}
 
-	if err := repo.CreateMeeting(ctx, committeeID, fmt.Sprintf("Meeting %d", cfg.Seed), "", fmt.Sprintf("meeting-secret-%d", cfg.Seed), false); err != nil {
+	if err := repo.CreateMeeting(ctx, committeeID, fmt.Sprintf("Meeting %d", cfg.Seed), "", fmt.Sprintf("meeting-secret-%d", cfg.Seed), false, nil, nil); err != nil {
 		return executionFixture{}, fmt.Errorf("create meeting: %w", err)
 	}
 	var meetingID int64

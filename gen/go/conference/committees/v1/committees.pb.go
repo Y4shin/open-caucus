@@ -383,6 +383,8 @@ type CreateMeetingRequest struct {
 	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
 	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	StartAt       *string                `protobuf:"bytes,4,opt,name=start_at,json=startAt,proto3,oneof" json:"start_at,omitempty"` // ISO 8601 / RFC 3339 in UTC
+	EndAt         *string                `protobuf:"bytes,5,opt,name=end_at,json=endAt,proto3,oneof" json:"end_at,omitempty"`       // ISO 8601 / RFC 3339 in UTC
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -434,6 +436,20 @@ func (x *CreateMeetingRequest) GetName() string {
 func (x *CreateMeetingRequest) GetDescription() string {
 	if x != nil {
 		return x.Description
+	}
+	return ""
+}
+
+func (x *CreateMeetingRequest) GetStartAt() string {
+	if x != nil && x.StartAt != nil {
+		return *x.StartAt
+	}
+	return ""
+}
+
+func (x *CreateMeetingRequest) GetEndAt() string {
+	if x != nil && x.EndAt != nil {
+		return *x.EndAt
 	}
 	return ""
 }
@@ -716,11 +732,15 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\x1bGetCommitteeOverviewRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\"g\n" +
 	"\x1cGetCommitteeOverviewResponse\x12G\n" +
-	"\boverview\x18\x01 \x01(\v2+.conference.committees.v1.CommitteeOverviewR\boverview\"s\n" +
+	"\boverview\x18\x01 \x01(\v2+.conference.committees.v1.CommitteeOverviewR\boverview\"\xc7\x01\n" +
 	"\x14CreateMeetingRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"Y\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1e\n" +
+	"\bstart_at\x18\x04 \x01(\tH\x00R\astartAt\x88\x01\x01\x12\x1a\n" +
+	"\x06end_at\x18\x05 \x01(\tH\x01R\x05endAt\x88\x01\x01B\v\n" +
+	"\t_start_atB\t\n" +
+	"\a_end_at\"Y\n" +
 	"\x15CreateMeetingResponse\x12@\n" +
 	"\ameeting\x18\x01 \x01(\v2&.conference.common.v1.MeetingReferenceR\ameeting\"\\\n" +
 	"\x14DeleteMeetingRequest\x12%\n" +
@@ -808,6 +828,7 @@ func file_conference_committees_v1_committees_proto_init() {
 	if File_conference_committees_v1_committees_proto != nil {
 		return
 	}
+	file_conference_committees_v1_committees_proto_msgTypes[7].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

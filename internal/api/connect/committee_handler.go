@@ -2,6 +2,7 @@ package apiconnect
 
 import (
 	"context"
+	"time"
 
 	connect "connectrpc.com/connect"
 
@@ -36,11 +37,25 @@ func (h *CommitteeHandler) GetCommitteeOverview(ctx context.Context, req *connec
 }
 
 func (h *CommitteeHandler) CreateMeeting(ctx context.Context, req *connect.Request[committeesv1.CreateMeetingRequest]) (*connect.Response[committeesv1.CreateMeetingResponse], error) {
-	resp, err := h.service.CreateMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.Name, req.Msg.Description)
+	startAt := parseOptionalUTCTime(req.Msg.StartAt)
+	endAt := parseOptionalUTCTime(req.Msg.EndAt)
+	resp, err := h.service.CreateMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.Name, req.Msg.Description, startAt, endAt)
 	if err != nil {
 		return nil, err
 	}
 	return connect.NewResponse(resp), nil
+}
+
+func parseOptionalUTCTime(s *string) *time.Time {
+	if s == nil || *s == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, *s)
+	if err != nil {
+		return nil
+	}
+	t = t.UTC()
+	return &t
 }
 
 func (h *CommitteeHandler) DeleteMeeting(ctx context.Context, req *connect.Request[committeesv1.DeleteMeetingRequest]) (*connect.Response[committeesv1.DeleteMeetingResponse], error) {

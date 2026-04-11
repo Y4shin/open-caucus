@@ -1167,13 +1167,15 @@ func (r *Repository) CountMeetingsForCommittee(ctx context.Context, slug string)
 }
 
 // CreateMeeting creates a new meeting for a committee
-func (r *Repository) CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool) error {
+func (r *Repository) CreateMeeting(ctx context.Context, committeeID int64, name, description, secret string, signupOpen bool, startAt, endAt *time.Time) error {
 	err := r.Queries.CreateMeeting(ctx, client.CreateMeetingParams{
 		CommitteeID: committeeID,
 		Name:        name,
 		Description: description,
 		Secret:      secret,
 		SignupOpen:  signupOpen,
+		StartAt:     timeToNullString(startAt),
+		EndAt:       timeToNullString(endAt),
 	})
 	if err != nil {
 		return fmt.Errorf("create meeting: %w", err)
@@ -1390,6 +1392,8 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 		ModeratorID:                  nullInt64ToPtr(m.ModeratorID),
 		Version:                      m.Version,
 		CreatedAt:                    createdAt,
+		StartAt:                      nullStringToTime(m.StartAt),
+		EndAt:                        nullStringToTime(m.EndAt),
 	}
 }
 
@@ -1426,6 +1430,25 @@ func ptrToNullBool(p *bool) sql.NullBool {
 		return sql.NullBool{}
 	}
 	return sql.NullBool{Bool: *p, Valid: true}
+}
+
+func timeToNullString(t *time.Time) sql.NullString {
+	if t == nil {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: t.UTC().Format(time.RFC3339), Valid: true}
+}
+
+func nullStringToTime(n sql.NullString) *time.Time {
+	if !n.Valid || n.String == "" {
+		return nil
+	}
+	t, err := time.Parse(time.RFC3339, n.String)
+	if err != nil {
+		return nil
+	}
+	t = t.UTC()
+	return &t
 }
 
 func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
@@ -2161,6 +2184,18 @@ func (r *Repository) SetMeetingModerator(ctx context.Context, id int64, moderato
 		ModeratorID: mid,
 	}); err != nil {
 		return fmt.Errorf("set meeting moderator: %w", err)
+	}
+	return nil
+}
+
+// SetMeetingDatetime sets the optional start and end times for a meeting (always stored as UTC).
+func (r *Repository) SetMeetingDatetime(ctx context.Context, id int64, startAt, endAt *time.Time) error {
+	if err := r.Queries.SetMeetingDatetime(ctx, client.SetMeetingDatetimeParams{
+		ID:      id,
+		StartAt: timeToNullString(startAt),
+		EndAt:   timeToNullString(endAt),
+	}); err != nil {
+		return fmt.Errorf("set meeting datetime: %w", err)
 	}
 	return nil
 }

@@ -227,7 +227,7 @@ func (ts *combinedTestServer) seedMeeting(t *testing.T, slug, name string, signu
 	if err != nil {
 		t.Fatalf("get committee id for %q: %v", slug, err)
 	}
-	if err := ts.repo.CreateMeeting(context.Background(), committeeID, name, "", "secret", signupOpen); err != nil {
+	if err := ts.repo.CreateMeeting(context.Background(), committeeID, name, "", "secret", signupOpen, nil, nil); err != nil {
 		t.Fatalf("seed meeting %q: %v", name, err)
 	}
 	meetings, err := ts.repo.ListMeetingsForCommittee(context.Background(), slug, 1, 0)

@@ -105,6 +105,8 @@
 	"committee_description_label": "Description:",
 	"committee_signup_label": "Open for signup",
 	"committee_create_button": "Create Meeting",
+	"wizard_start_at_label": "Start (optional):",
+	"wizard_end_at_label": "End (optional):",
 	"wizard_step_basics": "Basics",
 	"wizard_step_agenda": "Agenda",
 	"wizard_step_participants": "Participants",

@@ -105,6 +105,8 @@
 	"committee_description_label": "Beschreibung:",
 	"committee_signup_label": "Anmeldung offen",
 	"committee_create_button": "Sitzung erstellen",
+	"wizard_start_at_label": "Beginn (optional):",
+	"wizard_end_at_label": "Ende (optional):",
 	"wizard_step_basics": "Grundlagen",
 	"wizard_step_agenda": "Tagesordnung",
 	"wizard_step_participants": "Teilnehmer",

@@ -8,8 +8,8 @@ SELECT COUNT(*) FROM meetings
 WHERE committee_id = (SELECT id FROM committees WHERE slug = ?);
 
 -- name: CreateMeeting :exec
-INSERT INTO meetings (committee_id, name, description, secret, signup_open)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO meetings (committee_id, name, description, secret, signup_open, start_at, end_at)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- name: GetMeetingByID :one
 SELECT * FROM meetings WHERE id = ?;
@@ -34,3 +34,6 @@ UPDATE meetings SET first_speaker_quotation_enabled = ? WHERE id = ?;
 
 -- name: SetMeetingModerator :exec
 UPDATE meetings SET moderator_id = ? WHERE id = ?;
+
+-- name: SetMeetingDatetime :exec
+UPDATE meetings SET start_at = ?, end_at = ? WHERE id = ?;
