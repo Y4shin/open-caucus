@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AppTooltip from '$lib/components/ui/AppTooltip.svelte';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
 	import * as m from '$lib/paraglide/messages';
 
@@ -83,20 +84,32 @@
 		</div>
 		<div class="mt-2 flex items-center gap-2">
 			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await onMoveUp(); }}>
-				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move up" title="Move up" aria-label="Move up" disabled={!canMoveUp || isBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
+				<AppTooltip text="Move up" side="left">
+					<button type="submit" class="btn btn-sm btn-square" aria-label="Move up" disabled={!canMoveUp || isBusy(`move-${point.agendaPointId}-up`)}><LegacyIcon name="left" class="h-4 w-4 rotate-90" /></button>
+				</AppTooltip>
 			</form>
 			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await onMoveDown(); }}>
-				<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Move down" title="Move down" aria-label="Move down" disabled={!canMoveDown || isBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
+				<AppTooltip text="Move down" side="left">
+					<button type="submit" class="btn btn-sm btn-square" aria-label="Move down" disabled={!canMoveDown || isBusy(`move-${point.agendaPointId}-down`)}><LegacyIcon name="right" class="h-4 w-4 rotate-90" /></button>
+				</AppTooltip>
 			</form>
 			{#if !point.isActive}
 				<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await onActivate(); }}>
-					<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Activate agenda point" title="Activate agenda point" aria-label="Activate agenda point" disabled={isBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
+					<AppTooltip text="Activate agenda point" side="left">
+						<button type="submit" class="btn btn-sm btn-square" aria-label="Activate agenda point" disabled={isBusy(`activate-${point.agendaPointId}`)}><LegacyIcon name="check-circle" class="h-4 w-4" /></button>
+					</AppTooltip>
 				</form>
 			{/if}
-			<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Edit agenda point" title="Edit agenda point" aria-label="Edit agenda point" data-testid="manage-agenda-point-edit-btn" onclick={onStartEdit}><LegacyIcon name="edit" class="h-4 w-4" /></button>
-			<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Open tools" title="Open tools" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
+			<AppTooltip text="Edit agenda point" side="left">
+				<button type="button" class="btn btn-sm btn-square" aria-label="Edit agenda point" data-testid="manage-agenda-point-edit-btn" onclick={onStartEdit}><LegacyIcon name="edit" class="h-4 w-4" /></button>
+			</AppTooltip>
+			<AppTooltip text="Open tools" side="left">
+				<a href={`/committee/${slug}/meeting/${meetingId}/agenda-point/${point.agendaPointId}/tools`} class="btn btn-sm btn-square" aria-label="Open tools"><LegacyIcon name="settings" class="h-4 w-4" /></a>
+			</AppTooltip>
 			<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await onDelete(); }}>
-				<button type="submit" class="btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Delete agenda point" title="Delete agenda point" aria-label="Delete agenda point" disabled={isBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+				<AppTooltip text="Delete agenda point" side="left">
+					<button type="submit" class="btn btn-sm btn-square btn-error" aria-label="Delete agenda point" disabled={isBusy(`delete-${point.agendaPointId}`)}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+				</AppTooltip>
 			</form>
 		</div>
 	{/if}

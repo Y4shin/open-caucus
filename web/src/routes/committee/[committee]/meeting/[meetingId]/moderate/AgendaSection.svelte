@@ -4,6 +4,7 @@
 	import { buildDocsOverlayHref } from '$lib/docs/navigation.js';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import AgendaPointCard from '$lib/components/ui/AgendaPointCard.svelte';
+	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import { agendaClient } from '$lib/api/index.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
@@ -499,12 +500,12 @@
 								<label class="label p-0 text-sm font-medium" for="ap_title">{m.meeting_manage_edit_agenda_point_title()}</label>
 								<input class="input input-bordered input-sm w-full" type="text" id="ap_title" name="title" required placeholder={m.meeting_manage_agenda_point_title_placeholder()} bind:value={agendaTitle} bind:this={agendaTitleInput} onkeydown={handleAgendaTitleKeydown} />
 								<label class="label mt-2 p-0 text-sm font-medium" for="ap_parent_id">{m.meeting_manage_agenda_point_parent_label()}</label>
-								<select class="select select-bordered select-sm w-full" id="ap_parent_id" name="parent_id" bind:value={agendaParentId}>
-									<option value="">-- top-level --</option>
-									{#each agendaPointsFlat() as point}
-										<option value={point.agendaPointId}>{point.title}</option>
-									{/each}
-								</select>
+								<AppSelect
+									bind:value={agendaParentId}
+									id="ap_parent_id"
+									placeholder="-- top-level --"
+									items={agendaPointsFlat().map((p) => ({ value: p.agendaPointId, label: p.title }))}
+								/>
 								<button type="submit" class="btn btn-sm mt-3 w-full"><LegacyIcon name="arrow-forward" class="h-4 w-4" />{m.meeting_manage_add_agenda_point()}</button>
 								<button type="button" class="btn btn-sm btn-outline mt-2 w-full" data-manage-dialog-open aria-controls="moderate-agenda-import-dialog" onclick={openAgendaImportDialog}>{m.agenda_import_open_button()}</button>
 							</fieldset>

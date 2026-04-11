@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onDestroy, onMount } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppTooltip from '$lib/components/ui/AppTooltip.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import SpeakerBadges from '$lib/components/ui/SpeakerBadges.svelte';
@@ -508,9 +509,11 @@
 					<div class="mb-3 flex items-center justify-between gap-2">
 						<h2 class="text-lg font-semibold">{m.meeting_live_agenda_heading()}</h2>
 						{#if liveState.data.currentDocument}
-							<button type="button" class="btn btn-sm btn-outline btn-square tooltip tooltip-left lg:hidden" data-live-dialog-open aria-controls="live-doc-modal" title="Open document" aria-label="Open document" data-tip="Open document">
-								<LegacyIcon name="eye" class="live-agenda-dialog-icon" />
-							</button>
+							<AppTooltip text="Open document" side="left">
+								<button type="button" class="btn btn-sm btn-outline btn-square lg:hidden" data-live-dialog-open aria-controls="live-doc-modal" aria-label="Open document">
+									<LegacyIcon name="eye" class="live-agenda-dialog-icon" />
+								</button>
+							</AppTooltip>
 						{/if}
 					</div>
 					<div id="live-agenda-main-stack" class="min-h-0 flex flex-1 flex-col">
@@ -558,12 +561,16 @@
 						</div>
 						{#if liveState.data.currentDocument}
 							<div class="mt-3 hidden gap-2 lg:flex">
-								<button type="button" class="btn btn-sm btn-outline btn-square tooltip tooltip-left" data-testid="live-doc-open-desktop" data-live-dialog-open aria-controls="live-doc-modal" title="Open document" aria-label="Open document" data-tip="Open document">
-									<LegacyIcon name="eye" />
-								</button>
-								<a href={liveState.data.currentDocument.downloadUrl} download data-testid="live-doc-download-desktop" class="btn btn-sm btn-outline btn-square tooltip tooltip-left" title="Download document" aria-label="Download document" data-tip="Download document">
-									<LegacyIcon name="download" />
-								</a>
+								<AppTooltip text="Open document" side="left">
+									<button type="button" class="btn btn-sm btn-outline btn-square" data-testid="live-doc-open-desktop" data-live-dialog-open aria-controls="live-doc-modal" aria-label="Open document">
+										<LegacyIcon name="eye" />
+									</button>
+								</AppTooltip>
+								<AppTooltip text="Download document" side="left">
+									<a href={liveState.data.currentDocument.downloadUrl} download data-testid="live-doc-download-desktop" class="btn btn-sm btn-outline btn-square" aria-label="Download document">
+										<LegacyIcon name="download" />
+									</a>
+								</AppTooltip>
 							</div>
 						{/if}
 					</div>
@@ -574,17 +581,17 @@
 				<div class="flex h-full min-h-0 flex-col p-4">
 					<div class="mb-3 flex items-center justify-between gap-2">
 						<h2 class="text-lg font-semibold">{m.meeting_live_speakers_heading()}</h2>
-						<button
-							type="button"
-							class="btn btn-sm btn-outline btn-square tooltip tooltip-left lg:hidden"
-							data-live-dialog-open
-							aria-controls="speakers-full-dialog"
-							aria-label="Speakers"
-							title="Speakers"
-							data-tip="Speakers"
-						>
-							<LegacyIcon name="eye" class="live-speaker-history-icon" />
-						</button>
+						<AppTooltip text="Speakers" side="left">
+							<button
+								type="button"
+								class="btn btn-sm btn-outline btn-square lg:hidden"
+								data-live-dialog-open
+								aria-controls="speakers-full-dialog"
+								aria-label="Speakers"
+							>
+								<LegacyIcon name="eye" class="live-speaker-history-icon" />
+							</button>
+						</AppTooltip>
 					</div>
 					<div id="live-speakers-panel-meta" class="mb-2"></div>
 					<div class="live-speakers-sse min-h-0 flex-1">

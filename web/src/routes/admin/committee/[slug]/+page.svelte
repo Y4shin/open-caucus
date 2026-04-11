@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppCard from '$lib/components/ui/AppCard.svelte';
 	import DataTable from '$lib/components/ui/DataTable.svelte';
@@ -200,19 +201,23 @@
 					>
 						<div>
 							<label class="label text-sm font-medium" for="account_id">{m.admin_committee_users_account_label()}</label>
-							<select class="select select-bordered select-sm w-full" id="account_id" name="account_id" bind:value={selectedAccountId} required>
-								<option value="">{m.admin_committee_users_account_placeholder()}</option>
-								{#each committeeState.data.assignableAccounts as account}
-									<option value={account.accountId}>{account.fullName} ({account.username})</option>
-								{/each}
-							</select>
+							<AppSelect
+								bind:value={selectedAccountId}
+								id="account_id"
+								placeholder={m.admin_committee_users_account_placeholder()}
+								items={committeeState.data.assignableAccounts.map((a) => ({ value: a.accountId, label: `${a.fullName} (${a.username})` }))}
+							/>
 						</div>
 						<div>
 							<label class="label text-sm font-medium" for="role">{m.admin_committee_users_role_label()}</label>
-							<select class="select select-bordered select-sm w-full" id="role" name="role" bind:value={selectedAccountRole} required>
-								<option value="member">{m.admin_committee_users_role_member()}</option>
-								<option value="chairperson">{m.admin_committee_users_role_chairperson()}</option>
-							</select>
+							<AppSelect
+								bind:value={selectedAccountRole}
+								id="role"
+								items={[
+									{ value: 'member', label: m.admin_committee_users_role_member() },
+									{ value: 'chairperson', label: m.admin_committee_users_role_chairperson() }
+								]}
+							/>
 						</div>
 						<label class="label cursor-pointer justify-start gap-2 p-0 sm:mb-1">
 							<input class="checkbox checkbox-sm" type="checkbox" name="quoted" value="true" bind:checked={selectedAccountQuoted} />
@@ -243,19 +248,18 @@
 									<td>{user.username}</td>
 									<td>{user.fullName}</td>
 									<td>
-										<select
-											class="select select-bordered select-xs"
-											name="role"
-											disabled={user.isOauthManaged}
+										<AppSelect
 											value={membershipDrafts[user.userId]?.role ?? user.role}
-											onchange={(event) => {
-												const next = (event.currentTarget as HTMLSelectElement).value;
+											disabled={user.isOauthManaged}
+											size="xs"
+											items={[
+												{ value: 'member', label: m.admin_committee_users_role_member() },
+												{ value: 'chairperson', label: m.admin_committee_users_role_chairperson() }
+											]}
+											onValueChange={(next) => {
 												membershipDrafts[user.userId] = { ...(membershipDrafts[user.userId] ?? { role: user.role, quoted: user.quoted }), role: next };
 											}}
-										>
-											<option value="member" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'member'}>{m.admin_committee_users_role_member()}</option>
-											<option value="chairperson" selected={(membershipDrafts[user.userId]?.role ?? user.role) === 'chairperson'}>{m.admin_committee_users_role_chairperson()}</option>
-										</select>
+										/>
 										{#if user.isOauthManaged}
 											<p class="text-[0.65rem] text-base-content/50 mt-0.5">{m.admin_committee_users_oauth_managed_role_hint()}</p>
 										{/if}
@@ -303,10 +307,14 @@
 						</div>
 						<div>
 							<label class="label text-sm font-medium" for="oauth_rule_role">{m.admin_committee_users_role_label()}</label>
-							<select class="select select-bordered select-sm w-full" id="oauth_rule_role" name="role" bind:value={oauthRole} required>
-								<option value="member">{m.admin_committee_users_role_member()}</option>
-								<option value="chairperson">{m.admin_committee_users_role_chairperson()}</option>
-							</select>
+							<AppSelect
+								bind:value={oauthRole}
+								id="oauth_rule_role"
+								items={[
+									{ value: 'member', label: m.admin_committee_users_role_member() },
+									{ value: 'chairperson', label: m.admin_committee_users_role_chairperson() }
+								]}
+							/>
 						</div>
 						<button class="btn btn-sm btn-primary" type="submit" disabled={createRulePending}>{m.admin_committee_users_oauth_rule_add_button()}</button>
 					</form>

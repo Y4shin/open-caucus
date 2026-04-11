@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import AgendaSection from './AgendaSection.svelte';
@@ -380,9 +381,8 @@
 
 
 
-	async function updateMeetingModerator(event: Event) {
-		const target = event.currentTarget as HTMLSelectElement | null;
-		if (!target || settingsActionPending !== '') return;
+	async function updateMeetingModerator(newValue: string) {
+		if (settingsActionPending !== '') return;
 
 		settingsActionPending = 'moderator';
 		actionError = '';
@@ -390,7 +390,7 @@
 			await moderationClient.setMeetingModerator({
 				committeeSlug: slug,
 				meetingId,
-				moderatorAttendeeId: target.value
+				moderatorAttendeeId: newValue
 			});
 			if (moderationState.data?.settings) {
 				moderationState.data.settings.moderatorAttendeeId = target.value;
@@ -623,47 +623,43 @@
 														<form class="grid gap-3 md:grid-cols-2">
 															<div class="space-y-1">
 																<label for="gender_quotation_enabled">{m.meeting_moderate_flinta_quotation_label()}</label>
-																<select class="select select-bordered select-sm" id="gender_quotation_enabled" name="gender_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.genderQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
-																	{#if moderationState.data.settings?.genderQuotationEnabled ?? true}
-																		<option selected value="true">{m.meeting_moderate_enabled()}</option>
-																		<option value="false">{m.meeting_moderate_disabled()}</option>
-																	{:else}
-																		<option value="true">{m.meeting_moderate_enabled()}</option>
-																		<option selected value="false">{m.meeting_moderate_disabled()}</option>
-																	{/if}
-																</select>
+																<AppSelect
+																	id="gender_quotation_enabled"
+																	value={(moderationState.data.settings?.genderQuotationEnabled ?? true) ? 'true' : 'false'}
+																	disabled={settingsActionPending !== ''}
+																	items={[
+																		{ value: 'true', label: m.meeting_moderate_enabled() },
+																		{ value: 'false', label: m.meeting_moderate_disabled() }
+																	]}
+																	onValueChange={(v) => { if (moderationState.data?.settings) { moderationState.data.settings.genderQuotationEnabled = v === 'true'; } void updateMeetingQuotation(); }}
+																/>
 															</div>
 															<div class="space-y-1">
 																<label for="first_speaker_quotation_enabled">{m.meeting_moderate_first_speaker_bonus_label()}</label>
-																<select class="select select-bordered select-sm" id="first_speaker_quotation_enabled" name="first_speaker_quotation_enabled" disabled={settingsActionPending !== ''} onchange={(event) => { if (moderationState.data?.settings) { moderationState.data.settings.firstSpeakerQuotationEnabled = (event.currentTarget as HTMLSelectElement).value === 'true'; } void updateMeetingQuotation(); }}>
-																	{#if moderationState.data.settings?.firstSpeakerQuotationEnabled ?? true}
-																		<option selected value="true">{m.meeting_moderate_enabled()}</option>
-																		<option value="false">{m.meeting_moderate_disabled()}</option>
-																	{:else}
-																		<option value="true">{m.meeting_moderate_enabled()}</option>
-																		<option selected value="false">{m.meeting_moderate_disabled()}</option>
-																	{/if}
-																</select>
+																<AppSelect
+																	id="first_speaker_quotation_enabled"
+																	value={(moderationState.data.settings?.firstSpeakerQuotationEnabled ?? true) ? 'true' : 'false'}
+																	disabled={settingsActionPending !== ''}
+																	items={[
+																		{ value: 'true', label: m.meeting_moderate_enabled() },
+																		{ value: 'false', label: m.meeting_moderate_disabled() }
+																	]}
+																	onValueChange={(v) => { if (moderationState.data?.settings) { moderationState.data.settings.firstSpeakerQuotationEnabled = v === 'true'; } void updateMeetingQuotation(); }}
+																/>
 															</div>
 														</form>
 													</div>
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
 														<h3 class="mb-2 text-sm font-semibold">{m.meeting_manage_agenda_point_moderator()}</h3>
 														<form class="flex flex-wrap items-end gap-3">
-															<select class="select select-bordered select-sm" id="meeting_moderator_attendee_id" name="attendee_id" disabled={settingsActionPending !== ''} onchange={updateMeetingModerator}>
-																{#if !(moderationState.data.settings?.moderatorAttendeeId ?? '')}
-																	<option selected value="">-- none --</option>
-																{:else}
-																	<option value="">-- none --</option>
-																{/if}
-																{#each settingsAttendees() as attendee}
-																	{#if (moderationState.data.settings?.moderatorAttendeeId ?? '') === attendee.attendeeId}
-																		<option selected value={attendee.attendeeId}>{attendee.fullName}</option>
-																	{:else}
-																		<option value={attendee.attendeeId}>{attendee.fullName}</option>
-																	{/if}
-																{/each}
-															</select>
+															<AppSelect
+																id="meeting_moderator_attendee_id"
+																value={moderationState.data.settings?.moderatorAttendeeId ?? ''}
+																disabled={settingsActionPending !== ''}
+																placeholder="-- none --"
+																items={settingsAttendees().map((a) => ({ value: a.attendeeId, label: a.fullName }))}
+																onValueChange={updateMeetingModerator}
+															/>
 														</form>
 													</div>
 												</div>

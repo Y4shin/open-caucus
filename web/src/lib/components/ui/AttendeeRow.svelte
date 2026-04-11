@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AppTooltip from '$lib/components/ui/AppTooltip.svelte';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import * as m from '$lib/paraglide/messages';
 
@@ -32,14 +33,14 @@
 							<span class="badge badge-neutral badge-sm">{m.meeting_moderate_guest_badge()}</span>
 						{/if}
 						{#if attendee.isChair}
-							<span class="tooltip tooltip-right" data-tip="Chairperson">
+							<AppTooltip text="Chairperson" side="right">
 								<span class="badge badge-success badge-sm"><LegacyIcon name="crown" class="h-3.5 w-3.5" /></span>
-							</span>
+							</AppTooltip>
 						{/if}
 						{#if attendee.quoted}
-							<span class="tooltip tooltip-right" data-tip="FLINTA*">
+							<AppTooltip text="FLINTA*" side="right">
 								<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
-							</span>
+							</AppTooltip>
 						{/if}
 					</div>
 				{/if}
@@ -59,10 +60,14 @@
 				</div>
 				<div class="join join-vertical">
 					{#if attendee.isGuest}
-						<button type="button" class="join-item btn btn-sm btn-square tooltip tooltip-left" data-tip="Recovery link" title="Recovery link" aria-label="Recovery link" onclick={() => onRecovery(attendee.attendeeId)}><LegacyIcon name="history" class="h-4 w-4" /></button>
+						<AppTooltip text="Recovery link" side="left">
+							<button type="button" class="join-item btn btn-sm btn-square" aria-label="Recovery link" onclick={() => onRecovery(attendee.attendeeId)}><LegacyIcon name="history" class="h-4 w-4" /></button>
+						</AppTooltip>
 					{/if}
 					<form class="inline-flex" onsubmit={async (event) => { event.preventDefault(); await onRemove(attendee.attendeeId, attendee.fullName); }}>
-						<button type="submit" class="join-item btn btn-sm btn-square btn-error tooltip tooltip-left" data-tip="Remove attendee" title="Remove attendee" aria-label="Remove attendee" disabled={attendeeActionPending !== ''}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+						<AppTooltip text="Remove attendee" side="left">
+							<button type="submit" class="join-item btn btn-sm btn-square btn-error" aria-label="Remove attendee" disabled={attendeeActionPending !== ''}><LegacyIcon name="trash" class="h-4 w-4" /></button>
+						</AppTooltip>
 					</form>
 				</div>
 			</div>

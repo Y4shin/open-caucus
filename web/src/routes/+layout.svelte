@@ -3,6 +3,7 @@
 	import { getLocale, locales, setLocale } from '$lib/paraglide/runtime';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import { Popover } from 'bits-ui';
 	import DocsOverlay from '$lib/components/docs/DocsOverlay.svelte';
 	import AppLogo from '$lib/components/ui/AppLogo.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
@@ -249,12 +250,17 @@
 						<a href="/login" class="btn btn-ghost btn-sm">{m.login_button()}</a>
 					{/if}
 				</div>
-				<div class="dropdown dropdown-end md:hidden">
-					<button class="btn btn-ghost btn-sm" onclick={() => (mobileMenuOpen = !mobileMenuOpen)}>
+				<div class="md:hidden">
+					<Popover.Root bind:open={mobileMenuOpen}>
+					<Popover.Trigger class="btn btn-ghost btn-sm">
 						{m.scaffold_menu()}
-					</button>
-					{#if mobileMenuOpen}
-						<div class="dropdown-content z-[1] mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow">
+					</Popover.Trigger>
+					<Popover.Content
+						side="bottom"
+						align="end"
+						sideOffset={8}
+						class="z-50 w-80 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-3 shadow"
+					>
 							{#if pageActions.subtitle}
 								<p class="mb-2 text-sm text-base-content/70">{pageActions.subtitle}</p>
 							{/if}
@@ -319,8 +325,8 @@
 								</div>
 								<p class="mt-2 text-xs text-base-content/70">Powered by Open Caucus {PUBLIC_APP_VERSION}</p>
 							</div>
-						</div>
-					{/if}
+					</Popover.Content>
+					</Popover.Root>
 				</div>
 			</div>
 		</nav>

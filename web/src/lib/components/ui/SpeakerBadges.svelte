@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AppTooltip from '$lib/components/ui/AppTooltip.svelte';
 	import * as m from '$lib/paraglide/messages';
 
 	let {
@@ -18,24 +19,24 @@
 </script>
 
 {#if speakerType === 'ropm'}
-	<span class="tooltip tooltip-right" data-tip="Point of order">
+	<AppTooltip text="Point of order" side="right">
 		<span class="badge badge-warning badge-sm" data-testid="live-speaker-ropm-badge"><LegacyIcon name="scale" class="h-3.5 w-3.5" /></span>
-	</span>
+	</AppTooltip>
 {/if}
 {#if quoted}
-	<span class="tooltip tooltip-right" data-tip="FLINTA*" data-testid="live-speaker-quoted-badge">
-		<span class="badge badge-info badge-sm"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
-	</span>
+	<AppTooltip text="FLINTA*" side="right">
+		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
+	</AppTooltip>
 {/if}
 {#if firstSpeaker}
-	<span class="tooltip tooltip-right" data-tip="First Time">
+	<AppTooltip text="First Time" side="right">
 		<span class="badge badge-success badge-sm" data-testid="live-speaker-first-badge"><LegacyIcon name="person-raised" class="h-3.5 w-3.5" /></span>
-	</span>
+	</AppTooltip>
 {/if}
 {#if priority}
-	<span class="tooltip tooltip-right" data-tip="Priority">
+	<AppTooltip text="Priority" side="right">
 		<span class="badge badge-warning badge-sm badge-outline" data-testid="live-speaker-priority-icon-badge"><LegacyIcon name="star" class="h-3.5 w-3.5" /></span>
-	</span>
+	</AppTooltip>
 	<span class="badge badge-warning badge-sm" data-testid="live-speaker-priority-label-badge">{m.meeting_live_badge_priority()}</span>
 {/if}
 {#if mine}
