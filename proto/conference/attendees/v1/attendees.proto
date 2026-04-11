@@ -42,6 +42,10 @@ service AttendeeService {
   // GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
   // Requires moderation access for the meeting.
   rpc GetAttendeeRecovery(GetAttendeeRecoveryRequest) returns (GetAttendeeRecoveryResponse);
+
+  // InviteSecretJoin creates an attendee record for a committee member identified
+  // by their invite_secret token and starts a guest session for them.
+  rpc InviteSecretJoin(InviteSecretJoinRequest) returns (InviteSecretJoinResponse);
 }
 
 // AttendeeRecord is the canonical attendee read model for both moderator and
@@ -166,4 +170,15 @@ message GetAttendeeRecoveryRequest {
 
 message GetAttendeeRecoveryResponse {
   AttendeeRecoveryView view = 1;
+}
+
+message InviteSecretJoinRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string invite_secret = 3;
+}
+
+message InviteSecretJoinResponse {
+  string attendee_secret = 1;
+  string attendee_id = 2;
 }

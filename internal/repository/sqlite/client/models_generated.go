@@ -157,13 +157,16 @@ type SpeakersList struct {
 }
 
 type User struct {
-	ID          int64
-	AccountID   int64
-	CommitteeID int64
-	Role        string
-	Quoted      bool
-	CreatedAt   string
-	UpdatedAt   string
+	ID           int64
+	AccountID    sql.NullInt64
+	CommitteeID  int64
+	Email        sql.NullString
+	FullName     string
+	Role         string
+	Quoted       bool
+	InviteSecret sql.NullString
+	CreatedAt    string
+	UpdatedAt    string
 }
 
 type VoteBallot struct {

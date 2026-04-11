@@ -48,6 +48,27 @@ const (
 	// CommitteeServiceToggleMeetingActiveProcedure is the fully-qualified name of the
 	// CommitteeService's ToggleMeetingActive RPC.
 	CommitteeServiceToggleMeetingActiveProcedure = "/conference.committees.v1.CommitteeService/ToggleMeetingActive"
+	// CommitteeServiceListCommitteeMembersProcedure is the fully-qualified name of the
+	// CommitteeService's ListCommitteeMembers RPC.
+	CommitteeServiceListCommitteeMembersProcedure = "/conference.committees.v1.CommitteeService/ListCommitteeMembers"
+	// CommitteeServiceListAssignableAccountsProcedure is the fully-qualified name of the
+	// CommitteeService's ListAssignableAccounts RPC.
+	CommitteeServiceListAssignableAccountsProcedure = "/conference.committees.v1.CommitteeService/ListAssignableAccounts"
+	// CommitteeServiceAddMemberByEmailProcedure is the fully-qualified name of the CommitteeService's
+	// AddMemberByEmail RPC.
+	CommitteeServiceAddMemberByEmailProcedure = "/conference.committees.v1.CommitteeService/AddMemberByEmail"
+	// CommitteeServiceAssignAccountToCommitteeProcedure is the fully-qualified name of the
+	// CommitteeService's AssignAccountToCommittee RPC.
+	CommitteeServiceAssignAccountToCommitteeProcedure = "/conference.committees.v1.CommitteeService/AssignAccountToCommittee"
+	// CommitteeServiceUpdateMemberProcedure is the fully-qualified name of the CommitteeService's
+	// UpdateMember RPC.
+	CommitteeServiceUpdateMemberProcedure = "/conference.committees.v1.CommitteeService/UpdateMember"
+	// CommitteeServiceRemoveMemberProcedure is the fully-qualified name of the CommitteeService's
+	// RemoveMember RPC.
+	CommitteeServiceRemoveMemberProcedure = "/conference.committees.v1.CommitteeService/RemoveMember"
+	// CommitteeServiceSendInviteEmailsProcedure is the fully-qualified name of the CommitteeService's
+	// SendInviteEmails RPC.
+	CommitteeServiceSendInviteEmailsProcedure = "/conference.committees.v1.CommitteeService/SendInviteEmails"
 )
 
 // CommitteeServiceClient is a client for the conference.committees.v1.CommitteeService service.
@@ -57,6 +78,14 @@ type CommitteeServiceClient interface {
 	CreateMeeting(context.Context, *connect.Request[v1.CreateMeetingRequest]) (*connect.Response[v1.CreateMeetingResponse], error)
 	DeleteMeeting(context.Context, *connect.Request[v1.DeleteMeetingRequest]) (*connect.Response[v1.DeleteMeetingResponse], error)
 	ToggleMeetingActive(context.Context, *connect.Request[v1.ToggleMeetingActiveRequest]) (*connect.Response[v1.ToggleMeetingActiveResponse], error)
+	// Member management (chairperson or admin)
+	ListCommitteeMembers(context.Context, *connect.Request[v1.ListCommitteeMembersRequest]) (*connect.Response[v1.ListCommitteeMembersResponse], error)
+	ListAssignableAccounts(context.Context, *connect.Request[v1.ListAssignableAccountsRequest]) (*connect.Response[v1.ListAssignableAccountsResponse], error)
+	AddMemberByEmail(context.Context, *connect.Request[v1.AddMemberByEmailRequest]) (*connect.Response[v1.AddMemberByEmailResponse], error)
+	AssignAccountToCommittee(context.Context, *connect.Request[v1.CommitteeAssignAccountRequest]) (*connect.Response[v1.CommitteeAssignAccountResponse], error)
+	UpdateMember(context.Context, *connect.Request[v1.UpdateMemberRequest]) (*connect.Response[v1.UpdateMemberResponse], error)
+	RemoveMember(context.Context, *connect.Request[v1.RemoveMemberRequest]) (*connect.Response[v1.RemoveMemberResponse], error)
+	SendInviteEmails(context.Context, *connect.Request[v1.SendInviteEmailsRequest]) (*connect.Response[v1.SendInviteEmailsResponse], error)
 }
 
 // NewCommitteeServiceClient constructs a client for the conference.committees.v1.CommitteeService
@@ -100,16 +129,65 @@ func NewCommitteeServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(committeeServiceMethods.ByName("ToggleMeetingActive")),
 			connect.WithClientOptions(opts...),
 		),
+		listCommitteeMembers: connect.NewClient[v1.ListCommitteeMembersRequest, v1.ListCommitteeMembersResponse](
+			httpClient,
+			baseURL+CommitteeServiceListCommitteeMembersProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("ListCommitteeMembers")),
+			connect.WithClientOptions(opts...),
+		),
+		listAssignableAccounts: connect.NewClient[v1.ListAssignableAccountsRequest, v1.ListAssignableAccountsResponse](
+			httpClient,
+			baseURL+CommitteeServiceListAssignableAccountsProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("ListAssignableAccounts")),
+			connect.WithClientOptions(opts...),
+		),
+		addMemberByEmail: connect.NewClient[v1.AddMemberByEmailRequest, v1.AddMemberByEmailResponse](
+			httpClient,
+			baseURL+CommitteeServiceAddMemberByEmailProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("AddMemberByEmail")),
+			connect.WithClientOptions(opts...),
+		),
+		assignAccountToCommittee: connect.NewClient[v1.CommitteeAssignAccountRequest, v1.CommitteeAssignAccountResponse](
+			httpClient,
+			baseURL+CommitteeServiceAssignAccountToCommitteeProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("AssignAccountToCommittee")),
+			connect.WithClientOptions(opts...),
+		),
+		updateMember: connect.NewClient[v1.UpdateMemberRequest, v1.UpdateMemberResponse](
+			httpClient,
+			baseURL+CommitteeServiceUpdateMemberProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("UpdateMember")),
+			connect.WithClientOptions(opts...),
+		),
+		removeMember: connect.NewClient[v1.RemoveMemberRequest, v1.RemoveMemberResponse](
+			httpClient,
+			baseURL+CommitteeServiceRemoveMemberProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("RemoveMember")),
+			connect.WithClientOptions(opts...),
+		),
+		sendInviteEmails: connect.NewClient[v1.SendInviteEmailsRequest, v1.SendInviteEmailsResponse](
+			httpClient,
+			baseURL+CommitteeServiceSendInviteEmailsProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("SendInviteEmails")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // committeeServiceClient implements CommitteeServiceClient.
 type committeeServiceClient struct {
-	listMyCommittees     *connect.Client[v1.ListMyCommitteesRequest, v1.ListMyCommitteesResponse]
-	getCommitteeOverview *connect.Client[v1.GetCommitteeOverviewRequest, v1.GetCommitteeOverviewResponse]
-	createMeeting        *connect.Client[v1.CreateMeetingRequest, v1.CreateMeetingResponse]
-	deleteMeeting        *connect.Client[v1.DeleteMeetingRequest, v1.DeleteMeetingResponse]
-	toggleMeetingActive  *connect.Client[v1.ToggleMeetingActiveRequest, v1.ToggleMeetingActiveResponse]
+	listMyCommittees         *connect.Client[v1.ListMyCommitteesRequest, v1.ListMyCommitteesResponse]
+	getCommitteeOverview     *connect.Client[v1.GetCommitteeOverviewRequest, v1.GetCommitteeOverviewResponse]
+	createMeeting            *connect.Client[v1.CreateMeetingRequest, v1.CreateMeetingResponse]
+	deleteMeeting            *connect.Client[v1.DeleteMeetingRequest, v1.DeleteMeetingResponse]
+	toggleMeetingActive      *connect.Client[v1.ToggleMeetingActiveRequest, v1.ToggleMeetingActiveResponse]
+	listCommitteeMembers     *connect.Client[v1.ListCommitteeMembersRequest, v1.ListCommitteeMembersResponse]
+	listAssignableAccounts   *connect.Client[v1.ListAssignableAccountsRequest, v1.ListAssignableAccountsResponse]
+	addMemberByEmail         *connect.Client[v1.AddMemberByEmailRequest, v1.AddMemberByEmailResponse]
+	assignAccountToCommittee *connect.Client[v1.CommitteeAssignAccountRequest, v1.CommitteeAssignAccountResponse]
+	updateMember             *connect.Client[v1.UpdateMemberRequest, v1.UpdateMemberResponse]
+	removeMember             *connect.Client[v1.RemoveMemberRequest, v1.RemoveMemberResponse]
+	sendInviteEmails         *connect.Client[v1.SendInviteEmailsRequest, v1.SendInviteEmailsResponse]
 }
 
 // ListMyCommittees calls conference.committees.v1.CommitteeService.ListMyCommittees.
@@ -137,6 +215,42 @@ func (c *committeeServiceClient) ToggleMeetingActive(ctx context.Context, req *c
 	return c.toggleMeetingActive.CallUnary(ctx, req)
 }
 
+// ListCommitteeMembers calls conference.committees.v1.CommitteeService.ListCommitteeMembers.
+func (c *committeeServiceClient) ListCommitteeMembers(ctx context.Context, req *connect.Request[v1.ListCommitteeMembersRequest]) (*connect.Response[v1.ListCommitteeMembersResponse], error) {
+	return c.listCommitteeMembers.CallUnary(ctx, req)
+}
+
+// ListAssignableAccounts calls conference.committees.v1.CommitteeService.ListAssignableAccounts.
+func (c *committeeServiceClient) ListAssignableAccounts(ctx context.Context, req *connect.Request[v1.ListAssignableAccountsRequest]) (*connect.Response[v1.ListAssignableAccountsResponse], error) {
+	return c.listAssignableAccounts.CallUnary(ctx, req)
+}
+
+// AddMemberByEmail calls conference.committees.v1.CommitteeService.AddMemberByEmail.
+func (c *committeeServiceClient) AddMemberByEmail(ctx context.Context, req *connect.Request[v1.AddMemberByEmailRequest]) (*connect.Response[v1.AddMemberByEmailResponse], error) {
+	return c.addMemberByEmail.CallUnary(ctx, req)
+}
+
+// AssignAccountToCommittee calls
+// conference.committees.v1.CommitteeService.AssignAccountToCommittee.
+func (c *committeeServiceClient) AssignAccountToCommittee(ctx context.Context, req *connect.Request[v1.CommitteeAssignAccountRequest]) (*connect.Response[v1.CommitteeAssignAccountResponse], error) {
+	return c.assignAccountToCommittee.CallUnary(ctx, req)
+}
+
+// UpdateMember calls conference.committees.v1.CommitteeService.UpdateMember.
+func (c *committeeServiceClient) UpdateMember(ctx context.Context, req *connect.Request[v1.UpdateMemberRequest]) (*connect.Response[v1.UpdateMemberResponse], error) {
+	return c.updateMember.CallUnary(ctx, req)
+}
+
+// RemoveMember calls conference.committees.v1.CommitteeService.RemoveMember.
+func (c *committeeServiceClient) RemoveMember(ctx context.Context, req *connect.Request[v1.RemoveMemberRequest]) (*connect.Response[v1.RemoveMemberResponse], error) {
+	return c.removeMember.CallUnary(ctx, req)
+}
+
+// SendInviteEmails calls conference.committees.v1.CommitteeService.SendInviteEmails.
+func (c *committeeServiceClient) SendInviteEmails(ctx context.Context, req *connect.Request[v1.SendInviteEmailsRequest]) (*connect.Response[v1.SendInviteEmailsResponse], error) {
+	return c.sendInviteEmails.CallUnary(ctx, req)
+}
+
 // CommitteeServiceHandler is an implementation of the conference.committees.v1.CommitteeService
 // service.
 type CommitteeServiceHandler interface {
@@ -145,6 +259,14 @@ type CommitteeServiceHandler interface {
 	CreateMeeting(context.Context, *connect.Request[v1.CreateMeetingRequest]) (*connect.Response[v1.CreateMeetingResponse], error)
 	DeleteMeeting(context.Context, *connect.Request[v1.DeleteMeetingRequest]) (*connect.Response[v1.DeleteMeetingResponse], error)
 	ToggleMeetingActive(context.Context, *connect.Request[v1.ToggleMeetingActiveRequest]) (*connect.Response[v1.ToggleMeetingActiveResponse], error)
+	// Member management (chairperson or admin)
+	ListCommitteeMembers(context.Context, *connect.Request[v1.ListCommitteeMembersRequest]) (*connect.Response[v1.ListCommitteeMembersResponse], error)
+	ListAssignableAccounts(context.Context, *connect.Request[v1.ListAssignableAccountsRequest]) (*connect.Response[v1.ListAssignableAccountsResponse], error)
+	AddMemberByEmail(context.Context, *connect.Request[v1.AddMemberByEmailRequest]) (*connect.Response[v1.AddMemberByEmailResponse], error)
+	AssignAccountToCommittee(context.Context, *connect.Request[v1.CommitteeAssignAccountRequest]) (*connect.Response[v1.CommitteeAssignAccountResponse], error)
+	UpdateMember(context.Context, *connect.Request[v1.UpdateMemberRequest]) (*connect.Response[v1.UpdateMemberResponse], error)
+	RemoveMember(context.Context, *connect.Request[v1.RemoveMemberRequest]) (*connect.Response[v1.RemoveMemberResponse], error)
+	SendInviteEmails(context.Context, *connect.Request[v1.SendInviteEmailsRequest]) (*connect.Response[v1.SendInviteEmailsResponse], error)
 }
 
 // NewCommitteeServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -184,6 +306,48 @@ func NewCommitteeServiceHandler(svc CommitteeServiceHandler, opts ...connect.Han
 		connect.WithSchema(committeeServiceMethods.ByName("ToggleMeetingActive")),
 		connect.WithHandlerOptions(opts...),
 	)
+	committeeServiceListCommitteeMembersHandler := connect.NewUnaryHandler(
+		CommitteeServiceListCommitteeMembersProcedure,
+		svc.ListCommitteeMembers,
+		connect.WithSchema(committeeServiceMethods.ByName("ListCommitteeMembers")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceListAssignableAccountsHandler := connect.NewUnaryHandler(
+		CommitteeServiceListAssignableAccountsProcedure,
+		svc.ListAssignableAccounts,
+		connect.WithSchema(committeeServiceMethods.ByName("ListAssignableAccounts")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceAddMemberByEmailHandler := connect.NewUnaryHandler(
+		CommitteeServiceAddMemberByEmailProcedure,
+		svc.AddMemberByEmail,
+		connect.WithSchema(committeeServiceMethods.ByName("AddMemberByEmail")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceAssignAccountToCommitteeHandler := connect.NewUnaryHandler(
+		CommitteeServiceAssignAccountToCommitteeProcedure,
+		svc.AssignAccountToCommittee,
+		connect.WithSchema(committeeServiceMethods.ByName("AssignAccountToCommittee")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceUpdateMemberHandler := connect.NewUnaryHandler(
+		CommitteeServiceUpdateMemberProcedure,
+		svc.UpdateMember,
+		connect.WithSchema(committeeServiceMethods.ByName("UpdateMember")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceRemoveMemberHandler := connect.NewUnaryHandler(
+		CommitteeServiceRemoveMemberProcedure,
+		svc.RemoveMember,
+		connect.WithSchema(committeeServiceMethods.ByName("RemoveMember")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceSendInviteEmailsHandler := connect.NewUnaryHandler(
+		CommitteeServiceSendInviteEmailsProcedure,
+		svc.SendInviteEmails,
+		connect.WithSchema(committeeServiceMethods.ByName("SendInviteEmails")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.committees.v1.CommitteeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case CommitteeServiceListMyCommitteesProcedure:
@@ -196,6 +360,20 @@ func NewCommitteeServiceHandler(svc CommitteeServiceHandler, opts ...connect.Han
 			committeeServiceDeleteMeetingHandler.ServeHTTP(w, r)
 		case CommitteeServiceToggleMeetingActiveProcedure:
 			committeeServiceToggleMeetingActiveHandler.ServeHTTP(w, r)
+		case CommitteeServiceListCommitteeMembersProcedure:
+			committeeServiceListCommitteeMembersHandler.ServeHTTP(w, r)
+		case CommitteeServiceListAssignableAccountsProcedure:
+			committeeServiceListAssignableAccountsHandler.ServeHTTP(w, r)
+		case CommitteeServiceAddMemberByEmailProcedure:
+			committeeServiceAddMemberByEmailHandler.ServeHTTP(w, r)
+		case CommitteeServiceAssignAccountToCommitteeProcedure:
+			committeeServiceAssignAccountToCommitteeHandler.ServeHTTP(w, r)
+		case CommitteeServiceUpdateMemberProcedure:
+			committeeServiceUpdateMemberHandler.ServeHTTP(w, r)
+		case CommitteeServiceRemoveMemberProcedure:
+			committeeServiceRemoveMemberHandler.ServeHTTP(w, r)
+		case CommitteeServiceSendInviteEmailsProcedure:
+			committeeServiceSendInviteEmailsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -223,4 +401,32 @@ func (UnimplementedCommitteeServiceHandler) DeleteMeeting(context.Context, *conn
 
 func (UnimplementedCommitteeServiceHandler) ToggleMeetingActive(context.Context, *connect.Request[v1.ToggleMeetingActiveRequest]) (*connect.Response[v1.ToggleMeetingActiveResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.ToggleMeetingActive is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) ListCommitteeMembers(context.Context, *connect.Request[v1.ListCommitteeMembersRequest]) (*connect.Response[v1.ListCommitteeMembersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.ListCommitteeMembers is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) ListAssignableAccounts(context.Context, *connect.Request[v1.ListAssignableAccountsRequest]) (*connect.Response[v1.ListAssignableAccountsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.ListAssignableAccounts is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) AddMemberByEmail(context.Context, *connect.Request[v1.AddMemberByEmailRequest]) (*connect.Response[v1.AddMemberByEmailResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.AddMemberByEmail is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) AssignAccountToCommittee(context.Context, *connect.Request[v1.CommitteeAssignAccountRequest]) (*connect.Response[v1.CommitteeAssignAccountResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.AssignAccountToCommittee is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) UpdateMember(context.Context, *connect.Request[v1.UpdateMemberRequest]) (*connect.Response[v1.UpdateMemberResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.UpdateMember is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) RemoveMember(context.Context, *connect.Request[v1.RemoveMemberRequest]) (*connect.Response[v1.RemoveMemberResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.RemoveMember is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) SendInviteEmails(context.Context, *connect.Request[v1.SendInviteEmailsRequest]) (*connect.Response[v1.SendInviteEmailsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.SendInviteEmails is not implemented"))
 }

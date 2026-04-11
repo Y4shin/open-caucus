@@ -356,7 +356,7 @@ func (s *Service) resolveAttendeeID(ctx context.Context, meetingID int64, attend
 				if uErr != nil {
 					continue
 				}
-				if user.AccountID == *sd.AccountID {
+				if user.AccountID != nil && *user.AccountID == *sd.AccountID {
 					return a.ID, nil
 				}
 			}
@@ -390,7 +390,7 @@ func (s *Service) callerAttendeeID(ctx context.Context, meetingID int64) int64 {
 				if uErr != nil {
 					continue
 				}
-				if user.AccountID == *sd.AccountID {
+				if user.AccountID != nil && *user.AccountID == *sd.AccountID {
 					return a.ID
 				}
 			}

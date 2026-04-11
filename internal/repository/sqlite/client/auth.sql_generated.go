@@ -98,7 +98,7 @@ WHERE u.id = ?
 
 type GetUserByIDRow struct {
 	ID          int64
-	AccountID   int64
+	AccountID   sql.NullInt64
 	CommitteeID int64
 	FullName    sql.NullString
 	Role        string
@@ -142,7 +142,7 @@ type GetUserMembershipByAccountAndCommitteeParams struct {
 
 type GetUserMembershipByAccountAndCommitteeRow struct {
 	ID          int64
-	AccountID   int64
+	AccountID   sql.NullInt64
 	CommitteeID int64
 	FullName    sql.NullString
 	Role        string
@@ -181,13 +181,13 @@ WHERE u.account_id = ? AND c.slug = ?
 `
 
 type GetUserMembershipByAccountIDAndSlugParams struct {
-	AccountID int64
+	AccountID sql.NullInt64
 	Slug      string
 }
 
 type GetUserMembershipByAccountIDAndSlugRow struct {
 	ID            int64
-	AccountID     int64
+	AccountID     sql.NullInt64
 	CommitteeID   int64
 	FullName      sql.NullString
 	Role          string
@@ -234,7 +234,7 @@ type ListCommitteesByAccountIDRow struct {
 }
 
 // Lists all committees an account has a user membership in.
-func (q *Queries) ListCommitteesByAccountID(ctx context.Context, accountID int64) ([]ListCommitteesByAccountIDRow, error) {
+func (q *Queries) ListCommitteesByAccountID(ctx context.Context, accountID sql.NullInt64) ([]ListCommitteesByAccountIDRow, error) {
 	rows, err := q.db.QueryContext(ctx, listCommitteesByAccountID, accountID)
 	if err != nil {
 		return nil, err

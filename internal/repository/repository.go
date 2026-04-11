@@ -195,10 +195,15 @@ type Repository interface {
 	ListUsersInCommittee(ctx context.Context, slug string, limit, offset int) ([]*model.User, error)
 	CountUsersInCommittee(ctx context.Context, slug string) (int64, error)
 	CreateUser(ctx context.Context, committeeID int64, username, passwordHash, fullName string, quoted bool, role string) error
+	CreateEmailMember(ctx context.Context, committeeID int64, email, fullName string, quoted bool, role, inviteSecret string) error
 	AssignAccountToCommittee(ctx context.Context, committeeID, accountID int64, quoted bool, role string) error
 	UpdateUserMembership(ctx context.Context, userID int64, quoted bool, role string) error
 	IsOAuthManagedMembership(ctx context.Context, userID int64) (bool, error)
 	DeleteUserByID(ctx context.Context, id int64) error
+	GetUserByCommitteeAndEmail(ctx context.Context, slug, email string) (*model.User, error)
+	GetUserByInviteSecret(ctx context.Context, inviteSecret string) (*model.User, error)
+	SetInviteSecret(ctx context.Context, userID int64, inviteSecret string) error
+	ListAllMembersForCommittee(ctx context.Context, slug string) ([]*model.User, error)
 
 	// Admin - Account admin flag
 	SetAccountIsAdmin(ctx context.Context, accountID int64, isAdmin bool) error

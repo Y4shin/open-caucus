@@ -373,7 +373,7 @@ func (r *Repository) GetUserByID(ctx context.Context, id int64) (*model.User, er
 // GetUserMembershipByAccountIDAndSlug retrieves a committee membership by account ID and committee slug
 func (r *Repository) GetUserMembershipByAccountIDAndSlug(ctx context.Context, accountID int64, slug string) (*model.User, error) {
 	row, err := r.Queries.GetUserMembershipByAccountIDAndSlug(ctx, client.GetUserMembershipByAccountIDAndSlugParams{
-		AccountID: accountID,
+		AccountID: sql.NullInt64{Int64: accountID, Valid: true},
 		Slug:      slug,
 	})
 	if err != nil {
@@ -387,7 +387,7 @@ func (r *Repository) GetUserMembershipByAccountIDAndSlug(ctx context.Context, ac
 
 // ListCommitteesByAccountID returns all committees an account has a membership in
 func (r *Repository) ListCommitteesByAccountID(ctx context.Context, accountID int64) ([]*model.Committee, error) {
-	rows, err := r.Queries.ListCommitteesByAccountID(ctx, accountID)
+	rows, err := r.Queries.ListCommitteesByAccountID(ctx, sql.NullInt64{Int64: accountID, Valid: true})
 	if err != nil {
 		return nil, fmt.Errorf("list committees by account id: %w", err)
 	}
@@ -633,7 +633,7 @@ func userFromGetUserByIDRow(r *client.GetUserByIDRow) *model.User {
 
 	return &model.User{
 		ID:          r.ID,
-		AccountID:   r.AccountID,
+		AccountID:   nullInt64ToPtr(r.AccountID),
 		CommitteeID: r.CommitteeID,
 		Username:    r.Username,
 		FullName:    nullStringValue(r.FullName, r.Username),
@@ -650,7 +650,7 @@ func userFromMembershipRow(r *client.GetUserMembershipByAccountAndCommitteeRow) 
 
 	return &model.User{
 		ID:          r.ID,
-		AccountID:   r.AccountID,
+		AccountID:   nullInt64ToPtr(r.AccountID),
 		CommitteeID: r.CommitteeID,
 		Username:    r.Username,
 		FullName:    nullStringValue(r.FullName, r.Username),
@@ -667,7 +667,7 @@ func userFromMembershipByAccountIDAndSlugRow(r *client.GetUserMembershipByAccoun
 
 	return &model.User{
 		ID:            r.ID,
-		AccountID:     r.AccountID,
+		AccountID:     nullInt64ToPtr(r.AccountID),
 		CommitteeID:   r.CommitteeID,
 		Username:      r.Username,
 		CommitteeSlug: r.CommitteeSlug,
@@ -698,12 +698,75 @@ func userFromListRow(r *client.ListUsersInCommitteeRow) *model.User {
 
 	return &model.User{
 		ID:           r.ID,
-		AccountID:    r.AccountID,
+		AccountID:    nullInt64ToPtr(r.AccountID),
 		CommitteeID:  r.CommitteeID,
+		Email:        nullStringToPtr(r.Email),
 		Username:     r.Username,
-		FullName:     nullStringValue(r.FullName, r.Username),
+		FullName:     r.FullName,
 		Quoted:       r.Quoted,
 		Role:         r.Role,
+		InviteSecret: nullStringToPtr(r.InviteSecret),
+		OAuthManaged: r.OauthManaged == 1,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
+	}
+}
+
+func userFromGetUserByCommitteeAndEmailRow(r *client.GetUserByCommitteeAndEmailRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:           r.ID,
+		AccountID:    nullInt64ToPtr(r.AccountID),
+		CommitteeID:  r.CommitteeID,
+		Email:        nullStringToPtr(r.Email),
+		Username:     r.Username,
+		FullName:     r.FullName,
+		Quoted:       r.Quoted,
+		Role:         r.Role,
+		InviteSecret: nullStringToPtr(r.InviteSecret),
+		OAuthManaged: r.OauthManaged == 1,
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
+	}
+}
+
+func userFromGetUserByInviteSecretRow(r *client.GetUserByInviteSecretRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:            r.ID,
+		AccountID:     nullInt64ToPtr(r.AccountID),
+		CommitteeID:   r.CommitteeID,
+		Email:         nullStringToPtr(r.Email),
+		Username:      r.Username,
+		CommitteeSlug: r.CommitteeSlug,
+		FullName:      r.FullName,
+		Quoted:        r.Quoted,
+		Role:          r.Role,
+		InviteSecret:  nullStringToPtr(r.InviteSecret),
+		OAuthManaged:  r.OauthManaged == 1,
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+	}
+}
+
+func userFromListAllMembersRow(r *client.ListAllMembersForCommitteeRow) *model.User {
+	createdAt, _ := time.Parse(time.RFC3339, r.CreatedAt)
+	updatedAt, _ := time.Parse(time.RFC3339, r.UpdatedAt)
+
+	return &model.User{
+		ID:           r.ID,
+		AccountID:    nullInt64ToPtr(r.AccountID),
+		CommitteeID:  r.CommitteeID,
+		Email:        nullStringToPtr(r.Email),
+		Username:     r.Username,
+		FullName:     r.FullName,
+		Quoted:       r.Quoted,
+		Role:         r.Role,
+		InviteSecret: nullStringToPtr(r.InviteSecret),
 		OAuthManaged: r.OauthManaged == 1,
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
@@ -874,7 +937,7 @@ func (r *Repository) CreateUser(ctx context.Context, committeeID int64, username
 	}
 
 	_, err = r.Queries.CreateMembership(ctx, client.CreateMembershipParams{
-		AccountID:   account.ID,
+		AccountID:   sql.NullInt64{Int64: account.ID, Valid: true},
 		CommitteeID: committeeID,
 		Role:        role,
 		Quoted:      quoted,
@@ -927,7 +990,7 @@ func (r *Repository) CreateAccount(ctx context.Context, username, fullName, pass
 // AssignAccountToCommittee creates a committee membership for an existing account.
 func (r *Repository) AssignAccountToCommittee(ctx context.Context, committeeID, accountID int64, quoted bool, role string) error {
 	_, err := r.Queries.CreateMembership(ctx, client.CreateMembershipParams{
-		AccountID:   accountID,
+		AccountID:   sql.NullInt64{Int64: accountID, Valid: true},
 		CommitteeID: committeeID,
 		Role:        role,
 		Quoted:      quoted,
@@ -936,6 +999,74 @@ func (r *Repository) AssignAccountToCommittee(ctx context.Context, committeeID, 
 		return fmt.Errorf("assign account to committee: %w", err)
 	}
 	return nil
+}
+
+// CreateEmailMember creates a committee membership for an email-only member (no account).
+func (r *Repository) CreateEmailMember(ctx context.Context, committeeID int64, email, fullName string, quoted bool, role, inviteSecret string) error {
+	_, err := r.Queries.CreateEmailMember(ctx, client.CreateEmailMemberParams{
+		CommitteeID:  committeeID,
+		Email:        sql.NullString{String: email, Valid: email != ""},
+		FullName:     fullName,
+		Role:         role,
+		Quoted:       quoted,
+		InviteSecret: sql.NullString{String: inviteSecret, Valid: inviteSecret != ""},
+	})
+	if err != nil {
+		return fmt.Errorf("create email member: %w", err)
+	}
+	return nil
+}
+
+// GetUserByCommitteeAndEmail retrieves a committee membership by committee slug and email.
+func (r *Repository) GetUserByCommitteeAndEmail(ctx context.Context, slug, email string) (*model.User, error) {
+	row, err := r.Queries.GetUserByCommitteeAndEmail(ctx, client.GetUserByCommitteeAndEmailParams{
+		Slug:  slug,
+		Email: sql.NullString{String: email, Valid: email != ""},
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("get user by committee and email: %w", err)
+	}
+	return userFromGetUserByCommitteeAndEmailRow(&row), nil
+}
+
+// GetUserByInviteSecret retrieves a committee membership by invite secret token.
+func (r *Repository) GetUserByInviteSecret(ctx context.Context, inviteSecret string) (*model.User, error) {
+	row, err := r.Queries.GetUserByInviteSecret(ctx, sql.NullString{String: inviteSecret, Valid: inviteSecret != ""})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("get user by invite secret: %w", err)
+	}
+	return userFromGetUserByInviteSecretRow(&row), nil
+}
+
+// SetInviteSecret sets the invite secret for a user membership.
+func (r *Repository) SetInviteSecret(ctx context.Context, userID int64, inviteSecret string) error {
+	err := r.Queries.SetInviteSecret(ctx, client.SetInviteSecretParams{
+		InviteSecret: sql.NullString{String: inviteSecret, Valid: inviteSecret != ""},
+		ID:           userID,
+	})
+	if err != nil {
+		return fmt.Errorf("set invite secret: %w", err)
+	}
+	return nil
+}
+
+// ListAllMembersForCommittee returns all members in a committee (no pagination).
+func (r *Repository) ListAllMembersForCommittee(ctx context.Context, slug string) ([]*model.User, error) {
+	rows, err := r.Queries.ListAllMembersForCommittee(ctx, slug)
+	if err != nil {
+		return nil, fmt.Errorf("list all members for committee: %w", err)
+	}
+	result := make([]*model.User, len(rows))
+	for i := range rows {
+		result[i] = userFromListAllMembersRow(&rows[i])
+	}
+	return result, nil
 }
 
 // UpdateUserMembership updates quoted/role for an existing membership row.

@@ -18,11 +18,13 @@ import (
 	votesv1connect "github.com/Y4shin/open-caucus/gen/go/conference/votes/v1/votesv1connect"
 	apiconnect "github.com/Y4shin/open-caucus/internal/api/connect"
 	apihttp "github.com/Y4shin/open-caucus/internal/api/http"
+	"github.com/Y4shin/open-caucus/internal/email"
 	"github.com/Y4shin/open-caucus/internal/webhooks"
 	adminservice "github.com/Y4shin/open-caucus/internal/services/admin"
 	agendaservice "github.com/Y4shin/open-caucus/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
 	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
+	memberservice "github.com/Y4shin/open-caucus/internal/services/members"
 	meetingservice "github.com/Y4shin/open-caucus/internal/services/meetings"
 	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
 	sessionservice "github.com/Y4shin/open-caucus/internal/services/session"
@@ -114,7 +116,7 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	apiMux.Handle(sessionAPIPath, rt.middleware.Get("session")(sessionAPIHandler))
 
 	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-		apiconnect.NewCommitteeHandler(committeeservice.New(rt.repo)),
+		apiconnect.NewCommitteeHandler(committeeservice.New(rt.repo), memberservice.New(rt.repo, email.NewSender(rt.cfg.Email))),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(committeeAPIPath, rt.middleware.Get("session")(committeeAPIHandler))

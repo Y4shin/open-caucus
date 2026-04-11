@@ -37,7 +37,9 @@ import (
 	adminservice "github.com/Y4shin/open-caucus/internal/services/admin"
 	agendaservice "github.com/Y4shin/open-caucus/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
+	"github.com/Y4shin/open-caucus/internal/email"
 	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
+	memberservice "github.com/Y4shin/open-caucus/internal/services/members"
 	meetingservice "github.com/Y4shin/open-caucus/internal/services/meetings"
 	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
 	sessionservice "github.com/Y4shin/open-caucus/internal/services/session"
@@ -164,7 +166,7 @@ func newOAuthTestServer(t *testing.T, opts oauthServerOptions) *oauthTestServer 
 	apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
 
 	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-		apiconnect.NewCommitteeHandler(committeeservice.New(repo)),
+		apiconnect.NewCommitteeHandler(committeeservice.New(repo), memberservice.New(repo, &email.MockSender{})),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))

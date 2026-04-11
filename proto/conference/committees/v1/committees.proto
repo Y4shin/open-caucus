@@ -12,6 +12,15 @@ service CommitteeService {
   rpc CreateMeeting(CreateMeetingRequest) returns (CreateMeetingResponse);
   rpc DeleteMeeting(DeleteMeetingRequest) returns (DeleteMeetingResponse);
   rpc ToggleMeetingActive(ToggleMeetingActiveRequest) returns (ToggleMeetingActiveResponse);
+
+  // Member management (chairperson or admin)
+  rpc ListCommitteeMembers(ListCommitteeMembersRequest) returns (ListCommitteeMembersResponse);
+  rpc ListAssignableAccounts(ListAssignableAccountsRequest) returns (ListAssignableAccountsResponse);
+  rpc AddMemberByEmail(AddMemberByEmailRequest) returns (AddMemberByEmailResponse);
+  rpc AssignAccountToCommittee(CommitteeAssignAccountRequest) returns (CommitteeAssignAccountResponse);
+  rpc UpdateMember(UpdateMemberRequest) returns (UpdateMemberResponse);
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
+  rpc SendInviteEmails(SendInviteEmailsRequest) returns (SendInviteEmailsResponse);
 }
 
 message CommitteeListItem {
@@ -77,4 +86,93 @@ message ToggleMeetingActiveRequest {
 message ToggleMeetingActiveResponse {
   string meeting_id = 1;
   bool active = 2;
+}
+
+// --- Member management ---
+
+message MemberRecord {
+  string user_id = 1;
+  string full_name = 2;
+  string role = 3;
+  bool quoted = 4;
+  bool is_oauth_managed = 5;
+  optional string email = 6;
+  optional string username = 7;
+  bool has_account = 8;
+}
+
+message ListCommitteeMembersRequest {
+  string committee_slug = 1;
+}
+
+message ListCommitteeMembersResponse {
+  repeated MemberRecord members = 1;
+}
+
+message AssignableAccount {
+  string account_id = 1;
+  string username = 2;
+  string full_name = 3;
+}
+
+message ListAssignableAccountsRequest {
+  string committee_slug = 1;
+}
+
+message ListAssignableAccountsResponse {
+  repeated AssignableAccount accounts = 1;
+}
+
+message AddMemberByEmailRequest {
+  string committee_slug = 1;
+  string email = 2;
+  string full_name = 3;
+  string role = 4;
+  bool quoted = 5;
+}
+
+message AddMemberByEmailResponse {
+  MemberRecord member = 1;
+}
+
+message CommitteeAssignAccountRequest {
+  string committee_slug = 1;
+  string account_id = 2;
+  string role = 3;
+  bool quoted = 4;
+}
+
+message CommitteeAssignAccountResponse {
+  MemberRecord member = 1;
+}
+
+message UpdateMemberRequest {
+  string committee_slug = 1;
+  string user_id = 2;
+  string role = 3;
+  bool quoted = 4;
+}
+
+message UpdateMemberResponse {
+  MemberRecord member = 1;
+}
+
+message RemoveMemberRequest {
+  string committee_slug = 1;
+  string user_id = 2;
+}
+
+message RemoveMemberResponse {}
+
+message SendInviteEmailsRequest {
+  string committee_slug = 1;
+  string meeting_id = 2;
+  string base_url = 3;
+  repeated string member_ids = 4; // empty = all members
+}
+
+message SendInviteEmailsResponse {
+  int32 sent_count = 1;
+  int32 skipped_count = 2;
+  repeated string errors = 3;
 }

@@ -60,6 +60,9 @@ const (
 	// AttendeeServiceGetAttendeeRecoveryProcedure is the fully-qualified name of the AttendeeService's
 	// GetAttendeeRecovery RPC.
 	AttendeeServiceGetAttendeeRecoveryProcedure = "/conference.attendees.v1.AttendeeService/GetAttendeeRecovery"
+	// AttendeeServiceInviteSecretJoinProcedure is the fully-qualified name of the AttendeeService's
+	// InviteSecretJoin RPC.
+	AttendeeServiceInviteSecretJoinProcedure = "/conference.attendees.v1.AttendeeService/InviteSecretJoin"
 )
 
 // AttendeeServiceClient is a client for the conference.attendees.v1.AttendeeService service.
@@ -91,6 +94,9 @@ type AttendeeServiceClient interface {
 	// GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
 	// Requires moderation access for the meeting.
 	GetAttendeeRecovery(context.Context, *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error)
+	// InviteSecretJoin creates an attendee record for a committee member identified
+	// by their invite_secret token and starts a guest session for them.
+	InviteSecretJoin(context.Context, *connect.Request[v1.InviteSecretJoinRequest]) (*connect.Response[v1.InviteSecretJoinResponse], error)
 }
 
 // NewAttendeeServiceClient constructs a client for the conference.attendees.v1.AttendeeService
@@ -158,6 +164,12 @@ func NewAttendeeServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(attendeeServiceMethods.ByName("GetAttendeeRecovery")),
 			connect.WithClientOptions(opts...),
 		),
+		inviteSecretJoin: connect.NewClient[v1.InviteSecretJoinRequest, v1.InviteSecretJoinResponse](
+			httpClient,
+			baseURL+AttendeeServiceInviteSecretJoinProcedure,
+			connect.WithSchema(attendeeServiceMethods.ByName("InviteSecretJoin")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -172,6 +184,7 @@ type attendeeServiceClient struct {
 	setChairperson      *connect.Client[v1.SetChairpersonRequest, v1.SetChairpersonResponse]
 	setQuoted           *connect.Client[v1.SetQuotedRequest, v1.SetQuotedResponse]
 	getAttendeeRecovery *connect.Client[v1.GetAttendeeRecoveryRequest, v1.GetAttendeeRecoveryResponse]
+	inviteSecretJoin    *connect.Client[v1.InviteSecretJoinRequest, v1.InviteSecretJoinResponse]
 }
 
 // ListAttendees calls conference.attendees.v1.AttendeeService.ListAttendees.
@@ -219,6 +232,11 @@ func (c *attendeeServiceClient) GetAttendeeRecovery(ctx context.Context, req *co
 	return c.getAttendeeRecovery.CallUnary(ctx, req)
 }
 
+// InviteSecretJoin calls conference.attendees.v1.AttendeeService.InviteSecretJoin.
+func (c *attendeeServiceClient) InviteSecretJoin(ctx context.Context, req *connect.Request[v1.InviteSecretJoinRequest]) (*connect.Response[v1.InviteSecretJoinResponse], error) {
+	return c.inviteSecretJoin.CallUnary(ctx, req)
+}
+
 // AttendeeServiceHandler is an implementation of the conference.attendees.v1.AttendeeService
 // service.
 type AttendeeServiceHandler interface {
@@ -249,6 +267,9 @@ type AttendeeServiceHandler interface {
 	// GetAttendeeRecovery returns the direct attendee-login URL and QR code for a guest attendee.
 	// Requires moderation access for the meeting.
 	GetAttendeeRecovery(context.Context, *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error)
+	// InviteSecretJoin creates an attendee record for a committee member identified
+	// by their invite_secret token and starts a guest session for them.
+	InviteSecretJoin(context.Context, *connect.Request[v1.InviteSecretJoinRequest]) (*connect.Response[v1.InviteSecretJoinResponse], error)
 }
 
 // NewAttendeeServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -312,6 +333,12 @@ func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.Handl
 		connect.WithSchema(attendeeServiceMethods.ByName("GetAttendeeRecovery")),
 		connect.WithHandlerOptions(opts...),
 	)
+	attendeeServiceInviteSecretJoinHandler := connect.NewUnaryHandler(
+		AttendeeServiceInviteSecretJoinProcedure,
+		svc.InviteSecretJoin,
+		connect.WithSchema(attendeeServiceMethods.ByName("InviteSecretJoin")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/conference.attendees.v1.AttendeeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AttendeeServiceListAttendeesProcedure:
@@ -332,6 +359,8 @@ func NewAttendeeServiceHandler(svc AttendeeServiceHandler, opts ...connect.Handl
 			attendeeServiceSetQuotedHandler.ServeHTTP(w, r)
 		case AttendeeServiceGetAttendeeRecoveryProcedure:
 			attendeeServiceGetAttendeeRecoveryHandler.ServeHTTP(w, r)
+		case AttendeeServiceInviteSecretJoinProcedure:
+			attendeeServiceInviteSecretJoinHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -375,4 +404,8 @@ func (UnimplementedAttendeeServiceHandler) SetQuoted(context.Context, *connect.R
 
 func (UnimplementedAttendeeServiceHandler) GetAttendeeRecovery(context.Context, *connect.Request[v1.GetAttendeeRecoveryRequest]) (*connect.Response[v1.GetAttendeeRecoveryResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.GetAttendeeRecovery is not implemented"))
+}
+
+func (UnimplementedAttendeeServiceHandler) InviteSecretJoin(context.Context, *connect.Request[v1.InviteSecretJoinRequest]) (*connect.Response[v1.InviteSecretJoinResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.attendees.v1.AttendeeService.InviteSecretJoin is not implemented"))
 }

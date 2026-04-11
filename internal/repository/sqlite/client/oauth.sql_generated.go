@@ -170,7 +170,7 @@ WHERE u.account_id = ?
 
 type ListMembershipsForAccountWithOAuthManagedRow struct {
 	ID           int64
-	AccountID    int64
+	AccountID    sql.NullInt64
 	CommitteeID  int64
 	Role         string
 	Quoted       bool
@@ -179,7 +179,7 @@ type ListMembershipsForAccountWithOAuthManagedRow struct {
 	OauthManaged int64
 }
 
-func (q *Queries) ListMembershipsForAccountWithOAuthManaged(ctx context.Context, accountID int64) ([]ListMembershipsForAccountWithOAuthManagedRow, error) {
+func (q *Queries) ListMembershipsForAccountWithOAuthManaged(ctx context.Context, accountID sql.NullInt64) ([]ListMembershipsForAccountWithOAuthManagedRow, error) {
 	rows, err := q.db.QueryContext(ctx, listMembershipsForAccountWithOAuthManaged, accountID)
 	if err != nil {
 		return nil, err

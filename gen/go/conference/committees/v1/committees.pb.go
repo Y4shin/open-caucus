@@ -706,6 +706,902 @@ func (x *ToggleMeetingActiveResponse) GetActive() bool {
 	return false
 }
 
+type MemberRecord struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	UserId         string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	FullName       string                 `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	Role           string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	Quoted         bool                   `protobuf:"varint,4,opt,name=quoted,proto3" json:"quoted,omitempty"`
+	IsOauthManaged bool                   `protobuf:"varint,5,opt,name=is_oauth_managed,json=isOauthManaged,proto3" json:"is_oauth_managed,omitempty"`
+	Email          *string                `protobuf:"bytes,6,opt,name=email,proto3,oneof" json:"email,omitempty"`
+	Username       *string                `protobuf:"bytes,7,opt,name=username,proto3,oneof" json:"username,omitempty"`
+	HasAccount     bool                   `protobuf:"varint,8,opt,name=has_account,json=hasAccount,proto3" json:"has_account,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *MemberRecord) Reset() {
+	*x = MemberRecord{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MemberRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MemberRecord) ProtoMessage() {}
+
+func (x *MemberRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MemberRecord.ProtoReflect.Descriptor instead.
+func (*MemberRecord) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *MemberRecord) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *MemberRecord) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *MemberRecord) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *MemberRecord) GetQuoted() bool {
+	if x != nil {
+		return x.Quoted
+	}
+	return false
+}
+
+func (x *MemberRecord) GetIsOauthManaged() bool {
+	if x != nil {
+		return x.IsOauthManaged
+	}
+	return false
+}
+
+func (x *MemberRecord) GetEmail() string {
+	if x != nil && x.Email != nil {
+		return *x.Email
+	}
+	return ""
+}
+
+func (x *MemberRecord) GetUsername() string {
+	if x != nil && x.Username != nil {
+		return *x.Username
+	}
+	return ""
+}
+
+func (x *MemberRecord) GetHasAccount() bool {
+	if x != nil {
+		return x.HasAccount
+	}
+	return false
+}
+
+type ListCommitteeMembersRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCommitteeMembersRequest) Reset() {
+	*x = ListCommitteeMembersRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCommitteeMembersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCommitteeMembersRequest) ProtoMessage() {}
+
+func (x *ListCommitteeMembersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCommitteeMembersRequest.ProtoReflect.Descriptor instead.
+func (*ListCommitteeMembersRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListCommitteeMembersRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+type ListCommitteeMembersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Members       []*MemberRecord        `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCommitteeMembersResponse) Reset() {
+	*x = ListCommitteeMembersResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCommitteeMembersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCommitteeMembersResponse) ProtoMessage() {}
+
+func (x *ListCommitteeMembersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCommitteeMembersResponse.ProtoReflect.Descriptor instead.
+func (*ListCommitteeMembersResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListCommitteeMembersResponse) GetMembers() []*MemberRecord {
+	if x != nil {
+		return x.Members
+	}
+	return nil
+}
+
+type AssignableAccount struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountId     string                 `protobuf:"bytes,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	FullName      string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AssignableAccount) Reset() {
+	*x = AssignableAccount{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AssignableAccount) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AssignableAccount) ProtoMessage() {}
+
+func (x *AssignableAccount) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AssignableAccount.ProtoReflect.Descriptor instead.
+func (*AssignableAccount) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *AssignableAccount) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *AssignableAccount) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *AssignableAccount) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+type ListAssignableAccountsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAssignableAccountsRequest) Reset() {
+	*x = ListAssignableAccountsRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAssignableAccountsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAssignableAccountsRequest) ProtoMessage() {}
+
+func (x *ListAssignableAccountsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAssignableAccountsRequest.ProtoReflect.Descriptor instead.
+func (*ListAssignableAccountsRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ListAssignableAccountsRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+type ListAssignableAccountsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Accounts      []*AssignableAccount   `protobuf:"bytes,1,rep,name=accounts,proto3" json:"accounts,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAssignableAccountsResponse) Reset() {
+	*x = ListAssignableAccountsResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAssignableAccountsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAssignableAccountsResponse) ProtoMessage() {}
+
+func (x *ListAssignableAccountsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAssignableAccountsResponse.ProtoReflect.Descriptor instead.
+func (*ListAssignableAccountsResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ListAssignableAccountsResponse) GetAccounts() []*AssignableAccount {
+	if x != nil {
+		return x.Accounts
+	}
+	return nil
+}
+
+type AddMemberByEmailRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	FullName      string                 `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
+	Quoted        bool                   `protobuf:"varint,5,opt,name=quoted,proto3" json:"quoted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddMemberByEmailRequest) Reset() {
+	*x = AddMemberByEmailRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddMemberByEmailRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddMemberByEmailRequest) ProtoMessage() {}
+
+func (x *AddMemberByEmailRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddMemberByEmailRequest.ProtoReflect.Descriptor instead.
+func (*AddMemberByEmailRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *AddMemberByEmailRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *AddMemberByEmailRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *AddMemberByEmailRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *AddMemberByEmailRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *AddMemberByEmailRequest) GetQuoted() bool {
+	if x != nil {
+		return x.Quoted
+	}
+	return false
+}
+
+type AddMemberByEmailResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Member        *MemberRecord          `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddMemberByEmailResponse) Reset() {
+	*x = AddMemberByEmailResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddMemberByEmailResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddMemberByEmailResponse) ProtoMessage() {}
+
+func (x *AddMemberByEmailResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddMemberByEmailResponse.ProtoReflect.Descriptor instead.
+func (*AddMemberByEmailResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *AddMemberByEmailResponse) GetMember() *MemberRecord {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
+type CommitteeAssignAccountRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	AccountId     string                 `protobuf:"bytes,2,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	Quoted        bool                   `protobuf:"varint,4,opt,name=quoted,proto3" json:"quoted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommitteeAssignAccountRequest) Reset() {
+	*x = CommitteeAssignAccountRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitteeAssignAccountRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitteeAssignAccountRequest) ProtoMessage() {}
+
+func (x *CommitteeAssignAccountRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitteeAssignAccountRequest.ProtoReflect.Descriptor instead.
+func (*CommitteeAssignAccountRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *CommitteeAssignAccountRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *CommitteeAssignAccountRequest) GetAccountId() string {
+	if x != nil {
+		return x.AccountId
+	}
+	return ""
+}
+
+func (x *CommitteeAssignAccountRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *CommitteeAssignAccountRequest) GetQuoted() bool {
+	if x != nil {
+		return x.Quoted
+	}
+	return false
+}
+
+type CommitteeAssignAccountResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Member        *MemberRecord          `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CommitteeAssignAccountResponse) Reset() {
+	*x = CommitteeAssignAccountResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CommitteeAssignAccountResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitteeAssignAccountResponse) ProtoMessage() {}
+
+func (x *CommitteeAssignAccountResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitteeAssignAccountResponse.ProtoReflect.Descriptor instead.
+func (*CommitteeAssignAccountResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *CommitteeAssignAccountResponse) GetMember() *MemberRecord {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
+type UpdateMemberRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	Quoted        bool                   `protobuf:"varint,4,opt,name=quoted,proto3" json:"quoted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMemberRequest) Reset() {
+	*x = UpdateMemberRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMemberRequest) ProtoMessage() {}
+
+func (x *UpdateMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMemberRequest.ProtoReflect.Descriptor instead.
+func (*UpdateMemberRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *UpdateMemberRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *UpdateMemberRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UpdateMemberRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *UpdateMemberRequest) GetQuoted() bool {
+	if x != nil {
+		return x.Quoted
+	}
+	return false
+}
+
+type UpdateMemberResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Member        *MemberRecord          `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMemberResponse) Reset() {
+	*x = UpdateMemberResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMemberResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMemberResponse) ProtoMessage() {}
+
+func (x *UpdateMemberResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMemberResponse.ProtoReflect.Descriptor instead.
+func (*UpdateMemberResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *UpdateMemberResponse) GetMember() *MemberRecord {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
+type RemoveMemberRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	UserId        string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveMemberRequest) Reset() {
+	*x = RemoveMemberRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveMemberRequest) ProtoMessage() {}
+
+func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveMemberRequest.ProtoReflect.Descriptor instead.
+func (*RemoveMemberRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *RemoveMemberRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *RemoveMemberRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type RemoveMemberResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveMemberResponse) Reset() {
+	*x = RemoveMemberResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveMemberResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveMemberResponse) ProtoMessage() {}
+
+func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveMemberResponse.ProtoReflect.Descriptor instead.
+func (*RemoveMemberResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{26}
+}
+
+type SendInviteEmailsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	BaseUrl       string                 `protobuf:"bytes,3,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
+	MemberIds     []string               `protobuf:"bytes,4,rep,name=member_ids,json=memberIds,proto3" json:"member_ids,omitempty"` // empty = all members
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendInviteEmailsRequest) Reset() {
+	*x = SendInviteEmailsRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendInviteEmailsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendInviteEmailsRequest) ProtoMessage() {}
+
+func (x *SendInviteEmailsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendInviteEmailsRequest.ProtoReflect.Descriptor instead.
+func (*SendInviteEmailsRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *SendInviteEmailsRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *SendInviteEmailsRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *SendInviteEmailsRequest) GetBaseUrl() string {
+	if x != nil {
+		return x.BaseUrl
+	}
+	return ""
+}
+
+func (x *SendInviteEmailsRequest) GetMemberIds() []string {
+	if x != nil {
+		return x.MemberIds
+	}
+	return nil
+}
+
+type SendInviteEmailsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SentCount     int32                  `protobuf:"varint,1,opt,name=sent_count,json=sentCount,proto3" json:"sent_count,omitempty"`
+	SkippedCount  int32                  `protobuf:"varint,2,opt,name=skipped_count,json=skippedCount,proto3" json:"skipped_count,omitempty"`
+	Errors        []string               `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendInviteEmailsResponse) Reset() {
+	*x = SendInviteEmailsResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendInviteEmailsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendInviteEmailsResponse) ProtoMessage() {}
+
+func (x *SendInviteEmailsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendInviteEmailsResponse.ProtoReflect.Descriptor instead.
+func (*SendInviteEmailsResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *SendInviteEmailsResponse) GetSentCount() int32 {
+	if x != nil {
+		return x.SentCount
+	}
+	return 0
+}
+
+func (x *SendInviteEmailsResponse) GetSkippedCount() int32 {
+	if x != nil {
+		return x.SkippedCount
+	}
+	return 0
+}
+
+func (x *SendInviteEmailsResponse) GetErrors() []string {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
 var File_conference_committees_v1_committees_proto protoreflect.FileDescriptor
 
 const file_conference_committees_v1_committees_proto_rawDesc = "" +
@@ -758,13 +1654,84 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\x1bToggleMeetingActiveResponse\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12\x16\n" +
-	"\x06active\x18\x02 \x01(\bR\x06active2\xfe\x04\n" +
+	"\x06active\x18\x02 \x01(\bR\x06active\"\x8e\x02\n" +
+	"\fMemberRecord\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1b\n" +
+	"\tfull_name\x18\x02 \x01(\tR\bfullName\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\x12\x16\n" +
+	"\x06quoted\x18\x04 \x01(\bR\x06quoted\x12(\n" +
+	"\x10is_oauth_managed\x18\x05 \x01(\bR\x0eisOauthManaged\x12\x19\n" +
+	"\x05email\x18\x06 \x01(\tH\x00R\x05email\x88\x01\x01\x12\x1f\n" +
+	"\busername\x18\a \x01(\tH\x01R\busername\x88\x01\x01\x12\x1f\n" +
+	"\vhas_account\x18\b \x01(\bR\n" +
+	"hasAccountB\b\n" +
+	"\x06_emailB\v\n" +
+	"\t_username\"D\n" +
+	"\x1bListCommitteeMembersRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\"`\n" +
+	"\x1cListCommitteeMembersResponse\x12@\n" +
+	"\amembers\x18\x01 \x03(\v2&.conference.committees.v1.MemberRecordR\amembers\"k\n" +
+	"\x11AssignableAccount\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x01 \x01(\tR\taccountId\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
+	"\tfull_name\x18\x03 \x01(\tR\bfullName\"F\n" +
+	"\x1dListAssignableAccountsRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\"i\n" +
+	"\x1eListAssignableAccountsResponse\x12G\n" +
+	"\baccounts\x18\x01 \x03(\v2+.conference.committees.v1.AssignableAccountR\baccounts\"\x9f\x01\n" +
+	"\x17AddMemberByEmailRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1b\n" +
+	"\tfull_name\x18\x03 \x01(\tR\bfullName\x12\x12\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\x12\x16\n" +
+	"\x06quoted\x18\x05 \x01(\bR\x06quoted\"Z\n" +
+	"\x18AddMemberByEmailResponse\x12>\n" +
+	"\x06member\x18\x01 \x01(\v2&.conference.committees.v1.MemberRecordR\x06member\"\x91\x01\n" +
+	"\x1dCommitteeAssignAccountRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"account_id\x18\x02 \x01(\tR\taccountId\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\x12\x16\n" +
+	"\x06quoted\x18\x04 \x01(\bR\x06quoted\"`\n" +
+	"\x1eCommitteeAssignAccountResponse\x12>\n" +
+	"\x06member\x18\x01 \x01(\v2&.conference.committees.v1.MemberRecordR\x06member\"\x81\x01\n" +
+	"\x13UpdateMemberRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\x12\x16\n" +
+	"\x06quoted\x18\x04 \x01(\bR\x06quoted\"V\n" +
+	"\x14UpdateMemberResponse\x12>\n" +
+	"\x06member\x18\x01 \x01(\v2&.conference.committees.v1.MemberRecordR\x06member\"U\n" +
+	"\x13RemoveMemberRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"\x16\n" +
+	"\x14RemoveMemberResponse\"\x99\x01\n" +
+	"\x17SendInviteEmailsRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x19\n" +
+	"\bbase_url\x18\x03 \x01(\tR\abaseUrl\x12\x1d\n" +
+	"\n" +
+	"member_ids\x18\x04 \x03(\tR\tmemberIds\"v\n" +
+	"\x18SendInviteEmailsResponse\x12\x1d\n" +
+	"\n" +
+	"sent_count\x18\x01 \x01(\x05R\tsentCount\x12#\n" +
+	"\rskipped_count\x18\x02 \x01(\x05R\fskippedCount\x12\x16\n" +
+	"\x06errors\x18\x03 \x03(\tR\x06errors2\xf8\v\n" +
 	"\x10CommitteeService\x12y\n" +
 	"\x10ListMyCommittees\x121.conference.committees.v1.ListMyCommitteesRequest\x1a2.conference.committees.v1.ListMyCommitteesResponse\x12\x85\x01\n" +
 	"\x14GetCommitteeOverview\x125.conference.committees.v1.GetCommitteeOverviewRequest\x1a6.conference.committees.v1.GetCommitteeOverviewResponse\x12p\n" +
 	"\rCreateMeeting\x12..conference.committees.v1.CreateMeetingRequest\x1a/.conference.committees.v1.CreateMeetingResponse\x12p\n" +
 	"\rDeleteMeeting\x12..conference.committees.v1.DeleteMeetingRequest\x1a/.conference.committees.v1.DeleteMeetingResponse\x12\x82\x01\n" +
-	"\x13ToggleMeetingActive\x124.conference.committees.v1.ToggleMeetingActiveRequest\x1a5.conference.committees.v1.ToggleMeetingActiveResponseBLZJgithub.com/Y4shin/open-caucus/gen/go/conference/committees/v1;committeesv1b\x06proto3"
+	"\x13ToggleMeetingActive\x124.conference.committees.v1.ToggleMeetingActiveRequest\x1a5.conference.committees.v1.ToggleMeetingActiveResponse\x12\x85\x01\n" +
+	"\x14ListCommitteeMembers\x125.conference.committees.v1.ListCommitteeMembersRequest\x1a6.conference.committees.v1.ListCommitteeMembersResponse\x12\x8b\x01\n" +
+	"\x16ListAssignableAccounts\x127.conference.committees.v1.ListAssignableAccountsRequest\x1a8.conference.committees.v1.ListAssignableAccountsResponse\x12y\n" +
+	"\x10AddMemberByEmail\x121.conference.committees.v1.AddMemberByEmailRequest\x1a2.conference.committees.v1.AddMemberByEmailResponse\x12\x8d\x01\n" +
+	"\x18AssignAccountToCommittee\x127.conference.committees.v1.CommitteeAssignAccountRequest\x1a8.conference.committees.v1.CommitteeAssignAccountResponse\x12m\n" +
+	"\fUpdateMember\x12-.conference.committees.v1.UpdateMemberRequest\x1a..conference.committees.v1.UpdateMemberResponse\x12m\n" +
+	"\fRemoveMember\x12-.conference.committees.v1.RemoveMemberRequest\x1a..conference.committees.v1.RemoveMemberResponse\x12y\n" +
+	"\x10SendInviteEmails\x121.conference.committees.v1.SendInviteEmailsRequest\x1a2.conference.committees.v1.SendInviteEmailsResponseBLZJgithub.com/Y4shin/open-caucus/gen/go/conference/committees/v1;committeesv1b\x06proto3"
 
 var (
 	file_conference_committees_v1_committees_proto_rawDescOnce sync.Once
@@ -778,49 +1745,84 @@ func file_conference_committees_v1_committees_proto_rawDescGZIP() []byte {
 	return file_conference_committees_v1_committees_proto_rawDescData
 }
 
-var file_conference_committees_v1_committees_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_conference_committees_v1_committees_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_conference_committees_v1_committees_proto_goTypes = []any{
-	(*CommitteeListItem)(nil),            // 0: conference.committees.v1.CommitteeListItem
-	(*CommitteeOverviewMeeting)(nil),     // 1: conference.committees.v1.CommitteeOverviewMeeting
-	(*CommitteeOverview)(nil),            // 2: conference.committees.v1.CommitteeOverview
-	(*ListMyCommitteesRequest)(nil),      // 3: conference.committees.v1.ListMyCommitteesRequest
-	(*ListMyCommitteesResponse)(nil),     // 4: conference.committees.v1.ListMyCommitteesResponse
-	(*GetCommitteeOverviewRequest)(nil),  // 5: conference.committees.v1.GetCommitteeOverviewRequest
-	(*GetCommitteeOverviewResponse)(nil), // 6: conference.committees.v1.GetCommitteeOverviewResponse
-	(*CreateMeetingRequest)(nil),         // 7: conference.committees.v1.CreateMeetingRequest
-	(*CreateMeetingResponse)(nil),        // 8: conference.committees.v1.CreateMeetingResponse
-	(*DeleteMeetingRequest)(nil),         // 9: conference.committees.v1.DeleteMeetingRequest
-	(*DeleteMeetingResponse)(nil),        // 10: conference.committees.v1.DeleteMeetingResponse
-	(*ToggleMeetingActiveRequest)(nil),   // 11: conference.committees.v1.ToggleMeetingActiveRequest
-	(*ToggleMeetingActiveResponse)(nil),  // 12: conference.committees.v1.ToggleMeetingActiveResponse
-	(*v1.CommitteeReference)(nil),        // 13: conference.common.v1.CommitteeReference
-	(*v1.MeetingReference)(nil),          // 14: conference.common.v1.MeetingReference
-	(*v1.Capability)(nil),                // 15: conference.common.v1.Capability
+	(*CommitteeListItem)(nil),              // 0: conference.committees.v1.CommitteeListItem
+	(*CommitteeOverviewMeeting)(nil),       // 1: conference.committees.v1.CommitteeOverviewMeeting
+	(*CommitteeOverview)(nil),              // 2: conference.committees.v1.CommitteeOverview
+	(*ListMyCommitteesRequest)(nil),        // 3: conference.committees.v1.ListMyCommitteesRequest
+	(*ListMyCommitteesResponse)(nil),       // 4: conference.committees.v1.ListMyCommitteesResponse
+	(*GetCommitteeOverviewRequest)(nil),    // 5: conference.committees.v1.GetCommitteeOverviewRequest
+	(*GetCommitteeOverviewResponse)(nil),   // 6: conference.committees.v1.GetCommitteeOverviewResponse
+	(*CreateMeetingRequest)(nil),           // 7: conference.committees.v1.CreateMeetingRequest
+	(*CreateMeetingResponse)(nil),          // 8: conference.committees.v1.CreateMeetingResponse
+	(*DeleteMeetingRequest)(nil),           // 9: conference.committees.v1.DeleteMeetingRequest
+	(*DeleteMeetingResponse)(nil),          // 10: conference.committees.v1.DeleteMeetingResponse
+	(*ToggleMeetingActiveRequest)(nil),     // 11: conference.committees.v1.ToggleMeetingActiveRequest
+	(*ToggleMeetingActiveResponse)(nil),    // 12: conference.committees.v1.ToggleMeetingActiveResponse
+	(*MemberRecord)(nil),                   // 13: conference.committees.v1.MemberRecord
+	(*ListCommitteeMembersRequest)(nil),    // 14: conference.committees.v1.ListCommitteeMembersRequest
+	(*ListCommitteeMembersResponse)(nil),   // 15: conference.committees.v1.ListCommitteeMembersResponse
+	(*AssignableAccount)(nil),              // 16: conference.committees.v1.AssignableAccount
+	(*ListAssignableAccountsRequest)(nil),  // 17: conference.committees.v1.ListAssignableAccountsRequest
+	(*ListAssignableAccountsResponse)(nil), // 18: conference.committees.v1.ListAssignableAccountsResponse
+	(*AddMemberByEmailRequest)(nil),        // 19: conference.committees.v1.AddMemberByEmailRequest
+	(*AddMemberByEmailResponse)(nil),       // 20: conference.committees.v1.AddMemberByEmailResponse
+	(*CommitteeAssignAccountRequest)(nil),  // 21: conference.committees.v1.CommitteeAssignAccountRequest
+	(*CommitteeAssignAccountResponse)(nil), // 22: conference.committees.v1.CommitteeAssignAccountResponse
+	(*UpdateMemberRequest)(nil),            // 23: conference.committees.v1.UpdateMemberRequest
+	(*UpdateMemberResponse)(nil),           // 24: conference.committees.v1.UpdateMemberResponse
+	(*RemoveMemberRequest)(nil),            // 25: conference.committees.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),           // 26: conference.committees.v1.RemoveMemberResponse
+	(*SendInviteEmailsRequest)(nil),        // 27: conference.committees.v1.SendInviteEmailsRequest
+	(*SendInviteEmailsResponse)(nil),       // 28: conference.committees.v1.SendInviteEmailsResponse
+	(*v1.CommitteeReference)(nil),          // 29: conference.common.v1.CommitteeReference
+	(*v1.MeetingReference)(nil),            // 30: conference.common.v1.MeetingReference
+	(*v1.Capability)(nil),                  // 31: conference.common.v1.Capability
 }
 var file_conference_committees_v1_committees_proto_depIdxs = []int32{
-	13, // 0: conference.committees.v1.CommitteeListItem.committee:type_name -> conference.common.v1.CommitteeReference
-	14, // 1: conference.committees.v1.CommitteeOverviewMeeting.meeting:type_name -> conference.common.v1.MeetingReference
-	13, // 2: conference.committees.v1.CommitteeOverview.committee:type_name -> conference.common.v1.CommitteeReference
+	29, // 0: conference.committees.v1.CommitteeListItem.committee:type_name -> conference.common.v1.CommitteeReference
+	30, // 1: conference.committees.v1.CommitteeOverviewMeeting.meeting:type_name -> conference.common.v1.MeetingReference
+	29, // 2: conference.committees.v1.CommitteeOverview.committee:type_name -> conference.common.v1.CommitteeReference
 	1,  // 3: conference.committees.v1.CommitteeOverview.meetings:type_name -> conference.committees.v1.CommitteeOverviewMeeting
-	15, // 4: conference.committees.v1.CommitteeOverview.capabilities:type_name -> conference.common.v1.Capability
+	31, // 4: conference.committees.v1.CommitteeOverview.capabilities:type_name -> conference.common.v1.Capability
 	0,  // 5: conference.committees.v1.ListMyCommitteesResponse.committees:type_name -> conference.committees.v1.CommitteeListItem
 	2,  // 6: conference.committees.v1.GetCommitteeOverviewResponse.overview:type_name -> conference.committees.v1.CommitteeOverview
-	14, // 7: conference.committees.v1.CreateMeetingResponse.meeting:type_name -> conference.common.v1.MeetingReference
-	3,  // 8: conference.committees.v1.CommitteeService.ListMyCommittees:input_type -> conference.committees.v1.ListMyCommitteesRequest
-	5,  // 9: conference.committees.v1.CommitteeService.GetCommitteeOverview:input_type -> conference.committees.v1.GetCommitteeOverviewRequest
-	7,  // 10: conference.committees.v1.CommitteeService.CreateMeeting:input_type -> conference.committees.v1.CreateMeetingRequest
-	9,  // 11: conference.committees.v1.CommitteeService.DeleteMeeting:input_type -> conference.committees.v1.DeleteMeetingRequest
-	11, // 12: conference.committees.v1.CommitteeService.ToggleMeetingActive:input_type -> conference.committees.v1.ToggleMeetingActiveRequest
-	4,  // 13: conference.committees.v1.CommitteeService.ListMyCommittees:output_type -> conference.committees.v1.ListMyCommitteesResponse
-	6,  // 14: conference.committees.v1.CommitteeService.GetCommitteeOverview:output_type -> conference.committees.v1.GetCommitteeOverviewResponse
-	8,  // 15: conference.committees.v1.CommitteeService.CreateMeeting:output_type -> conference.committees.v1.CreateMeetingResponse
-	10, // 16: conference.committees.v1.CommitteeService.DeleteMeeting:output_type -> conference.committees.v1.DeleteMeetingResponse
-	12, // 17: conference.committees.v1.CommitteeService.ToggleMeetingActive:output_type -> conference.committees.v1.ToggleMeetingActiveResponse
-	13, // [13:18] is the sub-list for method output_type
-	8,  // [8:13] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	30, // 7: conference.committees.v1.CreateMeetingResponse.meeting:type_name -> conference.common.v1.MeetingReference
+	13, // 8: conference.committees.v1.ListCommitteeMembersResponse.members:type_name -> conference.committees.v1.MemberRecord
+	16, // 9: conference.committees.v1.ListAssignableAccountsResponse.accounts:type_name -> conference.committees.v1.AssignableAccount
+	13, // 10: conference.committees.v1.AddMemberByEmailResponse.member:type_name -> conference.committees.v1.MemberRecord
+	13, // 11: conference.committees.v1.CommitteeAssignAccountResponse.member:type_name -> conference.committees.v1.MemberRecord
+	13, // 12: conference.committees.v1.UpdateMemberResponse.member:type_name -> conference.committees.v1.MemberRecord
+	3,  // 13: conference.committees.v1.CommitteeService.ListMyCommittees:input_type -> conference.committees.v1.ListMyCommitteesRequest
+	5,  // 14: conference.committees.v1.CommitteeService.GetCommitteeOverview:input_type -> conference.committees.v1.GetCommitteeOverviewRequest
+	7,  // 15: conference.committees.v1.CommitteeService.CreateMeeting:input_type -> conference.committees.v1.CreateMeetingRequest
+	9,  // 16: conference.committees.v1.CommitteeService.DeleteMeeting:input_type -> conference.committees.v1.DeleteMeetingRequest
+	11, // 17: conference.committees.v1.CommitteeService.ToggleMeetingActive:input_type -> conference.committees.v1.ToggleMeetingActiveRequest
+	14, // 18: conference.committees.v1.CommitteeService.ListCommitteeMembers:input_type -> conference.committees.v1.ListCommitteeMembersRequest
+	17, // 19: conference.committees.v1.CommitteeService.ListAssignableAccounts:input_type -> conference.committees.v1.ListAssignableAccountsRequest
+	19, // 20: conference.committees.v1.CommitteeService.AddMemberByEmail:input_type -> conference.committees.v1.AddMemberByEmailRequest
+	21, // 21: conference.committees.v1.CommitteeService.AssignAccountToCommittee:input_type -> conference.committees.v1.CommitteeAssignAccountRequest
+	23, // 22: conference.committees.v1.CommitteeService.UpdateMember:input_type -> conference.committees.v1.UpdateMemberRequest
+	25, // 23: conference.committees.v1.CommitteeService.RemoveMember:input_type -> conference.committees.v1.RemoveMemberRequest
+	27, // 24: conference.committees.v1.CommitteeService.SendInviteEmails:input_type -> conference.committees.v1.SendInviteEmailsRequest
+	4,  // 25: conference.committees.v1.CommitteeService.ListMyCommittees:output_type -> conference.committees.v1.ListMyCommitteesResponse
+	6,  // 26: conference.committees.v1.CommitteeService.GetCommitteeOverview:output_type -> conference.committees.v1.GetCommitteeOverviewResponse
+	8,  // 27: conference.committees.v1.CommitteeService.CreateMeeting:output_type -> conference.committees.v1.CreateMeetingResponse
+	10, // 28: conference.committees.v1.CommitteeService.DeleteMeeting:output_type -> conference.committees.v1.DeleteMeetingResponse
+	12, // 29: conference.committees.v1.CommitteeService.ToggleMeetingActive:output_type -> conference.committees.v1.ToggleMeetingActiveResponse
+	15, // 30: conference.committees.v1.CommitteeService.ListCommitteeMembers:output_type -> conference.committees.v1.ListCommitteeMembersResponse
+	18, // 31: conference.committees.v1.CommitteeService.ListAssignableAccounts:output_type -> conference.committees.v1.ListAssignableAccountsResponse
+	20, // 32: conference.committees.v1.CommitteeService.AddMemberByEmail:output_type -> conference.committees.v1.AddMemberByEmailResponse
+	22, // 33: conference.committees.v1.CommitteeService.AssignAccountToCommittee:output_type -> conference.committees.v1.CommitteeAssignAccountResponse
+	24, // 34: conference.committees.v1.CommitteeService.UpdateMember:output_type -> conference.committees.v1.UpdateMemberResponse
+	26, // 35: conference.committees.v1.CommitteeService.RemoveMember:output_type -> conference.committees.v1.RemoveMemberResponse
+	28, // 36: conference.committees.v1.CommitteeService.SendInviteEmails:output_type -> conference.committees.v1.SendInviteEmailsResponse
+	25, // [25:37] is the sub-list for method output_type
+	13, // [13:25] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_conference_committees_v1_committees_proto_init() }
@@ -829,13 +1831,14 @@ func file_conference_committees_v1_committees_proto_init() {
 		return
 	}
 	file_conference_committees_v1_committees_proto_msgTypes[7].OneofWrappers = []any{}
+	file_conference_committees_v1_committees_proto_msgTypes[13].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_committees_v1_committees_proto_rawDesc), len(file_conference_committees_v1_committees_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -27,6 +27,7 @@ import (
 	apihttp "github.com/Y4shin/open-caucus/internal/api/http"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/Y4shin/open-caucus/internal/email"
 	"github.com/Y4shin/open-caucus/internal/broker"
 	"github.com/Y4shin/open-caucus/internal/config"
 	"github.com/Y4shin/open-caucus/internal/docs"
@@ -39,6 +40,7 @@ import (
 	agendaservice "github.com/Y4shin/open-caucus/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
 	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
+	memberservice "github.com/Y4shin/open-caucus/internal/services/members"
 	meetingservice "github.com/Y4shin/open-caucus/internal/services/meetings"
 	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
 	sessionservice "github.com/Y4shin/open-caucus/internal/services/session"
@@ -117,7 +119,7 @@ func newTestServer(t *testing.T) *testServer {
 	apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
 
 	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-		apiconnect.NewCommitteeHandler(committeeservice.New(repo)),
+		apiconnect.NewCommitteeHandler(committeeservice.New(repo), memberservice.New(repo, &email.MockSender{})),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))

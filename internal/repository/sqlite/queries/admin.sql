@@ -17,15 +17,18 @@ DELETE FROM committees WHERE slug = ?;
 -- User / Membership Management
 
 -- name: ListUsersInCommittee :many
-SELECT u.id, u.account_id, u.committee_id, a.full_name, u.role, u.quoted,
-       u.created_at, u.updated_at, a.username,
+SELECT u.id, u.account_id, u.committee_id, u.email,
+       COALESCE(a.full_name, u.full_name) AS full_name,
+       u.role, u.quoted, u.invite_secret,
+       u.created_at, u.updated_at,
+       COALESCE(a.username, '') AS username,
        CASE WHEN om.user_id IS NULL THEN 0 ELSE 1 END AS oauth_managed
 FROM users u
-JOIN accounts a ON u.account_id = a.id
+LEFT JOIN accounts a ON u.account_id = a.id
 JOIN committees c ON u.committee_id = c.id
 LEFT JOIN oauth_managed_memberships om ON om.user_id = u.id
 WHERE c.slug = ?
-ORDER BY a.username ASC LIMIT ? OFFSET ?;
+ORDER BY COALESCE(a.username, u.email, u.full_name) ASC LIMIT ? OFFSET ?;
 
 -- name: CountUsersInCommittee :one
 SELECT COUNT(*) FROM users u
@@ -54,8 +57,8 @@ ON CONFLICT (account_id) DO UPDATE
 
 -- name: CreateMembership :one
 -- Creates a committee membership row for an existing account.
-INSERT INTO users (account_id, committee_id, role, quoted, created_at, updated_at)
-VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+INSERT INTO users (account_id, committee_id, full_name, role, quoted, created_at, updated_at)
+VALUES (?, ?, '', ?, ?, datetime('now'), datetime('now'))
 RETURNING *;
 
 -- name: SetAccountIsAdmin :exec

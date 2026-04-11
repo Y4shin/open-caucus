@@ -1213,6 +1213,118 @@ func (x *GetAttendeeRecoveryResponse) GetView() *AttendeeRecoveryView {
 	return nil
 }
 
+type InviteSecretJoinRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	InviteSecret  string                 `protobuf:"bytes,3,opt,name=invite_secret,json=inviteSecret,proto3" json:"invite_secret,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InviteSecretJoinRequest) Reset() {
+	*x = InviteSecretJoinRequest{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InviteSecretJoinRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InviteSecretJoinRequest) ProtoMessage() {}
+
+func (x *InviteSecretJoinRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InviteSecretJoinRequest.ProtoReflect.Descriptor instead.
+func (*InviteSecretJoinRequest) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *InviteSecretJoinRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *InviteSecretJoinRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *InviteSecretJoinRequest) GetInviteSecret() string {
+	if x != nil {
+		return x.InviteSecret
+	}
+	return ""
+}
+
+type InviteSecretJoinResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	AttendeeSecret string                 `protobuf:"bytes,1,opt,name=attendee_secret,json=attendeeSecret,proto3" json:"attendee_secret,omitempty"`
+	AttendeeId     string                 `protobuf:"bytes,2,opt,name=attendee_id,json=attendeeId,proto3" json:"attendee_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *InviteSecretJoinResponse) Reset() {
+	*x = InviteSecretJoinResponse{}
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InviteSecretJoinResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InviteSecretJoinResponse) ProtoMessage() {}
+
+func (x *InviteSecretJoinResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_attendees_v1_attendees_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InviteSecretJoinResponse.ProtoReflect.Descriptor instead.
+func (*InviteSecretJoinResponse) Descriptor() ([]byte, []int) {
+	return file_conference_attendees_v1_attendees_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *InviteSecretJoinResponse) GetAttendeeSecret() string {
+	if x != nil {
+		return x.AttendeeSecret
+	}
+	return ""
+}
+
+func (x *InviteSecretJoinResponse) GetAttendeeId() string {
+	if x != nil {
+		return x.AttendeeId
+	}
+	return ""
+}
+
 var File_conference_attendees_v1_attendees_proto protoreflect.FileDescriptor
 
 const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
@@ -1311,7 +1423,16 @@ const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
 	"attendeeId\x12\x19\n" +
 	"\bbase_url\x18\x04 \x01(\tR\abaseUrl\"`\n" +
 	"\x1bGetAttendeeRecoveryResponse\x12A\n" +
-	"\x04view\x18\x01 \x01(\v2-.conference.attendees.v1.AttendeeRecoveryViewR\x04view2\xfc\a\n" +
+	"\x04view\x18\x01 \x01(\v2-.conference.attendees.v1.AttendeeRecoveryViewR\x04view\"\x84\x01\n" +
+	"\x17InviteSecretJoinRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12#\n" +
+	"\rinvite_secret\x18\x03 \x01(\tR\finviteSecret\"d\n" +
+	"\x18InviteSecretJoinResponse\x12'\n" +
+	"\x0fattendee_secret\x18\x01 \x01(\tR\x0eattendeeSecret\x12\x1f\n" +
+	"\vattendee_id\x18\x02 \x01(\tR\n" +
+	"attendeeId2\xf5\b\n" +
 	"\x0fAttendeeService\x12n\n" +
 	"\rListAttendees\x12-.conference.attendees.v1.ListAttendeesRequest\x1a..conference.attendees.v1.ListAttendeesResponse\x12e\n" +
 	"\n" +
@@ -1322,7 +1443,8 @@ const file_conference_attendees_v1_attendees_proto_rawDesc = "" +
 	"\x0eDeleteAttendee\x12..conference.attendees.v1.DeleteAttendeeRequest\x1a/.conference.attendees.v1.DeleteAttendeeResponse\x12q\n" +
 	"\x0eSetChairperson\x12..conference.attendees.v1.SetChairpersonRequest\x1a/.conference.attendees.v1.SetChairpersonResponse\x12b\n" +
 	"\tSetQuoted\x12).conference.attendees.v1.SetQuotedRequest\x1a*.conference.attendees.v1.SetQuotedResponse\x12\x80\x01\n" +
-	"\x13GetAttendeeRecovery\x123.conference.attendees.v1.GetAttendeeRecoveryRequest\x1a4.conference.attendees.v1.GetAttendeeRecoveryResponseBJZHgithub.com/Y4shin/open-caucus/gen/go/conference/attendees/v1;attendeesv1b\x06proto3"
+	"\x13GetAttendeeRecovery\x123.conference.attendees.v1.GetAttendeeRecoveryRequest\x1a4.conference.attendees.v1.GetAttendeeRecoveryResponse\x12w\n" +
+	"\x10InviteSecretJoin\x120.conference.attendees.v1.InviteSecretJoinRequest\x1a1.conference.attendees.v1.InviteSecretJoinResponseBJZHgithub.com/Y4shin/open-caucus/gen/go/conference/attendees/v1;attendeesv1b\x06proto3"
 
 var (
 	file_conference_attendees_v1_attendees_proto_rawDescOnce sync.Once
@@ -1336,7 +1458,7 @@ func file_conference_attendees_v1_attendees_proto_rawDescGZIP() []byte {
 	return file_conference_attendees_v1_attendees_proto_rawDescData
 }
 
-var file_conference_attendees_v1_attendees_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_conference_attendees_v1_attendees_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_conference_attendees_v1_attendees_proto_goTypes = []any{
 	(*AttendeeRecord)(nil),              // 0: conference.attendees.v1.AttendeeRecord
 	(*ListAttendeesRequest)(nil),        // 1: conference.attendees.v1.ListAttendeesRequest
@@ -1358,14 +1480,16 @@ var file_conference_attendees_v1_attendees_proto_goTypes = []any{
 	(*AttendeeRecoveryView)(nil),        // 17: conference.attendees.v1.AttendeeRecoveryView
 	(*GetAttendeeRecoveryRequest)(nil),  // 18: conference.attendees.v1.GetAttendeeRecoveryRequest
 	(*GetAttendeeRecoveryResponse)(nil), // 19: conference.attendees.v1.GetAttendeeRecoveryResponse
-	(*v1.ActorSummary)(nil),             // 20: conference.common.v1.ActorSummary
+	(*InviteSecretJoinRequest)(nil),     // 20: conference.attendees.v1.InviteSecretJoinRequest
+	(*InviteSecretJoinResponse)(nil),    // 21: conference.attendees.v1.InviteSecretJoinResponse
+	(*v1.ActorSummary)(nil),             // 22: conference.common.v1.ActorSummary
 }
 var file_conference_attendees_v1_attendees_proto_depIdxs = []int32{
 	0,  // 0: conference.attendees.v1.ListAttendeesResponse.attendees:type_name -> conference.attendees.v1.AttendeeRecord
 	0,  // 1: conference.attendees.v1.SelfSignupResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
 	0,  // 2: conference.attendees.v1.GuestJoinResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
 	0,  // 3: conference.attendees.v1.AttendeeLoginResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
-	20, // 4: conference.attendees.v1.AttendeeLoginResponse.actor:type_name -> conference.common.v1.ActorSummary
+	22, // 4: conference.attendees.v1.AttendeeLoginResponse.actor:type_name -> conference.common.v1.ActorSummary
 	0,  // 5: conference.attendees.v1.CreateAttendeeResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
 	0,  // 6: conference.attendees.v1.SetChairpersonResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
 	0,  // 7: conference.attendees.v1.SetQuotedResponse.attendee:type_name -> conference.attendees.v1.AttendeeRecord
@@ -1379,17 +1503,19 @@ var file_conference_attendees_v1_attendees_proto_depIdxs = []int32{
 	13, // 15: conference.attendees.v1.AttendeeService.SetChairperson:input_type -> conference.attendees.v1.SetChairpersonRequest
 	15, // 16: conference.attendees.v1.AttendeeService.SetQuoted:input_type -> conference.attendees.v1.SetQuotedRequest
 	18, // 17: conference.attendees.v1.AttendeeService.GetAttendeeRecovery:input_type -> conference.attendees.v1.GetAttendeeRecoveryRequest
-	2,  // 18: conference.attendees.v1.AttendeeService.ListAttendees:output_type -> conference.attendees.v1.ListAttendeesResponse
-	4,  // 19: conference.attendees.v1.AttendeeService.SelfSignup:output_type -> conference.attendees.v1.SelfSignupResponse
-	6,  // 20: conference.attendees.v1.AttendeeService.GuestJoin:output_type -> conference.attendees.v1.GuestJoinResponse
-	8,  // 21: conference.attendees.v1.AttendeeService.AttendeeLogin:output_type -> conference.attendees.v1.AttendeeLoginResponse
-	10, // 22: conference.attendees.v1.AttendeeService.CreateAttendee:output_type -> conference.attendees.v1.CreateAttendeeResponse
-	12, // 23: conference.attendees.v1.AttendeeService.DeleteAttendee:output_type -> conference.attendees.v1.DeleteAttendeeResponse
-	14, // 24: conference.attendees.v1.AttendeeService.SetChairperson:output_type -> conference.attendees.v1.SetChairpersonResponse
-	16, // 25: conference.attendees.v1.AttendeeService.SetQuoted:output_type -> conference.attendees.v1.SetQuotedResponse
-	19, // 26: conference.attendees.v1.AttendeeService.GetAttendeeRecovery:output_type -> conference.attendees.v1.GetAttendeeRecoveryResponse
-	18, // [18:27] is the sub-list for method output_type
-	9,  // [9:18] is the sub-list for method input_type
+	20, // 18: conference.attendees.v1.AttendeeService.InviteSecretJoin:input_type -> conference.attendees.v1.InviteSecretJoinRequest
+	2,  // 19: conference.attendees.v1.AttendeeService.ListAttendees:output_type -> conference.attendees.v1.ListAttendeesResponse
+	4,  // 20: conference.attendees.v1.AttendeeService.SelfSignup:output_type -> conference.attendees.v1.SelfSignupResponse
+	6,  // 21: conference.attendees.v1.AttendeeService.GuestJoin:output_type -> conference.attendees.v1.GuestJoinResponse
+	8,  // 22: conference.attendees.v1.AttendeeService.AttendeeLogin:output_type -> conference.attendees.v1.AttendeeLoginResponse
+	10, // 23: conference.attendees.v1.AttendeeService.CreateAttendee:output_type -> conference.attendees.v1.CreateAttendeeResponse
+	12, // 24: conference.attendees.v1.AttendeeService.DeleteAttendee:output_type -> conference.attendees.v1.DeleteAttendeeResponse
+	14, // 25: conference.attendees.v1.AttendeeService.SetChairperson:output_type -> conference.attendees.v1.SetChairpersonResponse
+	16, // 26: conference.attendees.v1.AttendeeService.SetQuoted:output_type -> conference.attendees.v1.SetQuotedResponse
+	19, // 27: conference.attendees.v1.AttendeeService.GetAttendeeRecovery:output_type -> conference.attendees.v1.GetAttendeeRecoveryResponse
+	21, // 28: conference.attendees.v1.AttendeeService.InviteSecretJoin:output_type -> conference.attendees.v1.InviteSecretJoinResponse
+	19, // [19:29] is the sub-list for method output_type
+	9,  // [9:19] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -1406,7 +1532,7 @@ func file_conference_attendees_v1_attendees_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_attendees_v1_attendees_proto_rawDesc), len(file_conference_attendees_v1_attendees_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -15,6 +15,7 @@ type Config struct {
 	Database    *DatabaseConfig    `mapstructure:"database"`
 	Auth        *AuthConfig        `mapstructure:"auth"`
 	Webhook     *WebhookConfig     `mapstructure:"webhook"`
+	Email       *EmailConfig       `mapstructure:"email"`
 }
 
 // ConfigGroup identifies config subsections
@@ -25,11 +26,12 @@ const (
 	DatabaseGroup    ConfigGroup = "database"
 	AuthGroup        ConfigGroup = "auth"
 	WebhookGroup     ConfigGroup = "webhook"
+	EmailGroup       ConfigGroup = "email"
 )
 
 // LoadConfig loads full configuration
 func LoadConfig() (*Config, error) {
-	return LoadConfigSelective([]ConfigGroup{ApplicationGroup, DatabaseGroup, AuthGroup, WebhookGroup})
+	return LoadConfigSelective([]ConfigGroup{ApplicationGroup, DatabaseGroup, AuthGroup, WebhookGroup, EmailGroup})
 }
 
 // stringToStringMapHook decodes comma-separated key=value strings into map[string]string
@@ -103,6 +105,11 @@ func LoadConfigSelective(groups []ConfigGroup) (*Config, error) {
 			cfg.Webhook = &WebhookConfig{}
 			if err := BindConfigToViper(v, cfg.Webhook, string(WebhookGroup)); err != nil {
 				return nil, fmt.Errorf("failed to bind webhook config: %w", err)
+			}
+		case EmailGroup:
+			cfg.Email = &EmailConfig{}
+			if err := BindConfigToViper(v, cfg.Email, string(EmailGroup)); err != nil {
+				return nil, fmt.Errorf("failed to bind email config: %w", err)
 			}
 		default:
 			return nil, fmt.Errorf("unknown config group: %s", group)

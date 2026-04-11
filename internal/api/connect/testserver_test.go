@@ -32,6 +32,7 @@ import (
 	adminservice "github.com/Y4shin/open-caucus/internal/services/admin"
 	agendaservice "github.com/Y4shin/open-caucus/internal/services/agenda"
 	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
+	"github.com/Y4shin/open-caucus/internal/email"
 	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
 	meetingservice "github.com/Y4shin/open-caucus/internal/services/meetings"
 	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
@@ -100,7 +101,7 @@ func newCombinedAPITestServerWithOpts(t *testing.T, committeeGroupPrefix string)
 
 	// Committee service
 	committeePath, committeeHandler := committeesv1connect.NewCommitteeServiceHandler(
-		NewCommitteeHandler(committeeservice.New(repo)),
+		NewCommitteeHandler(committeeservice.New(repo), memberservice.New(repo, &email.MockSender{})),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+committeePath, mw.Get("session")(http.StripPrefix("/api", committeeHandler)))

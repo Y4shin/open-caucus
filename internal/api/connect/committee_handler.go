@@ -9,15 +9,20 @@ import (
 	committeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1"
 	committeesv1connect "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1/committeesv1connect"
 	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
+	memberservice "github.com/Y4shin/open-caucus/internal/services/members"
 )
 
 type CommitteeHandler struct {
 	committeesv1connect.UnimplementedCommitteeServiceHandler
 	service *committeeservice.Service
+	members *MemberHandler
 }
 
-func NewCommitteeHandler(service *committeeservice.Service) *CommitteeHandler {
-	return &CommitteeHandler{service: service}
+func NewCommitteeHandler(service *committeeservice.Service, memberSvc *memberservice.Service) *CommitteeHandler {
+	return &CommitteeHandler{
+		service: service,
+		members: NewMemberHandler(memberSvc),
+	}
 }
 
 func (h *CommitteeHandler) ListMyCommittees(ctx context.Context, _ *connect.Request[committeesv1.ListMyCommitteesRequest]) (*connect.Response[committeesv1.ListMyCommitteesResponse], error) {
@@ -72,4 +77,34 @@ func (h *CommitteeHandler) ToggleMeetingActive(ctx context.Context, req *connect
 		return nil, err
 	}
 	return connect.NewResponse(resp), nil
+}
+
+// Member management RPCs — delegated to MemberHandler.
+
+func (h *CommitteeHandler) ListCommitteeMembers(ctx context.Context, req *connect.Request[committeesv1.ListCommitteeMembersRequest]) (*connect.Response[committeesv1.ListCommitteeMembersResponse], error) {
+	return h.members.ListCommitteeMembers(ctx, req)
+}
+
+func (h *CommitteeHandler) ListAssignableAccounts(ctx context.Context, req *connect.Request[committeesv1.ListAssignableAccountsRequest]) (*connect.Response[committeesv1.ListAssignableAccountsResponse], error) {
+	return h.members.ListAssignableAccounts(ctx, req)
+}
+
+func (h *CommitteeHandler) AddMemberByEmail(ctx context.Context, req *connect.Request[committeesv1.AddMemberByEmailRequest]) (*connect.Response[committeesv1.AddMemberByEmailResponse], error) {
+	return h.members.AddMemberByEmail(ctx, req)
+}
+
+func (h *CommitteeHandler) AssignAccountToCommittee(ctx context.Context, req *connect.Request[committeesv1.CommitteeAssignAccountRequest]) (*connect.Response[committeesv1.CommitteeAssignAccountResponse], error) {
+	return h.members.AssignAccountToCommittee(ctx, req)
+}
+
+func (h *CommitteeHandler) UpdateMember(ctx context.Context, req *connect.Request[committeesv1.UpdateMemberRequest]) (*connect.Response[committeesv1.UpdateMemberResponse], error) {
+	return h.members.UpdateMember(ctx, req)
+}
+
+func (h *CommitteeHandler) RemoveMember(ctx context.Context, req *connect.Request[committeesv1.RemoveMemberRequest]) (*connect.Response[committeesv1.RemoveMemberResponse], error) {
+	return h.members.RemoveMember(ctx, req)
+}
+
+func (h *CommitteeHandler) SendInviteEmails(ctx context.Context, req *connect.Request[committeesv1.SendInviteEmailsRequest]) (*connect.Response[committeesv1.SendInviteEmailsResponse], error) {
+	return h.members.SendInviteEmails(ctx, req)
 }

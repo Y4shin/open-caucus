@@ -643,7 +643,7 @@ func (s *Service) findAttendeeByAccount(ctx context.Context, meetingID, accountI
 			if uErr != nil {
 				continue
 			}
-			if user.AccountID == accountID {
+			if user.AccountID != nil && *user.AccountID == accountID {
 				return a.ID, nil
 			}
 		}

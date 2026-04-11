@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file conference/committees/v1/committees.proto.
  */
 export const file_conference_committees_v1_committees: GenFile = /*@__PURE__*/
-  fileDesc("Ciljb25mZXJlbmNlL2NvbW1pdHRlZXMvdjEvY29tbWl0dGVlcy5wcm90bxIYY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxIoMBChFDb21taXR0ZWVMaXN0SXRlbRI7Cgljb21taXR0ZWUYASABKAsyKC5jb25mZXJlbmNlLmNvbW1vbi52MS5Db21taXR0ZWVSZWZlcmVuY2USFQoNbWVldGluZ19jb3VudBgCIAEoBRIaChJoYXNfYWN0aXZlX21lZXRpbmcYAyABKAgikgEKGENvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI3CgdtZWV0aW5nGAEgASgLMiYuY29uZmVyZW5jZS5jb21tb24udjEuTWVldGluZ1JlZmVyZW5jZRIUCgxjYW5fbW9kZXJhdGUYAiABKAgSEAoIY2FuX2pvaW4YAyABKAgSFQoNY2FuX3ZpZXdfbGl2ZRgEIAEoCCLOAQoRQ29tbWl0dGVlT3ZlcnZpZXcSOwoJY29tbWl0dGVlGAEgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQ29tbWl0dGVlUmVmZXJlbmNlEkQKCG1lZXRpbmdzGAIgAygLMjIuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI2CgxjYXBhYmlsaXRpZXMYAyADKAsyIC5jb25mZXJlbmNlLmNvbW1vbi52MS5DYXBhYmlsaXR5IhkKF0xpc3RNeUNvbW1pdHRlZXNSZXF1ZXN0IlsKGExpc3RNeUNvbW1pdHRlZXNSZXNwb25zZRI/Cgpjb21taXR0ZWVzGAEgAygLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZUxpc3RJdGVtIjUKG0dldENvbW1pdHRlZU92ZXJ2aWV3UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCSJdChxHZXRDb21taXR0ZWVPdmVydmlld1Jlc3BvbnNlEj0KCG92ZXJ2aWV3GAEgASgLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3IpUBChRDcmVhdGVNZWV0aW5nUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhUKCHN0YXJ0X2F0GAQgASgJSACIAQESEwoGZW5kX2F0GAUgASgJSAGIAQFCCwoJX3N0YXJ0X2F0QgkKB19lbmRfYXQiUAoVQ3JlYXRlTWVldGluZ1Jlc3BvbnNlEjcKB21lZXRpbmcYASABKAsyJi5jb25mZXJlbmNlLmNvbW1vbi52MS5NZWV0aW5nUmVmZXJlbmNlIkIKFERlbGV0ZU1lZXRpbmdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiPAoVRGVsZXRlTWVldGluZ1Jlc3BvbnNlEhIKCm1lZXRpbmdfaWQYASABKAkSDwoHZGVsZXRlZBgCIAEoCCJIChpUb2dnbGVNZWV0aW5nQWN0aXZlUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIkEKG1RvZ2dsZU1lZXRpbmdBY3RpdmVSZXNwb25zZRISCgptZWV0aW5nX2lkGAEgASgJEg4KBmFjdGl2ZRgCIAEoCDL+BAoQQ29tbWl0dGVlU2VydmljZRJ5ChBMaXN0TXlDb21taXR0ZWVzEjEuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkxpc3RNeUNvbW1pdHRlZXNSZXF1ZXN0GjIuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkxpc3RNeUNvbW1pdHRlZXNSZXNwb25zZRKFAQoUR2V0Q29tbWl0dGVlT3ZlcnZpZXcSNS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuR2V0Q29tbWl0dGVlT3ZlcnZpZXdSZXF1ZXN0GjYuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkdldENvbW1pdHRlZU92ZXJ2aWV3UmVzcG9uc2UScAoNQ3JlYXRlTWVldGluZxIuLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5DcmVhdGVNZWV0aW5nUmVxdWVzdBovLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5DcmVhdGVNZWV0aW5nUmVzcG9uc2UScAoNRGVsZXRlTWVldGluZxIuLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5EZWxldGVNZWV0aW5nUmVxdWVzdBovLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5EZWxldGVNZWV0aW5nUmVzcG9uc2USggEKE1RvZ2dsZU1lZXRpbmdBY3RpdmUSNC5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuVG9nZ2xlTWVldGluZ0FjdGl2ZVJlcXVlc3QaNS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuVG9nZ2xlTWVldGluZ0FjdGl2ZVJlc3BvbnNlQkxaSmdpdGh1Yi5jb20vWTRzaGluL29wZW4tY2F1Y3VzL2dlbi9nby9jb25mZXJlbmNlL2NvbW1pdHRlZXMvdjE7Y29tbWl0dGVlc3YxYgZwcm90bzM", [file_conference_common_v1_common]);
+  fileDesc("Ciljb25mZXJlbmNlL2NvbW1pdHRlZXMvdjEvY29tbWl0dGVlcy5wcm90bxIYY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxIoMBChFDb21taXR0ZWVMaXN0SXRlbRI7Cgljb21taXR0ZWUYASABKAsyKC5jb25mZXJlbmNlLmNvbW1vbi52MS5Db21taXR0ZWVSZWZlcmVuY2USFQoNbWVldGluZ19jb3VudBgCIAEoBRIaChJoYXNfYWN0aXZlX21lZXRpbmcYAyABKAgikgEKGENvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI3CgdtZWV0aW5nGAEgASgLMiYuY29uZmVyZW5jZS5jb21tb24udjEuTWVldGluZ1JlZmVyZW5jZRIUCgxjYW5fbW9kZXJhdGUYAiABKAgSEAoIY2FuX2pvaW4YAyABKAgSFQoNY2FuX3ZpZXdfbGl2ZRgEIAEoCCLOAQoRQ29tbWl0dGVlT3ZlcnZpZXcSOwoJY29tbWl0dGVlGAEgASgLMiguY29uZmVyZW5jZS5jb21tb24udjEuQ29tbWl0dGVlUmVmZXJlbmNlEkQKCG1lZXRpbmdzGAIgAygLMjIuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3TWVldGluZxI2CgxjYXBhYmlsaXRpZXMYAyADKAsyIC5jb25mZXJlbmNlLmNvbW1vbi52MS5DYXBhYmlsaXR5IhkKF0xpc3RNeUNvbW1pdHRlZXNSZXF1ZXN0IlsKGExpc3RNeUNvbW1pdHRlZXNSZXNwb25zZRI/Cgpjb21taXR0ZWVzGAEgAygLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZUxpc3RJdGVtIjUKG0dldENvbW1pdHRlZU92ZXJ2aWV3UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCSJdChxHZXRDb21taXR0ZWVPdmVydmlld1Jlc3BvbnNlEj0KCG92ZXJ2aWV3GAEgASgLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkNvbW1pdHRlZU92ZXJ2aWV3IpUBChRDcmVhdGVNZWV0aW5nUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRIMCgRuYW1lGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJEhUKCHN0YXJ0X2F0GAQgASgJSACIAQESEwoGZW5kX2F0GAUgASgJSAGIAQFCCwoJX3N0YXJ0X2F0QgkKB19lbmRfYXQiUAoVQ3JlYXRlTWVldGluZ1Jlc3BvbnNlEjcKB21lZXRpbmcYASABKAsyJi5jb25mZXJlbmNlLmNvbW1vbi52MS5NZWV0aW5nUmVmZXJlbmNlIkIKFERlbGV0ZU1lZXRpbmdSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEhIKCm1lZXRpbmdfaWQYAiABKAkiPAoVRGVsZXRlTWVldGluZ1Jlc3BvbnNlEhIKCm1lZXRpbmdfaWQYASABKAkSDwoHZGVsZXRlZBgCIAEoCCJIChpUb2dnbGVNZWV0aW5nQWN0aXZlUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJIkEKG1RvZ2dsZU1lZXRpbmdBY3RpdmVSZXNwb25zZRISCgptZWV0aW5nX2lkGAEgASgJEg4KBmFjdGl2ZRgCIAEoCCLBAQoMTWVtYmVyUmVjb3JkEg8KB3VzZXJfaWQYASABKAkSEQoJZnVsbF9uYW1lGAIgASgJEgwKBHJvbGUYAyABKAkSDgoGcXVvdGVkGAQgASgIEhgKEGlzX29hdXRoX21hbmFnZWQYBSABKAgSEgoFZW1haWwYBiABKAlIAIgBARIVCgh1c2VybmFtZRgHIAEoCUgBiAEBEhMKC2hhc19hY2NvdW50GAggASgIQggKBl9lbWFpbEILCglfdXNlcm5hbWUiNQobTGlzdENvbW1pdHRlZU1lbWJlcnNSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJIlcKHExpc3RDb21taXR0ZWVNZW1iZXJzUmVzcG9uc2USNwoHbWVtYmVycxgBIAMoCzImLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5NZW1iZXJSZWNvcmQiTAoRQXNzaWduYWJsZUFjY291bnQSEgoKYWNjb3VudF9pZBgBIAEoCRIQCgh1c2VybmFtZRgCIAEoCRIRCglmdWxsX25hbWUYAyABKAkiNwodTGlzdEFzc2lnbmFibGVBY2NvdW50c1JlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkiXwoeTGlzdEFzc2lnbmFibGVBY2NvdW50c1Jlc3BvbnNlEj0KCGFjY291bnRzGAEgAygLMisuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkFzc2lnbmFibGVBY2NvdW50InEKF0FkZE1lbWJlckJ5RW1haWxSZXF1ZXN0EhYKDmNvbW1pdHRlZV9zbHVnGAEgASgJEg0KBWVtYWlsGAIgASgJEhEKCWZ1bGxfbmFtZRgDIAEoCRIMCgRyb2xlGAQgASgJEg4KBnF1b3RlZBgFIAEoCCJSChhBZGRNZW1iZXJCeUVtYWlsUmVzcG9uc2USNgoGbWVtYmVyGAEgASgLMiYuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLk1lbWJlclJlY29yZCJpCh1Db21taXR0ZWVBc3NpZ25BY2NvdW50UmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgphY2NvdW50X2lkGAIgASgJEgwKBHJvbGUYAyABKAkSDgoGcXVvdGVkGAQgASgIIlgKHkNvbW1pdHRlZUFzc2lnbkFjY291bnRSZXNwb25zZRI2CgZtZW1iZXIYASABKAsyJi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTWVtYmVyUmVjb3JkIlwKE1VwZGF0ZU1lbWJlclJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSDwoHdXNlcl9pZBgCIAEoCRIMCgRyb2xlGAMgASgJEg4KBnF1b3RlZBgEIAEoCCJOChRVcGRhdGVNZW1iZXJSZXNwb25zZRI2CgZtZW1iZXIYASABKAsyJi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTWVtYmVyUmVjb3JkIj4KE1JlbW92ZU1lbWJlclJlcXVlc3QSFgoOY29tbWl0dGVlX3NsdWcYASABKAkSDwoHdXNlcl9pZBgCIAEoCSIWChRSZW1vdmVNZW1iZXJSZXNwb25zZSJrChdTZW5kSW52aXRlRW1haWxzUmVxdWVzdBIWCg5jb21taXR0ZWVfc2x1ZxgBIAEoCRISCgptZWV0aW5nX2lkGAIgASgJEhAKCGJhc2VfdXJsGAMgASgJEhIKCm1lbWJlcl9pZHMYBCADKAkiVQoYU2VuZEludml0ZUVtYWlsc1Jlc3BvbnNlEhIKCnNlbnRfY291bnQYASABKAUSFQoNc2tpcHBlZF9jb3VudBgCIAEoBRIOCgZlcnJvcnMYAyADKAky+AsKEENvbW1pdHRlZVNlcnZpY2USeQoQTGlzdE15Q29tbWl0dGVlcxIxLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5MaXN0TXlDb21taXR0ZWVzUmVxdWVzdBoyLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5MaXN0TXlDb21taXR0ZWVzUmVzcG9uc2UShQEKFEdldENvbW1pdHRlZU92ZXJ2aWV3EjUuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkdldENvbW1pdHRlZU92ZXJ2aWV3UmVxdWVzdBo2LmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5HZXRDb21taXR0ZWVPdmVydmlld1Jlc3BvbnNlEnAKDUNyZWF0ZU1lZXRpbmcSLi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuQ3JlYXRlTWVldGluZ1JlcXVlc3QaLy5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuQ3JlYXRlTWVldGluZ1Jlc3BvbnNlEnAKDURlbGV0ZU1lZXRpbmcSLi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuRGVsZXRlTWVldGluZ1JlcXVlc3QaLy5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuRGVsZXRlTWVldGluZ1Jlc3BvbnNlEoIBChNUb2dnbGVNZWV0aW5nQWN0aXZlEjQuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLlRvZ2dsZU1lZXRpbmdBY3RpdmVSZXF1ZXN0GjUuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLlRvZ2dsZU1lZXRpbmdBY3RpdmVSZXNwb25zZRKFAQoUTGlzdENvbW1pdHRlZU1lbWJlcnMSNS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTGlzdENvbW1pdHRlZU1lbWJlcnNSZXF1ZXN0GjYuY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLkxpc3RDb21taXR0ZWVNZW1iZXJzUmVzcG9uc2USiwEKFkxpc3RBc3NpZ25hYmxlQWNjb3VudHMSNy5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTGlzdEFzc2lnbmFibGVBY2NvdW50c1JlcXVlc3QaOC5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuTGlzdEFzc2lnbmFibGVBY2NvdW50c1Jlc3BvbnNlEnkKEEFkZE1lbWJlckJ5RW1haWwSMS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuQWRkTWVtYmVyQnlFbWFpbFJlcXVlc3QaMi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuQWRkTWVtYmVyQnlFbWFpbFJlc3BvbnNlEo0BChhBc3NpZ25BY2NvdW50VG9Db21taXR0ZWUSNy5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuQ29tbWl0dGVlQXNzaWduQWNjb3VudFJlcXVlc3QaOC5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuQ29tbWl0dGVlQXNzaWduQWNjb3VudFJlc3BvbnNlEm0KDFVwZGF0ZU1lbWJlchItLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5VcGRhdGVNZW1iZXJSZXF1ZXN0Gi4uY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLlVwZGF0ZU1lbWJlclJlc3BvbnNlEm0KDFJlbW92ZU1lbWJlchItLmNvbmZlcmVuY2UuY29tbWl0dGVlcy52MS5SZW1vdmVNZW1iZXJSZXF1ZXN0Gi4uY29uZmVyZW5jZS5jb21taXR0ZWVzLnYxLlJlbW92ZU1lbWJlclJlc3BvbnNlEnkKEFNlbmRJbnZpdGVFbWFpbHMSMS5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuU2VuZEludml0ZUVtYWlsc1JlcXVlc3QaMi5jb25mZXJlbmNlLmNvbW1pdHRlZXMudjEuU2VuZEludml0ZUVtYWlsc1Jlc3BvbnNlQkxaSmdpdGh1Yi5jb20vWTRzaGluL29wZW4tY2F1Y3VzL2dlbi9nby9jb25mZXJlbmNlL2NvbW1pdHRlZXMvdjE7Y29tbWl0dGVlc3YxYgZwcm90bzM", [file_conference_common_v1_common]);
 
 /**
  * @generated from message conference.committees.v1.CommitteeListItem
@@ -311,6 +311,401 @@ export const ToggleMeetingActiveResponseSchema: GenMessage<ToggleMeetingActiveRe
   messageDesc(file_conference_committees_v1_committees, 12);
 
 /**
+ * @generated from message conference.committees.v1.MemberRecord
+ */
+export type MemberRecord = Message<"conference.committees.v1.MemberRecord"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string full_name = 2;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: string role = 3;
+   */
+  role: string;
+
+  /**
+   * @generated from field: bool quoted = 4;
+   */
+  quoted: boolean;
+
+  /**
+   * @generated from field: bool is_oauth_managed = 5;
+   */
+  isOauthManaged: boolean;
+
+  /**
+   * @generated from field: optional string email = 6;
+   */
+  email?: string;
+
+  /**
+   * @generated from field: optional string username = 7;
+   */
+  username?: string;
+
+  /**
+   * @generated from field: bool has_account = 8;
+   */
+  hasAccount: boolean;
+};
+
+/**
+ * Describes the message conference.committees.v1.MemberRecord.
+ * Use `create(MemberRecordSchema)` to create a new message.
+ */
+export const MemberRecordSchema: GenMessage<MemberRecord> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 13);
+
+/**
+ * @generated from message conference.committees.v1.ListCommitteeMembersRequest
+ */
+export type ListCommitteeMembersRequest = Message<"conference.committees.v1.ListCommitteeMembersRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.ListCommitteeMembersRequest.
+ * Use `create(ListCommitteeMembersRequestSchema)` to create a new message.
+ */
+export const ListCommitteeMembersRequestSchema: GenMessage<ListCommitteeMembersRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 14);
+
+/**
+ * @generated from message conference.committees.v1.ListCommitteeMembersResponse
+ */
+export type ListCommitteeMembersResponse = Message<"conference.committees.v1.ListCommitteeMembersResponse"> & {
+  /**
+   * @generated from field: repeated conference.committees.v1.MemberRecord members = 1;
+   */
+  members: MemberRecord[];
+};
+
+/**
+ * Describes the message conference.committees.v1.ListCommitteeMembersResponse.
+ * Use `create(ListCommitteeMembersResponseSchema)` to create a new message.
+ */
+export const ListCommitteeMembersResponseSchema: GenMessage<ListCommitteeMembersResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 15);
+
+/**
+ * @generated from message conference.committees.v1.AssignableAccount
+ */
+export type AssignableAccount = Message<"conference.committees.v1.AssignableAccount"> & {
+  /**
+   * @generated from field: string account_id = 1;
+   */
+  accountId: string;
+
+  /**
+   * @generated from field: string username = 2;
+   */
+  username: string;
+
+  /**
+   * @generated from field: string full_name = 3;
+   */
+  fullName: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.AssignableAccount.
+ * Use `create(AssignableAccountSchema)` to create a new message.
+ */
+export const AssignableAccountSchema: GenMessage<AssignableAccount> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 16);
+
+/**
+ * @generated from message conference.committees.v1.ListAssignableAccountsRequest
+ */
+export type ListAssignableAccountsRequest = Message<"conference.committees.v1.ListAssignableAccountsRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.ListAssignableAccountsRequest.
+ * Use `create(ListAssignableAccountsRequestSchema)` to create a new message.
+ */
+export const ListAssignableAccountsRequestSchema: GenMessage<ListAssignableAccountsRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 17);
+
+/**
+ * @generated from message conference.committees.v1.ListAssignableAccountsResponse
+ */
+export type ListAssignableAccountsResponse = Message<"conference.committees.v1.ListAssignableAccountsResponse"> & {
+  /**
+   * @generated from field: repeated conference.committees.v1.AssignableAccount accounts = 1;
+   */
+  accounts: AssignableAccount[];
+};
+
+/**
+ * Describes the message conference.committees.v1.ListAssignableAccountsResponse.
+ * Use `create(ListAssignableAccountsResponseSchema)` to create a new message.
+ */
+export const ListAssignableAccountsResponseSchema: GenMessage<ListAssignableAccountsResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 18);
+
+/**
+ * @generated from message conference.committees.v1.AddMemberByEmailRequest
+ */
+export type AddMemberByEmailRequest = Message<"conference.committees.v1.AddMemberByEmailRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string email = 2;
+   */
+  email: string;
+
+  /**
+   * @generated from field: string full_name = 3;
+   */
+  fullName: string;
+
+  /**
+   * @generated from field: string role = 4;
+   */
+  role: string;
+
+  /**
+   * @generated from field: bool quoted = 5;
+   */
+  quoted: boolean;
+};
+
+/**
+ * Describes the message conference.committees.v1.AddMemberByEmailRequest.
+ * Use `create(AddMemberByEmailRequestSchema)` to create a new message.
+ */
+export const AddMemberByEmailRequestSchema: GenMessage<AddMemberByEmailRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 19);
+
+/**
+ * @generated from message conference.committees.v1.AddMemberByEmailResponse
+ */
+export type AddMemberByEmailResponse = Message<"conference.committees.v1.AddMemberByEmailResponse"> & {
+  /**
+   * @generated from field: conference.committees.v1.MemberRecord member = 1;
+   */
+  member?: MemberRecord;
+};
+
+/**
+ * Describes the message conference.committees.v1.AddMemberByEmailResponse.
+ * Use `create(AddMemberByEmailResponseSchema)` to create a new message.
+ */
+export const AddMemberByEmailResponseSchema: GenMessage<AddMemberByEmailResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 20);
+
+/**
+ * @generated from message conference.committees.v1.CommitteeAssignAccountRequest
+ */
+export type CommitteeAssignAccountRequest = Message<"conference.committees.v1.CommitteeAssignAccountRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string account_id = 2;
+   */
+  accountId: string;
+
+  /**
+   * @generated from field: string role = 3;
+   */
+  role: string;
+
+  /**
+   * @generated from field: bool quoted = 4;
+   */
+  quoted: boolean;
+};
+
+/**
+ * Describes the message conference.committees.v1.CommitteeAssignAccountRequest.
+ * Use `create(CommitteeAssignAccountRequestSchema)` to create a new message.
+ */
+export const CommitteeAssignAccountRequestSchema: GenMessage<CommitteeAssignAccountRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 21);
+
+/**
+ * @generated from message conference.committees.v1.CommitteeAssignAccountResponse
+ */
+export type CommitteeAssignAccountResponse = Message<"conference.committees.v1.CommitteeAssignAccountResponse"> & {
+  /**
+   * @generated from field: conference.committees.v1.MemberRecord member = 1;
+   */
+  member?: MemberRecord;
+};
+
+/**
+ * Describes the message conference.committees.v1.CommitteeAssignAccountResponse.
+ * Use `create(CommitteeAssignAccountResponseSchema)` to create a new message.
+ */
+export const CommitteeAssignAccountResponseSchema: GenMessage<CommitteeAssignAccountResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 22);
+
+/**
+ * @generated from message conference.committees.v1.UpdateMemberRequest
+ */
+export type UpdateMemberRequest = Message<"conference.committees.v1.UpdateMemberRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string user_id = 2;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string role = 3;
+   */
+  role: string;
+
+  /**
+   * @generated from field: bool quoted = 4;
+   */
+  quoted: boolean;
+};
+
+/**
+ * Describes the message conference.committees.v1.UpdateMemberRequest.
+ * Use `create(UpdateMemberRequestSchema)` to create a new message.
+ */
+export const UpdateMemberRequestSchema: GenMessage<UpdateMemberRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 23);
+
+/**
+ * @generated from message conference.committees.v1.UpdateMemberResponse
+ */
+export type UpdateMemberResponse = Message<"conference.committees.v1.UpdateMemberResponse"> & {
+  /**
+   * @generated from field: conference.committees.v1.MemberRecord member = 1;
+   */
+  member?: MemberRecord;
+};
+
+/**
+ * Describes the message conference.committees.v1.UpdateMemberResponse.
+ * Use `create(UpdateMemberResponseSchema)` to create a new message.
+ */
+export const UpdateMemberResponseSchema: GenMessage<UpdateMemberResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 24);
+
+/**
+ * @generated from message conference.committees.v1.RemoveMemberRequest
+ */
+export type RemoveMemberRequest = Message<"conference.committees.v1.RemoveMemberRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string user_id = 2;
+   */
+  userId: string;
+};
+
+/**
+ * Describes the message conference.committees.v1.RemoveMemberRequest.
+ * Use `create(RemoveMemberRequestSchema)` to create a new message.
+ */
+export const RemoveMemberRequestSchema: GenMessage<RemoveMemberRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 25);
+
+/**
+ * @generated from message conference.committees.v1.RemoveMemberResponse
+ */
+export type RemoveMemberResponse = Message<"conference.committees.v1.RemoveMemberResponse"> & {
+};
+
+/**
+ * Describes the message conference.committees.v1.RemoveMemberResponse.
+ * Use `create(RemoveMemberResponseSchema)` to create a new message.
+ */
+export const RemoveMemberResponseSchema: GenMessage<RemoveMemberResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 26);
+
+/**
+ * @generated from message conference.committees.v1.SendInviteEmailsRequest
+ */
+export type SendInviteEmailsRequest = Message<"conference.committees.v1.SendInviteEmailsRequest"> & {
+  /**
+   * @generated from field: string committee_slug = 1;
+   */
+  committeeSlug: string;
+
+  /**
+   * @generated from field: string meeting_id = 2;
+   */
+  meetingId: string;
+
+  /**
+   * @generated from field: string base_url = 3;
+   */
+  baseUrl: string;
+
+  /**
+   * empty = all members
+   *
+   * @generated from field: repeated string member_ids = 4;
+   */
+  memberIds: string[];
+};
+
+/**
+ * Describes the message conference.committees.v1.SendInviteEmailsRequest.
+ * Use `create(SendInviteEmailsRequestSchema)` to create a new message.
+ */
+export const SendInviteEmailsRequestSchema: GenMessage<SendInviteEmailsRequest> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 27);
+
+/**
+ * @generated from message conference.committees.v1.SendInviteEmailsResponse
+ */
+export type SendInviteEmailsResponse = Message<"conference.committees.v1.SendInviteEmailsResponse"> & {
+  /**
+   * @generated from field: int32 sent_count = 1;
+   */
+  sentCount: number;
+
+  /**
+   * @generated from field: int32 skipped_count = 2;
+   */
+  skippedCount: number;
+
+  /**
+   * @generated from field: repeated string errors = 3;
+   */
+  errors: string[];
+};
+
+/**
+ * Describes the message conference.committees.v1.SendInviteEmailsResponse.
+ * Use `create(SendInviteEmailsResponseSchema)` to create a new message.
+ */
+export const SendInviteEmailsResponseSchema: GenMessage<SendInviteEmailsResponse> = /*@__PURE__*/
+  messageDesc(file_conference_committees_v1_committees, 28);
+
+/**
  * @generated from service conference.committees.v1.CommitteeService
  */
 export const CommitteeService: GenService<{
@@ -353,6 +748,64 @@ export const CommitteeService: GenService<{
     methodKind: "unary";
     input: typeof ToggleMeetingActiveRequestSchema;
     output: typeof ToggleMeetingActiveResponseSchema;
+  },
+  /**
+   * Member management (chairperson or admin)
+   *
+   * @generated from rpc conference.committees.v1.CommitteeService.ListCommitteeMembers
+   */
+  listCommitteeMembers: {
+    methodKind: "unary";
+    input: typeof ListCommitteeMembersRequestSchema;
+    output: typeof ListCommitteeMembersResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.ListAssignableAccounts
+   */
+  listAssignableAccounts: {
+    methodKind: "unary";
+    input: typeof ListAssignableAccountsRequestSchema;
+    output: typeof ListAssignableAccountsResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.AddMemberByEmail
+   */
+  addMemberByEmail: {
+    methodKind: "unary";
+    input: typeof AddMemberByEmailRequestSchema;
+    output: typeof AddMemberByEmailResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.AssignAccountToCommittee
+   */
+  assignAccountToCommittee: {
+    methodKind: "unary";
+    input: typeof CommitteeAssignAccountRequestSchema;
+    output: typeof CommitteeAssignAccountResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.UpdateMember
+   */
+  updateMember: {
+    methodKind: "unary";
+    input: typeof UpdateMemberRequestSchema;
+    output: typeof UpdateMemberResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.RemoveMember
+   */
+  removeMember: {
+    methodKind: "unary";
+    input: typeof RemoveMemberRequestSchema;
+    output: typeof RemoveMemberResponseSchema;
+  },
+  /**
+   * @generated from rpc conference.committees.v1.CommitteeService.SendInviteEmails
+   */
+  sendInviteEmails: {
+    methodKind: "unary";
+    input: typeof SendInviteEmailsRequestSchema;
+    output: typeof SendInviteEmailsResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_conference_committees_v1_committees, 0);
