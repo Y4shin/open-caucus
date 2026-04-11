@@ -214,7 +214,7 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 	if _, err := repo.DB.Exec("INSERT INTO committees (name, slug) VALUES ('test', 'test')"); err != nil {
 		t.Fatalf("insert committee: %v", err)
 	}
-	if _, err := repo.DB.Exec("INSERT INTO users (account_id, committee_id, role) VALUES (1, 1, 'member')"); err != nil {
+	if _, err := repo.DB.Exec("INSERT INTO users (account_id, committee_id, full_name, role) VALUES (1, 1, '', 'member')"); err != nil {
 		t.Fatalf("insert user membership: %v", err)
 	}
 	if _, err := repo.DB.Exec("INSERT INTO meetings (committee_id, name, secret, signup_open) VALUES (1, 'meeting1', 'secret1', 0)"); err != nil {
@@ -229,7 +229,7 @@ func TestMigrateUp_CheckConstraints(t *testing.T) {
 		t.Fatalf("insert bad account: %v", err)
 	}
 	_, err := repo.DB.Exec(
-		"INSERT INTO users (account_id, committee_id, role) VALUES (2, 1, 'admin')",
+		"INSERT INTO users (account_id, committee_id, full_name, role) VALUES (2, 1, '', 'admin')",
 	)
 	if err == nil {
 		t.Error("expected CHECK constraint violation for invalid role")

@@ -20,7 +20,9 @@ CREATE TABLE users_new (
 );
 
 INSERT INTO users_new (id, account_id, committee_id, full_name, role, quoted, created_at, updated_at)
-SELECT id, account_id, committee_id, full_name, role, quoted, created_at, updated_at FROM users;
+SELECT u.id, u.account_id, u.committee_id, COALESCE(a.full_name, ''), u.role, u.quoted, u.created_at, u.updated_at
+FROM users u
+LEFT JOIN accounts a ON u.account_id = a.id;
 
 DROP TABLE users;
 ALTER TABLE users_new RENAME TO users;

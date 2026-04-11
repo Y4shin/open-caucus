@@ -461,8 +461,8 @@ func (r *Repository) SyncOAuthCommitteeMemberships(ctx context.Context, accountI
 			var userID int64
 			if err := tx.QueryRowContext(
 				ctx,
-				`INSERT INTO users (account_id, committee_id, role, quoted, created_at, updated_at)
-				 VALUES (?, ?, ?, 0, datetime('now'), datetime('now'))
+				`INSERT INTO users (account_id, committee_id, full_name, role, quoted, created_at, updated_at)
+				 VALUES (?, ?, '', ?, 0, datetime('now'), datetime('now'))
 				 RETURNING id`,
 				accountID, committeeID, role,
 			).Scan(&userID); err != nil {

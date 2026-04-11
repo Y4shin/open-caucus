@@ -180,8 +180,8 @@ func seedMembership(t *testing.T, repo *Repository, accountID, committeeID int64
 	t.Helper()
 	var userID int64
 	if err := repo.DB.QueryRow(
-		`INSERT INTO users (account_id, committee_id, role, quoted, created_at, updated_at)
-		 VALUES (?, ?, ?, 0, datetime('now'), datetime('now'))
+		`INSERT INTO users (account_id, committee_id, full_name, role, quoted, created_at, updated_at)
+		 VALUES (?, ?, '', ?, 0, datetime('now'), datetime('now'))
 		 RETURNING id`,
 		accountID, committeeID, role,
 	).Scan(&userID); err != nil {

@@ -34,6 +34,7 @@ import (
 	attendeeservice "github.com/Y4shin/open-caucus/internal/services/attendees"
 	"github.com/Y4shin/open-caucus/internal/email"
 	committeeservice "github.com/Y4shin/open-caucus/internal/services/committees"
+	memberservice "github.com/Y4shin/open-caucus/internal/services/members"
 	meetingservice "github.com/Y4shin/open-caucus/internal/services/meetings"
 	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
 	sessionservice "github.com/Y4shin/open-caucus/internal/services/session"
