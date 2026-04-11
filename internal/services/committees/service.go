@@ -2,6 +2,8 @@ package committeeservice
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"strconv"
 
 	committeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1"
@@ -139,7 +141,11 @@ func (s *Service) CreateMeeting(ctx context.Context, slug, name, description str
 	if name == "" {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "meeting name is required")
 	}
-	if err := s.repo.CreateMeeting(ctx, committee.ID, name, description, "", false); err != nil {
+	secret, err := generateMeetingSecret()
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate meeting secret", err)
+	}
+	if err := s.repo.CreateMeeting(ctx, committee.ID, name, description, secret, false); err != nil {
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to create meeting", err)
 	}
 
@@ -230,4 +236,12 @@ func (s *Service) requireCommitteeManager(ctx context.Context, slug string) (*mo
 	}
 
 	return committee, nil
+}
+
+func generateMeetingSecret() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }

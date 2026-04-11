@@ -1,0 +1,1 @@
+-- Cannot reverse: original empty secrets are not recoverable.
