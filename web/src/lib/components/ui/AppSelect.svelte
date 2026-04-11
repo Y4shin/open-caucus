@@ -21,7 +21,8 @@
 		onValueChange?: (value: string) => void;
 	} = $props();
 
-	const sizeClass = { xs: 'input-xs text-xs', sm: 'input-sm text-sm', md: '' }[size];
+	const sizeMap: Record<string, string> = { xs: 'input-xs text-xs', sm: 'input-sm text-sm', md: '' };
+	let sizeClass = $derived(sizeMap[size] ?? '');
 
 	let selectedLabel = $derived(items.find((i) => i.value === value)?.label ?? placeholder);
 </script>

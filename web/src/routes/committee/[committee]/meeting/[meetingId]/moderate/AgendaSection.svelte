@@ -7,6 +7,7 @@
 	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import { agendaClient } from '$lib/api/index.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
+	import type { AgendaPointSummary } from '$lib/gen/conference/common/v1/common_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import * as m from '$lib/paraglide/messages';
 	import AgendaImportPreview from './AgendaImportPreview.svelte';
@@ -28,7 +29,7 @@
 		anyDialogOpen?: boolean;
 		onError: (msg: string) => void;
 		onReload: () => void;
-		onSetActivePoint: (point: AgendaPointRecord | undefined) => void;
+		onSetActivePoint: (point: AgendaPointSummary | undefined) => void;
 	} = $props();
 
 	let agendaActionPending = $state('');

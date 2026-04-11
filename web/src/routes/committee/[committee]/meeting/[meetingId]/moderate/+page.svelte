@@ -25,8 +25,8 @@
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import * as m from '$lib/paraglide/messages';
 
-	const slug = $derived(page.params.committee);
-	const meetingId = $derived(page.params.meetingId);
+	const slug = $derived(page.params.committee ?? '');
+	const meetingId = $derived(page.params.meetingId ?? '');
 
 	let moderationState = $state(createRemoteState<ModerationView>());
 	let speakerState = $state(createRemoteState<SpeakerQueueView>());

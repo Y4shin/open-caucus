@@ -44,9 +44,8 @@
 	function openReceiptsDialog() {
 		const allReceipts = listReceipts();
 		const voteIds = new Set(
-			(voteState.data?.closedVotes ?? [])
-				.concat(voteState.data?.activeVote ? [voteState.data.activeVote] : [])
-				.map((v) => v.vote?.voteId ?? '')
+			(voteState.data?.votes ?? [])
+				.map((v: LiveVoteCardView) => v.vote?.voteId ?? '')
 				.filter(Boolean)
 		);
 		meetingReceipts = allReceipts.filter((r) => voteIds.has(r.voteId));

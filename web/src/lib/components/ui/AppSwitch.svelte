@@ -19,17 +19,19 @@
 		onCheckedChange?: (checked: boolean) => void;
 	} = $props();
 
-	const sizeClasses = {
+	const sizeMap: Record<string, { root: string; thumb: string; translate: string }> = {
 		xs: { root: 'h-4 w-8', thumb: 'h-3 w-3', translate: 'translate-x-4' },
 		sm: { root: 'h-5 w-10', thumb: 'h-4 w-4', translate: 'translate-x-5' },
 		md: { root: 'h-6 w-12', thumb: 'h-5 w-5', translate: 'translate-x-6' }
-	}[size];
+	};
+	let sizeClasses = $derived(sizeMap[size] ?? sizeMap.sm);
 
-	const colorClasses = {
+	const colorMap: Record<string, string> = {
 		primary: 'bg-primary',
 		info: 'bg-info',
 		'': 'bg-base-content/30'
-	}[color];
+	};
+	let colorClasses = $derived(colorMap[color] ?? colorMap['']);
 </script>
 
 <label class="label cursor-pointer justify-start gap-2 p-0">
