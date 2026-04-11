@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -1387,14 +1388,37 @@ func meetingFromClient(m *client.Meeting) *model.Meeting {
 		Secret:                       m.Secret,
 		SignupOpen:                   m.SignupOpen,
 		CurrentAgendaPointID:         currentAgendaPointID,
-		GenderQuotationEnabled:       m.GenderQuotationEnabled,
-		FirstSpeakerQuotationEnabled: m.FirstSpeakerQuotationEnabled,
+		QuotationOrder:               parseQuotationOrder(m.QuotationOrder),
 		ModeratorID:                  nullInt64ToPtr(m.ModeratorID),
 		Version:                      m.Version,
 		CreatedAt:                    createdAt,
 		StartAt:                      nullStringToTime(m.StartAt),
 		EndAt:                        nullStringToTime(m.EndAt),
 	}
+}
+
+func parseQuotationOrder(s string) []string {
+	var order []string
+	if s == "" {
+		return []string{"gender", "first_speaker"}
+	}
+	if err := json.Unmarshal([]byte(s), &order); err != nil {
+		return []string{"gender", "first_speaker"}
+	}
+	return order
+}
+
+func parseNullableQuotationOrder(s sql.NullString) *[]string {
+	if !s.Valid {
+		return nil
+	}
+	order := parseQuotationOrder(s.String)
+	return &order
+}
+
+func quotationOrderToJSON(order []string) string {
+	b, _ := json.Marshal(order)
+	return string(b)
 }
 
 func nullInt64ToPtr(n sql.NullInt64) *int64 {
@@ -1467,8 +1491,7 @@ func agendaPointFromClient(ap *client.AgendaPoint) *model.AgendaPoint {
 		Position:                     ap.Position,
 		Title:                        ap.Title,
 		CurrentSpeakerID:             currentSpeakerID,
-		GenderQuotationEnabled:       nullBoolToPtr(ap.GenderQuotationEnabled),
-		FirstSpeakerQuotationEnabled: nullBoolToPtr(ap.FirstSpeakerQuotationEnabled),
+		QuotationOrder:               parseNullableQuotationOrder(ap.QuotationOrder),
 		ModeratorID:                  nullInt64ToPtr(ap.ModeratorID),
 		CurrentAttachmentID:          nullInt64ToPtr(ap.CurrentAttachmentID),
 		EnteredAt:                    nullStringToPtr(ap.EnteredAt),
@@ -2056,39 +2079,63 @@ func (r *Repository) SetSpeakerPriority(ctx context.Context, id int64, priority 
 // Ordering rules:
 //  1. ROPM (points of order) always come first.
 //  2. Within the same speaker type, priority speakers come first.
-//  3. When gender quotation is enabled, the FLINTA* and non-FLINTA* lists are interleaved
-//     (round-robin) with FLINTA* going first. Within each gender group, first-speaker
-//     quotation gives priority, then by request time.
-//  4. When gender quotation is disabled, all speakers are sorted together by first-speaker
-//     quotation, then by request time.
+//  3. The effective quotation_order (from agenda point override or meeting default) determines
+//     which quotation rules apply and in what order.
+//
+// Each quotation rule divides the speaker list into two buckets. The first rule in the list
+// partitions the entire queue; subsequent rules partition within each bucket. Within the final
+// buckets, speakers are sorted by request time. The buckets are then recombined in reverse
+// order — innermost partitions first, outermost last.
+//
+// The difference between rules is how the two buckets are recombined:
+//   - "gender": sorts into FLINTA* and non-FLINTA* buckets, then interleaves them in round-robin
+//     (FLINTA* bucket goes first in each pair).
+//   - "first_speaker": sorts into first-time and returning speaker buckets, then empties the
+//     first-time bucket entirely before moving on to returning speakers.
 func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID int64) error {
 	rows, err := r.Queries.GetWaitingSpeakersForAgendaPoint(ctx, agendaPointID)
 	if err != nil {
 		return fmt.Errorf("recompute speaker order fetch: %w", err)
 	}
 
-	// Determine effective gender quotation setting for this agenda point.
-	genderQuotationEnabled := true // default
+	// Resolve effective quotation order for this agenda point.
+	quotationOrder := []string{"gender", "first_speaker"} // default
 	ap, err := r.Queries.GetAgendaPointByID(ctx, agendaPointID)
 	if err == nil {
-		if ap.GenderQuotationEnabled.Valid {
-			genderQuotationEnabled = ap.GenderQuotationEnabled.Bool
+		if ap.QuotationOrder.Valid {
+			quotationOrder = parseQuotationOrder(ap.QuotationOrder.String)
 		} else {
 			meeting, mErr := r.Queries.GetMeetingByID(ctx, ap.MeetingID)
 			if mErr == nil {
-				genderQuotationEnabled = meeting.GenderQuotationEnabled
+				quotationOrder = parseQuotationOrder(meeting.QuotationOrder)
 			}
 		}
 	}
 
-	// withinGroupLess sorts speakers within a gender group:
-	// priority DESC, first_speaker DESC, requested_at ASC.
+	// Build a set of active quotation rules for quick lookup.
+	hasRule := make(map[string]bool, len(quotationOrder))
+	for _, r := range quotationOrder {
+		hasRule[r] = true
+	}
+
+	// baseLess sorts speakers by priority DESC, then requested_at ASC.
+	baseLess := func(a, b client.SpeakersList) bool {
+		if a.Priority != b.Priority {
+			return a.Priority
+		}
+		return a.RequestedAt < b.RequestedAt
+	}
+
+	// withinGroupLess sorts speakers within a group:
+	// priority DESC, first_speaker DESC (when first_speaker rule is not the primary dim), requested_at ASC.
 	withinGroupLess := func(a, b client.SpeakersList) bool {
 		if a.Priority != b.Priority {
 			return a.Priority
 		}
-		if a.FirstSpeaker != b.FirstSpeaker {
-			return a.FirstSpeaker
+		if hasRule["first_speaker"] {
+			if a.FirstSpeaker != b.FirstSpeaker {
+				return a.FirstSpeaker
+			}
 		}
 		return a.RequestedAt < b.RequestedAt
 	}
@@ -2103,12 +2150,20 @@ func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID in
 		}
 	}
 
-	// Sort ROPM speakers (no gender interleaving, just priority + first-speaker + time).
-	sort.Slice(ropm, func(i, j int) bool { return withinGroupLess(ropm[i], ropm[j]) })
+	// Sort ROPM speakers (no quotation rules, just priority + time).
+	sort.Slice(ropm, func(i, j int) bool { return baseLess(ropm[i], ropm[j]) })
 
-	// Sort regular speakers with gender interleaving when enabled.
+	// Apply quotation rules to regular speakers based on the order of dimensions.
 	var orderedRegular []client.SpeakersList
-	if genderQuotationEnabled {
+
+	// Determine primary dimension (first element).
+	primaryDim := ""
+	if len(quotationOrder) > 0 {
+		primaryDim = quotationOrder[0]
+	}
+
+	if primaryDim == "gender" {
+		// Gender is primary: split into quoted/non-quoted, sort each group, interleave.
 		var quoted, nonQuoted []client.SpeakersList
 		for _, row := range regular {
 			if row.GenderQuoted {
@@ -2120,7 +2175,7 @@ func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID in
 		sort.Slice(quoted, func(i, j int) bool { return withinGroupLess(quoted[i], quoted[j]) })
 		sort.Slice(nonQuoted, func(i, j int) bool { return withinGroupLess(nonQuoted[i], nonQuoted[j]) })
 
-		// Interleave: FLINTA* first, then non-FLINTA*, alternating.
+		// Interleave: quoted (FLINTA*) first, then non-quoted, alternating.
 		qi, ni := 0, 0
 		for qi < len(quoted) || ni < len(nonQuoted) {
 			if qi < len(quoted) {
@@ -2132,12 +2187,41 @@ func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID in
 				ni++
 			}
 		}
+	} else if primaryDim == "first_speaker" {
+		// First-speaker is primary: split into first-speakers / non-first-speakers.
+		var firstSpeakers, nonFirstSpeakers []client.SpeakersList
+		for _, row := range regular {
+			if row.FirstSpeaker {
+				firstSpeakers = append(firstSpeakers, row)
+			} else {
+				nonFirstSpeakers = append(nonFirstSpeakers, row)
+			}
+		}
+
+		// genderAwareLess sorts by priority, then gender-quoted first (if gender rule active), then time.
+		genderAwareLess := func(a, b client.SpeakersList) bool {
+			if a.Priority != b.Priority {
+				return a.Priority
+			}
+			if hasRule["gender"] {
+				if a.GenderQuoted != b.GenderQuoted {
+					return a.GenderQuoted
+				}
+			}
+			return a.RequestedAt < b.RequestedAt
+		}
+
+		sort.Slice(firstSpeakers, func(i, j int) bool { return genderAwareLess(firstSpeakers[i], firstSpeakers[j]) })
+		sort.Slice(nonFirstSpeakers, func(i, j int) bool { return genderAwareLess(nonFirstSpeakers[i], nonFirstSpeakers[j]) })
+
+		orderedRegular = append(firstSpeakers, nonFirstSpeakers...)
 	} else {
+		// No recognized primary dimension, fall back to simple sort.
 		orderedRegular = regular
 		sort.Slice(orderedRegular, func(i, j int) bool { return withinGroupLess(orderedRegular[i], orderedRegular[j]) })
 	}
 
-	// Combine: ROPM first, then interleaved regular.
+	// Combine: ROPM first, then ordered regular.
 	ordered := append(ropm, orderedRegular...)
 
 	for i, row := range ordered {
@@ -2151,24 +2235,13 @@ func (r *Repository) RecomputeSpeakerOrder(ctx context.Context, agendaPointID in
 	return nil
 }
 
-// SetMeetingGenderQuotation updates the gender_quotation_enabled flag for a meeting.
-func (r *Repository) SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error {
-	if err := r.Queries.SetMeetingGenderQuotation(ctx, client.SetMeetingGenderQuotationParams{
-		ID:                     id,
-		GenderQuotationEnabled: enabled,
+// SetMeetingQuotationOrder updates the quotation_order JSON array for a meeting.
+func (r *Repository) SetMeetingQuotationOrder(ctx context.Context, id int64, order []string) error {
+	if err := r.Queries.SetMeetingQuotationOrder(ctx, client.SetMeetingQuotationOrderParams{
+		QuotationOrder: quotationOrderToJSON(order),
+		ID:             id,
 	}); err != nil {
-		return fmt.Errorf("set meeting gender quotation: %w", err)
-	}
-	return nil
-}
-
-// SetMeetingFirstSpeakerQuotation updates the first_speaker_quotation_enabled flag for a meeting.
-func (r *Repository) SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error {
-	if err := r.Queries.SetMeetingFirstSpeakerQuotation(ctx, client.SetMeetingFirstSpeakerQuotationParams{
-		ID:                           id,
-		FirstSpeakerQuotationEnabled: enabled,
-	}); err != nil {
-		return fmt.Errorf("set meeting first speaker quotation: %w", err)
+		return fmt.Errorf("set meeting quotation order: %w", err)
 	}
 	return nil
 }
@@ -2200,24 +2273,17 @@ func (r *Repository) SetMeetingDatetime(ctx context.Context, id int64, startAt, 
 	return nil
 }
 
-// SetAgendaPointGenderQuotation sets the gender_quotation_enabled override for an agenda point (nil clears it).
-func (r *Repository) SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error {
-	if err := r.Queries.SetAgendaPointGenderQuotation(ctx, client.SetAgendaPointGenderQuotationParams{
-		ID:                     id,
-		GenderQuotationEnabled: ptrToNullBool(enabled),
-	}); err != nil {
-		return fmt.Errorf("set agenda point gender quotation: %w", err)
+// SetAgendaPointQuotationOrder sets the quotation_order JSON array override for an agenda point (nil clears it).
+func (r *Repository) SetAgendaPointQuotationOrder(ctx context.Context, id int64, order *[]string) error {
+	var s sql.NullString
+	if order != nil {
+		s = sql.NullString{String: quotationOrderToJSON(*order), Valid: true}
 	}
-	return nil
-}
-
-// SetAgendaPointFirstSpeakerQuotation sets the first_speaker_quotation_enabled override for an agenda point (nil clears it).
-func (r *Repository) SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error {
-	if err := r.Queries.SetAgendaPointFirstSpeakerQuotation(ctx, client.SetAgendaPointFirstSpeakerQuotationParams{
-		ID:                           id,
-		FirstSpeakerQuotationEnabled: ptrToNullBool(enabled),
+	if err := r.Queries.SetAgendaPointQuotationOrder(ctx, client.SetAgendaPointQuotationOrderParams{
+		QuotationOrder: s,
+		ID:             id,
 	}); err != nil {
-		return fmt.Errorf("set agenda point first speaker quotation: %w", err)
+		return fmt.Errorf("set agenda point quotation order: %w", err)
 	}
 	return nil
 }

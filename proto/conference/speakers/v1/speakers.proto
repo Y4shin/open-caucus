@@ -35,8 +35,8 @@ message SpeakerQueueView {
   string active_agenda_point_title = 4;
   repeated conference.common.v1.SpeakerSummary speakers = 5;
   bool can_add_self = 6;
-  bool gender_quotation = 7;
-  bool first_speaker_quotation = 8;
+  reserved 7, 8;
+  repeated conference.common.v1.QuotationType quotation_order = 9; // ordered list of active quotation types
 }
 
 message ListSpeakersRequest {

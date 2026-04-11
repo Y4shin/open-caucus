@@ -8,6 +8,7 @@
 	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
 	import MeetingWizard from './MeetingWizard.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
+	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { committeeClient, moderationClient } from '$lib/api/index.js';
 	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
@@ -21,6 +22,11 @@
 	let localActiveMeetingId = $state<string | null>(null);
 	let signupTogglePendingMeetingId = $state('');
 	let wizardRef = $state<ReturnType<typeof MeetingWizard> | null>(null);
+
+	$effect(() => {
+		pageActions.set([], { backHref: '/home' });
+		return () => { pageActions.clear(); };
+	});
 
 	$effect(() => {
 		if (!session.loaded) return;

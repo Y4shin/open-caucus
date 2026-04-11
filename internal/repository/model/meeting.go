@@ -10,8 +10,7 @@ type Meeting struct {
 	Secret                       string
 	SignupOpen                   bool
 	CurrentAgendaPointID         *int64
-	GenderQuotationEnabled       bool   // default true
-	FirstSpeakerQuotationEnabled bool   // default true
+	QuotationOrder []string // ordered list of enabled quotation types, e.g. ["gender", "first_speaker"]
 	ModeratorID                  *int64 // nil if not set
 	Version                      int64
 	CreatedAt                    time.Time

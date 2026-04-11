@@ -32,8 +32,7 @@ type SpeakerQueueView struct {
 	ActiveAgendaPointTitle string                 `protobuf:"bytes,4,opt,name=active_agenda_point_title,json=activeAgendaPointTitle,proto3" json:"active_agenda_point_title,omitempty"`
 	Speakers               []*v1.SpeakerSummary   `protobuf:"bytes,5,rep,name=speakers,proto3" json:"speakers,omitempty"`
 	CanAddSelf             bool                   `protobuf:"varint,6,opt,name=can_add_self,json=canAddSelf,proto3" json:"can_add_self,omitempty"`
-	GenderQuotation        bool                   `protobuf:"varint,7,opt,name=gender_quotation,json=genderQuotation,proto3" json:"gender_quotation,omitempty"`
-	FirstSpeakerQuotation  bool                   `protobuf:"varint,8,opt,name=first_speaker_quotation,json=firstSpeakerQuotation,proto3" json:"first_speaker_quotation,omitempty"`
+	QuotationOrder         []v1.QuotationType     `protobuf:"varint,9,rep,packed,name=quotation_order,json=quotationOrder,proto3,enum=conference.common.v1.QuotationType" json:"quotation_order,omitempty"` // ordered list of active quotation types
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -110,18 +109,11 @@ func (x *SpeakerQueueView) GetCanAddSelf() bool {
 	return false
 }
 
-func (x *SpeakerQueueView) GetGenderQuotation() bool {
+func (x *SpeakerQueueView) GetQuotationOrder() []v1.QuotationType {
 	if x != nil {
-		return x.GenderQuotation
+		return x.QuotationOrder
 	}
-	return false
-}
-
-func (x *SpeakerQueueView) GetFirstSpeakerQuotation() bool {
-	if x != nil {
-		return x.FirstSpeakerQuotation
-	}
-	return false
+	return nil
 }
 
 type ListSpeakersRequest struct {
@@ -802,7 +794,7 @@ var File_conference_speakers_v1_speakers_proto protoreflect.FileDescriptor
 
 const file_conference_speakers_v1_speakers_proto_rawDesc = "" +
 	"\n" +
-	"%conference/speakers/v1/speakers.proto\x12\x16conference.speakers.v1\x1a!conference/common/v1/common.proto\"\x8f\x03\n" +
+	"%conference/speakers/v1/speakers.proto\x12\x16conference.speakers.v1\x1a!conference/common/v1/common.proto\"\x86\x03\n" +
 	"\x10SpeakerQueueView\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12%\n" +
@@ -811,9 +803,8 @@ const file_conference_speakers_v1_speakers_proto_rawDesc = "" +
 	"\x19active_agenda_point_title\x18\x04 \x01(\tR\x16activeAgendaPointTitle\x12@\n" +
 	"\bspeakers\x18\x05 \x03(\v2$.conference.common.v1.SpeakerSummaryR\bspeakers\x12 \n" +
 	"\fcan_add_self\x18\x06 \x01(\bR\n" +
-	"canAddSelf\x12)\n" +
-	"\x10gender_quotation\x18\a \x01(\bR\x0fgenderQuotation\x126\n" +
-	"\x17first_speaker_quotation\x18\b \x01(\bR\x15firstSpeakerQuotation\"[\n" +
+	"canAddSelf\x12L\n" +
+	"\x0fquotation_order\x18\t \x03(\x0e2#.conference.common.v1.QuotationTypeR\x0equotationOrderJ\x04\b\a\x10\bJ\x04\b\b\x10\t\"[\n" +
 	"\x13ListSpeakersRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
@@ -904,32 +895,34 @@ var file_conference_speakers_v1_speakers_proto_goTypes = []any{
 	(*SetSpeakerPriorityRequest)(nil),  // 11: conference.speakers.v1.SetSpeakerPriorityRequest
 	(*SetSpeakerPriorityResponse)(nil), // 12: conference.speakers.v1.SetSpeakerPriorityResponse
 	(*v1.SpeakerSummary)(nil),          // 13: conference.common.v1.SpeakerSummary
+	(v1.QuotationType)(0),              // 14: conference.common.v1.QuotationType
 }
 var file_conference_speakers_v1_speakers_proto_depIdxs = []int32{
 	13, // 0: conference.speakers.v1.SpeakerQueueView.speakers:type_name -> conference.common.v1.SpeakerSummary
-	0,  // 1: conference.speakers.v1.ListSpeakersResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
-	0,  // 2: conference.speakers.v1.AddSpeakerResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
-	0,  // 3: conference.speakers.v1.RemoveSpeakerResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
-	0,  // 4: conference.speakers.v1.SetSpeakerSpeakingResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
-	0,  // 5: conference.speakers.v1.SetSpeakerDoneResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
-	0,  // 6: conference.speakers.v1.SetSpeakerPriorityResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
-	1,  // 7: conference.speakers.v1.SpeakerService.ListSpeakers:input_type -> conference.speakers.v1.ListSpeakersRequest
-	3,  // 8: conference.speakers.v1.SpeakerService.AddSpeaker:input_type -> conference.speakers.v1.AddSpeakerRequest
-	5,  // 9: conference.speakers.v1.SpeakerService.RemoveSpeaker:input_type -> conference.speakers.v1.RemoveSpeakerRequest
-	7,  // 10: conference.speakers.v1.SpeakerService.SetSpeakerSpeaking:input_type -> conference.speakers.v1.SetSpeakerSpeakingRequest
-	9,  // 11: conference.speakers.v1.SpeakerService.SetSpeakerDone:input_type -> conference.speakers.v1.SetSpeakerDoneRequest
-	11, // 12: conference.speakers.v1.SpeakerService.SetSpeakerPriority:input_type -> conference.speakers.v1.SetSpeakerPriorityRequest
-	2,  // 13: conference.speakers.v1.SpeakerService.ListSpeakers:output_type -> conference.speakers.v1.ListSpeakersResponse
-	4,  // 14: conference.speakers.v1.SpeakerService.AddSpeaker:output_type -> conference.speakers.v1.AddSpeakerResponse
-	6,  // 15: conference.speakers.v1.SpeakerService.RemoveSpeaker:output_type -> conference.speakers.v1.RemoveSpeakerResponse
-	8,  // 16: conference.speakers.v1.SpeakerService.SetSpeakerSpeaking:output_type -> conference.speakers.v1.SetSpeakerSpeakingResponse
-	10, // 17: conference.speakers.v1.SpeakerService.SetSpeakerDone:output_type -> conference.speakers.v1.SetSpeakerDoneResponse
-	12, // 18: conference.speakers.v1.SpeakerService.SetSpeakerPriority:output_type -> conference.speakers.v1.SetSpeakerPriorityResponse
-	13, // [13:19] is the sub-list for method output_type
-	7,  // [7:13] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	14, // 1: conference.speakers.v1.SpeakerQueueView.quotation_order:type_name -> conference.common.v1.QuotationType
+	0,  // 2: conference.speakers.v1.ListSpeakersResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
+	0,  // 3: conference.speakers.v1.AddSpeakerResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
+	0,  // 4: conference.speakers.v1.RemoveSpeakerResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
+	0,  // 5: conference.speakers.v1.SetSpeakerSpeakingResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
+	0,  // 6: conference.speakers.v1.SetSpeakerDoneResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
+	0,  // 7: conference.speakers.v1.SetSpeakerPriorityResponse.view:type_name -> conference.speakers.v1.SpeakerQueueView
+	1,  // 8: conference.speakers.v1.SpeakerService.ListSpeakers:input_type -> conference.speakers.v1.ListSpeakersRequest
+	3,  // 9: conference.speakers.v1.SpeakerService.AddSpeaker:input_type -> conference.speakers.v1.AddSpeakerRequest
+	5,  // 10: conference.speakers.v1.SpeakerService.RemoveSpeaker:input_type -> conference.speakers.v1.RemoveSpeakerRequest
+	7,  // 11: conference.speakers.v1.SpeakerService.SetSpeakerSpeaking:input_type -> conference.speakers.v1.SetSpeakerSpeakingRequest
+	9,  // 12: conference.speakers.v1.SpeakerService.SetSpeakerDone:input_type -> conference.speakers.v1.SetSpeakerDoneRequest
+	11, // 13: conference.speakers.v1.SpeakerService.SetSpeakerPriority:input_type -> conference.speakers.v1.SetSpeakerPriorityRequest
+	2,  // 14: conference.speakers.v1.SpeakerService.ListSpeakers:output_type -> conference.speakers.v1.ListSpeakersResponse
+	4,  // 15: conference.speakers.v1.SpeakerService.AddSpeaker:output_type -> conference.speakers.v1.AddSpeakerResponse
+	6,  // 16: conference.speakers.v1.SpeakerService.RemoveSpeaker:output_type -> conference.speakers.v1.RemoveSpeakerResponse
+	8,  // 17: conference.speakers.v1.SpeakerService.SetSpeakerSpeaking:output_type -> conference.speakers.v1.SetSpeakerSpeakingResponse
+	10, // 18: conference.speakers.v1.SpeakerService.SetSpeakerDone:output_type -> conference.speakers.v1.SetSpeakerDoneResponse
+	12, // 19: conference.speakers.v1.SpeakerService.SetSpeakerPriority:output_type -> conference.speakers.v1.SetSpeakerPriorityResponse
+	14, // [14:20] is the sub-list for method output_type
+	8,  // [8:14] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_conference_speakers_v1_speakers_proto_init() }

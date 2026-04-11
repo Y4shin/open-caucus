@@ -27,20 +27,19 @@ type AgendaAttachment struct {
 }
 
 type AgendaPoint struct {
-	ID                           int64
-	MeetingID                    int64
-	ParentID                     sql.NullInt64
-	Position                     int64
-	Title                        string
-	CreatedAt                    string
-	UpdatedAt                    string
-	CurrentSpeakerID             sql.NullInt64
-	GenderQuotationEnabled       sql.NullBool
-	FirstSpeakerQuotationEnabled sql.NullBool
-	ModeratorID                  sql.NullInt64
-	CurrentAttachmentID          sql.NullInt64
-	EnteredAt                    sql.NullString
-	LeftAt                       sql.NullString
+	ID                  int64
+	MeetingID           int64
+	ParentID            sql.NullInt64
+	Position            int64
+	Title               string
+	CreatedAt           string
+	UpdatedAt           string
+	CurrentSpeakerID    sql.NullInt64
+	ModeratorID         sql.NullInt64
+	CurrentAttachmentID sql.NullInt64
+	EnteredAt           sql.NullString
+	LeftAt              sql.NullString
+	QuotationOrder      sql.NullString
 }
 
 type Attendee struct {
@@ -81,21 +80,20 @@ type EligibleVoter struct {
 }
 
 type Meeting struct {
-	ID                           int64
-	CommitteeID                  int64
-	Name                         string
-	Description                  string
-	Secret                       string
-	SignupOpen                   bool
-	CreatedAt                    string
-	UpdatedAt                    string
-	CurrentAgendaPointID         sql.NullInt64
-	GenderQuotationEnabled       bool
-	FirstSpeakerQuotationEnabled bool
-	ModeratorID                  sql.NullInt64
-	Version                      int64
-	StartAt                      sql.NullString
-	EndAt                        sql.NullString
+	ID                   int64
+	CommitteeID          int64
+	Name                 string
+	Description          string
+	Secret               string
+	SignupOpen           bool
+	CreatedAt            string
+	UpdatedAt            string
+	CurrentAgendaPointID sql.NullInt64
+	ModeratorID          sql.NullInt64
+	Version              int64
+	StartAt              sql.NullString
+	EndAt                sql.NullString
+	QuotationOrder       string
 }
 
 type OauthCommitteeGroupRule struct {

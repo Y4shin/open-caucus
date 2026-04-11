@@ -25,20 +25,19 @@ const (
 // AgendaPointRecord is the read model for one agenda point, including its
 // position, activation state, and quotation settings.
 type AgendaPointRecord struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	AgendaPointId         string                 `protobuf:"bytes,1,opt,name=agenda_point_id,json=agendaPointId,proto3" json:"agenda_point_id,omitempty"`
-	DisplayNumber         string                 `protobuf:"bytes,2,opt,name=display_number,json=displayNumber,proto3" json:"display_number,omitempty"`
-	Title                 string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	IsActive              bool                   `protobuf:"varint,4,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
-	Position              int64                  `protobuf:"varint,5,opt,name=position,proto3" json:"position,omitempty"`
-	ParentId              string                 `protobuf:"bytes,6,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
-	GenderQuotation       bool                   `protobuf:"varint,7,opt,name=gender_quotation,json=genderQuotation,proto3" json:"gender_quotation,omitempty"`
-	FirstSpeakerQuotation bool                   `protobuf:"varint,8,opt,name=first_speaker_quotation,json=firstSpeakerQuotation,proto3" json:"first_speaker_quotation,omitempty"`
-	SubPoints             []*AgendaPointRecord   `protobuf:"bytes,9,rep,name=sub_points,json=subPoints,proto3" json:"sub_points,omitempty"`
-	EnteredAt             string                 `protobuf:"bytes,10,opt,name=entered_at,json=enteredAt,proto3" json:"entered_at,omitempty"` // RFC3339 timestamp when this point was activated
-	LeftAt                string                 `protobuf:"bytes,11,opt,name=left_at,json=leftAt,proto3" json:"left_at,omitempty"`          // RFC3339 timestamp when this point was deactivated
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	AgendaPointId  string                 `protobuf:"bytes,1,opt,name=agenda_point_id,json=agendaPointId,proto3" json:"agenda_point_id,omitempty"`
+	DisplayNumber  string                 `protobuf:"bytes,2,opt,name=display_number,json=displayNumber,proto3" json:"display_number,omitempty"`
+	Title          string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	IsActive       bool                   `protobuf:"varint,4,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	Position       int64                  `protobuf:"varint,5,opt,name=position,proto3" json:"position,omitempty"`
+	ParentId       string                 `protobuf:"bytes,6,opt,name=parent_id,json=parentId,proto3" json:"parent_id,omitempty"`
+	QuotationOrder []v1.QuotationType     `protobuf:"varint,12,rep,packed,name=quotation_order,json=quotationOrder,proto3,enum=conference.common.v1.QuotationType" json:"quotation_order,omitempty"`
+	SubPoints      []*AgendaPointRecord   `protobuf:"bytes,9,rep,name=sub_points,json=subPoints,proto3" json:"sub_points,omitempty"`
+	EnteredAt      string                 `protobuf:"bytes,10,opt,name=entered_at,json=enteredAt,proto3" json:"entered_at,omitempty"` // RFC3339 timestamp when this point was activated
+	LeftAt         string                 `protobuf:"bytes,11,opt,name=left_at,json=leftAt,proto3" json:"left_at,omitempty"`          // RFC3339 timestamp when this point was deactivated
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *AgendaPointRecord) Reset() {
@@ -113,18 +112,11 @@ func (x *AgendaPointRecord) GetParentId() string {
 	return ""
 }
 
-func (x *AgendaPointRecord) GetGenderQuotation() bool {
+func (x *AgendaPointRecord) GetQuotationOrder() []v1.QuotationType {
 	if x != nil {
-		return x.GenderQuotation
+		return x.QuotationOrder
 	}
-	return false
-}
-
-func (x *AgendaPointRecord) GetFirstSpeakerQuotation() bool {
-	if x != nil {
-		return x.FirstSpeakerQuotation
-	}
-	return false
+	return nil
 }
 
 func (x *AgendaPointRecord) GetSubPoints() []*AgendaPointRecord {
@@ -1467,22 +1459,21 @@ var File_conference_agenda_v1_agenda_proto protoreflect.FileDescriptor
 
 const file_conference_agenda_v1_agenda_proto_rawDesc = "" +
 	"\n" +
-	"!conference/agenda/v1/agenda.proto\x12\x14conference.agenda.v1\x1a!conference/common/v1/common.proto\"\xb1\x03\n" +
+	"!conference/agenda/v1/agenda.proto\x12\x14conference.agenda.v1\x1a!conference/common/v1/common.proto\"\xa8\x03\n" +
 	"\x11AgendaPointRecord\x12&\n" +
 	"\x0fagenda_point_id\x18\x01 \x01(\tR\ragendaPointId\x12%\n" +
 	"\x0edisplay_number\x18\x02 \x01(\tR\rdisplayNumber\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12\x1b\n" +
 	"\tis_active\x18\x04 \x01(\bR\bisActive\x12\x1a\n" +
 	"\bposition\x18\x05 \x01(\x03R\bposition\x12\x1b\n" +
-	"\tparent_id\x18\x06 \x01(\tR\bparentId\x12)\n" +
-	"\x10gender_quotation\x18\a \x01(\bR\x0fgenderQuotation\x126\n" +
-	"\x17first_speaker_quotation\x18\b \x01(\bR\x15firstSpeakerQuotation\x12F\n" +
+	"\tparent_id\x18\x06 \x01(\tR\bparentId\x12L\n" +
+	"\x0fquotation_order\x18\f \x03(\x0e2#.conference.common.v1.QuotationTypeR\x0equotationOrder\x12F\n" +
 	"\n" +
 	"sub_points\x18\t \x03(\v2'.conference.agenda.v1.AgendaPointRecordR\tsubPoints\x12\x1d\n" +
 	"\n" +
 	"entered_at\x18\n" +
 	" \x01(\tR\tenteredAt\x12\x17\n" +
-	"\aleft_at\x18\v \x01(\tR\x06leftAt\"\xc4\x01\n" +
+	"\aleft_at\x18\v \x01(\tR\x06leftAtJ\x04\b\a\x10\bJ\x04\b\b\x10\t\"\xc4\x01\n" +
 	"\x10AttachmentRecord\x12#\n" +
 	"\rattachment_id\x18\x01 \x01(\tR\fattachmentId\x12\x17\n" +
 	"\ablob_id\x18\x02 \x01(\tR\x06blobId\x12\x1a\n" +
@@ -1631,45 +1622,47 @@ var file_conference_agenda_v1_agenda_proto_goTypes = []any{
 	(*DeleteAttachmentResponse)(nil),     // 20: conference.agenda.v1.DeleteAttachmentResponse
 	(*UpdateAgendaPointRequest)(nil),     // 21: conference.agenda.v1.UpdateAgendaPointRequest
 	(*UpdateAgendaPointResponse)(nil),    // 22: conference.agenda.v1.UpdateAgendaPointResponse
-	(*v1.AgendaPointSummary)(nil),        // 23: conference.common.v1.AgendaPointSummary
+	(v1.QuotationType)(0),                // 23: conference.common.v1.QuotationType
+	(*v1.AgendaPointSummary)(nil),        // 24: conference.common.v1.AgendaPointSummary
 }
 var file_conference_agenda_v1_agenda_proto_depIdxs = []int32{
-	0,  // 0: conference.agenda.v1.AgendaPointRecord.sub_points:type_name -> conference.agenda.v1.AgendaPointRecord
-	1,  // 1: conference.agenda.v1.AgendaPointToolsView.attachments:type_name -> conference.agenda.v1.AttachmentRecord
-	0,  // 2: conference.agenda.v1.ListAgendaPointsResponse.agenda_points:type_name -> conference.agenda.v1.AgendaPointRecord
-	2,  // 3: conference.agenda.v1.GetAgendaPointToolsResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
-	0,  // 4: conference.agenda.v1.CreateAgendaPointResponse.agenda_point:type_name -> conference.agenda.v1.AgendaPointRecord
-	0,  // 5: conference.agenda.v1.MoveAgendaPointResponse.agenda_points:type_name -> conference.agenda.v1.AgendaPointRecord
-	23, // 6: conference.agenda.v1.ActivateAgendaPointResponse.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
-	2,  // 7: conference.agenda.v1.SetCurrentAttachmentResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
-	2,  // 8: conference.agenda.v1.ClearCurrentDocumentResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
-	2,  // 9: conference.agenda.v1.DeleteAttachmentResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
-	0,  // 10: conference.agenda.v1.UpdateAgendaPointResponse.agenda_point:type_name -> conference.agenda.v1.AgendaPointRecord
-	3,  // 11: conference.agenda.v1.AgendaService.ListAgendaPoints:input_type -> conference.agenda.v1.ListAgendaPointsRequest
-	5,  // 12: conference.agenda.v1.AgendaService.GetAgendaPointTools:input_type -> conference.agenda.v1.GetAgendaPointToolsRequest
-	7,  // 13: conference.agenda.v1.AgendaService.CreateAgendaPoint:input_type -> conference.agenda.v1.CreateAgendaPointRequest
-	9,  // 14: conference.agenda.v1.AgendaService.DeleteAgendaPoint:input_type -> conference.agenda.v1.DeleteAgendaPointRequest
-	11, // 15: conference.agenda.v1.AgendaService.MoveAgendaPoint:input_type -> conference.agenda.v1.MoveAgendaPointRequest
-	13, // 16: conference.agenda.v1.AgendaService.ActivateAgendaPoint:input_type -> conference.agenda.v1.ActivateAgendaPointRequest
-	15, // 17: conference.agenda.v1.AgendaService.SetCurrentAttachment:input_type -> conference.agenda.v1.SetCurrentAttachmentRequest
-	17, // 18: conference.agenda.v1.AgendaService.ClearCurrentDocument:input_type -> conference.agenda.v1.ClearCurrentDocumentRequest
-	19, // 19: conference.agenda.v1.AgendaService.DeleteAttachment:input_type -> conference.agenda.v1.DeleteAttachmentRequest
-	21, // 20: conference.agenda.v1.AgendaService.UpdateAgendaPoint:input_type -> conference.agenda.v1.UpdateAgendaPointRequest
-	4,  // 21: conference.agenda.v1.AgendaService.ListAgendaPoints:output_type -> conference.agenda.v1.ListAgendaPointsResponse
-	6,  // 22: conference.agenda.v1.AgendaService.GetAgendaPointTools:output_type -> conference.agenda.v1.GetAgendaPointToolsResponse
-	8,  // 23: conference.agenda.v1.AgendaService.CreateAgendaPoint:output_type -> conference.agenda.v1.CreateAgendaPointResponse
-	10, // 24: conference.agenda.v1.AgendaService.DeleteAgendaPoint:output_type -> conference.agenda.v1.DeleteAgendaPointResponse
-	12, // 25: conference.agenda.v1.AgendaService.MoveAgendaPoint:output_type -> conference.agenda.v1.MoveAgendaPointResponse
-	14, // 26: conference.agenda.v1.AgendaService.ActivateAgendaPoint:output_type -> conference.agenda.v1.ActivateAgendaPointResponse
-	16, // 27: conference.agenda.v1.AgendaService.SetCurrentAttachment:output_type -> conference.agenda.v1.SetCurrentAttachmentResponse
-	18, // 28: conference.agenda.v1.AgendaService.ClearCurrentDocument:output_type -> conference.agenda.v1.ClearCurrentDocumentResponse
-	20, // 29: conference.agenda.v1.AgendaService.DeleteAttachment:output_type -> conference.agenda.v1.DeleteAttachmentResponse
-	22, // 30: conference.agenda.v1.AgendaService.UpdateAgendaPoint:output_type -> conference.agenda.v1.UpdateAgendaPointResponse
-	21, // [21:31] is the sub-list for method output_type
-	11, // [11:21] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	23, // 0: conference.agenda.v1.AgendaPointRecord.quotation_order:type_name -> conference.common.v1.QuotationType
+	0,  // 1: conference.agenda.v1.AgendaPointRecord.sub_points:type_name -> conference.agenda.v1.AgendaPointRecord
+	1,  // 2: conference.agenda.v1.AgendaPointToolsView.attachments:type_name -> conference.agenda.v1.AttachmentRecord
+	0,  // 3: conference.agenda.v1.ListAgendaPointsResponse.agenda_points:type_name -> conference.agenda.v1.AgendaPointRecord
+	2,  // 4: conference.agenda.v1.GetAgendaPointToolsResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
+	0,  // 5: conference.agenda.v1.CreateAgendaPointResponse.agenda_point:type_name -> conference.agenda.v1.AgendaPointRecord
+	0,  // 6: conference.agenda.v1.MoveAgendaPointResponse.agenda_points:type_name -> conference.agenda.v1.AgendaPointRecord
+	24, // 7: conference.agenda.v1.ActivateAgendaPointResponse.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
+	2,  // 8: conference.agenda.v1.SetCurrentAttachmentResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
+	2,  // 9: conference.agenda.v1.ClearCurrentDocumentResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
+	2,  // 10: conference.agenda.v1.DeleteAttachmentResponse.view:type_name -> conference.agenda.v1.AgendaPointToolsView
+	0,  // 11: conference.agenda.v1.UpdateAgendaPointResponse.agenda_point:type_name -> conference.agenda.v1.AgendaPointRecord
+	3,  // 12: conference.agenda.v1.AgendaService.ListAgendaPoints:input_type -> conference.agenda.v1.ListAgendaPointsRequest
+	5,  // 13: conference.agenda.v1.AgendaService.GetAgendaPointTools:input_type -> conference.agenda.v1.GetAgendaPointToolsRequest
+	7,  // 14: conference.agenda.v1.AgendaService.CreateAgendaPoint:input_type -> conference.agenda.v1.CreateAgendaPointRequest
+	9,  // 15: conference.agenda.v1.AgendaService.DeleteAgendaPoint:input_type -> conference.agenda.v1.DeleteAgendaPointRequest
+	11, // 16: conference.agenda.v1.AgendaService.MoveAgendaPoint:input_type -> conference.agenda.v1.MoveAgendaPointRequest
+	13, // 17: conference.agenda.v1.AgendaService.ActivateAgendaPoint:input_type -> conference.agenda.v1.ActivateAgendaPointRequest
+	15, // 18: conference.agenda.v1.AgendaService.SetCurrentAttachment:input_type -> conference.agenda.v1.SetCurrentAttachmentRequest
+	17, // 19: conference.agenda.v1.AgendaService.ClearCurrentDocument:input_type -> conference.agenda.v1.ClearCurrentDocumentRequest
+	19, // 20: conference.agenda.v1.AgendaService.DeleteAttachment:input_type -> conference.agenda.v1.DeleteAttachmentRequest
+	21, // 21: conference.agenda.v1.AgendaService.UpdateAgendaPoint:input_type -> conference.agenda.v1.UpdateAgendaPointRequest
+	4,  // 22: conference.agenda.v1.AgendaService.ListAgendaPoints:output_type -> conference.agenda.v1.ListAgendaPointsResponse
+	6,  // 23: conference.agenda.v1.AgendaService.GetAgendaPointTools:output_type -> conference.agenda.v1.GetAgendaPointToolsResponse
+	8,  // 24: conference.agenda.v1.AgendaService.CreateAgendaPoint:output_type -> conference.agenda.v1.CreateAgendaPointResponse
+	10, // 25: conference.agenda.v1.AgendaService.DeleteAgendaPoint:output_type -> conference.agenda.v1.DeleteAgendaPointResponse
+	12, // 26: conference.agenda.v1.AgendaService.MoveAgendaPoint:output_type -> conference.agenda.v1.MoveAgendaPointResponse
+	14, // 27: conference.agenda.v1.AgendaService.ActivateAgendaPoint:output_type -> conference.agenda.v1.ActivateAgendaPointResponse
+	16, // 28: conference.agenda.v1.AgendaService.SetCurrentAttachment:output_type -> conference.agenda.v1.SetCurrentAttachmentResponse
+	18, // 29: conference.agenda.v1.AgendaService.ClearCurrentDocument:output_type -> conference.agenda.v1.ClearCurrentDocumentResponse
+	20, // 30: conference.agenda.v1.AgendaService.DeleteAttachment:output_type -> conference.agenda.v1.DeleteAttachmentResponse
+	22, // 31: conference.agenda.v1.AgendaService.UpdateAgendaPoint:output_type -> conference.agenda.v1.UpdateAgendaPointResponse
+	22, // [22:32] is the sub-list for method output_type
+	12, // [12:22] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_conference_agenda_v1_agenda_proto_init() }

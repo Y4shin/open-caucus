@@ -134,9 +134,8 @@ func (s *Service) GetModerationView(ctx context.Context, committeeSlug, meetingI
 		Speakers:          speakerSummary,
 		Capabilities:      caps,
 		Settings: &moderationv1.ModerationMeetingSettingsBlock{
-			GenderQuotationEnabled:       meeting.GenderQuotationEnabled,
-			FirstSpeakerQuotationEnabled: meeting.FirstSpeakerQuotationEnabled,
-			ModeratorAttendeeId:          optionalInt64String(meeting.ModeratorID),
+			QuotationOrder:      stringsToQuotationTypes(meeting.QuotationOrder),
+			ModeratorAttendeeId: optionalInt64String(meeting.ModeratorID),
 		},
 	}
 
@@ -180,7 +179,7 @@ func (s *Service) ToggleSignupOpen(ctx context.Context, committeeSlug, meetingID
 	}, nil
 }
 
-func (s *Service) SetMeetingQuotation(ctx context.Context, committeeSlug, meetingIDStr string, genderQuotationEnabled, firstSpeakerQuotationEnabled bool) (*moderationv1.SetMeetingQuotationResponse, error) {
+func (s *Service) SetMeetingQuotation(ctx context.Context, committeeSlug, meetingIDStr string, quotationOrder []string) (*moderationv1.SetMeetingQuotationResponse, error) {
 	if err := serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug); err != nil {
 		return nil, err
 	}
@@ -190,11 +189,8 @@ func (s *Service) SetMeetingQuotation(ctx context.Context, committeeSlug, meetin
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
 	}
 
-	if err := s.repo.SetMeetingGenderQuotation(ctx, meetingID, genderQuotationEnabled); err != nil {
-		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set gender quotation", err)
-	}
-	if err := s.repo.SetMeetingFirstSpeakerQuotation(ctx, meetingID, firstSpeakerQuotationEnabled); err != nil {
-		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set first-speaker quotation", err)
+	if err := s.repo.SetMeetingQuotationOrder(ctx, meetingID, quotationOrder); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to set quotation order", err)
 	}
 
 	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
@@ -211,11 +207,10 @@ func (s *Service) SetMeetingQuotation(ctx context.Context, committeeSlug, meetin
 	s.publishInvalidation(meetingID, "speakers.updated", invalidatedViews, uint64(meeting.Version))
 
 	return &moderationv1.SetMeetingQuotationResponse{
-		MeetingId:                    strconv.FormatInt(meetingID, 10),
-		GenderQuotationEnabled:       genderQuotationEnabled,
-		FirstSpeakerQuotationEnabled: firstSpeakerQuotationEnabled,
-		Version:                      uint64(meeting.Version),
-		InvalidatedViews:             invalidatedViews,
+		MeetingId:        strconv.FormatInt(meetingID, 10),
+		QuotationOrder:   stringsToQuotationTypes(quotationOrder),
+		Version:          uint64(meeting.Version),
+		InvalidatedViews: invalidatedViews,
 	}, nil
 }
 
@@ -287,4 +282,30 @@ func optionalInt64String(value *int64) string {
 		return ""
 	}
 	return strconv.FormatInt(*value, 10)
+}
+
+func stringsToQuotationTypes(order []string) []commonv1.QuotationType {
+	result := make([]commonv1.QuotationType, 0, len(order))
+	for _, s := range order {
+		switch s {
+		case "gender":
+			result = append(result, commonv1.QuotationType_QUOTATION_TYPE_GENDER)
+		case "first_speaker":
+			result = append(result, commonv1.QuotationType_QUOTATION_TYPE_FIRST_SPEAKER)
+		}
+	}
+	return result
+}
+
+func quotationTypesToStrings(types []commonv1.QuotationType) []string {
+	result := make([]string, 0, len(types))
+	for _, t := range types {
+		switch t {
+		case commonv1.QuotationType_QUOTATION_TYPE_GENDER:
+			result = append(result, "gender")
+		case commonv1.QuotationType_QUOTATION_TYPE_FIRST_SPEAKER:
+			result = append(result, "first_speaker")
+		}
+	}
+	return result
 }

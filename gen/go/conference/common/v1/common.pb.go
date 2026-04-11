@@ -21,6 +21,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type QuotationType int32
+
+const (
+	QuotationType_QUOTATION_TYPE_UNSPECIFIED   QuotationType = 0
+	QuotationType_QUOTATION_TYPE_GENDER        QuotationType = 1 // FLINTA* interleaving
+	QuotationType_QUOTATION_TYPE_FIRST_SPEAKER QuotationType = 2 // first-time speaker bonus
+)
+
+// Enum value maps for QuotationType.
+var (
+	QuotationType_name = map[int32]string{
+		0: "QUOTATION_TYPE_UNSPECIFIED",
+		1: "QUOTATION_TYPE_GENDER",
+		2: "QUOTATION_TYPE_FIRST_SPEAKER",
+	}
+	QuotationType_value = map[string]int32{
+		"QUOTATION_TYPE_UNSPECIFIED":   0,
+		"QUOTATION_TYPE_GENDER":        1,
+		"QUOTATION_TYPE_FIRST_SPEAKER": 2,
+	}
+)
+
+func (x QuotationType) Enum() *QuotationType {
+	p := new(QuotationType)
+	*p = x
+	return p
+}
+
+func (x QuotationType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (QuotationType) Descriptor() protoreflect.EnumDescriptor {
+	return file_conference_common_v1_common_proto_enumTypes[0].Descriptor()
+}
+
+func (QuotationType) Type() protoreflect.EnumType {
+	return &file_conference_common_v1_common_proto_enumTypes[0]
+}
+
+func (x QuotationType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use QuotationType.Descriptor instead.
+func (QuotationType) EnumDescriptor() ([]byte, []int) {
+	return file_conference_common_v1_common_proto_rawDescGZIP(), []int{0}
+}
+
 type Capability struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
@@ -739,7 +788,11 @@ const file_conference_common_v1_common_proto_rawDesc = "" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\x12\x14\n" +
 	"\x05label\x18\x03 \x01(\tR\x05label\x12!\n" +
 	"\fcontent_type\x18\x04 \x01(\tR\vcontentType\x12!\n" +
-	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrlBDZBgithub.com/Y4shin/open-caucus/gen/go/conference/common/v1;commonv1b\x06proto3"
+	"\fdownload_url\x18\x05 \x01(\tR\vdownloadUrl*l\n" +
+	"\rQuotationType\x12\x1e\n" +
+	"\x1aQUOTATION_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
+	"\x15QUOTATION_TYPE_GENDER\x10\x01\x12 \n" +
+	"\x1cQUOTATION_TYPE_FIRST_SPEAKER\x10\x02BDZBgithub.com/Y4shin/open-caucus/gen/go/conference/common/v1;commonv1b\x06proto3"
 
 var (
 	file_conference_common_v1_common_proto_rawDescOnce sync.Once
@@ -753,16 +806,18 @@ func file_conference_common_v1_common_proto_rawDescGZIP() []byte {
 	return file_conference_common_v1_common_proto_rawDescData
 }
 
+var file_conference_common_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_conference_common_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_conference_common_v1_common_proto_goTypes = []any{
-	(*Capability)(nil),             // 0: conference.common.v1.Capability
-	(*ActorSummary)(nil),           // 1: conference.common.v1.ActorSummary
-	(*CommitteeReference)(nil),     // 2: conference.common.v1.CommitteeReference
-	(*MeetingReference)(nil),       // 3: conference.common.v1.MeetingReference
-	(*AgendaPointSummary)(nil),     // 4: conference.common.v1.AgendaPointSummary
-	(*AttendeeSummary)(nil),        // 5: conference.common.v1.AttendeeSummary
-	(*SpeakerSummary)(nil),         // 6: conference.common.v1.SpeakerSummary
-	(*CurrentDocumentSummary)(nil), // 7: conference.common.v1.CurrentDocumentSummary
+	(QuotationType)(0),             // 0: conference.common.v1.QuotationType
+	(*Capability)(nil),             // 1: conference.common.v1.Capability
+	(*ActorSummary)(nil),           // 2: conference.common.v1.ActorSummary
+	(*CommitteeReference)(nil),     // 3: conference.common.v1.CommitteeReference
+	(*MeetingReference)(nil),       // 4: conference.common.v1.MeetingReference
+	(*AgendaPointSummary)(nil),     // 5: conference.common.v1.AgendaPointSummary
+	(*AttendeeSummary)(nil),        // 6: conference.common.v1.AttendeeSummary
+	(*SpeakerSummary)(nil),         // 7: conference.common.v1.SpeakerSummary
+	(*CurrentDocumentSummary)(nil), // 8: conference.common.v1.CurrentDocumentSummary
 }
 var file_conference_common_v1_common_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -783,13 +838,14 @@ func file_conference_common_v1_common_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_common_v1_common_proto_rawDesc), len(file_conference_common_v1_common_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_conference_common_v1_common_proto_goTypes,
 		DependencyIndexes: file_conference_common_v1_common_proto_depIdxs,
+		EnumInfos:         file_conference_common_v1_common_proto_enumTypes,
 		MessageInfos:      file_conference_common_v1_common_proto_msgTypes,
 	}.Build()
 	File_conference_common_v1_common_proto = out.File

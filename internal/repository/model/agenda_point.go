@@ -8,8 +8,7 @@ type AgendaPoint struct {
 	Position                     int64
 	Title                        string
 	CurrentSpeakerID             *int64
-	GenderQuotationEnabled       *bool  // nil = inherit from meeting
-	FirstSpeakerQuotationEnabled *bool  // nil = inherit from meeting
+	QuotationOrder *[]string // nil = inherit from meeting; non-nil overrides
 	ModeratorID                  *int64 // nil if not set
 	CurrentAttachmentID          *int64
 	EnteredAt                    *string // ISO8601 timestamp when this point was activated

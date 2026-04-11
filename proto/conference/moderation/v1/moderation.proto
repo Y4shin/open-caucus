@@ -35,9 +35,9 @@ message ModerationSpeakerSummaryBlock {
 }
 
 message ModerationMeetingSettingsBlock {
-  bool gender_quotation_enabled = 1;
-  bool first_speaker_quotation_enabled = 2;
+  reserved 1, 2;
   string moderator_attendee_id = 3;
+  repeated conference.common.v1.QuotationType quotation_order = 4; // ordered list of enabled quotation types
 }
 
 message ModerationView {
@@ -76,16 +76,16 @@ message ToggleSignupOpenResponse {
 message SetMeetingQuotationRequest {
   string committee_slug = 1;
   string meeting_id = 2;
-  bool gender_quotation_enabled = 3;
-  bool first_speaker_quotation_enabled = 4;
+  reserved 3, 4;
+  repeated conference.common.v1.QuotationType quotation_order = 5; // ordered list of enabled quotation types
 }
 
 message SetMeetingQuotationResponse {
   string meeting_id = 1;
-  bool gender_quotation_enabled = 2;
-  bool first_speaker_quotation_enabled = 3;
+  reserved 2, 3;
   uint64 version = 4;
   repeated string invalidated_views = 5;
+  repeated conference.common.v1.QuotationType quotation_order = 6; // echoed back
 }
 
 message SetMeetingModeratorRequest {

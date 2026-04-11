@@ -48,8 +48,8 @@ message AgendaPointRecord {
   bool is_active = 4;
   int64 position = 5;
   string parent_id = 6;
-  bool gender_quotation = 7;
-  bool first_speaker_quotation = 8;
+  reserved 7, 8;
+  repeated conference.common.v1.QuotationType quotation_order = 12;
   repeated AgendaPointRecord sub_points = 9;
   string entered_at = 10; // RFC3339 timestamp when this point was activated
   string left_at = 11;    // RFC3339 timestamp when this point was deactivated

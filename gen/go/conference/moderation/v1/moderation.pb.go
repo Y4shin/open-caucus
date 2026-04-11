@@ -227,12 +227,11 @@ func (x *ModerationSpeakerSummaryBlock) GetWaitingCount() int32 {
 }
 
 type ModerationMeetingSettingsBlock struct {
-	state                        protoimpl.MessageState `protogen:"open.v1"`
-	GenderQuotationEnabled       bool                   `protobuf:"varint,1,opt,name=gender_quotation_enabled,json=genderQuotationEnabled,proto3" json:"gender_quotation_enabled,omitempty"`
-	FirstSpeakerQuotationEnabled bool                   `protobuf:"varint,2,opt,name=first_speaker_quotation_enabled,json=firstSpeakerQuotationEnabled,proto3" json:"first_speaker_quotation_enabled,omitempty"`
-	ModeratorAttendeeId          string                 `protobuf:"bytes,3,opt,name=moderator_attendee_id,json=moderatorAttendeeId,proto3" json:"moderator_attendee_id,omitempty"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	ModeratorAttendeeId string                 `protobuf:"bytes,3,opt,name=moderator_attendee_id,json=moderatorAttendeeId,proto3" json:"moderator_attendee_id,omitempty"`
+	QuotationOrder      []v1.QuotationType     `protobuf:"varint,4,rep,packed,name=quotation_order,json=quotationOrder,proto3,enum=conference.common.v1.QuotationType" json:"quotation_order,omitempty"` // ordered list of enabled quotation types
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *ModerationMeetingSettingsBlock) Reset() {
@@ -265,25 +264,18 @@ func (*ModerationMeetingSettingsBlock) Descriptor() ([]byte, []int) {
 	return file_conference_moderation_v1_moderation_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ModerationMeetingSettingsBlock) GetGenderQuotationEnabled() bool {
-	if x != nil {
-		return x.GenderQuotationEnabled
-	}
-	return false
-}
-
-func (x *ModerationMeetingSettingsBlock) GetFirstSpeakerQuotationEnabled() bool {
-	if x != nil {
-		return x.FirstSpeakerQuotationEnabled
-	}
-	return false
-}
-
 func (x *ModerationMeetingSettingsBlock) GetModeratorAttendeeId() string {
 	if x != nil {
 		return x.ModeratorAttendeeId
 	}
 	return ""
+}
+
+func (x *ModerationMeetingSettingsBlock) GetQuotationOrder() []v1.QuotationType {
+	if x != nil {
+		return x.QuotationOrder
+	}
+	return nil
 }
 
 type ModerationView struct {
@@ -611,13 +603,12 @@ func (x *ToggleSignupOpenResponse) GetInvalidatedViews() []string {
 }
 
 type SetMeetingQuotationRequest struct {
-	state                        protoimpl.MessageState `protogen:"open.v1"`
-	CommitteeSlug                string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
-	MeetingId                    string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
-	GenderQuotationEnabled       bool                   `protobuf:"varint,3,opt,name=gender_quotation_enabled,json=genderQuotationEnabled,proto3" json:"gender_quotation_enabled,omitempty"`
-	FirstSpeakerQuotationEnabled bool                   `protobuf:"varint,4,opt,name=first_speaker_quotation_enabled,json=firstSpeakerQuotationEnabled,proto3" json:"first_speaker_quotation_enabled,omitempty"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug  string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId      string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	QuotationOrder []v1.QuotationType     `protobuf:"varint,5,rep,packed,name=quotation_order,json=quotationOrder,proto3,enum=conference.common.v1.QuotationType" json:"quotation_order,omitempty"` // ordered list of enabled quotation types
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *SetMeetingQuotationRequest) Reset() {
@@ -664,29 +655,21 @@ func (x *SetMeetingQuotationRequest) GetMeetingId() string {
 	return ""
 }
 
-func (x *SetMeetingQuotationRequest) GetGenderQuotationEnabled() bool {
+func (x *SetMeetingQuotationRequest) GetQuotationOrder() []v1.QuotationType {
 	if x != nil {
-		return x.GenderQuotationEnabled
+		return x.QuotationOrder
 	}
-	return false
-}
-
-func (x *SetMeetingQuotationRequest) GetFirstSpeakerQuotationEnabled() bool {
-	if x != nil {
-		return x.FirstSpeakerQuotationEnabled
-	}
-	return false
+	return nil
 }
 
 type SetMeetingQuotationResponse struct {
-	state                        protoimpl.MessageState `protogen:"open.v1"`
-	MeetingId                    string                 `protobuf:"bytes,1,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
-	GenderQuotationEnabled       bool                   `protobuf:"varint,2,opt,name=gender_quotation_enabled,json=genderQuotationEnabled,proto3" json:"gender_quotation_enabled,omitempty"`
-	FirstSpeakerQuotationEnabled bool                   `protobuf:"varint,3,opt,name=first_speaker_quotation_enabled,json=firstSpeakerQuotationEnabled,proto3" json:"first_speaker_quotation_enabled,omitempty"`
-	Version                      uint64                 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
-	InvalidatedViews             []string               `protobuf:"bytes,5,rep,name=invalidated_views,json=invalidatedViews,proto3" json:"invalidated_views,omitempty"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	MeetingId        string                 `protobuf:"bytes,1,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	Version          uint64                 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
+	InvalidatedViews []string               `protobuf:"bytes,5,rep,name=invalidated_views,json=invalidatedViews,proto3" json:"invalidated_views,omitempty"`
+	QuotationOrder   []v1.QuotationType     `protobuf:"varint,6,rep,packed,name=quotation_order,json=quotationOrder,proto3,enum=conference.common.v1.QuotationType" json:"quotation_order,omitempty"` // echoed back
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *SetMeetingQuotationResponse) Reset() {
@@ -726,20 +709,6 @@ func (x *SetMeetingQuotationResponse) GetMeetingId() string {
 	return ""
 }
 
-func (x *SetMeetingQuotationResponse) GetGenderQuotationEnabled() bool {
-	if x != nil {
-		return x.GenderQuotationEnabled
-	}
-	return false
-}
-
-func (x *SetMeetingQuotationResponse) GetFirstSpeakerQuotationEnabled() bool {
-	if x != nil {
-		return x.FirstSpeakerQuotationEnabled
-	}
-	return false
-}
-
 func (x *SetMeetingQuotationResponse) GetVersion() uint64 {
 	if x != nil {
 		return x.Version
@@ -750,6 +719,13 @@ func (x *SetMeetingQuotationResponse) GetVersion() uint64 {
 func (x *SetMeetingQuotationResponse) GetInvalidatedViews() []string {
 	if x != nil {
 		return x.InvalidatedViews
+	}
+	return nil
+}
+
+func (x *SetMeetingQuotationResponse) GetQuotationOrder() []v1.QuotationType {
+	if x != nil {
+		return x.QuotationOrder
 	}
 	return nil
 }
@@ -907,11 +883,10 @@ const file_conference_moderation_v1_moderation_proto_rawDesc = "" +
 	"\vtotal_count\x18\x01 \x01(\x05R\n" +
 	"totalCount\x12,\n" +
 	"\x12has_active_speaker\x18\x02 \x01(\bR\x10hasActiveSpeaker\x12#\n" +
-	"\rwaiting_count\x18\x03 \x01(\x05R\fwaitingCount\"\xd5\x01\n" +
-	"\x1eModerationMeetingSettingsBlock\x128\n" +
-	"\x18gender_quotation_enabled\x18\x01 \x01(\bR\x16genderQuotationEnabled\x12E\n" +
-	"\x1ffirst_speaker_quotation_enabled\x18\x02 \x01(\bR\x1cfirstSpeakerQuotationEnabled\x122\n" +
-	"\x15moderator_attendee_id\x18\x03 \x01(\tR\x13moderatorAttendeeId\"\x9b\x04\n" +
+	"\rwaiting_count\x18\x03 \x01(\x05R\fwaitingCount\"\xae\x01\n" +
+	"\x1eModerationMeetingSettingsBlock\x122\n" +
+	"\x15moderator_attendee_id\x18\x03 \x01(\tR\x13moderatorAttendeeId\x12L\n" +
+	"\x0fquotation_order\x18\x04 \x03(\x0e2#.conference.common.v1.QuotationTypeR\x0equotationOrderJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03\"\x9b\x04\n" +
 	"\x0eModerationView\x12L\n" +
 	"\ameeting\x18\x01 \x01(\v22.conference.moderation.v1.ModerationMeetingSummaryR\ameeting\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\x04R\aversion\x12V\n" +
@@ -938,20 +913,18 @@ const file_conference_moderation_v1_moderation_proto_rawDesc = "" +
 	"\vsignup_open\x18\x02 \x01(\bR\n" +
 	"signupOpen\x12\x18\n" +
 	"\aversion\x18\x03 \x01(\x04R\aversion\x12+\n" +
-	"\x11invalidated_views\x18\x04 \x03(\tR\x10invalidatedViews\"\xe3\x01\n" +
+	"\x11invalidated_views\x18\x04 \x03(\tR\x10invalidatedViews\"\xbc\x01\n" +
 	"\x1aSetMeetingQuotationRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
-	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x128\n" +
-	"\x18gender_quotation_enabled\x18\x03 \x01(\bR\x16genderQuotationEnabled\x12E\n" +
-	"\x1ffirst_speaker_quotation_enabled\x18\x04 \x01(\bR\x1cfirstSpeakerQuotationEnabled\"\x84\x02\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12L\n" +
+	"\x0fquotation_order\x18\x05 \x03(\x0e2#.conference.common.v1.QuotationTypeR\x0equotationOrderJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05\"\xdd\x01\n" +
 	"\x1bSetMeetingQuotationResponse\x12\x1d\n" +
 	"\n" +
-	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x128\n" +
-	"\x18gender_quotation_enabled\x18\x02 \x01(\bR\x16genderQuotationEnabled\x12E\n" +
-	"\x1ffirst_speaker_quotation_enabled\x18\x03 \x01(\bR\x1cfirstSpeakerQuotationEnabled\x12\x18\n" +
+	"meeting_id\x18\x01 \x01(\tR\tmeetingId\x12\x18\n" +
 	"\aversion\x18\x04 \x01(\x04R\aversion\x12+\n" +
-	"\x11invalidated_views\x18\x05 \x03(\tR\x10invalidatedViews\"\x96\x01\n" +
+	"\x11invalidated_views\x18\x05 \x03(\tR\x10invalidatedViews\x12L\n" +
+	"\x0fquotation_order\x18\x06 \x03(\x0e2#.conference.common.v1.QuotationTypeR\x0equotationOrderJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04\"\x96\x01\n" +
 	"\x1aSetMeetingModeratorRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
@@ -996,30 +969,34 @@ var file_conference_moderation_v1_moderation_proto_goTypes = []any{
 	(*SetMeetingQuotationResponse)(nil),    // 10: conference.moderation.v1.SetMeetingQuotationResponse
 	(*SetMeetingModeratorRequest)(nil),     // 11: conference.moderation.v1.SetMeetingModeratorRequest
 	(*SetMeetingModeratorResponse)(nil),    // 12: conference.moderation.v1.SetMeetingModeratorResponse
-	(*v1.AgendaPointSummary)(nil),          // 13: conference.common.v1.AgendaPointSummary
-	(*v1.Capability)(nil),                  // 14: conference.common.v1.Capability
+	(v1.QuotationType)(0),                  // 13: conference.common.v1.QuotationType
+	(*v1.AgendaPointSummary)(nil),          // 14: conference.common.v1.AgendaPointSummary
+	(*v1.Capability)(nil),                  // 15: conference.common.v1.Capability
 }
 var file_conference_moderation_v1_moderation_proto_depIdxs = []int32{
-	0,  // 0: conference.moderation.v1.ModerationView.meeting:type_name -> conference.moderation.v1.ModerationMeetingSummary
-	1,  // 1: conference.moderation.v1.ModerationView.attendees:type_name -> conference.moderation.v1.ModerationAttendeeSummaryBlock
-	13, // 2: conference.moderation.v1.ModerationView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
-	2,  // 3: conference.moderation.v1.ModerationView.speakers:type_name -> conference.moderation.v1.ModerationSpeakerSummaryBlock
-	14, // 4: conference.moderation.v1.ModerationView.capabilities:type_name -> conference.common.v1.Capability
-	3,  // 5: conference.moderation.v1.ModerationView.settings:type_name -> conference.moderation.v1.ModerationMeetingSettingsBlock
-	4,  // 6: conference.moderation.v1.GetModerationViewResponse.view:type_name -> conference.moderation.v1.ModerationView
-	5,  // 7: conference.moderation.v1.ModerationService.GetModerationView:input_type -> conference.moderation.v1.GetModerationViewRequest
-	7,  // 8: conference.moderation.v1.ModerationService.ToggleSignupOpen:input_type -> conference.moderation.v1.ToggleSignupOpenRequest
-	9,  // 9: conference.moderation.v1.ModerationService.SetMeetingQuotation:input_type -> conference.moderation.v1.SetMeetingQuotationRequest
-	11, // 10: conference.moderation.v1.ModerationService.SetMeetingModerator:input_type -> conference.moderation.v1.SetMeetingModeratorRequest
-	6,  // 11: conference.moderation.v1.ModerationService.GetModerationView:output_type -> conference.moderation.v1.GetModerationViewResponse
-	8,  // 12: conference.moderation.v1.ModerationService.ToggleSignupOpen:output_type -> conference.moderation.v1.ToggleSignupOpenResponse
-	10, // 13: conference.moderation.v1.ModerationService.SetMeetingQuotation:output_type -> conference.moderation.v1.SetMeetingQuotationResponse
-	12, // 14: conference.moderation.v1.ModerationService.SetMeetingModerator:output_type -> conference.moderation.v1.SetMeetingModeratorResponse
-	11, // [11:15] is the sub-list for method output_type
-	7,  // [7:11] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	13, // 0: conference.moderation.v1.ModerationMeetingSettingsBlock.quotation_order:type_name -> conference.common.v1.QuotationType
+	0,  // 1: conference.moderation.v1.ModerationView.meeting:type_name -> conference.moderation.v1.ModerationMeetingSummary
+	1,  // 2: conference.moderation.v1.ModerationView.attendees:type_name -> conference.moderation.v1.ModerationAttendeeSummaryBlock
+	14, // 3: conference.moderation.v1.ModerationView.active_agenda_point:type_name -> conference.common.v1.AgendaPointSummary
+	2,  // 4: conference.moderation.v1.ModerationView.speakers:type_name -> conference.moderation.v1.ModerationSpeakerSummaryBlock
+	15, // 5: conference.moderation.v1.ModerationView.capabilities:type_name -> conference.common.v1.Capability
+	3,  // 6: conference.moderation.v1.ModerationView.settings:type_name -> conference.moderation.v1.ModerationMeetingSettingsBlock
+	4,  // 7: conference.moderation.v1.GetModerationViewResponse.view:type_name -> conference.moderation.v1.ModerationView
+	13, // 8: conference.moderation.v1.SetMeetingQuotationRequest.quotation_order:type_name -> conference.common.v1.QuotationType
+	13, // 9: conference.moderation.v1.SetMeetingQuotationResponse.quotation_order:type_name -> conference.common.v1.QuotationType
+	5,  // 10: conference.moderation.v1.ModerationService.GetModerationView:input_type -> conference.moderation.v1.GetModerationViewRequest
+	7,  // 11: conference.moderation.v1.ModerationService.ToggleSignupOpen:input_type -> conference.moderation.v1.ToggleSignupOpenRequest
+	9,  // 12: conference.moderation.v1.ModerationService.SetMeetingQuotation:input_type -> conference.moderation.v1.SetMeetingQuotationRequest
+	11, // 13: conference.moderation.v1.ModerationService.SetMeetingModerator:input_type -> conference.moderation.v1.SetMeetingModeratorRequest
+	6,  // 14: conference.moderation.v1.ModerationService.GetModerationView:output_type -> conference.moderation.v1.GetModerationViewResponse
+	8,  // 15: conference.moderation.v1.ModerationService.ToggleSignupOpen:output_type -> conference.moderation.v1.ToggleSignupOpenResponse
+	10, // 16: conference.moderation.v1.ModerationService.SetMeetingQuotation:output_type -> conference.moderation.v1.SetMeetingQuotationResponse
+	12, // 17: conference.moderation.v1.ModerationService.SetMeetingModerator:output_type -> conference.moderation.v1.SetMeetingModeratorResponse
+	14, // [14:18] is the sub-list for method output_type
+	10, // [10:14] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_conference_moderation_v1_moderation_proto_init() }

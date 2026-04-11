@@ -5,6 +5,9 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import { Dialog } from 'bits-ui';
 	import AppSelect from '$lib/components/ui/AppSelect.svelte';
+	import QuotationOrderConfig from './QuotationOrderConfig.svelte';
+	import QuotationPreview from './QuotationPreview.svelte';
+	import { QuotationType } from '$lib/gen/conference/common/v1/common_pb.js';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
@@ -406,9 +409,8 @@
 		}
 	}
 
-	async function updateMeetingQuotation() {
-		const settings = moderationState.data?.settings;
-		if (!settings || settingsActionPending !== '') return;
+	async function updateMeetingQuotation(order: QuotationType[]) {
+		if (settingsActionPending !== '') return;
 
 		settingsActionPending = 'quotation';
 		actionError = '';
@@ -416,8 +418,7 @@
 			await moderationClient.setMeetingQuotation({
 				committeeSlug: slug,
 				meetingId,
-				genderQuotationEnabled: settings.genderQuotationEnabled,
-				firstSpeakerQuotationEnabled: settings.firstSpeakerQuotationEnabled
+				quotationOrder: order
 			});
 			loadModeration();
 			loadSpeakers();
@@ -621,34 +622,14 @@
 												<div class="space-y-3">
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
 														<h3 class="mb-2 text-sm font-semibold">{m.meeting_manage_agenda_point_quotation_settings()}</h3>
-														<form class="grid gap-3 md:grid-cols-2">
-															<div class="space-y-1">
-																<label for="gender_quotation_enabled">{m.meeting_moderate_flinta_quotation_label()}</label>
-																<AppSelect
-																	id="gender_quotation_enabled"
-																	value={(moderationState.data.settings?.genderQuotationEnabled ?? true) ? 'true' : 'false'}
-																	disabled={settingsActionPending !== ''}
-																	items={[
-																		{ value: 'true', label: m.meeting_moderate_enabled() },
-																		{ value: 'false', label: m.meeting_moderate_disabled() }
-																	]}
-																	onValueChange={(v) => { if (moderationState.data?.settings) { moderationState.data.settings.genderQuotationEnabled = v === 'true'; } void updateMeetingQuotation(); }}
-																/>
-															</div>
-															<div class="space-y-1">
-																<label for="first_speaker_quotation_enabled">{m.meeting_moderate_first_speaker_bonus_label()}</label>
-																<AppSelect
-																	id="first_speaker_quotation_enabled"
-																	value={(moderationState.data.settings?.firstSpeakerQuotationEnabled ?? true) ? 'true' : 'false'}
-																	disabled={settingsActionPending !== ''}
-																	items={[
-																		{ value: 'true', label: m.meeting_moderate_enabled() },
-																		{ value: 'false', label: m.meeting_moderate_disabled() }
-																	]}
-																	onValueChange={(v) => { if (moderationState.data?.settings) { moderationState.data.settings.firstSpeakerQuotationEnabled = v === 'true'; } void updateMeetingQuotation(); }}
-																/>
-															</div>
-														</form>
+														<QuotationOrderConfig
+															quotationOrder={moderationState.data.settings?.quotationOrder ?? []}
+															disabled={settingsActionPending !== ''}
+															onOrderChange={(order) => void updateMeetingQuotation(order)}
+														/>
+														<div class="mt-3">
+															<QuotationPreview quotationOrder={moderationState.data.settings?.quotationOrder ?? []} />
+														</div>
 													</div>
 													<div class="rounded-box border border-base-300 bg-base-100 p-3">
 														<h3 class="mb-2 text-sm font-semibold">{m.meeting_manage_agenda_point_moderator()}</h3>

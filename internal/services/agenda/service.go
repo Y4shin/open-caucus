@@ -560,13 +560,16 @@ func toAgendaPointRecord(ap *model.AgendaPoint, displayNumber string, currentID 
 	if ap.ParentID != nil {
 		parentID = strconv.FormatInt(*ap.ParentID, 10)
 	}
-	genderQ := false
-	if ap.GenderQuotationEnabled != nil {
-		genderQ = *ap.GenderQuotationEnabled
-	}
-	firstSpeakerQ := false
-	if ap.FirstSpeakerQuotationEnabled != nil {
-		firstSpeakerQ = *ap.FirstSpeakerQuotationEnabled
+	var quotationOrder []commonv1.QuotationType
+	if ap.QuotationOrder != nil {
+		for _, s := range *ap.QuotationOrder {
+			switch s {
+			case "gender":
+				quotationOrder = append(quotationOrder, commonv1.QuotationType_QUOTATION_TYPE_GENDER)
+			case "first_speaker":
+				quotationOrder = append(quotationOrder, commonv1.QuotationType_QUOTATION_TYPE_FIRST_SPEAKER)
+			}
+		}
 	}
 	enteredAt := ""
 	if ap.EnteredAt != nil {
@@ -583,8 +586,7 @@ func toAgendaPointRecord(ap *model.AgendaPoint, displayNumber string, currentID 
 		IsActive:              isActive,
 		Position:              ap.Position,
 		ParentId:              parentID,
-		GenderQuotation:       genderQ,
-		FirstSpeakerQuotation: firstSpeakerQ,
+		QuotationOrder: quotationOrder,
 		EnteredAt:             enteredAt,
 		LeftAt:                leftAt,
 	}

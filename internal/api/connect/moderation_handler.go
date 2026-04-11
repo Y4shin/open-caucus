@@ -5,6 +5,7 @@ import (
 
 	connect "connectrpc.com/connect"
 
+	commonv1 "github.com/Y4shin/open-caucus/gen/go/conference/common/v1"
 	moderationv1 "github.com/Y4shin/open-caucus/gen/go/conference/moderation/v1"
 	moderationv1connect "github.com/Y4shin/open-caucus/gen/go/conference/moderation/v1/moderationv1connect"
 	moderationservice "github.com/Y4shin/open-caucus/internal/services/moderation"
@@ -36,11 +37,25 @@ func (h *ModerationHandler) ToggleSignupOpen(ctx context.Context, req *connect.R
 }
 
 func (h *ModerationHandler) SetMeetingQuotation(ctx context.Context, req *connect.Request[moderationv1.SetMeetingQuotationRequest]) (*connect.Response[moderationv1.SetMeetingQuotationResponse], error) {
-	resp, err := h.service.SetMeetingQuotation(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.GenderQuotationEnabled, req.Msg.FirstSpeakerQuotationEnabled)
+	order := quotationTypesToStrings(req.Msg.QuotationOrder)
+	resp, err := h.service.SetMeetingQuotation(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, order)
 	if err != nil {
 		return nil, err
 	}
 	return connect.NewResponse(resp), nil
+}
+
+func quotationTypesToStrings(types []commonv1.QuotationType) []string {
+	result := make([]string, 0, len(types))
+	for _, t := range types {
+		switch t {
+		case commonv1.QuotationType_QUOTATION_TYPE_GENDER:
+			result = append(result, "gender")
+		case commonv1.QuotationType_QUOTATION_TYPE_FIRST_SPEAKER:
+			result = append(result, "first_speaker")
+		}
+	}
+	return result
 }
 
 func (h *ModerationHandler) SetMeetingModerator(ctx context.Context, req *connect.Request[moderationv1.SetMeetingModeratorRequest]) (*connect.Response[moderationv1.SetMeetingModeratorResponse], error) {

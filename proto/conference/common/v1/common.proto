@@ -4,6 +4,12 @@ package conference.common.v1;
 
 option go_package = "github.com/Y4shin/open-caucus/gen/go/conference/common/v1;commonv1";
 
+enum QuotationType {
+  QUOTATION_TYPE_UNSPECIFIED = 0;
+  QUOTATION_TYPE_GENDER = 1;      // FLINTA* interleaving
+  QUOTATION_TYPE_FIRST_SPEAKER = 2; // first-time speaker bonus
+}
+
 message Capability {
   string key = 1;
   bool allowed = 2;

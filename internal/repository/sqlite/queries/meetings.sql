@@ -26,11 +26,8 @@ UPDATE meetings SET signup_open = ? WHERE id = ?;
 -- name: SetMeetingSignupOpenWithVersion :one
 UPDATE meetings SET signup_open = ?, version = version + 1 WHERE id = ? RETURNING version;
 
--- name: SetMeetingGenderQuotation :exec
-UPDATE meetings SET gender_quotation_enabled = ? WHERE id = ?;
-
--- name: SetMeetingFirstSpeakerQuotation :exec
-UPDATE meetings SET first_speaker_quotation_enabled = ? WHERE id = ?;
+-- name: SetMeetingQuotationOrder :exec
+UPDATE meetings SET quotation_order = ? WHERE id = ?;
 
 -- name: SetMeetingModerator :exec
 UPDATE meetings SET moderator_id = ? WHERE id = ?;

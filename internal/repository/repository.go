@@ -116,8 +116,7 @@ type Repository interface {
 	// SetMeetingSignupOpenWithVersion atomically sets signup_open and increments the version counter,
 	// returning the new version.
 	SetMeetingSignupOpenWithVersion(ctx context.Context, id int64, open bool) (int64, error)
-	SetMeetingGenderQuotation(ctx context.Context, id int64, enabled bool) error
-	SetMeetingFirstSpeakerQuotation(ctx context.Context, id int64, enabled bool) error
+	SetMeetingQuotationOrder(ctx context.Context, id int64, order []string) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
 	SetMeetingDatetime(ctx context.Context, id int64, startAt, endAt *time.Time) error
 
@@ -170,8 +169,7 @@ type Repository interface {
 	SetAgendaPointLeftAt(ctx context.Context, agendaPointID int64, ts string) error
 	SetCurrentAttachment(ctx context.Context, agendaPointID, attachmentID int64) error
 	ClearCurrentDocument(ctx context.Context, agendaPointID int64) error
-	SetAgendaPointGenderQuotation(ctx context.Context, id int64, enabled *bool) error
-	SetAgendaPointFirstSpeakerQuotation(ctx context.Context, id int64, enabled *bool) error
+	SetAgendaPointQuotationOrder(ctx context.Context, id int64, order *[]string) error
 	SetAgendaPointModerator(ctx context.Context, id int64, moderatorID *int64) error
 
 	// Speakers list

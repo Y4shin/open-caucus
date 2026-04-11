@@ -68,9 +68,9 @@ func (s *Service) AddSpeaker(ctx context.Context, committeeSlug, meetingIDStr, a
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load active agenda point", err)
 	}
 
-	effectiveGenderQuotation := meeting.GenderQuotationEnabled
-	if ap.GenderQuotationEnabled != nil {
-		effectiveGenderQuotation = *ap.GenderQuotationEnabled
+	effectiveOrder := meeting.QuotationOrder
+	if ap.QuotationOrder != nil {
+		effectiveOrder = *ap.QuotationOrder
 	}
 
 	attendee, err := s.repo.GetAttendeeByID(ctx, attendeeID)
@@ -78,7 +78,7 @@ func (s *Service) AddSpeaker(ctx context.Context, committeeSlug, meetingIDStr, a
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load attendee", err)
 	}
 
-	genderQuoted := attendee.Quoted && effectiveGenderQuotation
+	genderQuoted := attendee.Quoted && containsQuotationType(effectiveOrder, "gender")
 	firstSpeaker := false
 	if hasPrev, err := s.repo.HasAttendeeSpokenOnAgendaPoint(ctx, ap.ID, attendeeID); err == nil {
 		firstSpeaker = !hasPrev
@@ -285,12 +285,11 @@ func (s *Service) buildQueueView(ctx context.Context, committeeSlug string, meet
 
 	view.ActiveAgendaPointId = strconv.FormatInt(ap.ID, 10)
 	view.ActiveAgendaPointTitle = ap.Title
-	if ap.GenderQuotationEnabled != nil {
-		view.GenderQuotation = *ap.GenderQuotationEnabled
+	effectiveOrder := meeting.QuotationOrder
+	if ap.QuotationOrder != nil {
+		effectiveOrder = *ap.QuotationOrder
 	}
-	if ap.FirstSpeakerQuotationEnabled != nil {
-		view.FirstSpeakerQuotation = *ap.FirstSpeakerQuotationEnabled
-	}
+	view.QuotationOrder = stringsToQuotationTypes(effectiveOrder)
 
 	// Determine whether the calling actor can add themselves.
 	view.CanAddSelf = s.canAddSelf(ctx, meetingID)
@@ -407,4 +406,26 @@ func (s *Service) publishSpeakersUpdated(meetingID int64) {
 		Data:      []byte(`{"type":"speakers.updated"}`),
 		MeetingID: &mid,
 	})
+}
+
+func containsQuotationType(order []string, qt string) bool {
+	for _, s := range order {
+		if s == qt {
+			return true
+		}
+	}
+	return false
+}
+
+func stringsToQuotationTypes(order []string) []commonv1.QuotationType {
+	result := make([]commonv1.QuotationType, 0, len(order))
+	for _, s := range order {
+		switch s {
+		case "gender":
+			result = append(result, commonv1.QuotationType_QUOTATION_TYPE_GENDER)
+		case "first_speaker":
+			result = append(result, commonv1.QuotationType_QUOTATION_TYPE_FIRST_SPEAKER)
+		}
+	}
+	return result
 }

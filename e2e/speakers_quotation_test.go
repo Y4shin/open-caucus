@@ -285,15 +285,14 @@ func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 	}
 }
 
-// TestSpeakers_MeetingQuotation_ToggleDisablesGender verifies that setting the
-// meeting-level gender quotation to disabled persists in the UI.
-func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
+// TestSpeakers_MeetingQuotation_DisableGenderViaUI verifies that removing
+// gender quotation via the quotation order config persists.
+func TestSpeakers_MeetingQuotation_DisableGenderViaUI(t *testing.T) {
 	ts := newTestServer(t)
 	ts.seedCommittee(t, "Test Committee", "test-committee")
 	ts.seedUser(t, "test-committee", "chair1", "pass123", "Chair Person", "chairperson")
 	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
-
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
@@ -302,28 +301,34 @@ func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
 	openModerateLeftTab(t, page, "settings")
 
 	urlBefore := page.URL()
-	genderSelect := page.Locator("#gender_quotation_enabled")
-	if err := genderSelect.WaitFor(); err != nil {
-		t.Fatalf("wait for gender quotation select: %v", err)
+
+	// The quotation order config should show enabled items.
+	enabledZone := page.Locator("[role=list]").First()
+	if err := enabledZone.WaitFor(); err != nil {
+		t.Fatalf("wait quotation enabled zone: %v", err)
 	}
 
-	// Check i18n label for "Enabled" in the trigger text
-	initialText := bitsSelectValue(t, genderSelect)
-	if !strings.Contains(strings.ToLower(initialText), "enable") {
-		t.Fatalf("expected initial gender quotation to show enabled label, got %q", initialText)
+	// Click the disable (X) button on the FLINTA* quotation card.
+	genderCard := enabledZone.Locator("[role=listitem]").Filter(playwright.LocatorFilterOptions{HasText: "FLINTA"}).First()
+	if err := genderCard.WaitFor(); err != nil {
+		t.Fatalf("wait gender quotation card: %v", err)
+	}
+	disableBtn := genderCard.Locator("button[aria-label='Disable']")
+	if err := disableBtn.Click(); err != nil {
+		t.Fatalf("click disable gender quotation: %v", err)
 	}
 
-	// Select the "Disabled" option
-	bitsSelectByID(t, page, "gender_quotation_enabled", "Disabled")
-	waitUntil(t, 3*time.Second, func() (bool, error) {
-		text := bitsSelectValue(t, page.Locator("#gender_quotation_enabled"))
-		return strings.Contains(strings.ToLower(text), "disable"), nil
-	}, "gender quotation select to persist disabled")
+	// Verify gender card moves to the disabled zone.
+	waitUntil(t, 5*time.Second, func() (bool, error) {
+		count, err := enabledZone.Locator("[role=listitem]").Filter(playwright.LocatorFilterOptions{HasText: "FLINTA"}).Count()
+		return count == 0, err
+	}, "gender card to leave enabled zone")
 
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on quotation toggle: got %s, want %s", page.URL(), urlBefore)
 	}
 }
+
 
 // TestSpeakers_SortingOrder_WithActiveSpeaker verifies displayed row order:
 // DONE entries first, then SPEAKING, then WAITING according queue ordering.
