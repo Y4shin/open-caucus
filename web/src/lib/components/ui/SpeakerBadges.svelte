@@ -25,7 +25,7 @@
 {/if}
 {#if quoted}
 	<AppTooltip text="FLINTA*" side="right">
-		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
+		<span class="badge badge-info badge-sm" data-testid="live-speaker-quoted-badge" aria-label="FLINTA*"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
 	</AppTooltip>
 {/if}
 {#if firstSpeaker}

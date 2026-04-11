@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
@@ -139,29 +140,19 @@
 									{/if}
 								</div>
 								<div class="flex flex-col items-start justify-center gap-1 pr-2">
-									<label class="text-xs font-medium text-base-content/70">
-										<input
-											class="toggle toggle-primary toggle-sm"
-											type="checkbox"
-											id={"meeting-active-toggle-" + (item.meeting?.meetingId ?? '')}
-											checked={localActiveMeetingId === item.meeting?.meetingId}
-											data-testid="committee-toggle-active"
-											onchange={(e) => toggleActive(e, item.meeting?.meetingId ?? '')}
-										/>
-										{m.committee_col_active()}
-									</label>
-									<label class="text-xs font-medium text-base-content/70">
-										<input
-											class="toggle toggle-primary toggle-sm"
-											type="checkbox"
-											id={"meeting-signup-toggle-" + (item.meeting?.meetingId ?? '')}
-											checked={item.meeting?.signupOpen ?? false}
-											data-testid="committee-toggle-signup-open"
-											disabled={signupTogglePendingMeetingId === (item.meeting?.meetingId ?? '')}
-											onchange={() => toggleSignupOpen(item.meeting?.meetingId ?? '', item.meeting?.signupOpen ?? false)}
-										/>
-										{m.committee_col_signup()}
-									</label>
+									<AppSwitch
+										checked={localActiveMeetingId === item.meeting?.meetingId}
+										id={"meeting-active-toggle-" + (item.meeting?.meetingId ?? '')}
+										label={m.committee_col_active()}
+										onCheckedChange={() => toggleActive(new Event('change'), item.meeting?.meetingId ?? '')}
+									/>
+									<AppSwitch
+										checked={item.meeting?.signupOpen ?? false}
+										id={"meeting-signup-toggle-" + (item.meeting?.meetingId ?? '')}
+										disabled={signupTogglePendingMeetingId === (item.meeting?.meetingId ?? '')}
+										label={m.committee_col_signup()}
+										onCheckedChange={() => toggleSignupOpen(item.meeting?.meetingId ?? '', item.meeting?.signupOpen ?? false)}
+									/>
 								</div>
 								<div class="flex items-center justify-end gap-1">
 									<a

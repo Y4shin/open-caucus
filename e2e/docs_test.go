@@ -41,7 +41,7 @@ func TestDocsDirectoryPathResolvesIndexAndShowsExpectedPath(t *testing.T) {
 	if err := page.Locator("p:has-text('Path: Chairperson')").First().WaitFor(); err != nil {
 		t.Fatalf("expected docs path display for directory index: %v", err)
 	}
-	if err := page.Locator("summary:has-text('Browse Documentation')").First().WaitFor(); err != nil {
+	if err := page.Locator("button:has-text('Browse Documentation')").First().WaitFor(); err != nil {
 		t.Fatalf("expected docs browse accordion label: %v", err)
 	}
 }

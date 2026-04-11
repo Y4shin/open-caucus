@@ -175,11 +175,7 @@ func TestAgendaPoint_CreateSubAgendaPoint(t *testing.T) {
 	if err := page.Locator("#agenda-point-list-container input[name=title]").Fill("Child Item"); err != nil {
 		t.Fatalf("fill child title: %v", err)
 	}
-	if _, err := page.Locator("#ap_parent_id").SelectOption(playwright.SelectOptionValues{
-		Labels: playwright.StringSlice("Parent Item"),
-	}); err != nil {
-		t.Fatalf("select parent agenda point: %v", err)
-	}
+	bitsSelectByID(t, page, "ap_parent_id", "Parent Item")
 	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-add-form'] button[type=submit]").Click(); err != nil {
 		t.Fatalf("submit child agenda form: %v", err)
 	}
@@ -210,11 +206,11 @@ func TestAgendaPoint_Activate(t *testing.T) {
 	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Item One",
 	})
-	if err := card.Locator("button[title='Activate agenda point']").Click(); err != nil {
+	if err := card.Locator("button[aria-label='Activate agenda point']").Click(); err != nil {
 		t.Fatalf("click activate: %v", err)
 	}
 
-	if err := card.Locator("button[title='Activate agenda point']").WaitFor(playwright.LocatorWaitForOptions{
+	if err := card.Locator("button[aria-label='Activate agenda point']").WaitFor(playwright.LocatorWaitForOptions{
 		State: playwright.WaitForSelectorStateDetached,
 	}); err != nil {
 		t.Fatalf("expected activate button to disappear after activation: %v", err)
@@ -255,7 +251,7 @@ func TestAgendaPoint_Delete(t *testing.T) {
 			t.Logf("accept dialog error: %v", err)
 		}
 	})
-	if err := card.Locator("button[title='Delete agenda point']").Click(); err != nil {
+	if err := card.Locator("button[aria-label='Delete agenda point']").Click(); err != nil {
 		t.Fatalf("click delete: %v", err)
 	}
 
@@ -286,7 +282,7 @@ func TestAgendaPoint_ReorderMoveUp(t *testing.T) {
 	card := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").Filter(playwright.LocatorFilterOptions{
 		HasText: "Second",
 	})
-	if err := card.Locator("button[title='Move up']").Click(); err != nil {
+	if err := card.Locator("button[aria-label='Move up']").Click(); err != nil {
 		t.Fatalf("click move up: %v", err)
 	}
 	if err := page.Locator("#agenda-point-list-container [data-testid='manage-agenda-point-card']").First().Locator("text=Second").WaitFor(); err != nil {

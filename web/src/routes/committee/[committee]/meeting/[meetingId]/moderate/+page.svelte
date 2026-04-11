@@ -3,8 +3,10 @@
 	import { goto } from '$app/navigation';
 	import { onDestroy } from 'svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
+	import { Dialog } from 'bits-ui';
 	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import AgendaSection from './AgendaSection.svelte';
 	import VotesPanelSection from './VotesPanelSection.svelte';
@@ -41,11 +43,11 @@
 	let moderateLeftTab = $state<'agenda' | 'tools' | 'attendees' | 'settings'>('agenda');
 
 	// QR dialog state
-	let joinQrDialogEl = $state<HTMLDialogElement | null>(null);
+	let joinQrDialogOpen = $state(false);
 	let joinQrData = $state<MeetingJoinQrView | null>(null);
 	let joinQrLoading = $state(false);
 	let joinQrCopied = $state(false);
-	let recoveryDialogEl = $state<HTMLDialogElement | null>(null);
+	let recoveryDialogOpen = $state(false);
 	let recoveryData = $state<AttendeeRecoveryView | null>(null);
 	let recoveryLoading = $state(false);
 	let recoveryCopied = $state(false);
@@ -237,7 +239,7 @@
 		joinQrData = null;
 		joinQrLoading = true;
 		joinQrCopied = false;
-		joinQrDialogEl?.showModal();
+		joinQrDialogOpen = true;
 		try {
 			const res = await meetingClient.getMeetingJoinQr({
 				committeeSlug: slug,
@@ -263,7 +265,7 @@
 		recoveryData = null;
 		recoveryLoading = true;
 		recoveryCopied = false;
-		recoveryDialogEl?.showModal();
+		recoveryDialogOpen = true;
 		try {
 			const res = await attendeeClient.getAttendeeRecovery({
 				committeeSlug: slug,
@@ -393,7 +395,7 @@
 				moderatorAttendeeId: newValue
 			});
 			if (moderationState.data?.settings) {
-				moderationState.data.settings.moderatorAttendeeId = target.value;
+				moderationState.data.settings.moderatorAttendeeId = newValue;
 			}
 			loadModeration();
 		} catch (err) {
@@ -553,16 +555,15 @@
 								<div class="mb-3 flex items-center justify-between gap-2">
 									<h2 class="text-lg font-semibold">{m.meeting_moderate_attendees_tab()}</h2>
 									<div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
-										<form class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
-											<label class="label cursor-pointer justify-start gap-3" for="manage_signup_open">
-												{#if moderationState.data.attendees?.signupOpen}
-													<input checked class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
-												{:else}
-													<input class="toggle toggle-primary toggle-sm" id="manage_signup_open" name="signup_open" type="checkbox" value="true" disabled={togglingSignup || attendeeActionPending !== ''} onchange={toggleSignupOpen} />
-												{/if}
-												<span>{m.meeting_moderate_guest_signup_label()}</span>
-											</label>
-										</form>
+										<div class="inline-flex order-last basis-full justify-center sm:order-none sm:basis-auto sm:justify-start" title={moderationState.data.attendees?.signupOpen ? 'Guest signup is open' : 'Guest signup is closed'}>
+											<AppSwitch
+												checked={moderationState.data.attendees?.signupOpen ?? false}
+												id="manage_signup_open"
+												disabled={togglingSignup || attendeeActionPending !== ''}
+												label={m.meeting_moderate_guest_signup_label()}
+												onCheckedChange={() => toggleSignupOpen()}
+											/>
+										</div>
 										<form class="inline-flex" data-testid="manage-self-signup-form" onsubmit={async (event) => { event.preventDefault(); await selfSignupAttendee(); }}>
 											<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Sign yourself up" title="Sign yourself up" aria-label="Sign yourself up" disabled={attendeeActionPending !== ''}><LegacyIcon name="person-raised" class="h-4 w-4" /></button>
 										</form>
@@ -657,7 +658,7 @@
 																value={moderationState.data.settings?.moderatorAttendeeId ?? ''}
 																disabled={settingsActionPending !== ''}
 																placeholder="-- none --"
-																items={settingsAttendees().map((a) => ({ value: a.attendeeId, label: a.fullName }))}
+																items={[{ value: '', label: '-- none --' }, ...settingsAttendees().map((a) => ({ value: a.attendeeId, label: a.fullName }))]}
 																onValueChange={updateMeetingModerator}
 															/>
 														</form>
@@ -695,11 +696,13 @@
 	{/if}
 </div>
 
-<dialog id="join-qr-dialog" class="modal" bind:this={joinQrDialogEl} onclose={() => { joinQrData = null; }}>
-	<div class="modal-box max-w-md text-center">
+<Dialog.Root bind:open={joinQrDialogOpen} onOpenChange={(o) => { if (!o) joinQrData = null; }}>
+<Dialog.Portal>
+<Dialog.Overlay class="fixed inset-0 z-40 bg-black/50" />
+<Dialog.Content class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md rounded-box bg-base-100 p-6 shadow-xl text-center">
 		<div class="mb-4 flex items-center justify-between">
-			<h3 class="text-lg font-semibold">{m.meeting_join_qr_title()}</h3>
-			<button type="button" class="btn btn-sm btn-ghost" onclick={() => joinQrDialogEl?.close()}>{m.common_close()}</button>
+			<Dialog.Title class="text-lg font-semibold">{m.meeting_join_qr_title()}</Dialog.Title>
+			<button type="button" class="btn btn-sm btn-ghost" onclick={() => joinQrDialogOpen = false}>{m.common_close()}</button>
 		</div>
 		{#if joinQrLoading}
 			<AppSpinner label="Loading QR code" />
@@ -715,15 +718,17 @@
 		{:else}
 			<AppAlert message="Failed to load the join QR code." />
 		{/if}
-	</div>
-	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
-</dialog>
+</Dialog.Content>
+</Dialog.Portal>
+</Dialog.Root>
 
-<dialog id="recovery-qr-dialog" class="modal" bind:this={recoveryDialogEl} onclose={() => { recoveryData = null; }}>
-	<div class="modal-box max-w-md text-center">
+<Dialog.Root bind:open={recoveryDialogOpen} onOpenChange={(o) => { if (!o) recoveryData = null; }}>
+<Dialog.Portal>
+<Dialog.Overlay class="fixed inset-0 z-40 bg-black/50" />
+<Dialog.Content class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-md rounded-box bg-base-100 p-6 shadow-xl text-center">
 		<div class="mb-4 flex items-center justify-between">
-			<h3 class="text-lg font-semibold">{m.meeting_attendee_recovery_title()}</h3>
-			<button type="button" class="btn btn-sm btn-ghost" onclick={() => recoveryDialogEl?.close()}>{m.common_close()}</button>
+			<Dialog.Title class="text-lg font-semibold">{m.meeting_attendee_recovery_title()}</Dialog.Title>
+			<button type="button" class="btn btn-sm btn-ghost" onclick={() => recoveryDialogOpen = false}>{m.common_close()}</button>
 		</div>
 		{#if recoveryLoading}
 			<AppSpinner label="Loading recovery link" />
@@ -740,6 +745,6 @@
 		{:else}
 			<AppAlert message="Failed to load the recovery link." />
 		{/if}
-	</div>
-	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
-</dialog>
+</Dialog.Content>
+</Dialog.Portal>
+</Dialog.Root>

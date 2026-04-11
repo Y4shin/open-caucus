@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Collapsible } from 'bits-ui';
+	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import VoteCard from '$lib/components/ui/VoteCard.svelte';
@@ -30,6 +32,7 @@
 	} = $props();
 
 	let createVoteDetailsOpen = $state(false);
+	let createVoteVisibility = $state('open');
 	let voteAccordionOpen = $state<Record<string, boolean>>({});
 	let draftVoteEditorOpen = $state<Record<string, boolean>>({});
 
@@ -208,15 +211,24 @@
 {:else if !votesPanel?.hasActiveAgendaPoint}
 	<p class="text-sm text-base-content/70">{m.meeting_manage_no_active_agenda_for_speakers()}</p>
 {:else}
-	<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={createVoteDetailsOpen} ontoggle={(event) => { createVoteDetailsOpen = (event.currentTarget as HTMLDetailsElement).open; }}>
-		<summary class="collapse-title text-sm font-semibold">{m.votes_create_vote()}</summary>
-		<div class="collapse-content">
+	<Collapsible.Root bind:open={createVoteDetailsOpen} class="rounded-box border border-base-300 bg-base-100" data-testid="create-vote-collapsible">
+		<Collapsible.Trigger class="flex w-full cursor-pointer items-center justify-between px-4 py-2 text-sm font-semibold">
+			{m.votes_create_vote()}
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 transition-transform {createVoteDetailsOpen ? 'rotate-180' : ''}">
+				<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+			</svg>
+		</Collapsible.Trigger>
+		<Collapsible.Content class="px-4 pb-4">
 			<form class="grid gap-2 md:grid-cols-2" onsubmit={submitCreateVoteForm}>
 				<input class="input input-bordered input-sm md:col-span-2" name="name" placeholder={m.votes_vote_name_placeholder()} required />
-				<select class="select select-bordered select-sm" name="visibility">
-					<option value="open">{m.votes_visibility_open()}</option>
-					<option value="secret">{m.votes_visibility_secret()}</option>
-				</select>
+				<AppSelect
+					bind:value={createVoteVisibility}
+					items={[
+						{ value: 'open', label: m.votes_visibility_open() },
+						{ value: 'secret', label: m.votes_visibility_secret() }
+					]}
+				/>
+				<input type="hidden" name="visibility" value={createVoteVisibility} />
 				<div class="join">
 					<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value="1" required />
 					<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value="1" required />
@@ -234,8 +246,8 @@
 					<button type="submit" class="btn btn-sm btn-primary">{m.votes_create_draft_vote()}</button>
 				</div>
 			</form>
-		</div>
-	</details>
+		</Collapsible.Content>
+	</Collapsible.Root>
 
 	{#if (votesPanel?.votes ?? []).length === 0}
 		<p class="text-sm text-base-content/70">{m.votes_no_votes_for_agenda_point({ agendaPoint: votesPanel?.activeAgendaPointTitle ?? "" })}</p>

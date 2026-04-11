@@ -18,7 +18,7 @@ func meetingCard(page playwright.Page, meetingName string) playwright.Locator {
 }
 
 func meetingActiveToggle(page playwright.Page, meetingName string) playwright.Locator {
-	return meetingCard(page, meetingName).Locator("input[data-testid='committee-toggle-active']")
+	return meetingCard(page, meetingName).Locator("button[role=switch]").First()
 }
 
 func TestChairpersonSeesCreateMeetingForm(t *testing.T) {
@@ -103,23 +103,23 @@ func TestChairpersonCreateMeeting(t *testing.T) {
 	if err := page.Locator("#wizard-name").Fill("Budget Meeting"); err != nil {
 		t.Fatalf("fill meeting name: %v", err)
 	}
-	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+	if err := page.Locator("[role=dialog] button:has-text('Next')").Click(); err != nil {
 		t.Fatalf("click next (step 1): %v", err)
 	}
 
 	// Step 2: Skip agenda, proceed
-	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+	if err := page.Locator("[role=dialog] button:has-text('Next')").Click(); err != nil {
 		t.Fatalf("click next (step 2): %v", err)
 	}
 
 	// Step 3: Skip participants, proceed
-	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+	if err := page.Locator("[role=dialog] button:has-text('Next')").Click(); err != nil {
 		t.Fatalf("click next (step 3): %v", err)
 	}
 
 	// Step 4: Review — click Create
 	urlBefore := page.URL()
-	if err := page.Locator("dialog .modal-action button.btn-primary").Click(); err != nil {
+	if err := page.Locator("[role=dialog] button:has-text('Create Meeting')").Click(); err != nil {
 		t.Fatalf("click create (step 4): %v", err)
 	}
 
@@ -153,39 +153,19 @@ func TestSetActiveMeeting_TransfersActiveStatus(t *testing.T) {
 	firstActive := meetingActiveToggle(page, "First Meeting")
 	secondActive := meetingActiveToggle(page, "Second Meeting")
 
-	if err := firstActive.Click(); err != nil {
-		t.Fatalf("activate first meeting: %v", err)
-	}
-	firstChecked, err := firstActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read first active toggle: %v", err)
-	}
-	if !firstChecked {
+	bitsSwitchClick(t, firstActive)
+	if !bitsSwitchIsChecked(t, firstActive) {
 		t.Fatalf("expected first meeting to be active")
 	}
-	secondChecked, err := secondActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read second active toggle: %v", err)
-	}
-	if secondChecked {
+	if bitsSwitchIsChecked(t, secondActive) {
 		t.Fatalf("expected second meeting to be inactive while first is active")
 	}
 
-	if err := secondActive.Click(); err != nil {
-		t.Fatalf("activate second meeting: %v", err)
-	}
-	firstChecked, err = firstActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read first active toggle after activating second: %v", err)
-	}
-	if firstChecked {
+	bitsSwitchClick(t, secondActive)
+	if bitsSwitchIsChecked(t, firstActive) {
 		t.Fatalf("expected first meeting to become inactive after activating second")
 	}
-	secondChecked, err = secondActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read second active toggle after activation: %v", err)
-	}
-	if !secondChecked {
+	if !bitsSwitchIsChecked(t, secondActive) {
 		t.Fatalf("expected second meeting to be active")
 	}
 }
@@ -203,30 +183,14 @@ func TestUnsetActiveMeeting_WhenClickingActiveToggleAgain(t *testing.T) {
 	firstActive := meetingActiveToggle(page, "First Meeting")
 	secondActive := meetingActiveToggle(page, "Second Meeting")
 
-	if err := firstActive.Click(); err != nil {
-		t.Fatalf("activate first meeting: %v", err)
-	}
-	firstChecked, err := firstActive.IsChecked()
-	if err != nil {
-		t.Fatalf("read first active toggle after activation: %v", err)
-	}
-	if !firstChecked {
+	bitsSwitchClick(t, firstActive)
+	if !bitsSwitchIsChecked(t, firstActive) {
 		t.Fatalf("expected first meeting to be active")
 	}
 
-	if err := firstActive.Click(); err != nil {
-		t.Fatalf("deactivate active meeting: %v", err)
-	}
+	bitsSwitchClick(t, firstActive)
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		firstChecked, err = firstActive.IsChecked()
-		if err != nil {
-			return false, err
-		}
-		secondChecked, err := secondActive.IsChecked()
-		if err != nil {
-			return false, err
-		}
-		return !firstChecked && !secondChecked, nil
+		return !bitsSwitchIsChecked(t, firstActive) && !bitsSwitchIsChecked(t, secondActive), nil
 	}, "meeting active toggles to clear after deactivation")
 }
 

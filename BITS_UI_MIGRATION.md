@@ -38,7 +38,20 @@ Migrate interactive DaisyUI/HTML components to bits-ui for proper accessibility 
 
 - [x] `web/src/routes/+layout.svelte` — mobile menu dropdown → bits-ui Popover (auto-close on outside click, focus trap, keyboard dismiss)
 
-## Not migrating
+## 5. Dialogs (partial — 3/8 migrated)
 
-- **Dialogs (8 instances):** Native `<dialog>` already accessible, has focus trap and Escape-to-close.
-- **Toggles (6 instances):** Native checkbox with DaisyUI styling already accessible.
+**Why:** Consistent API. Native `<dialog>` is already accessible, so the gain is primarily API consistency.
+
+- [x] `web/src/routes/committee/[committee]/MeetingWizard.svelte` — wizard dialog
+- [x] `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/+page.svelte` — QR dialog + recovery dialog
+- [ ] `web/src/routes/committee/[committee]/meeting/[meetingId]/moderate/AgendaSection.svelte` — edit + import dialogs (nested, complex)
+- [ ] `web/src/routes/committee/[committee]/meeting/[meetingId]/+page.svelte` — speakers + receipts dialogs (data-attribute driven)
+- [x] `web/src/lib/components/ui/DateTimePicker.svelte` — kept as native `<dialog>` (self-contained, simple)
+
+## 6. Toggles/Switches (7 instances, 4 files)
+
+- [x] `AppSwitch.svelte` wrapper component
+- [x] `MeetingWizard.svelte` — signup toggle
+- [x] `+page.svelte` (committee) — active + signup toggles
+- [x] `+page.svelte` (moderate) — signup toggle
+- [x] `AttendeeRow.svelte` — chair + quoted toggles

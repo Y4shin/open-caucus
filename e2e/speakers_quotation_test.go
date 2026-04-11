@@ -257,8 +257,6 @@ func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 	ts.seedMeeting(t, "test-committee", "Board Meeting", "")
 	meetingID := ts.getMeetingID(t, "test-committee", "Board Meeting")
 	ts.seedAttendee(t, "test-committee", "Board Meeting", "Alice Moderator", "secret-am")
-	aliceID := ts.getAttendeeIDForMeeting(t, "test-committee", "Board Meeting", "Alice Moderator")
-
 	page := newPage(t)
 	userLogin(t, page, ts.URL, "test-committee", "chair1", "pass123")
 	if _, err := page.Goto(agendaManageURL(ts.URL, "test-committee", meetingID)); err != nil {
@@ -268,25 +266,18 @@ func TestSpeakers_MeetingModerator_SetAndClear(t *testing.T) {
 
 	urlBefore := page.URL()
 
-	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
-		Labels: playwright.StringSlice("Alice Moderator"),
-	}); err != nil {
-		t.Fatalf("select moderator: %v", err)
-	}
+	bitsSelectByID(t, page, "meeting_moderator_attendee_id", "Alice Moderator")
 
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		val, err := page.Locator("#meeting_moderator_attendee_id").InputValue()
-		return val == aliceID, err
+		text := bitsSelectValue(t, page.Locator("#meeting_moderator_attendee_id"))
+		return strings.Contains(text, "Alice Moderator"), nil
 	}, "moderator select to persist selected attendee")
 
-	if _, err := page.Locator("#meeting_moderator_attendee_id").SelectOption(playwright.SelectOptionValues{
-		Values: playwright.StringSlice(""),
-	}); err != nil {
-		t.Fatalf("clear moderator: %v", err)
-	}
+	// Clear moderator by selecting the placeholder option ("-- none --")
+	bitsSelectByID(t, page, "meeting_moderator_attendee_id", "-- none --")
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		val, err := page.Locator("#meeting_moderator_attendee_id").InputValue()
-		return val == "", err
+		text := bitsSelectValue(t, page.Locator("#meeting_moderator_attendee_id"))
+		return !strings.Contains(text, "Alice Moderator"), nil
 	}, "moderator select to clear")
 
 	if page.URL() != urlBefore {
@@ -315,23 +306,19 @@ func TestSpeakers_MeetingQuotation_ToggleDisablesGender(t *testing.T) {
 	if err := genderSelect.WaitFor(); err != nil {
 		t.Fatalf("wait for gender quotation select: %v", err)
 	}
-	initialVal, err := genderSelect.InputValue()
-	if err != nil {
-		t.Fatalf("read initial gender quotation value: %v", err)
-	}
-	if initialVal != "true" {
-		t.Fatalf("expected initial gender quotation value 'true', got %q", initialVal)
+
+	// Check i18n label for "Enabled" in the trigger text
+	initialText := bitsSelectValue(t, genderSelect)
+	if !strings.Contains(strings.ToLower(initialText), "enable") {
+		t.Fatalf("expected initial gender quotation to show enabled label, got %q", initialText)
 	}
 
-	if _, err := genderSelect.SelectOption(playwright.SelectOptionValues{
-		Values: playwright.StringSlice("false"),
-	}); err != nil {
-		t.Fatalf("set gender quotation to false: %v", err)
-	}
+	// Select the "Disabled" option
+	bitsSelectByID(t, page, "gender_quotation_enabled", "Disabled")
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		val, err := page.Locator("#gender_quotation_enabled").InputValue()
-		return val == "false", err
-	}, "gender quotation select to persist false")
+		text := bitsSelectValue(t, page.Locator("#gender_quotation_enabled"))
+		return strings.Contains(strings.ToLower(text), "disable"), nil
+	}, "gender quotation select to persist disabled")
 
 	if page.URL() != urlBefore {
 		t.Errorf("URL changed on quotation toggle: got %s, want %s", page.URL(), urlBefore)

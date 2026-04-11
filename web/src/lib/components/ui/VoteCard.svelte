@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Collapsible } from 'bits-ui';
+	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import type { VoteDefinitionRecord } from '$lib/gen/conference/votes/v1/votes_pb.js';
@@ -57,6 +59,9 @@
 		return m.votes_select_between({ min: Number(vote.minSelections), max: Number(vote.maxSelections) });
 	}
 
+	let draftVisibilityOverride = $state<string | null>(null);
+	let draftVisibility = $derived(draftVisibilityOverride ?? vote.visibility);
+
 	function voteLabelsForEdit() {
 		const labels = vote.options.map((option) => option.label);
 		if (labels.length < 2) {
@@ -81,21 +86,19 @@
 	}
 </script>
 
-<details
-	class="collapse collapse-arrow border border-base-300 bg-base-100"
-	{open}
-	ontoggle={(event) => onToggle((event.currentTarget as HTMLDetailsElement).open)}
-	data-vote-accordion={vote.voteId}
->
-	<summary class="collapse-title py-3 pr-10">
+<Collapsible.Root {open} onOpenChange={onToggle} data-vote-accordion={vote.voteId} class="rounded-box border border-base-300 bg-base-100">
+	<Collapsible.Trigger class="flex w-full cursor-pointer items-center justify-between px-4 py-3">
 		<div class="flex flex-wrap items-center gap-2">
 			<h4 class="font-semibold">{vote.name}</h4>
 			<span class={voteStateBadgeClass(vote.state)}>{voteStateLabel(vote.state)}</span>
 			<span class={voteVisibilityBadgeClass(vote.visibility)}>{voteVisibilityLabel(vote.visibility)}</span>
 			<span class="text-xs text-base-content/70">{voteBoundsLabel()}</span>
 		</div>
-	</summary>
-	<div class="collapse-content space-y-3">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 transition-transform {open ? 'rotate-180' : ''}">
+			<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+		</svg>
+	</Collapsible.Trigger>
+	<Collapsible.Content class="space-y-3 px-4 pb-4">
 		{#if vote.options.length > 0}
 			<ul class="list rounded-box border border-base-300 bg-base-200/40">
 				{#each vote.options as option}
@@ -133,20 +136,25 @@
 			<div class="flex flex-wrap gap-2">
 				<button type="button" class="btn btn-sm btn-success" onclick={async (event) => { event.preventDefault(); event.stopPropagation(); await onOpenVote(); }}>{m.votes_open_vote()}</button>
 			</div>
-			<details
-				class="collapse collapse-arrow border border-base-300 bg-base-200/30"
-				open={draftEditorOpen}
-				ontoggle={(event) => onDraftEditorToggle((event.currentTarget as HTMLDetailsElement).open)}
-				data-vote-draft-editor={vote.voteId}
-			>
-				<summary class="collapse-title text-sm">{m.votes_edit_draft()}</summary>
-				<div class="collapse-content">
+			<Collapsible.Root open={draftEditorOpen} onOpenChange={onDraftEditorToggle} data-vote-draft-editor={vote.voteId} class="rounded-box border border-base-300 bg-base-200/30">
+				<Collapsible.Trigger class="flex w-full cursor-pointer items-center justify-between px-4 py-2 text-sm">
+					{m.votes_edit_draft()}
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0 transition-transform {draftEditorOpen ? 'rotate-180' : ''}">
+						<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+					</svg>
+				</Collapsible.Trigger>
+				<Collapsible.Content class="px-4 pb-4">
 					<form class="grid gap-2 md:grid-cols-2" onsubmit={onUpdateDraft}>
 						<input class="input input-bordered input-sm md:col-span-2" name="name" value={vote.name} required />
-						<select class="select select-bordered select-sm" name="visibility">
-							<option value="open" selected={vote.visibility === 'open'}>{m.votes_visibility_open()}</option>
-							<option value="secret" selected={vote.visibility === 'secret'}>{m.votes_visibility_secret()}</option>
-						</select>
+						<AppSelect
+							value={draftVisibility}
+							items={[
+								{ value: 'open', label: m.votes_visibility_open() },
+								{ value: 'secret', label: m.votes_visibility_secret() }
+							]}
+							onValueChange={(v) => { draftVisibilityOverride = v; }}
+						/>
+						<input type="hidden" name="visibility" value={draftVisibility} />
 						<div class="join">
 							<input class="input input-bordered input-sm join-item w-24" type="number" min="0" name="min_selections" value={vote.minSelections.toString()} required />
 							<input class="input input-bordered input-sm join-item w-24" type="number" min="1" name="max_selections" value={vote.maxSelections.toString()} required />
@@ -164,8 +172,8 @@
 							<button type="submit" class="btn btn-sm btn-primary">{m.votes_save_draft()}</button>
 						</div>
 					</form>
-				</div>
-			</details>
+				</Collapsible.Content>
+			</Collapsible.Root>
 		{/if}
 
 		{#if vote.state === 'open' || vote.state === 'counting'}
@@ -300,5 +308,5 @@
 				<div class="mt-2 text-xs text-base-content/70">{m.votes_summary_counts({ eligible: voteStats().eligibleCount.toString(), casts: voteStats().castCount.toString(), ballots: voteStats().ballotCount.toString() })}</div>
 			</div>
 		{/if}
-	</div>
-</details>
+	</Collapsible.Content>
+</Collapsible.Root>

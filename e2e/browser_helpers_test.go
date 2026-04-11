@@ -196,3 +196,89 @@ func expectAlertContaining(t *testing.T, page playwright.Page, text string) {
 		t.Fatalf("expected alert containing %q: %v", text, err)
 	}
 }
+
+// ---------------------------------------------------------------------------
+// bits-ui component interaction helpers
+// ---------------------------------------------------------------------------
+
+// bitsSelectByLabel opens a bits-ui AppSelect trigger, then clicks the option
+// matching the given label text. The trigger is located within the given parent.
+func bitsSelectByLabel(t *testing.T, page playwright.Page, parent playwright.Locator, label string) {
+	t.Helper()
+	trigger := parent.Locator("[role=combobox], button.input").First()
+	if err := trigger.WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait bits-ui select trigger in parent: %v", err)
+	}
+	if err := trigger.Click(); err != nil {
+		t.Fatalf("open bits-ui select: %v", err)
+	}
+	option := page.Locator("[role=option]").Filter(playwright.LocatorFilterOptions{HasText: label}).First()
+	if err := option.WaitFor(); err != nil {
+		t.Fatalf("wait bits-ui select option %q: %v", label, err)
+	}
+	if err := option.Click(); err != nil {
+		t.Fatalf("click bits-ui select option %q: %v", label, err)
+	}
+}
+
+// bitsSelectByID opens a bits-ui AppSelect trigger by its id, then clicks the
+// option matching the given label text.
+func bitsSelectByID(t *testing.T, page playwright.Page, id, label string) {
+	t.Helper()
+	trigger := page.Locator("#" + id)
+	if err := trigger.WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait bits-ui select trigger #%s: %v", id, err)
+	}
+	if err := trigger.Click(); err != nil {
+		t.Fatalf("open bits-ui select #%s: %v", id, err)
+	}
+	// Wait for the listbox to appear, then find the option.
+	if err := page.Locator("[role=listbox]").First().WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait bits-ui listbox for #%s: %v", id, err)
+	}
+	option := page.Locator("[role=option]").Filter(playwright.LocatorFilterOptions{HasText: label}).First()
+	if err := option.WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait bits-ui select option %q for #%s: %v", label, id, err)
+	}
+	if err := option.Click(playwright.LocatorClickOptions{Force: playwright.Bool(true)}); err != nil {
+		t.Fatalf("click bits-ui select option %q for #%s: %v", label, id, err)
+	}
+}
+
+// bitsSelectValue reads the current value from a bits-ui AppSelect trigger
+// by reading the displayed text.
+func bitsSelectValue(t *testing.T, trigger playwright.Locator) string {
+	t.Helper()
+	text, err := trigger.TextContent()
+	if err != nil {
+		t.Fatalf("read bits-ui select value: %v", err)
+	}
+	return text
+}
+
+// bitsSwitchClick toggles a bits-ui AppSwitch. The locator should target
+// the button[role=switch] element.
+func bitsSwitchClick(t *testing.T, loc playwright.Locator) {
+	t.Helper()
+	if err := loc.Click(); err != nil {
+		t.Fatalf("click bits-ui switch: %v", err)
+	}
+}
+
+// bitsSwitchIsChecked returns the checked state of a bits-ui AppSwitch.
+func bitsSwitchIsChecked(t *testing.T, loc playwright.Locator) bool {
+	t.Helper()
+	raw, err := loc.GetAttribute("data-state")
+	if err != nil {
+		t.Fatalf("read bits-ui switch state: %v", err)
+	}
+	return raw == "checked"
+}

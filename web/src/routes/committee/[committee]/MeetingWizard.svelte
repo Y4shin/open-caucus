@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { Dialog } from 'bits-ui';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import { agendaClient, attendeeClient, committeeClient, moderationClient } from '$lib/api/index.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
@@ -19,7 +21,7 @@
 		onCreated: () => void;
 	} = $props();
 
-	let dialogEl = $state<HTMLDialogElement | null>(null);
+	let dialogOpen = $state(false);
 	let step = $state<1 | 2 | 3 | 4>(1);
 	let submitting = $state(false);
 	let error = $state('');
@@ -137,7 +139,7 @@
 		participantsText = '';
 		error = '';
 		submitting = false;
-		dialogEl?.showModal();
+		dialogOpen = true;
 	}
 
 	function canProceed(): boolean {
@@ -210,7 +212,7 @@
 				});
 			}
 
-			dialogEl?.close();
+			dialogOpen = false;
 			onCreated();
 		} catch (err) {
 			error = getDisplayError(err, 'Failed to create meeting.');
@@ -220,10 +222,12 @@
 	}
 </script>
 
-<dialog class="modal" bind:this={dialogEl}>
-	<div class="modal-box w-11/12 max-w-3xl">
+<Dialog.Root bind:open={dialogOpen}>
+	<Dialog.Portal>
+	<Dialog.Overlay class="fixed inset-0 z-40 bg-black/50" />
+	<Dialog.Content class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-3xl rounded-box bg-base-100 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
 		<div class="mb-4 flex items-center justify-between">
-			<h3 class="text-lg font-semibold">{m.committee_create_meeting_heading()}</h3>
+			<Dialog.Title class="text-lg font-semibold">{m.committee_create_meeting_heading()}</Dialog.Title>
 			<div class="flex items-center gap-2">
 				<ul class="steps steps-horizontal text-xs">
 					<li class={step >= 1 ? 'step step-primary' : 'step'}>{m.wizard_step_basics()}</li>
@@ -231,7 +235,7 @@
 					<li class={step >= 3 ? 'step step-primary' : 'step'}>{m.wizard_step_participants()}</li>
 					<li class={step >= 4 ? 'step step-primary' : 'step'}>{m.wizard_step_review()}</li>
 				</ul>
-				<button type="button" class="btn btn-sm btn-ghost" onclick={() => dialogEl?.close()}>{m.common_close()}</button>
+				<button type="button" class="btn btn-sm btn-ghost" onclick={() => dialogOpen = false}>{m.common_close()}</button>
 			</div>
 		</div>
 
@@ -249,10 +253,7 @@
 					<label class="label text-sm font-medium" for="wizard-desc">{m.committee_description_label()}</label>
 					<input class="input input-bordered input-sm w-full" id="wizard-desc" bind:value={meetingDescription} />
 				</div>
-				<label class="label cursor-pointer justify-start gap-3">
-					<input type="checkbox" class="toggle toggle-primary toggle-sm" bind:checked={signupOpen} />
-					<span class="text-sm">{m.committee_signup_label()}</span>
-				</label>
+				<AppSwitch bind:checked={signupOpen} label={m.committee_signup_label()} />
 				<div class="grid grid-cols-2 gap-3">
 					<DateTimePicker
 						bind:value={meetingStartAt}
@@ -363,6 +364,6 @@
 				<button type="button" class="btn btn-sm btn-primary" onclick={submit} disabled={submitting || !canProceed()}>{m.wizard_create()}</button>
 			{/if}
 		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
-</dialog>
+	</Dialog.Content>
+	</Dialog.Portal>
+</Dialog.Root>

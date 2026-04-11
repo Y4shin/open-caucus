@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Collapsible } from 'bits-ui';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import * as m from '$lib/paraglide/messages';
@@ -126,9 +127,14 @@
 			<form class="mt-3 flex gap-2" action="/docs/search" method="GET" onsubmit={submitSearch}>
 				<input class="input input-bordered input-sm flex-1" type="search" name="q" value={query} placeholder={m.docs_search_placeholder()} />
 			</form>
-			<details class="collapse collapse-arrow mt-3 border border-base-300 bg-base-200/30" open>
-				<summary class="collapse-title py-2 pr-8 text-sm font-medium">{m.docs_browse()}</summary>
-				<div class="collapse-content">
+			<Collapsible.Root open={true} class="mt-3 rounded-box border border-base-300 bg-base-200/30">
+				<Collapsible.Trigger class="flex w-full cursor-pointer items-center justify-between px-4 py-2 text-sm font-medium">
+					{m.docs_browse()}
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0">
+						<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+					</svg>
+				</Collapsible.Trigger>
+				<Collapsible.Content class="px-4 pb-3">
 					{#if crumbs.length}
 						<div class="mb-2 flex flex-wrap items-center gap-1 text-xs text-base-content/80">
 							{#each crumbs as crumb, index}
@@ -144,18 +150,21 @@
 							<div class="space-y-1">
 								{#each nodes as node}
 									{#if node.children.length}
-										<details class="collapse collapse-arrow border border-base-300 bg-base-100" open={node.expanded || node.current}>
-											<summary class="collapse-title py-2 pr-8 text-sm">
-												<a href={docsHref(node.path)} class={node.current ? 'font-medium text-primary hover:underline' : 'font-medium hover:underline'}>
+										<Collapsible.Root open={node.expanded || node.current} class="rounded-box border border-base-300 bg-base-100">
+											<Collapsible.Trigger class="flex w-full cursor-pointer items-center justify-between px-3 py-2 text-sm">
+												<a href={docsHref(node.path)} class={node.current ? 'font-medium text-primary hover:underline' : 'font-medium hover:underline'} onclick={(e) => e.stopPropagation()}>
 													{node.title}
 												</a>
-											</summary>
-											<div class="collapse-content pt-0 pb-2">
-												<div class="pl-2 border-l border-base-300">
+												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5 shrink-0 opacity-50">
+													<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+												</svg>
+											</Collapsible.Trigger>
+											<Collapsible.Content class="pb-2">
+												<div class="pl-2 border-l border-base-300 ml-3">
 													{@render navTree(node.children as Array<{ title: string; path: string; current: boolean; expanded: boolean; children: unknown[] }>)}
 												</div>
-											</div>
-										</details>
+											</Collapsible.Content>
+										</Collapsible.Root>
 									{:else}
 										<a
 											href={docsHref(node.path)}
@@ -175,8 +184,8 @@
 							<p class="text-sm text-base-content/70">{m.docs_no_tree()}</p>
 						{/if}
 					</div>
-				</div>
-			</details>
+				</Collapsible.Content>
+			</Collapsible.Root>
 			{#if searchHits !== null}
 				<div class="rounded-box border border-base-300 bg-base-200/30 p-3" id="docs-search-results">
 					{#if error}

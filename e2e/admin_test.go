@@ -139,26 +139,10 @@ func TestAdminAssignAccount(t *testing.T) {
 	}
 
 	urlBefore := page.URL()
-	createUserForm := page.Locator("#committee-users-container form").Filter(playwright.LocatorFilterOptions{
-		Has: page.Locator("select[name=account_id]"),
-	})
-
 	// Select account and assign it to the committee
-	accountID, err := createUserForm.Locator("select[name=account_id] option:has-text('newuser')").GetAttribute("value")
-	if err != nil {
-		t.Fatalf("read account option value: %v", err)
-	}
-	if accountID == "" {
-		t.Fatalf("missing account option value for newuser")
-	}
-	if _, err := createUserForm.Locator("select[name=account_id]").SelectOption(playwright.SelectOptionValues{Values: &[]string{accountID}}); err != nil {
-		t.Fatalf("select account: %v", err)
-	}
-	roleValues := []string{"member"}
-	if _, err := createUserForm.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
-		t.Fatalf("select role: %v", err)
-	}
-	if err := createUserForm.Locator("button[type=submit]").Click(); err != nil {
+	bitsSelectByID(t, page, "account_id", "newuser")
+	bitsSelectByID(t, page, "role", "member")
+	if err := page.Locator("#committee-users-container form button[type=submit]").First().Click(); err != nil {
 		t.Fatalf("click submit: %v", err)
 	}
 
@@ -235,11 +219,8 @@ func TestAdminUpdateMembershipRoleAndQuoted_ForManualMembership(t *testing.T) {
 		t.Fatalf("expected editable user row: %v", err)
 	}
 
-	roleValues := []string{"chairperson"}
-	if _, err := row.Locator("select[name=role]").SelectOption(playwright.SelectOptionValues{Values: &roleValues}); err != nil {
-		t.Fatalf("select updated role: %v", err)
-	}
-	if err := row.Locator("input[name=quoted][type='checkbox']").Check(); err != nil {
+	bitsSelectByLabel(t, page, row, "chairperson")
+	if err := row.Locator("input[type='checkbox']").Check(); err != nil {
 		t.Fatalf("check quoted checkbox: %v", err)
 	}
 	if err := row.Locator("button:has-text('Save')").Click(); err != nil {
@@ -291,7 +272,7 @@ func TestAdminUpdateMembership_OAuthManagedRoleLockedButQuotedEditable(t *testin
 		t.Fatalf("expected oidc user row: %v", err)
 	}
 
-	disabled, err := row.Locator("select[name=role]").IsDisabled()
+	disabled, err := row.Locator("[role=combobox], button.input").First().IsDisabled()
 	if err != nil {
 		t.Fatalf("check role select disabled state: %v", err)
 	}
@@ -299,7 +280,7 @@ func TestAdminUpdateMembership_OAuthManagedRoleLockedButQuotedEditable(t *testin
 		t.Fatalf("expected role select to be disabled for oauth-managed membership")
 	}
 
-	if err := row.Locator("input[name=quoted][type='checkbox']").Check(); err != nil {
+	if err := row.Locator("input[type='checkbox']").Check(); err != nil {
 		t.Fatalf("check quoted checkbox: %v", err)
 	}
 	if err := row.Locator("button:has-text('Save')").Click(); err != nil {

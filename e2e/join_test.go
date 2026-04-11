@@ -398,11 +398,11 @@ func TestManageJoinQRDialog_ContainsSecretJoinURL(t *testing.T) {
 		t.Fatalf("click show signup QR button: %v", err)
 	}
 
-	if err := page.Locator("#join-qr-dialog #join-qr-code").WaitFor(); err != nil {
+	if err := page.Locator("[role=dialog] #join-qr-code").WaitFor(); err != nil {
 		t.Fatalf("expected QR image in dialog: %v", err)
 	}
 
-	href, err := page.Locator("#join-qr-dialog a.link").First().GetAttribute("href")
+	href, err := page.Locator("[role=dialog] a.link").First().GetAttribute("href")
 	if err != nil {
 		t.Fatalf("read join URL href: %v", err)
 	}

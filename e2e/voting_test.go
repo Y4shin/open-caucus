@@ -31,42 +31,42 @@ func openModerateVotesPanel(t *testing.T, page playwright.Page) playwright.Locat
 
 func detailsOpenState(t *testing.T, details playwright.Locator) bool {
 	t.Helper()
-	raw, err := details.Evaluate("el => el.hasAttribute('open')", nil)
+	raw, err := details.Evaluate("el => el.getAttribute('data-state')", nil)
 	if err != nil {
-		t.Fatalf("read details open state: %v", err)
+		t.Fatalf("read collapsible open state: %v", err)
 	}
-	open, ok := raw.(bool)
+	state, ok := raw.(string)
 	if !ok {
-		t.Fatalf("unexpected details open state value: %#v", raw)
+		t.Fatalf("unexpected collapsible state value: %#v", raw)
 	}
-	return open
+	return state == "open"
 }
 
 func ensureDetailsOpen(t *testing.T, details playwright.Locator) {
 	t.Helper()
 	if err := details.WaitFor(); err != nil {
-		t.Fatalf("wait details: %v", err)
+		t.Fatalf("wait collapsible: %v", err)
 	}
 	if detailsOpenState(t, details) {
 		return
 	}
-	if err := details.Locator("summary").First().Click(); err != nil {
-		t.Fatalf("open details via summary click: %v", err)
+	if err := details.Locator("button").First().Click(); err != nil {
+		t.Fatalf("open collapsible via trigger click: %v", err)
 	}
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		raw, err := details.Evaluate("el => el.hasAttribute('open')", nil)
+		raw, err := details.Evaluate("el => el.getAttribute('data-state')", nil)
 		if err != nil {
 			return false, err
 		}
-		open, ok := raw.(bool)
-		return ok && open, nil
-	}, "details to open")
+		state, ok := raw.(string)
+		return ok && state == "open", nil
+	}, "collapsible to open")
 }
 
 func moderatorVoteAccordion(t *testing.T, page playwright.Page, voteName string) playwright.Locator {
 	t.Helper()
 	panel := openModerateVotesPanel(t, page)
-	accordion := panel.Locator("details").Filter(playwright.LocatorFilterOptions{HasText: voteName}).First()
+	accordion := panel.Locator("[data-vote-accordion]").Filter(playwright.LocatorFilterOptions{HasText: voteName}).First()
 	if err := accordion.WaitFor(); err != nil {
 		t.Fatalf("wait vote accordion %q: %v", voteName, err)
 	}
@@ -112,7 +112,7 @@ func verifySecretReceiptViaConnect(t *testing.T, baseURL string, voteID int64, r
 func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, visibility string, minSelections, maxSelections int) {
 	t.Helper()
 	panel := openModerateVotesPanel(t, page)
-	createDetails := panel.Locator("details").Filter(playwright.LocatorFilterOptions{HasText: "Create Vote"}).First()
+	createDetails := panel.Locator("[data-testid='create-vote-collapsible']").First()
 	ensureDetailsOpen(t, createDetails)
 
 	form := createDetails.Locator("form").First()
@@ -122,9 +122,30 @@ func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, vi
 	if err := form.Locator("input[name='name']").Fill(name); err != nil {
 		t.Fatalf("fill vote name: %v", err)
 	}
-	visibilityValues := []string{visibility}
-	if _, err := form.Locator("select[name='visibility']").SelectOption(playwright.SelectOptionValues{Values: &visibilityValues}); err != nil {
-		t.Fatalf("select vote visibility: %v", err)
+	// Set vote visibility via the bits-ui AppSelect.
+	// The default is "open"; only change if needed.
+	if visibility != "open" {
+		visibilityLabel := visibility
+		if visibility == "secret" {
+			visibilityLabel = "Secret"
+		}
+		// Use page-level selector since bits-ui Select may portal elements outside the form.
+		visibilityTrigger := createDetails.Locator("[role=combobox], button.input").First()
+		if err := visibilityTrigger.WaitFor(playwright.LocatorWaitForOptions{
+			Timeout: playwright.Float(defaultE2ETimeoutMs),
+		}); err != nil {
+			t.Fatalf("wait visibility select trigger: %v", err)
+		}
+		if err := visibilityTrigger.Click(); err != nil {
+			t.Fatalf("open visibility select: %v", err)
+		}
+		option := page.Locator("[role=option]").Filter(playwright.LocatorFilterOptions{HasText: visibilityLabel}).First()
+		if err := option.WaitFor(); err != nil {
+			t.Fatalf("wait visibility option %q: %v", visibilityLabel, err)
+		}
+		if err := option.Click(); err != nil {
+			t.Fatalf("click visibility option %q: %v", visibilityLabel, err)
+		}
 	}
 	if err := form.Locator("input[name='min_selections']").Fill(strconv.Itoa(minSelections)); err != nil {
 		t.Fatalf("fill min selections: %v", err)
@@ -135,7 +156,7 @@ func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, vi
 	if err := form.Locator("button:has-text('Create Draft Vote')").Click(); err != nil {
 		t.Fatalf("submit create draft vote form: %v", err)
 	}
-	if err := openModerateVotesPanel(t, page).Locator("details").Filter(playwright.LocatorFilterOptions{HasText: name}).First().WaitFor(); err != nil {
+	if err := openModerateVotesPanel(t, page).Locator("[data-vote-accordion]").Filter(playwright.LocatorFilterOptions{HasText: name}).First().WaitFor(); err != nil {
 		t.Fatalf("wait newly created draft vote %q in panel: %v", name, err)
 	}
 }
@@ -143,11 +164,11 @@ func createDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, name, vi
 func openDraftVoteFromModeratorUI(t *testing.T, page playwright.Page, voteName string) {
 	t.Helper()
 	accordion := moderatorVoteAccordion(t, page, voteName)
-	if err := accordion.Locator("button:has-text('Open Vote')").Click(); err != nil {
+	if err := accordion.Locator("button.btn-success:has-text('Open Vote')").Click(); err != nil {
 		t.Fatalf("open draft vote %q: %v", voteName, err)
 	}
 	waitUntil(t, 5*time.Second, func() (bool, error) {
-		count, err := page.Locator("#moderate-votes-panel details").
+		count, err := page.Locator("#moderate-votes-panel [data-vote-accordion]").
 			Filter(playwright.LocatorFilterOptions{HasText: voteName}).
 			Locator("button:has-text('Close Vote')").
 			Count()
@@ -927,9 +948,9 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 	waitUntil(t, 5*time.Second, func() (bool, error) {
 		count, err := moderatorPage.
-			Locator("#moderate-votes-panel details").
+			Locator("#moderate-votes-panel [data-vote-accordion]").
 			Filter(playwright.LocatorFilterOptions{HasText: "Secret Vote"}).
-			Locator("summary span:has-text('counting')").
+			Locator("span:has-text('counting')").
 			Count()
 		return count > 0, err
 	}, "secret vote to enter counting state after first close")
@@ -967,9 +988,9 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 	waitUntil(t, 5*time.Second, func() (bool, error) {
 		count, err := moderatorPage.
-			Locator("#moderate-votes-panel details").
+			Locator("#moderate-votes-panel [data-vote-accordion]").
 			Filter(playwright.LocatorFilterOptions{HasText: "Secret Vote"}).
-			Locator("summary span:has-text('counting')").
+			Locator("span:has-text('counting')").
 			Count()
 		return count > 0, err
 	}, "secret vote to remain counting on second close")
@@ -985,9 +1006,9 @@ func TestVoting_SecretVoteLifecycle_CountingAndVerificationGuards(t *testing.T) 
 	closeVoteFromModeratorUI(t, moderatorPage, "Secret Vote")
 	waitUntil(t, 5*time.Second, func() (bool, error) {
 		count, err := moderatorPage.
-			Locator("#moderate-votes-panel details").
+			Locator("#moderate-votes-panel [data-vote-accordion]").
 			Filter(playwright.LocatorFilterOptions{HasText: "Secret Vote"}).
-			Locator("summary span:has-text('closed')").
+			Locator("span:has-text('closed')").
 			Count()
 		return count > 0, err
 	}, "secret vote to close after counting completion")

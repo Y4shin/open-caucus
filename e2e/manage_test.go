@@ -30,11 +30,7 @@ func manageAttendeeCard(t *testing.T, page playwright.Page, fullName string) pla
 func manageSignupOpenChecked(t *testing.T, page playwright.Page) bool {
 	t.Helper()
 	openModerateLeftTab(t, page, "attendees")
-	checked, err := page.Locator("#manage_signup_open").IsChecked()
-	if err != nil {
-		t.Fatalf("read signup state: %v", err)
-	}
-	return checked
+	return bitsSwitchIsChecked(t, page.Locator("#manage_signup_open"))
 }
 
 func submitAddGuest(t *testing.T, page playwright.Page, fullName string) {
@@ -116,16 +112,16 @@ func assertFLINTABadgeUsesTransgenderIcon(t *testing.T, badge playwright.Locator
 		t.Fatalf("wait for FLINTA badge: %v", err)
 	}
 
-	tooltipAny, err := badge.Evaluate(`el => el.closest('[data-tip]')?.getAttribute('data-tip') ?? ''`, nil)
+	ariaLabelAny, err := badge.Evaluate(`el => el.getAttribute('aria-label') ?? el.closest('[aria-label]')?.getAttribute('aria-label') ?? ''`, nil)
 	if err != nil {
-		t.Fatalf("read FLINTA badge tooltip: %v", err)
+		t.Fatalf("read FLINTA badge aria-label: %v", err)
 	}
-	tooltip, ok := tooltipAny.(string)
+	ariaLabel, ok := ariaLabelAny.(string)
 	if !ok {
-		t.Fatalf("FLINTA badge tooltip was %T, want string", tooltipAny)
+		t.Fatalf("FLINTA badge aria-label was %T, want string", ariaLabelAny)
 	}
-	if tooltip != "FLINTA*" {
-		t.Fatalf("expected FLINTA badge tooltip %q, got %q", "FLINTA*", tooltip)
+	if ariaLabel != "FLINTA*" {
+		t.Fatalf("expected FLINTA badge aria-label %q, got %q", "FLINTA*", ariaLabel)
 	}
 
 	viewBox, err := badge.Locator("svg").GetAttribute("viewBox")
@@ -393,7 +389,7 @@ func TestManagePage_RemoveAttendee(t *testing.T) {
 		}
 	})
 
-	if err := card.Locator("button[title='Remove attendee']").Click(); err != nil {
+	if err := card.Locator("button[aria-label='Remove attendee']").Click(); err != nil {
 		t.Fatalf("click remove attendee: %v", err)
 	}
 	if err := manageAttendeeCard(t, page, "Carol Guest").WaitFor(playwright.LocatorWaitForOptions{
@@ -423,20 +419,15 @@ func TestManagePage_ToggleChair(t *testing.T) {
 		t.Fatalf("dave card not visible: %v", err)
 	}
 
-	chairToggle := card.Locator("input[title='Chairperson']")
-	if err := chairToggle.Click(); err != nil {
-		t.Fatalf("click chair toggle on: %v", err)
-	}
+	chairToggle := card.Locator("label:has(button[role=switch])").Filter(playwright.LocatorFilterOptions{HasText: "Chair"}).Locator("button[role=switch]")
+	bitsSwitchClick(t, chairToggle)
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		return chairToggle.IsChecked()
+		return bitsSwitchIsChecked(t, chairToggle), nil
 	}, "chair toggle to become checked")
 
-	if err := chairToggle.Click(); err != nil {
-		t.Fatalf("click chair toggle off: %v", err)
-	}
+	bitsSwitchClick(t, chairToggle)
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		checked, err := chairToggle.IsChecked()
-		return !checked, err
+		return !bitsSwitchIsChecked(t, chairToggle), nil
 	}, "chair toggle to become unchecked")
 }
 
@@ -460,17 +451,17 @@ func TestManagePage_GuestRecoveryDialog(t *testing.T) {
 	if err := card.WaitFor(); err != nil {
 		t.Fatalf("expected guest attendee card: %v", err)
 	}
-	if err := card.Locator("button[title='Recovery link']").Click(); err != nil {
+	if err := card.Locator("button[aria-label='Recovery link']").Click(); err != nil {
 		t.Fatalf("click recovery link: %v", err)
 	}
-	if err := page.Locator("#recovery-qr-dialog #attendee-recovery-link").WaitFor(); err != nil {
+	if err := page.Locator("[role=dialog] #attendee-recovery-link").WaitFor(); err != nil {
 		t.Fatalf("expected attendee recovery link in dialog: %v", err)
 	}
-	if err := page.Locator("#recovery-qr-dialog #attendee-recovery-qr").WaitFor(); err != nil {
+	if err := page.Locator("[role=dialog] #attendee-recovery-qr").WaitFor(); err != nil {
 		t.Fatalf("expected attendee recovery QR in dialog: %v", err)
 	}
 
-	href, err := page.Locator("#recovery-qr-dialog #attendee-recovery-link").GetAttribute("href")
+	href, err := page.Locator("[role=dialog] #attendee-recovery-link").GetAttribute("href")
 	if err != nil {
 		t.Fatalf("get attendee recovery href: %v", err)
 	}
@@ -509,11 +500,9 @@ func TestManagePage_ToggleSignupOpen(t *testing.T) {
 		t.Fatalf("expected signup to start closed")
 	}
 
-	if err := page.Locator("label[for='manage_signup_open']").Click(); err != nil {
-		t.Fatalf("toggle signup switch on: %v", err)
-	}
+	bitsSwitchClick(t, page.Locator("#manage_signup_open"))
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		return page.Locator("#manage_signup_open").IsChecked()
+		return bitsSwitchIsChecked(t, page.Locator("#manage_signup_open")), nil
 	}, "signup switch to become checked")
 
 	guestPage := newPage(t)
@@ -853,12 +842,10 @@ func TestManagePage_ToggleGuestGenderQuoted_UpdatesSpeakerChip(t *testing.T) {
 		t.Fatalf("expected no initial quoted attendee chip, got %d", initialQuotedChipCount)
 	}
 
-	guestQuotedToggle := guestCard.Locator("input[title='FLINTA*']")
-	if err := guestQuotedToggle.Click(); err != nil {
-		t.Fatalf("toggle guest gender quoted on: %v", err)
-	}
+	guestQuotedToggle := guestCard.Locator("label:has(button[role=switch])").Filter(playwright.LocatorFilterOptions{HasText: "FLINTA"}).Locator("button[role=switch]")
+	bitsSwitchClick(t, guestQuotedToggle)
 	waitUntil(t, 3*time.Second, func() (bool, error) {
-		return guestQuotedToggle.IsChecked()
+		return bitsSwitchIsChecked(t, guestQuotedToggle), nil
 	}, "guest quoted toggle to become checked")
 	if err := guestCard.Locator("[data-testid='manage-attendee-quoted-badge']").WaitFor(); err != nil {
 		t.Fatalf("expected quoted attendee chip after toggle: %v", err)

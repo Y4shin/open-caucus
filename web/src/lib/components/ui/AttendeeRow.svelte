@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
+	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import AppTooltip from '$lib/components/ui/AppTooltip.svelte';
 	import type { AttendeeRecord } from '$lib/gen/conference/attendees/v1/attendees_pb.js';
 	import * as m from '$lib/paraglide/messages';
@@ -39,7 +40,7 @@
 						{/if}
 						{#if attendee.quoted}
 							<AppTooltip text="FLINTA*" side="right">
-								<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
+								<span class="badge badge-info badge-sm" data-testid="manage-attendee-quoted-badge" aria-label="FLINTA*"><LegacyIcon name="transgender" class="h-3.5 w-3.5" /></span>
 							</AppTooltip>
 						{/if}
 					</div>
@@ -47,15 +48,23 @@
 			</div>
 			<div class="flex shrink-0 items-center gap-3">
 				<div class="hidden flex-col gap-1 sm:flex">
-					<label class="label cursor-pointer justify-start gap-2 p-0">
-						<input class={attendee.isChair ? 'toggle toggle-xs toggle-primary' : 'toggle toggle-xs'} type="checkbox" checked={attendee.isChair} title="Chairperson" aria-label="Chairperson" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await onToggleChair(attendee); }} />
-						<span class="text-xs leading-none">{m.meeting_live_chair()}</span>
-					</label>
+					<AppSwitch
+						checked={attendee.isChair}
+						size="xs"
+						color={attendee.isChair ? 'primary' : ''}
+						disabled={attendeeActionPending !== ''}
+						label={m.meeting_live_chair()}
+						onCheckedChange={async () => { await onToggleChair(attendee); }}
+					/>
 					{#if attendee.isGuest}
-						<label class="label cursor-pointer justify-start gap-2 p-0">
-							<input class={attendee.quoted ? 'toggle toggle-xs toggle-info' : 'toggle toggle-xs'} type="checkbox" checked={attendee.quoted} title="FLINTA*" aria-label="FLINTA*" disabled={attendeeActionPending !== ''} onchange={async (event) => { event.preventDefault(); event.stopPropagation(); await onToggleQuoted(attendee); }} />
-							<span class="text-xs leading-none">{m.meeting_join_quoted_label()}</span>
-						</label>
+						<AppSwitch
+							checked={attendee.quoted}
+							size="xs"
+							color={attendee.quoted ? 'info' : ''}
+							disabled={attendeeActionPending !== ''}
+							label={m.meeting_join_quoted_label()}
+							onCheckedChange={async () => { await onToggleQuoted(attendee); }}
+						/>
 					{/if}
 				</div>
 				<div class="join join-vertical">
