@@ -391,6 +391,65 @@ func (s *Service) GetAttendeeRecovery(ctx context.Context, committeeSlug, meetin
 	}, nil
 }
 
+// InviteSecretJoin creates an attendee record for a committee member identified
+// by their invite_secret and returns the attendee secret for session login.
+func (s *Service) InviteSecretJoin(ctx context.Context, committeeSlug, meetingIDStr, inviteSecret string) (*attendeesv1.InviteSecretJoinResponse, *http.Cookie, error) {
+	if inviteSecret == "" {
+		return nil, nil, apierrors.New(apierrors.KindInvalidArgument, "invite secret is required")
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	// Look up the committee member by invite secret.
+	user, err := s.repo.GetUserByInviteSecret(ctx, inviteSecret)
+	if err != nil {
+		return nil, nil, apierrors.New(apierrors.KindPermissionDenied, "invalid invite secret")
+	}
+
+	// Verify the member belongs to the correct committee.
+	if user.CommitteeSlug != committeeSlug {
+		return nil, nil, apierrors.New(apierrors.KindPermissionDenied, "invite secret does not match committee")
+	}
+
+	// Check the meeting exists.
+	if _, err := s.repo.GetMeetingByID(ctx, meetingID); err != nil {
+		return nil, nil, apierrors.New(apierrors.KindNotFound, "meeting not found")
+	}
+
+	// Create attendee record (or find existing).
+	attendeeSecret, err := generateSecret()
+	if err != nil {
+		return nil, nil, apierrors.Wrap(apierrors.KindInternal, "failed to generate attendee secret", err)
+	}
+
+	attendee, err := s.repo.CreateAttendee(ctx, meetingID, nil, user.FullName, attendeeSecret, user.Quoted)
+	if err != nil {
+		return nil, nil, apierrors.Wrap(apierrors.KindInternal, "failed to create attendee", err)
+	}
+
+	s.publishAttendeesChanged(meetingID)
+
+	// Create a guest session for the new attendee.
+	sd := &session.SessionData{
+		SessionType: session.SessionTypeGuest,
+		AttendeeID:  &attendee.ID,
+		ExpiresAt:   time.Now().Add(24 * time.Hour),
+	}
+	signedID, err := s.sessionManager.CreateSession(ctx, sd)
+	if err != nil {
+		return nil, nil, apierrors.Wrap(apierrors.KindInternal, "failed to create session", err)
+	}
+	cookie := s.sessionManager.CreateCookie(signedID)
+
+	return &attendeesv1.InviteSecretJoinResponse{
+		AttendeeSecret: attendeeSecret,
+		AttendeeId:     strconv.FormatInt(attendee.ID, 10),
+	}, cookie, nil
+}
+
 func (s *Service) requireChairperson(ctx context.Context, committeeSlug string) error {
 	return serviceauthz.RequireChairperson(ctx, s.repo, committeeSlug)
 }

@@ -7,6 +7,7 @@
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
 	import MeetingWizard from './MeetingWizard.svelte';
+	import MembersPanel from './MembersPanel.svelte';
 	import { session } from '$lib/stores/session.svelte.js';
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { committeeClient, moderationClient } from '$lib/api/index.js';
@@ -203,6 +204,8 @@
 				{/if}
 			</section>
 		</div>
+
+			<MembersPanel slug={slug ?? ''} />
 	{:else}
 		<section class="card border border-base-300 bg-base-200 p-4 mt-4" data-testid="committee-active-meeting-card">
 			<h3 class="text-lg font-semibold">{m.committee_active_meeting_heading()}</h3>

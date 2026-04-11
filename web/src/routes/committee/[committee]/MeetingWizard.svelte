@@ -4,7 +4,8 @@
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
-	import { agendaClient, attendeeClient, committeeClient, moderationClient } from '$lib/api/index.js';
+	import { agendaClient, committeeClient, moderationClient } from '$lib/api/index.js';
+	import type { MemberRecord } from '$lib/gen/conference/committees/v1/committees_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import * as m from '$lib/paraglide/messages';
 	import AgendaImportPreview from './meeting/[meetingId]/moderate/AgendaImportPreview.svelte';
@@ -81,48 +82,10 @@
 		}
 	});
 
-	// Step 3: Participants (text-based)
-	let participantsText = $state('');
-
-	interface ParsedParticipant {
-		name: string;
-		isChair: boolean;
-		isQuoted: boolean;
-	}
-
-	function parseParticipants(text: string): ParsedParticipant[] {
-		const lines = text.split('\n').filter((l) => l.trim().length > 0);
-		return lines.map((line) => {
-			let name = line.trim();
-			let isChair = false;
-			let isQuoted = false;
-
-			const chairPattern = /\[(?:chair|vorsitz|chairperson)\]/i;
-			const quotedPattern = /\[(?:flinta\*?|f|quoted)\]/i;
-
-			if (chairPattern.test(name)) {
-				isChair = true;
-				name = name.replace(chairPattern, '').trim();
-			}
-			if (quotedPattern.test(name)) {
-				isQuoted = true;
-				name = name.replace(quotedPattern, '').trim();
-			}
-
-			if (name.endsWith('*')) {
-				isQuoted = true;
-				name = name.slice(0, -1).trim();
-			}
-			if (name.endsWith('^')) {
-				isChair = true;
-				name = name.slice(0, -1).trim();
-			}
-
-			return { name, isChair, isQuoted };
-		});
-	}
-
-	let parsedParticipants = $derived(parseParticipants(participantsText));
+	// Step 3: Invites (member checklist)
+	let membersList = $state<MemberRecord[]>([]);
+	let selectedMemberIds = $state<Set<string>>(new Set());
+	let membersLoading = $state(false);
 
 	export function open() {
 		step = 1;
@@ -136,10 +99,52 @@
 		agendaFormat = 'plaintext';
 		agendaFormatManuallySet = false;
 		agendaLineStates = new Map();
-		participantsText = '';
+		membersList = [];
+		selectedMemberIds = new Set();
 		error = '';
 		submitting = false;
 		dialogOpen = true;
+		loadMembersForInvites();
+	}
+
+	async function loadMembersForInvites() {
+		membersLoading = true;
+		try {
+			const res = await committeeClient.listCommitteeMembers({ committeeSlug: slug });
+			membersList = res.members;
+			selectedMemberIds = new Set(
+				membersList
+					.filter((member) => !!(member.email || member.username))
+					.map((member) => member.userId)
+			);
+		} catch {
+			membersList = [];
+			selectedMemberIds = new Set();
+		} finally {
+			membersLoading = false;
+		}
+	}
+
+	function toggleMember(userId: string) {
+		const next = new Set(selectedMemberIds);
+		if (next.has(userId)) {
+			next.delete(userId);
+		} else {
+			next.add(userId);
+		}
+		selectedMemberIds = next;
+	}
+
+	function selectAllMembers() {
+		selectedMemberIds = new Set(
+			membersList
+				.filter((member) => !!(member.email || member.username))
+				.map((member) => member.userId)
+		);
+	}
+
+	function deselectAllMembers() {
+		selectedMemberIds = new Set();
 	}
 
 	function canProceed(): boolean {
@@ -186,21 +191,13 @@
 				}
 			}
 
-			for (const participant of parsedParticipants) {
-				const attendeeRes = await attendeeClient.createAttendee({
+			if (selectedMemberIds.size > 0) {
+				await committeeClient.sendInviteEmails({
 					committeeSlug: slug,
 					meetingId,
-					fullName: participant.name,
-					genderQuoted: participant.isQuoted
+					baseUrl: window.location.origin,
+					memberIds: [...selectedMemberIds]
 				});
-				if (participant.isChair && attendeeRes.attendee?.attendeeId) {
-					await attendeeClient.setChairperson({
-						committeeSlug: slug,
-						meetingId,
-						attendeeId: attendeeRes.attendee.attendeeId,
-						isChair: true
-					});
-				}
 			}
 
 			if (signupOpen) {
@@ -232,7 +229,7 @@
 				<ul class="steps steps-horizontal text-xs">
 					<li class={step >= 1 ? 'step step-primary' : 'step'}>{m.wizard_step_basics()}</li>
 					<li class={step >= 2 ? 'step step-primary' : 'step'}>{m.wizard_step_agenda()}</li>
-					<li class={step >= 3 ? 'step step-primary' : 'step'}>{m.wizard_step_participants()}</li>
+					<li class={step >= 3 ? 'step step-primary' : 'step'}>{m.wizard_step_invites()}</li>
 					<li class={step >= 4 ? 'step step-primary' : 'step'}>{m.wizard_step_review()}</li>
 				</ul>
 				<button type="button" class="btn btn-sm btn-ghost" onclick={() => dialogOpen = false}>{m.common_close()}</button>
@@ -286,26 +283,39 @@
 			</div>
 		{:else if step === 3}
 			<div class="space-y-3">
-				<p class="text-sm text-base-content/70">{m.wizard_participants_description()}</p>
-				<textarea
-					class="textarea textarea-bordered w-full font-mono text-sm"
-					rows="12"
-					placeholder={m.wizard_participants_placeholder()}
-					bind:value={participantsText}
-				></textarea>
-				{#if parsedParticipants.length > 0}
-					<div class="rounded-box border border-base-300 bg-base-200/30 p-3">
-						<h4 class="mb-2 text-sm font-semibold">{m.wizard_preview()} ({parsedParticipants.length})</h4>
-						<ul class="space-y-1 text-sm">
-							{#each parsedParticipants as p}
-								<li class="flex items-center gap-2">
-									<span>{p.name}</span>
-									{#if p.isChair}<span class="badge badge-success badge-xs">Chair</span>{/if}
-									{#if p.isQuoted}<span class="badge badge-info badge-xs">FLINTA*</span>{/if}
-								</li>
-							{/each}
-						</ul>
+				<p class="text-sm text-base-content/70">{m.wizard_invites_description()}</p>
+				{#if membersLoading}
+					<AppSpinner label="Loading members" />
+				{:else if membersList.length === 0}
+					<p class="text-sm text-base-content/70">{m.wizard_invites_description()}</p>
+				{:else}
+					<div class="flex gap-2 mb-2">
+						<button type="button" class="btn btn-xs btn-ghost" onclick={selectAllMembers}>Select all</button>
+						<button type="button" class="btn btn-xs btn-ghost" onclick={deselectAllMembers}>Deselect all</button>
 					</div>
+					<ul class="space-y-1 max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-200/30 p-3">
+						{#each membersList as member}
+							{@const hasContact = !!(member.email || member.username)}
+							<li class="flex items-center gap-2 {hasContact ? '' : 'opacity-50'}">
+								<input
+									class="checkbox checkbox-sm"
+									type="checkbox"
+									checked={selectedMemberIds.has(member.userId)}
+									disabled={!hasContact}
+									onchange={() => toggleMember(member.userId)}
+								/>
+								<span class="text-sm">{member.fullName}</span>
+								{#if member.email}
+									<span class="badge badge-outline badge-xs">{member.email}</span>
+								{:else if member.username}
+									<span class="badge badge-outline badge-xs">{member.username}</span>
+								{:else}
+									<span class="badge badge-ghost badge-xs">{m.members_no_contact()}</span>
+								{/if}
+								<span class="badge badge-sm {member.role === 'chairperson' ? 'badge-primary' : 'badge-neutral'}">{member.role === 'chairperson' ? m.admin_committee_users_role_chairperson() : m.admin_committee_users_role_member()}</span>
+							</li>
+						{/each}
+					</ul>
 				{/if}
 			</div>
 		{:else if step === 4}
@@ -333,20 +343,10 @@
 						</ul>
 					</div>
 				{/if}
-				{#if parsedParticipants.length > 0}
-					<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
-						<h4 class="text-sm font-semibold">{m.wizard_step_participants()} ({parsedParticipants.length})</h4>
-						<ul class="text-sm space-y-0.5">
-							{#each parsedParticipants as p}
-								<li>
-									{p.name}
-									{#if p.isChair} <span class="badge badge-success badge-xs">Chair</span>{/if}
-									{#if p.isQuoted} <span class="badge badge-info badge-xs">FLINTA*</span>{/if}
-								</li>
-							{/each}
-						</ul>
-					</div>
-				{/if}
+				<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
+					<h4 class="text-sm font-semibold">{m.wizard_step_invites()}</h4>
+					<p class="text-sm text-base-content/70">{m.wizard_invites_count({ count: selectedMemberIds.size })}</p>
+				</div>
 			</div>
 		{/if}
 

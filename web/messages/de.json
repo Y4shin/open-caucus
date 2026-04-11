@@ -522,5 +522,26 @@
 	"quotation_bucket_first_time": "Erstredner:in",
 	"quotation_bucket_returning": "Wiederholung",
 	"quotation_preview_heading": "Vorschau: Wie Redner:innen sortiert werden",
-	"quotation_preview_description": "Beispiel mit 4 Redner:innen zur Veranschaulichung der aktuellen Einstellungen."
+	"quotation_preview_description": "Beispiel mit 4 Redner:innen zur Veranschaulichung der aktuellen Einstellungen.",
+
+	"members_heading": "Mitglieder",
+	"members_empty": "Noch keine Mitglieder.",
+	"members_add_heading": "Mitglied hinzufügen",
+	"members_add_by_email": "Per E-Mail",
+	"members_add_assign_account": "Konto zuweisen",
+	"members_email_label": "E-Mail:",
+	"members_name_label": "Vollständiger Name:",
+	"members_role_label": "Rolle:",
+	"members_add_button": "Mitglied hinzufügen",
+	"members_col_name": "Name",
+	"members_col_contact": "Kontakt",
+	"members_col_role": "Rolle",
+	"members_col_quoted": "Quotiert",
+	"members_col_actions": "Aktionen",
+	"members_no_contact": "Keine Kontaktdaten",
+	"members_remove_confirm": "Dieses Mitglied entfernen?",
+	"wizard_step_invites": "Einladungen",
+	"wizard_invites_description": "Wählen Sie Mitglieder aus, die per E-Mail eingeladen werden sollen. Alle sind standardmäßig ausgewählt.",
+	"wizard_invites_count": "Einladungen werden an {count} Mitglied(er) gesendet",
+	"wizard_invites_email_disabled": "E-Mail-Versand ist nicht konfiguriert. Einladungen werden nicht gesendet."
 }

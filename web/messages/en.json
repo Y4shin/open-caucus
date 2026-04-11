@@ -522,5 +522,26 @@
 	"quotation_bucket_first_time": "First time",
 	"quotation_bucket_returning": "Returning",
 	"quotation_preview_heading": "Preview: How speakers would be sorted",
-	"quotation_preview_description": "Example with 4 speakers showing the effect of current settings."
+	"quotation_preview_description": "Example with 4 speakers showing the effect of current settings.",
+
+	"members_heading": "Members",
+	"members_empty": "No members yet.",
+	"members_add_heading": "Add Member",
+	"members_add_by_email": "By email",
+	"members_add_assign_account": "Assign account",
+	"members_email_label": "Email:",
+	"members_name_label": "Full name:",
+	"members_role_label": "Role:",
+	"members_add_button": "Add Member",
+	"members_col_name": "Name",
+	"members_col_contact": "Contact",
+	"members_col_role": "Role",
+	"members_col_quoted": "Quoted",
+	"members_col_actions": "Actions",
+	"members_no_contact": "No contact info",
+	"members_remove_confirm": "Remove this member?",
+	"wizard_step_invites": "Invites",
+	"wizard_invites_description": "Select members to invite by email. All members are selected by default.",
+	"wizard_invites_count": "Invites will be sent to {count} member(s)",
+	"wizard_invites_email_disabled": "Email sending is not configured. Invites will not be sent."
 }

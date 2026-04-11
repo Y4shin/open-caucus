@@ -92,3 +92,15 @@ func (h *AttendeeHandler) GetAttendeeRecovery(ctx context.Context, req *connect.
 	}
 	return connect.NewResponse(resp), nil
 }
+
+func (h *AttendeeHandler) InviteSecretJoin(ctx context.Context, req *connect.Request[attendeesv1.InviteSecretJoinRequest]) (*connect.Response[attendeesv1.InviteSecretJoinResponse], error) {
+	resp, cookie, err := h.service.InviteSecretJoin(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.InviteSecret)
+	if err != nil {
+		return nil, err
+	}
+	out := connect.NewResponse(resp)
+	if cookie != nil {
+		out.Header().Add("Set-Cookie", cookie.String())
+	}
+	return out, nil
+}
