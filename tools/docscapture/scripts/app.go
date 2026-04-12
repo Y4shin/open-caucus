@@ -561,10 +561,10 @@ func appScreenshotJoinQRDialogScript() Script {
 						return fmt.Errorf("click QR button: %w", err)
 					}
 					// Wait for QR image in dialog
-					if err := page.Locator("#join-qr-dialog #join-qr-code").WaitFor(); err != nil {
+					if err := page.Locator("[role=dialog] #join-qr-code").WaitFor(); err != nil {
 						return fmt.Errorf("wait QR code image: %w", err)
 					}
-					if err := highlight(page, "#join-qr-dialog .modal-box"); err != nil {
+					if err := highlight(page, "[role=dialog]"); err != nil {
 						return err
 					}
 					return nil
@@ -736,14 +736,14 @@ func appGIFVoteLifecycleOpenAndSecretScript() Script {
 						return fmt.Errorf("wait moderate votes panel: %w", err)
 					}
 
-					secretDetails := panel.Locator("details.collapse").Filter(playwright.LocatorFilterOptions{HasText: "Confidential Election"}).First()
+					secretDetails := panel.Locator("[data-vote-accordion]").Filter(playwright.LocatorFilterOptions{HasText: "Confidential Election"}).First()
 					if err := secretDetails.WaitFor(); err != nil {
 						return fmt.Errorf("wait secret vote accordion: %w", err)
 					}
-					if err := clickLocatorWithCursor(page, secretDetails.Locator("summary").First(), "secret vote accordion"); err != nil {
+					if err := clickLocatorWithCursor(page, secretDetails.Locator("button").First(), "secret vote accordion"); err != nil {
 						return fmt.Errorf("open secret vote accordion: %w", err)
 					}
-					openButton := secretDetails.Locator("button:has-text('Open Vote')").First()
+					openButton := secretDetails.Locator("button.btn-success:has-text('Open Vote')").First()
 					if err := openButton.WaitFor(); err != nil {
 						return fmt.Errorf("wait open vote button: %w", err)
 					}
@@ -764,11 +764,11 @@ func appGIFVoteLifecycleOpenAndSecretScript() Script {
 						return fmt.Errorf("click close vote button: %w", err)
 					}
 
-					openDetails := panel.Locator("details.collapse").Filter(playwright.LocatorFilterOptions{HasText: "Budget Approval"}).First()
+					openDetails := panel.Locator("[data-vote-accordion]").Filter(playwright.LocatorFilterOptions{HasText: "Budget Approval"}).First()
 					if err := openDetails.WaitFor(); err != nil {
 						return fmt.Errorf("wait open vote accordion: %w", err)
 					}
-					if err := clickLocatorWithCursor(page, openDetails.Locator("summary").First(), "open vote accordion"); err != nil {
+					if err := clickLocatorWithCursor(page, openDetails.Locator("button").First(), "open vote accordion"); err != nil {
 						return fmt.Errorf("open open-vote accordion: %w", err)
 					}
 					page.WaitForTimeout(gifPauseAfterActionMS)
