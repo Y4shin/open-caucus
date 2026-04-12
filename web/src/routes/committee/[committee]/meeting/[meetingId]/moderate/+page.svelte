@@ -58,6 +58,13 @@
 	// Email invite state
 	let emailEnabled = $state(false);
 	let inviteSending = $state(false);
+	let inviteDialogEl = $state<HTMLDialogElement | null>(null);
+	let inviteLanguage = $state('en');
+	let inviteTimezone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	let inviteCustomMessage = $state('');
+	let inviteMembers = $state<Array<{ userId: string; fullName: string; email?: string; username?: string; hasAccount: boolean }>>([]);
+	let inviteSelectedIds = $state<Set<string>>(new Set());
+	let inviteMembersLoading = $state(false);
 
 	onDestroy(() => {
 		pageActions.clear();
@@ -452,6 +459,42 @@
 		})();
 	});
 
+	async function openInviteDialog() {
+		inviteLanguage = 'en';
+		inviteTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		inviteCustomMessage = '';
+		inviteMembers = [];
+		inviteSelectedIds = new Set();
+		inviteMembersLoading = true;
+		inviteDialogEl?.showModal();
+		try {
+			const res = await committeeClient.listCommitteeMembers({ committeeSlug: slug });
+			inviteMembers = res.members.map((m) => ({
+				userId: m.userId,
+				fullName: m.fullName,
+				email: m.email ?? undefined,
+				username: m.username ?? undefined,
+				hasAccount: m.hasAccount
+			}));
+			inviteSelectedIds = new Set(
+				inviteMembers
+					.filter((m) => !!(m.email || m.username))
+					.map((m) => m.userId)
+			);
+		} catch {
+			inviteMembers = [];
+		} finally {
+			inviteMembersLoading = false;
+		}
+	}
+
+	function toggleInviteMember(userId: string) {
+		const next = new Set(inviteSelectedIds);
+		if (next.has(userId)) next.delete(userId);
+		else next.add(userId);
+		inviteSelectedIds = next;
+	}
+
 	async function sendInviteEmails() {
 		if (inviteSending) return;
 		inviteSending = true;
@@ -462,13 +505,17 @@
 				committeeSlug: slug,
 				meetingId,
 				baseUrl: window.location.origin,
-				memberIds: []
+				memberIds: [...inviteSelectedIds],
+				customMessage: inviteCustomMessage,
+				language: inviteLanguage,
+				timezone: inviteTimezone
 			});
 			let msg: string = m.moderate_send_invites_success({ count: res.sentCount });
 			if (res.skippedCount > 0) {
 				msg += ' ' + m.moderate_send_invites_skipped({ count: res.skippedCount });
 			}
 			actionNotice = msg;
+			inviteDialogEl?.close();
 		} catch (err) {
 			actionError = getDisplayError(err, 'Failed to send invite emails.');
 		} finally {
@@ -613,14 +660,10 @@
 											<button
 												type="button"
 												class="btn btn-sm btn-outline"
-												disabled={!emailEnabled || inviteSending}
-												onclick={sendInviteEmails}
+												disabled={!emailEnabled}
+												onclick={openInviteDialog}
 											>
-												{#if inviteSending}
-													<AppSpinner />
-												{:else}
-													{m.moderate_send_invites_button()}
-												{/if}
+												{m.moderate_send_invites_button()}
 											</button>
 										</div>
 									</div>
@@ -783,3 +826,107 @@
 </Dialog.Content>
 </Dialog.Portal>
 </Dialog.Root>
+
+<dialog class="modal" bind:this={inviteDialogEl}>
+	<div class="modal-box w-11/12 max-w-lg">
+		<div class="mb-4 flex items-center justify-between">
+			<h3 class="text-lg font-semibold">{m.invite_send_dialog_title()}</h3>
+			<button type="button" class="btn btn-sm btn-ghost" onclick={() => inviteDialogEl?.close()}>{m.common_close()}</button>
+		</div>
+		<div class="space-y-4">
+			<!-- Member checklist -->
+			<div>
+				<span class="label text-sm font-medium">{m.members_heading()}</span>
+				{#if inviteMembersLoading}
+					<AppSpinner label="Loading members" />
+				{:else if inviteMembers.length === 0}
+					<p class="text-sm text-base-content/70">{m.members_empty()}</p>
+				{:else}
+					<div class="flex gap-2 mb-2">
+						<button type="button" class="btn btn-xs btn-ghost" onclick={() => { inviteSelectedIds = new Set(inviteMembers.filter(m => !!(m.email || m.username)).map(m => m.userId)); }}>Select all</button>
+						<button type="button" class="btn btn-xs btn-ghost" onclick={() => { inviteSelectedIds = new Set(); }}>Deselect all</button>
+					</div>
+					<ul class="space-y-1 max-h-48 overflow-y-auto rounded-box border border-base-300 bg-base-200/30 p-3">
+						{#each inviteMembers as member}
+							{@const hasContact = !!(member.email || member.username)}
+							<li class="flex items-center gap-2 {hasContact ? '' : 'opacity-50'}">
+								<input
+									class="checkbox checkbox-sm"
+									type="checkbox"
+									checked={inviteSelectedIds.has(member.userId)}
+									disabled={!hasContact}
+									onchange={() => toggleInviteMember(member.userId)}
+								/>
+								<span class="text-sm">{member.fullName}</span>
+								{#if member.email}
+									<span class="badge badge-outline badge-xs">{member.email}</span>
+								{:else if member.username}
+									<span class="badge badge-outline badge-xs">{member.username}</span>
+								{:else}
+									<span class="badge badge-ghost badge-xs">{m.members_no_contact()}</span>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+
+			<div>
+				<label class="label text-sm font-medium" for="invite-language">{m.invite_language_label()}</label>
+				<AppSelect
+					id="invite-language"
+					bind:value={inviteLanguage}
+					disablePortal
+					items={[
+						{ value: 'en', label: 'English' },
+						{ value: 'de', label: 'Deutsch' }
+					]}
+				/>
+			</div>
+			<div>
+				<label class="label text-sm font-medium" for="invite-timezone">{m.invite_timezone_label()}</label>
+				<AppSelect
+					id="invite-timezone"
+					bind:value={inviteTimezone}
+					disablePortal
+					items={[
+						{ value: 'UTC', label: 'UTC' },
+						{ value: 'Europe/Berlin', label: 'Europe/Berlin' },
+						{ value: 'Europe/London', label: 'Europe/London' },
+						{ value: 'America/New_York', label: 'America/New_York' },
+						{ value: 'America/Chicago', label: 'America/Chicago' },
+						{ value: 'America/Los_Angeles', label: 'America/Los_Angeles' },
+						{ value: 'Asia/Tokyo', label: 'Asia/Tokyo' }
+					]}
+				/>
+			</div>
+			<div>
+				<label class="label text-sm font-medium" for="invite-custom-message">{m.invite_custom_message_label()}</label>
+				<textarea
+					id="invite-custom-message"
+					class="textarea textarea-bordered w-full"
+					rows="3"
+					placeholder={m.invite_custom_message_placeholder()}
+					bind:value={inviteCustomMessage}
+				></textarea>
+			</div>
+			{#if !emailEnabled}
+				<div class="alert alert-warning text-sm">{m.email_not_configured_hint()}</div>
+			{/if}
+		</div>
+		<div class="modal-action">
+			<button
+				type="button"
+				class="btn btn-sm btn-primary"
+				disabled={!emailEnabled || inviteSending}
+				onclick={sendInviteEmails}
+			>
+				{#if inviteSending}
+					<AppSpinner />
+				{/if}
+				{m.invite_send_button()}
+			</button>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
+</dialog>

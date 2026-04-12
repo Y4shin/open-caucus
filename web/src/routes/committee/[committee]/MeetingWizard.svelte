@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import AppSelect from '$lib/components/ui/AppSelect.svelte';
 	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import DateRangeTimePicker from '$lib/components/ui/DateRangeTimePicker.svelte';
 	import { agendaClient, committeeClient, moderationClient } from '$lib/api/index.js';
@@ -88,6 +89,9 @@
 	let selectedMemberIds = $state<Set<string>>(new Set());
 	let membersLoading = $state(false);
 	let sendInvites = $state(false);
+	let inviteLanguage = $state('en');
+	let inviteTimezone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	let inviteCustomMessage = $state('');
 
 	function resetWizardState() {
 		step = 1;
@@ -104,6 +108,9 @@
 		membersList = [];
 		selectedMemberIds = new Set();
 		sendInvites = emailEnabled;
+		inviteLanguage = 'en';
+		inviteTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		inviteCustomMessage = '';
 		error = '';
 		submitting = false;
 		loadMembersForInvites();
@@ -203,7 +210,10 @@
 					committeeSlug: slug,
 					meetingId,
 					baseUrl: window.location.origin,
-					memberIds: [...selectedMemberIds]
+					memberIds: [...selectedMemberIds],
+					customMessage: inviteCustomMessage,
+					language: inviteLanguage,
+					timezone: inviteTimezone
 				});
 			}
 
@@ -360,6 +370,45 @@
 						/>
 						{#if sendInvites}
 							<p class="text-sm text-base-content/70">{m.wizard_invites_count({ count: selectedMemberIds.size })}</p>
+							<div class="mt-3 space-y-3">
+								<div>
+									<label class="label text-sm font-medium" for="wizard-invite-language">{m.invite_language_label()}</label>
+									<AppSelect
+										id="wizard-invite-language"
+										bind:value={inviteLanguage}
+										items={[
+											{ value: 'en', label: 'English' },
+											{ value: 'de', label: 'Deutsch' }
+										]}
+									/>
+								</div>
+								<div>
+									<label class="label text-sm font-medium" for="wizard-invite-timezone">{m.invite_timezone_label()}</label>
+									<AppSelect
+										id="wizard-invite-timezone"
+										bind:value={inviteTimezone}
+										items={[
+											{ value: 'UTC', label: 'UTC' },
+											{ value: 'Europe/Berlin', label: 'Europe/Berlin' },
+											{ value: 'Europe/London', label: 'Europe/London' },
+											{ value: 'America/New_York', label: 'America/New_York' },
+											{ value: 'America/Chicago', label: 'America/Chicago' },
+											{ value: 'America/Los_Angeles', label: 'America/Los_Angeles' },
+											{ value: 'Asia/Tokyo', label: 'Asia/Tokyo' }
+										]}
+									/>
+								</div>
+								<div>
+									<label class="label text-sm font-medium" for="wizard-invite-message">{m.invite_custom_message_label()}</label>
+									<textarea
+										id="wizard-invite-message"
+										class="textarea textarea-bordered w-full"
+										rows="3"
+										placeholder={m.invite_custom_message_placeholder()}
+										bind:value={inviteCustomMessage}
+									></textarea>
+								</div>
+							</div>
 						{:else}
 							<p class="text-sm text-base-content/70">{m.wizard_invites_will_not_send()}</p>
 						{/if}

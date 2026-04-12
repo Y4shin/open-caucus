@@ -184,6 +184,9 @@ message SendInviteEmailsRequest {
   string meeting_id = 2;
   string base_url = 3;
   repeated string member_ids = 4; // empty = all members
+  string custom_message = 5;      // optional personal message from chairperson
+  string language = 6;            // "en" or "de"; empty = default (en)
+  string timezone = 7;            // IANA timezone for datetime display, e.g. "Europe/Berlin"; empty = UTC
 }
 
 message SendInviteEmailsResponse {

@@ -180,7 +180,7 @@ func (s *Service) RemoveMember(ctx context.Context, slug, userIDStr string) (*co
 	return &committeesv1.RemoveMemberResponse{}, nil
 }
 
-func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, baseURL string, memberIDs []string) (*committeesv1.SendInviteEmailsResponse, error) {
+func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, baseURL string, memberIDs []string, customMessage, language, timezone string) (*committeesv1.SendInviteEmailsResponse, error) {
 	if err := serviceauthz.RequireChairperson(ctx, s.repo, slug); err != nil {
 		return nil, err
 	}
@@ -209,8 +209,9 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to list members", err)
 	}
 
-	// Load agenda points for the email body.
+	// Load agenda points (top-level + sub-points) for the email body.
 	agendaPoints, _ := s.repo.ListAgendaPointsForMeeting(ctx, meetingID)
+	subPoints, _ := s.repo.ListSubAgendaPointsForMeeting(ctx, meetingID)
 
 	// Filter to requested member IDs if specified.
 	wantIDs := make(map[int64]bool)
@@ -270,24 +271,47 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 			continue
 		}
 
-		// Build agenda items for the email.
+		// Build agenda items with sub-points for the email.
 		agendaItems := make([]email.AgendaItem, 0)
 		if agendaPoints != nil {
+			// Build a map of parent ID → children.
+			childrenOf := make(map[int64][]*model.AgendaPoint)
+			if subPoints != nil {
+				for _, sp := range subPoints {
+					if sp.ParentID != nil {
+						childrenOf[*sp.ParentID] = append(childrenOf[*sp.ParentID], sp)
+					}
+				}
+			}
 			for i, ap := range agendaPoints {
-				agendaItems = append(agendaItems, email.AgendaItem{
+				item := email.AgendaItem{
 					Number: strconv.Itoa(i + 1),
 					Title:  ap.Title,
-				})
+				}
+				for j, child := range childrenOf[ap.ID] {
+					item.Children = append(item.Children, email.AgendaItem{
+						Number: fmt.Sprintf("%d.%d", i+1, j+1),
+						Title:  child.Title,
+					})
+				}
+				agendaItems = append(agendaItems, item)
 			}
 		}
 
-		// Format datetime strings.
+		// Format datetime strings in the requested timezone.
+		loc := time.UTC
+		if timezone != "" {
+			if parsed, err := time.LoadLocation(timezone); err == nil {
+				loc = parsed
+			}
+		}
+		dtFmt := "Mon, 2 Jan 2006 15:04 (MST)"
 		startStr, endStr := "", ""
 		if meeting.StartAt != nil {
-			startStr = meeting.StartAt.Format(time.RFC3339)
+			startStr = meeting.StartAt.In(loc).Format(dtFmt)
 		}
 		if meeting.EndAt != nil {
-			endStr = meeting.EndAt.Format(time.RFC3339)
+			endStr = meeting.EndAt.In(loc).Format(dtFmt)
 		}
 
 		htmlBody, textBody, err := email.RenderMeetingInvite(email.InviteData{
@@ -299,6 +323,8 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 			StartAt:       startStr,
 			EndAt:         endStr,
 			Agenda:        agendaItems,
+			CustomMessage: customMessage,
+			Language:      language,
 		})
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("render for %s: %v", m.FullName, err))

@@ -548,5 +548,11 @@
 	"moderate_send_invites_success": "Invite emails sent to {count} member(s).",
 	"moderate_send_invites_skipped": "{count} member(s) skipped (no contact info).",
 	"committee_edit_meeting": "Edit",
-	"committee_save_meeting": "Save"
+	"committee_save_meeting": "Save",
+	"invite_custom_message_label": "Personal message (optional):",
+	"invite_custom_message_placeholder": "Add a personal note to the invite...",
+	"invite_language_label": "Email language:",
+	"invite_timezone_label": "Timezone:",
+	"invite_send_dialog_title": "Send Meeting Invites",
+	"invite_send_button": "Send Invites"
 }

@@ -10,7 +10,8 @@
 		disabled = false,
 		size = 'sm',
 		id = '',
-		onValueChange
+		onValueChange,
+		disablePortal = false
 	}: {
 		value?: string;
 		items: Item[];
@@ -19,6 +20,7 @@
 		size?: 'xs' | 'sm' | 'md';
 		id?: string;
 		onValueChange?: (value: string) => void;
+		disablePortal?: boolean;
 	} = $props();
 
 	const sizeMap: Record<string, string> = { xs: 'input-xs text-xs', sm: 'input-sm text-sm', md: '' };
@@ -37,7 +39,7 @@
 			<path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0l-4.25-4.25a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
 		</svg>
 	</Select.Trigger>
-	<Select.Portal>
+	<Select.Portal disabled={disablePortal}>
 		<Select.Content
 			class="rounded-box border border-base-300 bg-base-100 py-1 shadow-lg z-50 max-h-60 overflow-auto"
 			sideOffset={4}

@@ -1615,7 +1615,10 @@ type SendInviteEmailsRequest struct {
 	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
 	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
 	BaseUrl       string                 `protobuf:"bytes,3,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
-	MemberIds     []string               `protobuf:"bytes,4,rep,name=member_ids,json=memberIds,proto3" json:"member_ids,omitempty"` // empty = all members
+	MemberIds     []string               `protobuf:"bytes,4,rep,name=member_ids,json=memberIds,proto3" json:"member_ids,omitempty"`             // empty = all members
+	CustomMessage string                 `protobuf:"bytes,5,opt,name=custom_message,json=customMessage,proto3" json:"custom_message,omitempty"` // optional personal message from chairperson
+	Language      string                 `protobuf:"bytes,6,opt,name=language,proto3" json:"language,omitempty"`                                // "en" or "de"; empty = default (en)
+	Timezone      string                 `protobuf:"bytes,7,opt,name=timezone,proto3" json:"timezone,omitempty"`                                // IANA timezone for datetime display, e.g. "Europe/Berlin"; empty = UTC
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1676,6 +1679,27 @@ func (x *SendInviteEmailsRequest) GetMemberIds() []string {
 		return x.MemberIds
 	}
 	return nil
+}
+
+func (x *SendInviteEmailsRequest) GetCustomMessage() string {
+	if x != nil {
+		return x.CustomMessage
+	}
+	return ""
+}
+
+func (x *SendInviteEmailsRequest) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
+func (x *SendInviteEmailsRequest) GetTimezone() string {
+	if x != nil {
+		return x.Timezone
+	}
+	return ""
 }
 
 type SendInviteEmailsResponse struct {
@@ -1855,14 +1879,17 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\x13RemoveMemberRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\"\x16\n" +
-	"\x14RemoveMemberResponse\"\x99\x01\n" +
+	"\x14RemoveMemberResponse\"\xf8\x01\n" +
 	"\x17SendInviteEmailsRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
 	"\n" +
 	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x19\n" +
 	"\bbase_url\x18\x03 \x01(\tR\abaseUrl\x12\x1d\n" +
 	"\n" +
-	"member_ids\x18\x04 \x03(\tR\tmemberIds\"v\n" +
+	"member_ids\x18\x04 \x03(\tR\tmemberIds\x12%\n" +
+	"\x0ecustom_message\x18\x05 \x01(\tR\rcustomMessage\x12\x1a\n" +
+	"\blanguage\x18\x06 \x01(\tR\blanguage\x12\x1a\n" +
+	"\btimezone\x18\a \x01(\tR\btimezone\"v\n" +
 	"\x18SendInviteEmailsResponse\x12\x1d\n" +
 	"\n" +
 	"sent_count\x18\x01 \x01(\x05R\tsentCount\x12#\n" +

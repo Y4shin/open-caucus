@@ -67,7 +67,7 @@ func (h *MemberHandler) RemoveMember(ctx context.Context, req *connect.Request[c
 }
 
 func (h *MemberHandler) SendInviteEmails(ctx context.Context, req *connect.Request[committeesv1.SendInviteEmailsRequest]) (*connect.Response[committeesv1.SendInviteEmailsResponse], error) {
-	resp, err := h.service.SendInviteEmails(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.BaseUrl, req.Msg.MemberIds)
+	resp, err := h.service.SendInviteEmails(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.BaseUrl, req.Msg.MemberIds, req.Msg.CustomMessage, req.Msg.Language, req.Msg.Timezone)
 	if err != nil {
 		return nil, err
 	}

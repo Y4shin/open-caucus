@@ -548,5 +548,11 @@
 	"moderate_send_invites_success": "Einladungs-E-Mails an {count} Mitglied(er) gesendet.",
 	"moderate_send_invites_skipped": "{count} Mitglied(er) übersprungen (keine Kontaktdaten).",
 	"committee_edit_meeting": "Bearbeiten",
-	"committee_save_meeting": "Speichern"
+	"committee_save_meeting": "Speichern",
+	"invite_custom_message_label": "Persönliche Nachricht (optional):",
+	"invite_custom_message_placeholder": "Persönliche Notiz zur Einladung hinzufügen...",
+	"invite_language_label": "E-Mail-Sprache:",
+	"invite_timezone_label": "Zeitzone:",
+	"invite_send_dialog_title": "Sitzungseinladungen versenden",
+	"invite_send_button": "Einladungen versenden"
 }
