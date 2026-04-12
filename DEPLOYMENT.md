@@ -1,8 +1,3 @@
----
-title-en: Deployment and Configuration Guide
-title-de: Deployment- und Konfigurationshandbuch
----
-
 # Deployment and Configuration Guide
 
 This guide covers all configuration options for deploying Open Caucus, including email, OIDC/OAuth, member management, and the development environment.

@@ -22,7 +22,6 @@ Admins and chairpersons responsible for stable operation.
 
 1. Use [Permission Model and Common 403 Cases](/docs/06-operations/01-permission-model-and-common-403-cases) for access-denied diagnostics.
 2. Use [Troubleshooting and Recovery](/docs/06-operations/02-troubleshooting-and-recovery) for live incident recovery.
-3. Use [Deployment and Configuration Guide](/docs/06-operations/03-deployment-and-configuration) for environment setup, email, OIDC, and member management configuration.
 
 ## What you should see
 
