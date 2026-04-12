@@ -220,6 +220,84 @@ func TestSendInviteEmails_IncludesCustomMessageAndLanguage(t *testing.T) {
 	}
 }
 
+func TestSendInviteEmails_MessageIDAndReferencesThreading(t *testing.T) {
+	ts := newCombinedAPITestServer(t)
+	ts.seedCommittee(t, "Test Committee", "test-comm")
+	ts.seedUser(t, "test-comm", "chair1", "pass", "Chair Person", "chairperson")
+	meeting1 := ts.seedMeeting(t, "test-comm", "First Meeting", false)
+	meeting2 := ts.seedMeeting(t, "test-comm", "Second Meeting", false)
+
+	client := newCombinedTestClient(t, ts)
+	if _, err := client.session.Login(context.Background(), connect.NewRequest(&sessionv1.LoginRequest{
+		Username: "chair1",
+		Password: "pass",
+	})); err != nil {
+		t.Fatalf("login: %v", err)
+	}
+
+	// Add email member.
+	client.committees.AddMemberByEmail(context.Background(), connect.NewRequest(&committeesv1.AddMemberByEmailRequest{
+		CommitteeSlug: "test-comm",
+		Email:         "thread@example.com",
+		FullName:      "Thread Tester",
+		Role:          "member",
+	}))
+
+	// Send first invite.
+	ts.mockSender.Sent = nil
+	client.committees.SendInviteEmails(context.Background(), connect.NewRequest(&committeesv1.SendInviteEmailsRequest{
+		CommitteeSlug: "test-comm",
+		MeetingId:     strconv.FormatInt(meeting1, 10),
+		BaseUrl:       "http://localhost:8080",
+	}))
+
+	if len(ts.mockSender.Sent) == 0 {
+		t.Fatal("expected first invite email")
+	}
+	firstEmail := ts.mockSender.Sent[0]
+	if firstEmail.MessageID == "" {
+		t.Fatal("first email missing Message-ID")
+	}
+	if !strings.HasPrefix(firstEmail.MessageID, "<") || !strings.HasSuffix(firstEmail.MessageID, ">") {
+		t.Errorf("Message-ID should be in angle brackets, got %q", firstEmail.MessageID)
+	}
+	if len(firstEmail.References) != 0 {
+		t.Errorf("first email should have no References, got %v", firstEmail.References)
+	}
+
+	// Send second invite to same recipient + committee.
+	ts.mockSender.Sent = nil
+	client.committees.SendInviteEmails(context.Background(), connect.NewRequest(&committeesv1.SendInviteEmailsRequest{
+		CommitteeSlug: "test-comm",
+		MeetingId:     strconv.FormatInt(meeting2, 10),
+		BaseUrl:       "http://localhost:8080",
+	}))
+
+	if len(ts.mockSender.Sent) == 0 {
+		t.Fatal("expected second invite email")
+	}
+	secondEmail := ts.mockSender.Sent[0]
+	if secondEmail.MessageID == "" {
+		t.Fatal("second email missing Message-ID")
+	}
+	if secondEmail.MessageID == firstEmail.MessageID {
+		t.Error("Message-IDs should be unique")
+	}
+	// Second email should reference the first email for threading.
+	if len(secondEmail.References) == 0 {
+		t.Fatal("second email should have References header for threading")
+	}
+	foundRef := false
+	for _, ref := range secondEmail.References {
+		if ref == firstEmail.MessageID {
+			foundRef = true
+		}
+	}
+	if !foundRef {
+		t.Errorf("second email References should contain first email's Message-ID %q, got %v", firstEmail.MessageID, secondEmail.References)
+	}
+}
+
 func sentRecipients(emails []email.MockEmail) []string {
 	r := make([]string, len(emails))
 	for i, e := range emails {

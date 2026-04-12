@@ -120,6 +120,10 @@ type Repository interface {
 	SetMeetingQuotationOrder(ctx context.Context, id int64, order []string) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
 	SetMeetingDatetime(ctx context.Context, id int64, startAt, endAt *time.Time) error
+
+	// Sent emails tracking
+	InsertSentEmail(ctx context.Context, messageID, recipient string, committeeID, meetingID *int64, subject string) error
+	ListSentEmailMessageIDs(ctx context.Context, recipient string, committeeID int64) ([]string, error)
 	UpdateMeetingDetails(ctx context.Context, id int64, name, description string, startAt, endAt *time.Time) error
 
 	// Binary blobs

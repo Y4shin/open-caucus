@@ -12,15 +12,18 @@ import (
 	"github.com/Y4shin/open-caucus/internal/config"
 )
 
-// SendOptions holds optional email attachments.
+// SendOptions holds optional email headers and attachments.
 type SendOptions struct {
-	ICSData string // optional iCalendar attachment content
+	ICSData    string   // optional iCalendar attachment content
+	MessageID  string   // RFC 5322 Message-ID (e.g. "<uuid@domain>")
+	References []string // RFC 5322 References header for threading
 }
 
 // Sender sends emails.
 type Sender interface {
 	Send(ctx context.Context, to, subject, htmlBody, textBody string, opts *SendOptions) error
 	Enabled() bool
+	FromDomain() string // domain part of the configured from address
 }
 
 // NewSender returns an appropriate Sender based on the configuration.
@@ -37,6 +40,13 @@ type SMTPSender struct {
 }
 
 func (s *SMTPSender) Enabled() bool { return true }
+
+func (s *SMTPSender) FromDomain() string {
+	if idx := strings.LastIndex(s.cfg.FromAddress, "@"); idx >= 0 {
+		return s.cfg.FromAddress[idx+1:]
+	}
+	return "localhost"
+}
 
 func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody string, opts *SendOptions) error {
 	addr := net.JoinHostPort(s.cfg.SMTPHost, fmt.Sprintf("%d", s.cfg.SMTPPort))
@@ -55,6 +65,12 @@ func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody str
 	fmt.Fprintf(&msg, "From: %s\r\n", fromHeader)
 	fmt.Fprintf(&msg, "To: %s\r\n", to)
 	fmt.Fprintf(&msg, "Subject: %s\r\n", subject)
+	if opts != nil && opts.MessageID != "" {
+		fmt.Fprintf(&msg, "Message-ID: %s\r\n", opts.MessageID)
+	}
+	if opts != nil && len(opts.References) > 0 {
+		fmt.Fprintf(&msg, "References: %s\r\n", strings.Join(opts.References, " "))
+	}
 	fmt.Fprintf(&msg, "MIME-Version: 1.0\r\n")
 
 	if hasICS {
@@ -137,7 +153,8 @@ func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody str
 // NoopSender discards all emails. Used when email is not configured.
 type NoopSender struct{}
 
-func (s *NoopSender) Enabled() bool { return false }
+func (s *NoopSender) Enabled() bool    { return false }
+func (s *NoopSender) FromDomain() string { return "localhost" }
 func (s *NoopSender) Send(_ context.Context, _, _, _, _ string, _ *SendOptions) error {
 	return fmt.Errorf("email sending is not configured")
 }
@@ -149,20 +166,25 @@ type MockSender struct {
 
 // MockEmail represents a single sent email.
 type MockEmail struct {
-	To       string
-	Subject  string
-	HTMLBody string
-	TextBody string
-	ICSData  string
+	To         string
+	Subject    string
+	HTMLBody   string
+	TextBody   string
+	ICSData    string
+	MessageID  string
+	References []string
 }
 
-func (s *MockSender) Enabled() bool { return true }
+func (s *MockSender) Enabled() bool    { return true }
+func (s *MockSender) FromDomain() string { return "test.local" }
 
 func (s *MockSender) Send(_ context.Context, to, subject, htmlBody, textBody string, opts *SendOptions) error {
-	ics := ""
+	e := MockEmail{To: to, Subject: subject, HTMLBody: htmlBody, TextBody: textBody}
 	if opts != nil {
-		ics = opts.ICSData
+		e.ICSData = opts.ICSData
+		e.MessageID = opts.MessageID
+		e.References = opts.References
 	}
-	s.Sent = append(s.Sent, MockEmail{To: to, Subject: subject, HTMLBody: htmlBody, TextBody: textBody, ICSData: ics})
+	s.Sent = append(s.Sent, e)
 	return nil
 }

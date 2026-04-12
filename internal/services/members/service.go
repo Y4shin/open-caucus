@@ -330,26 +330,45 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 			continue
 		}
 
+		// Generate Message-ID and look up References for threading.
+		messageUUID, _ := generateInviteSecret() // reuse for UUID-like unique string
+		fromDomain := s.sender.FromDomain()
+		messageID := fmt.Sprintf("<%s@%s>", messageUUID, fromDomain)
+
+		var references []string
+		if prevIDs, err := s.repo.ListSentEmailMessageIDs(ctx, toEmail, committee.ID); err == nil && len(prevIDs) > 0 {
+			references = prevIDs
+		}
+
 		// Generate ICS attachment if meeting has datetime.
-		var sendOpts *email.SendOptions
+		sendOpts := &email.SendOptions{
+			MessageID:  messageID,
+			References: references,
+		}
 		if meeting.StartAt != nil {
 			uid := fmt.Sprintf("meeting-%d@open-caucus", meetingID)
 			endTime := time.Time{}
 			if meeting.EndAt != nil {
 				endTime = *meeting.EndAt
 			}
-			icsData := ics.GenerateMeetingEvent(uid, meeting.Name, meeting.Description, *meeting.StartAt, endTime)
-			sendOpts = &email.SendOptions{ICSData: icsData}
+			sendOpts.ICSData = ics.GenerateMeetingEvent(uid, meeting.Name, meeting.Description, *meeting.StartAt, endTime)
 		}
 
 		subject := email.InviteSubject(meeting.Name, committee.Name)
-		slog.Info("email sending invite", "to", toEmail, "member", m.FullName, "meeting", meeting.Name, "has_ics", sendOpts != nil)
+		slog.Info("email sending invite", "to", toEmail, "member", m.FullName, "meeting", meeting.Name, "message_id", messageID, "references_count", len(references), "has_ics", sendOpts.ICSData != "")
 		if err := s.sender.Send(ctx, toEmail, subject, htmlBody, textBody, sendOpts); err != nil {
 			slog.Error("email send failed", "to", toEmail, "err", err)
 			errs = append(errs, fmt.Sprintf("send to %s: %v", toEmail, err))
 			continue
 		}
-		slog.Info("email sent successfully", "to", toEmail)
+
+		// Record sent email for future threading.
+		cID := committee.ID
+		if err := s.repo.InsertSentEmail(ctx, messageID, toEmail, &cID, &meetingID, subject); err != nil {
+			slog.Warn("failed to record sent email", "message_id", messageID, "err", err)
+		}
+
+		slog.Info("email sent successfully", "to", toEmail, "message_id", messageID)
 		sentCount++
 	}
 

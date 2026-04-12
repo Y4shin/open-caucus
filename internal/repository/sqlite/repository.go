@@ -2433,6 +2433,30 @@ func (r *Repository) UpdateMeetingDetails(ctx context.Context, id int64, name, d
 	return nil
 }
 
+func (r *Repository) InsertSentEmail(ctx context.Context, messageID, recipient string, committeeID, meetingID *int64, subject string) error {
+	var cID, mID sql.NullInt64
+	if committeeID != nil {
+		cID = sql.NullInt64{Int64: *committeeID, Valid: true}
+	}
+	if meetingID != nil {
+		mID = sql.NullInt64{Int64: *meetingID, Valid: true}
+	}
+	return r.Queries.InsertSentEmail(ctx, client.InsertSentEmailParams{
+		MessageID:   messageID,
+		Recipient:   recipient,
+		CommitteeID: cID,
+		MeetingID:   mID,
+		Subject:     subject,
+	})
+}
+
+func (r *Repository) ListSentEmailMessageIDs(ctx context.Context, recipient string, committeeID int64) ([]string, error) {
+	return r.Queries.ListSentEmailsByRecipientAndCommittee(ctx, client.ListSentEmailsByRecipientAndCommitteeParams{
+		Recipient:   recipient,
+		CommitteeID: sql.NullInt64{Int64: committeeID, Valid: true},
+	})
+}
+
 // SetAgendaPointQuotationOrder sets the quotation_order JSON array override for an agenda point (nil clears it).
 func (r *Repository) SetAgendaPointQuotationOrder(ctx context.Context, id int64, order *[]string) error {
 	var s sql.NullString

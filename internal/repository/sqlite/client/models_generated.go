@@ -133,6 +133,16 @@ type PasswordCredential struct {
 	UpdatedAt    string
 }
 
+type SentEmail struct {
+	ID          int64
+	MessageID   string
+	Recipient   string
+	CommitteeID sql.NullInt64
+	MeetingID   sql.NullInt64
+	Subject     string
+	CreatedAt   string
+}
+
 type Session struct {
 	SessionID   string
 	SessionType string
