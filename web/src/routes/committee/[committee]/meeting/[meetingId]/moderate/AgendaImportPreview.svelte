@@ -1,13 +1,7 @@
 <script lang="ts">
 	import { prepare, layout } from '@chenglou/pretext';
 	import * as m from '$lib/paraglide/messages';
-
-	type AgendaImportState = 'ignore' | 'heading' | 'subheading';
-	type AgendaImportLine = {
-		lineNo: number;
-		text: string;
-		state: AgendaImportState;
-	};
+	import type { AgendaImportLine, AgendaImportState } from './agenda-import.js';
 
 	let {
 		rawText = $bindable(''),
@@ -128,6 +122,13 @@
 		{/each}
 	</div>
 
+	<!-- Highlight overlay — shows colored backgrounds on extracted title portions -->
+	<div
+		class="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap wrap-break-word text-sm leading-6 text-transparent"
+		style="padding: {PT}px {CHIP_W + PH}px {PT}px {GUTTER_W + PH}px;"
+		aria-hidden="true"
+	>{#each rawText.split('\n') as rawLine, i}{#if i > 0}{'\n'}{/if}{@const lineNo = i + 1}{@const parsed = lines.find((l) => l.lineNo === lineNo)}{#if parsed && parsed.state !== 'ignore' && parsed.titleStart > 0}<span>{rawLine.slice(0, parsed.titleStart)}</span><span class="{parsed.state === 'heading' ? 'bg-primary/40' : 'bg-info/40'} rounded-sm">{rawLine.slice(parsed.titleStart)}</span>{:else if parsed && parsed.state !== 'ignore'}<span class="{parsed.state === 'heading' ? 'bg-primary/40' : 'bg-info/40'} rounded-sm">{rawLine}</span>{:else}{rawLine}{/if}{/each}</div>
+
 	<!-- Textarea — natural editing, arrow keys, selection all work here -->
 	<textarea
 		id="agenda-import-source"
@@ -160,7 +161,7 @@
 					type="button"
 					data-import-line-row
 					class={[
-						'pointer-events-auto absolute inset-x-0 flex items-center gap-1 px-2 text-xs font-semibold transition-opacity hover:opacity-80',
+						'pointer-events-auto absolute inset-x-0 flex items-center gap-1 px-2 text-xs transition-opacity hover:opacity-80',
 						line.state === 'heading'
 							? 'bg-primary text-primary-content'
 							: line.state === 'subheading'
@@ -171,11 +172,7 @@
 					onmousedown={(e) => e.preventDefault()}
 					onclick={() => onToggle(contentIdx)}
 				>
-					<span class="font-mono tabular-nums" data-import-line-prefix>{prefix}</span>
-					{#if prefix}
-						<span class="opacity-50">·</span>
-					{/if}
-					<span>{importStateLabel(line.state)}</span>
+					<span class="font-mono tabular-nums font-semibold" data-import-line-prefix>{prefix}</span>
 				</button>
 			{:else}
 				<div

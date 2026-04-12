@@ -18,7 +18,7 @@ function pt(id: string, title: string, subPoints: AgendaPointLike[] = []): Agend
 }
 
 function lines(ops: Record<string, 'heading' | 'subheading' | 'ignore'>): AgendaImportLine[] {
-	return Object.entries(ops).map(([text, state], i) => ({ lineNo: i + 1, text, state }));
+	return Object.entries(ops).map(([text, state], i) => ({ lineNo: i + 1, text, rawLine: text, titleStart: 0, state }));
 }
 
 // ---------------------------------------------------------------------------

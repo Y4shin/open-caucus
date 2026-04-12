@@ -1,5 +1,11 @@
 export type AgendaImportState = 'ignore' | 'heading' | 'subheading';
-export type AgendaImportLine = { lineNo: number; text: string; state: AgendaImportState };
+export type AgendaImportLine = {
+	lineNo: number;
+	text: string;        // extracted title (what gets saved)
+	rawLine: string;     // original trimmed line (for display/highlighting)
+	titleStart: number;  // character index where the extracted title starts in rawLine
+	state: AgendaImportState;
+};
 export type AgendaImportPoint = { title: string; children: string[] };
 // No 'modified': child changes do not affect the parent op (req 1).
 export type SubDiffOp = 'unchanged' | 'renamed' | 'reordered' | 'renamed+reordered' | 'added' | 'deleted' | 'newParent';
@@ -36,11 +42,11 @@ export function parseAgendaImportSource(
 
 	if (format === 'markdown') {
 		return indexed.map(({ raw, lineNo }) => {
-			const h1 = raw.match(/^#\s+(.+)$/);
-			if (h1) return { lineNo, text: h1[1].trim(), state: 'heading' };
-			const h2 = raw.match(/^#{2}\s+(.+)$/);
-			if (h2) return { lineNo, text: h2[1].trim(), state: 'subheading' };
-			return { lineNo, text: raw, state: 'ignore' };
+			const h1 = raw.match(/^(#{1}\s+)(.+)$/);
+			if (h1) return { lineNo, text: h1[2].trim(), rawLine: raw, titleStart: h1[1].length, state: 'heading' as const };
+			const h2 = raw.match(/^(#{2}\s+)(.+)$/);
+			if (h2) return { lineNo, text: h2[2].trim(), rawLine: raw, titleStart: h2[1].length, state: 'subheading' as const };
+			return { lineNo, text: raw, rawLine: raw, titleStart: 0, state: 'ignore' as const };
 		});
 	}
 
@@ -50,15 +56,17 @@ export function parseAgendaImportSource(
 
 	if (hasNumbers) {
 		return indexed.map(({ raw, lineNo }) => {
-			const match = raw.match(/^(?:TOP\s*)?(\d+(?:\.\d+)?)[:.) -]*\s*(.+)$/i);
+			const match = raw.match(/^((?:TOP\s*)?\d+(?:\.\d+)?[:.) -]*\s*)(.+)$/i);
 			if (match) {
 				return {
 					lineNo,
 					text: match[2].trim(),
-					state: match[1].includes('.') ? ('subheading' as const) : ('heading' as const)
+					rawLine: raw,
+					titleStart: match[1].length,
+					state: match[1].match(/\d+\.\d+/) ? ('subheading' as const) : ('heading' as const)
 				};
 			}
-			return { lineNo, text: raw, state: 'ignore' as const };
+			return { lineNo, text: raw, rawLine: raw, titleStart: 0, state: 'ignore' as const };
 		});
 	}
 
@@ -74,10 +82,11 @@ export function parseAgendaImportSource(
 
 	return indexed.map(({ raw, lineNo }, i) => {
 		const indent = indents[i];
-		if (indent === uniqueIndents[0]) return { lineNo, text: raw, state: 'heading' as const };
+		// For indentation format, the entire trimmed line is the title (no prefix stripping).
+		if (indent === uniqueIndents[0]) return { lineNo, text: raw, rawLine: raw, titleStart: 0, state: 'heading' as const };
 		if (subheadingIndent !== null && indent === subheadingIndent)
-			return { lineNo, text: raw, state: 'subheading' as const };
-		return { lineNo, text: raw, state: 'ignore' as const };
+			return { lineNo, text: raw, rawLine: raw, titleStart: 0, state: 'subheading' as const };
+		return { lineNo, text: raw, rawLine: raw, titleStart: 0, state: 'ignore' as const };
 	});
 }
 
