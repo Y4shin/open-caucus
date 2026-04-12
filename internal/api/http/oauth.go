@@ -164,7 +164,7 @@ func (h *OAuthHandler) resolveAccount(ctx context.Context, principal oauth.Princ
 	}
 	if account == nil {
 		if strings.EqualFold(h.provisioningMode(), "auto_create") {
-			account, err = h.Repository.CreateOAuthAccount(ctx, username, fullName)
+			account, err = h.Repository.CreateOAuthAccount(ctx, username, fullName, strings.TrimSpace(principal.Email))
 			if err != nil {
 				return nil, err
 			}
@@ -177,6 +177,10 @@ func (h *OAuthHandler) resolveAccount(ctx context.Context, principal oauth.Princ
 	}
 	if err := h.upsertIdentity(ctx, principal, account.ID); err != nil {
 		return nil, err
+	}
+	// Update display name and email from OIDC claims on every login.
+	if fullName != "" || strings.TrimSpace(principal.Email) != "" {
+		_ = h.Repository.UpdateAccountProfile(ctx, account.ID, fullName, strings.TrimSpace(principal.Email))
 	}
 	return account, nil
 }

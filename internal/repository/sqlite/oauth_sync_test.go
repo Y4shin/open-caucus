@@ -14,7 +14,7 @@ func TestSyncOAuthCommitteeMemberships_RemovesOnlyOAuthManaged(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	account, err := repo.CreateOAuthAccount(ctx, "oauth-user", "OAuth User")
+	account, err := repo.CreateOAuthAccount(ctx, "oauth-user", "OAuth User", "oauth@example.com")
 	if err != nil {
 		t.Fatalf("create oauth account: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestSyncOAuthCommitteeMemberships_CreatesManagedAndPromotesManualWithoutMan
 	}
 
 	ctx := context.Background()
-	account, err := repo.CreateOAuthAccount(ctx, "oauth-user2", "OAuth User Two")
+	account, err := repo.CreateOAuthAccount(ctx, "oauth-user2", "OAuth User Two", "")
 	if err != nil {
 		t.Fatalf("create oauth account: %v", err)
 	}
@@ -102,7 +102,7 @@ func TestUpsertOAuthIdentity_ReconcilesIssuerChangeForSameAccount(t *testing.T) 
 	}
 
 	ctx := context.Background()
-	account, err := repo.CreateOAuthAccount(ctx, "oauth-user3", "OAuth User Three")
+	account, err := repo.CreateOAuthAccount(ctx, "oauth-user3", "OAuth User Three", "")
 	if err != nil {
 		t.Fatalf("create oauth account: %v", err)
 	}

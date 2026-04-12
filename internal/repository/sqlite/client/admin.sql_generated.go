@@ -48,7 +48,7 @@ func (q *Queries) CountUsersInCommittee(ctx context.Context, slug string) (int64
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (username, full_name, auth_method, created_at, updated_at)
 VALUES (?, ?, 'password', datetime('now'), datetime('now'))
-RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name
+RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name, email
 `
 
 type CreateAccountParams struct {
@@ -68,6 +68,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FullName,
+		&i.Email,
 	)
 	return i, err
 }
@@ -190,7 +191,7 @@ func (q *Queries) GetCommitteeIDBySlug(ctx context.Context, slug string) (int64,
 }
 
 const listAllAccounts = `-- name: ListAllAccounts :many
-SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name FROM accounts ORDER BY username ASC LIMIT ? OFFSET ?
+SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name, email FROM accounts ORDER BY username ASC LIMIT ? OFFSET ?
 `
 
 type ListAllAccountsParams struct {
@@ -215,6 +216,7 @@ func (q *Queries) ListAllAccounts(ctx context.Context, arg ListAllAccountsParams
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.FullName,
+			&i.Email,
 		); err != nil {
 			return nil, err
 		}
@@ -271,7 +273,7 @@ func (q *Queries) ListAllCommittees(ctx context.Context, arg ListAllCommitteesPa
 }
 
 const listUnassignedAccountsForCommittee = `-- name: ListUnassignedAccountsForCommittee :many
-SELECT a.id, a.username, a.auth_method, a.is_admin, a.created_at, a.updated_at, a.full_name
+SELECT a.id, a.username, a.auth_method, a.is_admin, a.created_at, a.updated_at, a.full_name, a.email
 FROM accounts a
 LEFT JOIN users u
     ON u.account_id = a.id
@@ -297,6 +299,7 @@ func (q *Queries) ListUnassignedAccountsForCommittee(ctx context.Context, commit
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.FullName,
+			&i.Email,
 		); err != nil {
 			return nil, err
 		}

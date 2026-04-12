@@ -198,24 +198,26 @@ func (r *Repository) GetPasswordCredential(ctx context.Context, accountID int64)
 }
 
 // CreateOAuthAccount creates a new sitewide account with auth_method='oauth' and no password credential.
-func (r *Repository) CreateOAuthAccount(ctx context.Context, username, fullName string) (*model.Account, error) {
+func (r *Repository) CreateOAuthAccount(ctx context.Context, username, fullName, email string) (*model.Account, error) {
 	var (
-		id         int64
-		outUser    string
-		authMethod string
-		isAdmin    bool
-		createdAt  string
-		updatedAt  string
-		fullNameNS sql.NullString
+		id          int64
+		outUser     string
+		authMethod  string
+		isAdmin     bool
+		createdAt   string
+		updatedAt   string
+		fullNameNS  sql.NullString
+		emailNS     sql.NullString
 	)
 	if err := r.DB.QueryRowContext(
 		ctx,
-		`INSERT INTO accounts (username, full_name, auth_method, created_at, updated_at)
-		 VALUES (?, ?, 'oauth', datetime('now'), datetime('now'))
-		 RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name`,
+		`INSERT INTO accounts (username, full_name, email, auth_method, created_at, updated_at)
+		 VALUES (?, ?, ?, 'oauth', datetime('now'), datetime('now'))
+		 RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name, email`,
 		username,
 		sql.NullString{String: fullName, Valid: strings.TrimSpace(fullName) != ""},
-	).Scan(&id, &outUser, &authMethod, &isAdmin, &createdAt, &updatedAt, &fullNameNS); err != nil {
+		sql.NullString{String: email, Valid: strings.TrimSpace(email) != ""},
+	).Scan(&id, &outUser, &authMethod, &isAdmin, &createdAt, &updatedAt, &fullNameNS, &emailNS); err != nil {
 		return nil, fmt.Errorf("create oauth account: %w", err)
 	}
 	created, _ := time.Parse(time.RFC3339, createdAt)
@@ -224,11 +226,24 @@ func (r *Repository) CreateOAuthAccount(ctx context.Context, username, fullName 
 		ID:         id,
 		Username:   outUser,
 		FullName:   nullStringValue(fullNameNS, outUser),
+		Email:      nullStringValue(emailNS, ""),
 		AuthMethod: authMethod,
 		IsAdmin:    isAdmin,
 		CreatedAt:  created,
 		UpdatedAt:  updated,
 	}, nil
+}
+
+// UpdateAccountProfile updates the full name and email for an account.
+func (r *Repository) UpdateAccountProfile(ctx context.Context, accountID int64, fullName, email string) error {
+	if err := r.Queries.UpdateAccountProfile(ctx, client.UpdateAccountProfileParams{
+		FullName: sql.NullString{String: fullName, Valid: fullName != ""},
+		Email:    sql.NullString{String: email, Valid: email != ""},
+		ID:       accountID,
+	}); err != nil {
+		return fmt.Errorf("update account profile: %w", err)
+	}
+	return nil
 }
 
 // GetOAuthIdentityByIssuerSubject retrieves an OAuth identity mapping by issuer and subject.
@@ -606,6 +621,7 @@ func accountFromClient(a *client.Account) *model.Account {
 		ID:         a.ID,
 		Username:   a.Username,
 		FullName:   nullStringValue(a.FullName, a.Username),
+		Email:      nullStringValue(a.Email, ""),
 		AuthMethod: a.AuthMethod,
 		IsAdmin:    a.IsAdmin,
 		CreatedAt:  createdAt,

@@ -61,7 +61,7 @@ func (s *Seeder) CreateAdminAccount(ctx context.Context, username, password, ful
 }
 
 func (s *Seeder) CreateOAuthAccount(ctx context.Context, username, fullName string, admin bool) (*model.Account, error) {
-	account, err := s.repo.CreateOAuthAccount(ctx, username, fullName)
+	account, err := s.repo.CreateOAuthAccount(ctx, username, fullName, "")
 	if err != nil {
 		return nil, fmt.Errorf("create oauth account %q: %w", username, err)
 	}

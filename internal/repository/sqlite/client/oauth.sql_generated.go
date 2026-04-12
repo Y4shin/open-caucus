@@ -11,18 +11,19 @@ import (
 )
 
 const createOAuthAccount = `-- name: CreateOAuthAccount :one
-INSERT INTO accounts (username, full_name, auth_method, created_at, updated_at)
-VALUES (?, ?, 'oauth', datetime('now'), datetime('now'))
-RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name
+INSERT INTO accounts (username, full_name, email, auth_method, created_at, updated_at)
+VALUES (?, ?, ?, 'oauth', datetime('now'), datetime('now'))
+RETURNING id, username, auth_method, is_admin, created_at, updated_at, full_name, email
 `
 
 type CreateOAuthAccountParams struct {
 	Username string
 	FullName sql.NullString
+	Email    sql.NullString
 }
 
 func (q *Queries) CreateOAuthAccount(ctx context.Context, arg CreateOAuthAccountParams) (Account, error) {
-	row := q.db.QueryRowContext(ctx, createOAuthAccount, arg.Username, arg.FullName)
+	row := q.db.QueryRowContext(ctx, createOAuthAccount, arg.Username, arg.FullName, arg.Email)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -32,6 +33,7 @@ func (q *Queries) CreateOAuthAccount(ctx context.Context, arg CreateOAuthAccount
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FullName,
+		&i.Email,
 	)
 	return i, err
 }
@@ -265,6 +267,21 @@ func (q *Queries) ListOAuthCommitteeGroupRulesByCommitteeSlug(ctx context.Contex
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateAccountProfile = `-- name: UpdateAccountProfile :exec
+UPDATE accounts SET full_name = ?, email = ?, updated_at = datetime('now') WHERE id = ?
+`
+
+type UpdateAccountProfileParams struct {
+	FullName sql.NullString
+	Email    sql.NullString
+	ID       int64
+}
+
+func (q *Queries) UpdateAccountProfile(ctx context.Context, arg UpdateAccountProfileParams) error {
+	_, err := q.db.ExecContext(ctx, updateAccountProfile, arg.FullName, arg.Email, arg.ID)
+	return err
 }
 
 const updateMembershipRole = `-- name: UpdateMembershipRole :exec

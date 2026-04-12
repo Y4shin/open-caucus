@@ -1,7 +1,10 @@
 -- name: CreateOAuthAccount :one
-INSERT INTO accounts (username, full_name, auth_method, created_at, updated_at)
-VALUES (?, ?, 'oauth', datetime('now'), datetime('now'))
+INSERT INTO accounts (username, full_name, email, auth_method, created_at, updated_at)
+VALUES (?, ?, ?, 'oauth', datetime('now'), datetime('now'))
 RETURNING *;
+
+-- name: UpdateAccountProfile :exec
+UPDATE accounts SET full_name = ?, email = ?, updated_at = datetime('now') WHERE id = ?;
 
 -- name: GetOAuthIdentityByIssuerSubject :one
 SELECT * FROM oauth_identities

@@ -11,7 +11,7 @@ import (
 )
 
 const getAccountByID = `-- name: GetAccountByID :one
-SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name FROM accounts WHERE id = ?
+SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name, email FROM accounts WHERE id = ?
 `
 
 // Retrieves sitewide account by ID (for session restoration)
@@ -26,12 +26,13 @@ func (q *Queries) GetAccountByID(ctx context.Context, id int64) (Account, error)
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FullName,
+		&i.Email,
 	)
 	return i, err
 }
 
 const getAccountByUsername = `-- name: GetAccountByUsername :one
-SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name FROM accounts WHERE username = ?
+SELECT id, username, auth_method, is_admin, created_at, updated_at, full_name, email FROM accounts WHERE username = ?
 `
 
 // Retrieves sitewide account for login authentication
@@ -46,6 +47,7 @@ func (q *Queries) GetAccountByUsername(ctx context.Context, username string) (Ac
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FullName,
+		&i.Email,
 	)
 	return i, err
 }

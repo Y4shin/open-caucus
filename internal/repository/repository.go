@@ -70,7 +70,8 @@ type Repository interface {
 	GetAccountByUsername(ctx context.Context, username string) (*model.Account, error)
 	GetAccountByID(ctx context.Context, id int64) (*model.Account, error)
 	CreateAccount(ctx context.Context, username, fullName, passwordHash string) (*model.Account, error)
-	CreateOAuthAccount(ctx context.Context, username, fullName string) (*model.Account, error)
+	CreateOAuthAccount(ctx context.Context, username, fullName, email string) (*model.Account, error)
+	UpdateAccountProfile(ctx context.Context, accountID int64, fullName, email string) error
 	GetPasswordCredential(ctx context.Context, accountID int64) (*model.PasswordCredential, error)
 	GetOAuthIdentityByIssuerSubject(ctx context.Context, issuer, subject string) (*model.OAuthIdentity, error)
 	UpsertOAuthIdentity(

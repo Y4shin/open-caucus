@@ -16,6 +16,7 @@ type Account struct {
 	CreatedAt  string
 	UpdatedAt  string
 	FullName   sql.NullString
+	Email      sql.NullString
 }
 
 type AgendaAttachment struct {

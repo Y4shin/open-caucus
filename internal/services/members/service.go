@@ -243,20 +243,16 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 				skippedCount++
 				continue
 			}
-			// Use account email if we had one; for now use username as fallback.
 			// Account members get a direct meeting link (they authenticate via their account).
 			joinURL = fmt.Sprintf("%s/committee/%s/meeting/%d", baseURL, slug, meetingID)
-			// We don't have email on accounts — skip if no email on user record either.
-			if m.Email != nil && *m.Email != "" {
+			// Use account email, then user email, then skip.
+			if account.Email != "" {
+				toEmail = account.Email
+			} else if m.Email != nil && *m.Email != "" {
 				toEmail = *m.Email
 			} else {
-				// Try to construct from username if it looks like an email.
-				if isEmailLike(account.Username) {
-					toEmail = account.Username
-				} else {
-					skippedCount++
-					continue
-				}
+				skippedCount++
+				continue
 			}
 		} else if m.Email != nil && *m.Email != "" {
 			// Email-only member: personalized invite link.
@@ -384,15 +380,3 @@ func generateInviteSecret() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func isEmailLike(s string) bool {
-	return len(s) > 3 && contains(s, "@") && contains(s, ".")
-}
-
-func contains(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
-}

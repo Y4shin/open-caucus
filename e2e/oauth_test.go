@@ -54,7 +54,7 @@ func TestOAuthLogin_PreprovisionedVsAutoCreate(t *testing.T) {
 
 	candidates := []string{ts.provider.Username, "test-user@zitadel.ch", oauthTestSubject}
 	for _, candidate := range candidates {
-		if _, err := ts.repo.CreateOAuthAccount(context.Background(), candidate, candidate); err != nil && !strings.Contains(err.Error(), "UNIQUE constraint failed: accounts.username") {
+		if _, err := ts.repo.CreateOAuthAccount(context.Background(), candidate, candidate, ""); err != nil && !strings.Contains(err.Error(), "UNIQUE constraint failed: accounts.username") {
 			t.Fatalf("preprovision oauth account %q: %v", candidate, err)
 		}
 	}
