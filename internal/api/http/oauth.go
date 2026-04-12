@@ -144,6 +144,12 @@ func (h *OAuthHandler) resolveAccount(ctx context.Context, principal oauth.Princ
 		if err := h.upsertIdentity(ctx, principal, account.ID); err != nil {
 			return nil, err
 		}
+		// Update display name and email from OIDC claims on every login.
+		fullName := strings.TrimSpace(principal.FullName)
+		email := strings.TrimSpace(principal.Email)
+		if fullName != "" || email != "" {
+			_ = h.Repository.UpdateAccountProfile(ctx, account.ID, fullName, email)
+		}
 		return account, nil
 	}
 

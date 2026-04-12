@@ -66,6 +66,7 @@ type Service struct {
 
 	oauth2Config *oauth2.Config
 	verifier     *oidc.IDTokenVerifier
+	oidcProvider *oidc.Provider
 
 	groupsClaim    string
 	usernameClaims []string
@@ -119,6 +120,7 @@ func New(ctx context.Context, cfg Config, stateSecret []byte) (*Service, error) 
 			Scopes:       scopes,
 		},
 		verifier:       provider.Verifier(&oidc.Config{ClientID: cfg.ClientID}),
+		oidcProvider:   provider,
 		groupsClaim:    groupsClaim,
 		usernameClaims: usernameClaims,
 		fullNameClaims: fullNameClaims,
@@ -244,6 +246,25 @@ func (s *Service) HandleCallback(ctx context.Context, r *http.Request) (*Callbac
 	tokenNonce, _ := claims["nonce"].(string)
 	if tokenNonce == "" || tokenNonce != payload.Nonce {
 		return nil, fmt.Errorf("nonce mismatch")
+	}
+
+	// Fetch userinfo endpoint to get profile claims (name, email, etc.)
+	// that may not be included in the ID token itself.
+	tokenSource := s.oauth2Config.TokenSource(ctx, token)
+	userInfo, uiErr := s.oidcProvider.UserInfo(ctx, tokenSource)
+	if uiErr != nil {
+		slog.Warn("oauth userinfo fetch failed", "err", uiErr)
+	} else {
+		var uiClaims map[string]any
+		if err := userInfo.Claims(&uiClaims); err == nil {
+			slog.Debug("oauth userinfo claims", "claims", uiClaims)
+			// Merge userinfo claims into ID token claims (ID token takes precedence).
+			for k, v := range uiClaims {
+				if _, exists := claims[k]; !exists {
+					claims[k] = v
+				}
+			}
+		}
 	}
 
 	principal := Principal{
