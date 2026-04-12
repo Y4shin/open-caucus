@@ -496,11 +496,14 @@ func appScreenshotMeetingWizardScript() Script {
 					if err := createBtn.Click(); err != nil {
 						return fmt.Errorf("click create meeting: %w", err)
 					}
-					// Fill basics and advance to agenda step
+					// Wait for wizard dialog then fill basics
+					if err := page.Locator("dialog[open] #wizard-name").WaitFor(); err != nil {
+						return fmt.Errorf("wait wizard dialog: %w", err)
+					}
 					if err := page.Locator("#wizard-name").Fill("Example Meeting"); err != nil {
 						return fmt.Errorf("fill wizard name: %w", err)
 					}
-					nextBtn := page.Locator("dialog .modal-action button.btn-primary")
+					nextBtn := page.Locator("dialog[open] button:has-text('Next')")
 					if err := nextBtn.Click(); err != nil {
 						return fmt.Errorf("click next: %w", err)
 					}
@@ -513,7 +516,7 @@ func appScreenshotMeetingWizardScript() Script {
 						return fmt.Errorf("fill agenda: %w", err)
 					}
 					page.WaitForTimeout(500)
-					if err := highlight(page, "dialog .modal-box"); err != nil {
+					if err := highlight(page, "dialog[open] .modal-box"); err != nil {
 						return err
 					}
 					return nil
