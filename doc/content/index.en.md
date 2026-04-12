@@ -22,7 +22,8 @@ Everyone using or maintaining the conference tool.
 
 1. [Admin](/docs/02-admin)
 2. [Operations](/docs/06-operations)
-3. [Guides](/docs/guides)
+3. [Patch Notes](/docs/07-patchnotes)
+4. [Guides](/docs/guides)
 
 ## How to use these guides
 

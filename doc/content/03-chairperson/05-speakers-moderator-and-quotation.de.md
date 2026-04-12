@@ -57,17 +57,25 @@ Sitzungsleitungen, die die Live-Redeliste und Redeordnung verwalten.
 
 ## Moderation und Quotierungsregeln konfigurieren
 
+### Quotierungsregeln
+
+Das Quotierungssystem verwendet eine geordnete Liste von Regeln, die die Rednerpriorität bestimmen. Jede Regel definiert eine Gruppe (z.B. FLINTA*) und ob diese Gruppe priorisiert wird. Regeln können per Drag-and-Drop umsortiert werden, um ihre Priorität zu ändern.
+
+Wenn mehrere Regeln aktiv sind, wird die Redeliste sortiert, indem die Regeln der Reihe nach angewendet werden — höher priorisierte Regeln erzeugen übergeordnete Gruppen, und niedrigere Regeln sortieren innerhalb dieser Gruppen. Die Gruppen werden dann in umgekehrter Reihenfolge zusammengeführt, um die finale Warteschlange zu ergeben.
+
+Klicke auf **How it works** im Quotierungskonfigurationspanel, um eine animierte Schritt-für-Schritt-Visualisierung zu sehen, wie der Sortieralgorithmus Beispielredner verarbeitet.
+
 ### Meeting-Ebene
 
 1. Öffne den **Settings**-Tab und bleibe auf **Meeting**.
-2. Setze **FLINTA*-Quotierung** auf aktiviert oder deaktiviert. Bei Aktivierung wechselt die Warteschlange im Round-Robin zwischen FLINTA*- und Nicht-FLINTA*-Rednern, wobei FLINTA* zuerst dran sind. Innerhalb jeder Gruppe bestimmen Erstredebonus und Anfragezeit die Reihenfolge.
+2. Konfiguriere **Quotierungsregeln** — ziehe zum Umsortieren, schalte einzelne Regeln ein oder aus. Bei Aktivierung priorisiert die Warteschlange Redner gemäß der Regelreihenfolge.
 3. Setze **Erstredebonus** auf aktiviert oder deaktiviert.
 4. Wähle eine **Moderation** aus der Teilnehmerliste oder behalte `-- none --`.
 
 ### Tagesordnungspunkt-Überschreibungen
 
 1. Unter **Settings** zu **Agenda Point** wechseln.
-2. Für **FLINTA*-Quotierung** und **Erstredebonus** wähle:
+2. Für **Quotierung** und **Erstredebonus** wähle:
    - **Inherit from meeting**
    - aktiviert
    - deaktiviert

@@ -392,3 +392,16 @@ The route generator is in [tools/routing/](tools/routing/):
 
 Changes to the generator require rebuilding: `go build ./tools/routing/cmd/route-codegen`
 
+### Releasing a New Version
+
+When tagging a new version:
+1. Add an entry to the patch notes in `doc/content/07-patchnotes/index.{en,de}.md` covering all changes since the last tag.
+2. Follow the existing format: `## vX.Y.Z — YYYY-MM-DD` with `### New Features`, `### Improvements`, and/or `### Bug Fixes` subsections as appropriate.
+
+### Keeping Documentation Up to Date
+
+When implementing new features or making user-visible changes:
+1. Read all files under `doc/content/` to check whether any existing documentation needs updating.
+2. Update both English (`.en.md`) and German (`.de.md`) variants of any affected doc pages.
+3. Documentation lives in `doc/content/` and is embedded in the app — it must stay accurate.
+

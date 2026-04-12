@@ -57,17 +57,25 @@ Chairpersons who manage the live speakers queue and speaking rules.
 
 ## Configure Moderator and Quotation Rules
 
+### Quotation rules
+
+The quotation system uses an ordered list of rules that determine speaker priority. Each rule defines a group (e.g. FLINTA*) and whether that group is prioritized. Rules can be reordered via drag-and-drop to change their priority.
+
+When multiple rules are active, the speakers list is sorted by applying the rules in order — higher-priority rules create top-level buckets, and lower-priority rules sort within those buckets. The buckets are then recombined in reverse order to produce the final queue.
+
+Click **How it works** on the quotation configuration panel to see an animated step-by-step visualization of how the sorting algorithm processes example speakers.
+
 ### Meeting-level settings
 
 1. Open the **Settings** tab and stay on **Meeting**.
-2. Set **FLINTA* quotation** to enabled or disabled. When enabled, the queue alternates between FLINTA* and non-FLINTA* speakers (round-robin), with FLINTA* going first. Within each group, first-speaker bonus and request time determine order.
+2. Configure **Quotation rules** — drag to reorder, toggle individual rules on or off. When enabled, the queue prioritizes speakers according to the rule order.
 3. Set **First-speaker bonus** to enabled or disabled.
 4. Choose a **Moderator** from the attendee list, or keep `-- none --`.
 
 ### Agenda-point overrides
 
 1. In **Settings**, switch to **Agenda Point**.
-2. For **FLINTA* quotation** and **First-speaker bonus**, choose:
+2. For **Quotation** and **First-speaker bonus**, choose:
    - **Inherit from meeting**
    - enabled
    - disabled

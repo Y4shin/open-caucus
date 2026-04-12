@@ -15,6 +15,7 @@ Diese Dokumentation beschreibt die Arbeitsabläufe für Administration, Sitzungs
 - [Mitglieder und Teilnehmende](/docs/04-members-attendees)
 - [Öffentliche Verifikation](/docs/05-public-verification)
 - [Betrieb und Fehlerbehebung](/docs/06-operations)
+- [Versionshinweise](/docs/07-patchnotes)
 - [Leitfäden für Capture und Authoring](/docs/guides)
 
 ## Umfang

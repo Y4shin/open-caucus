@@ -23,21 +23,33 @@ Chairpersons who run committee meetings and need to control meeting status.
 
 1. Create a meeting:
    - Click the **Create Meeting** button to open the meeting wizard.
-   - The wizard guides you through four steps:
-     1. **Basics** — enter **Name** and optional **Description**. Enable **Open for signup** if participants should be able to join immediately.
+   - The wizard guides you through up to four steps:
+     1. **Basics** — enter **Name** and optional **Description**. Optionally set a **Start** and **End** date/time using the date range picker. Enable **Open for signup** if participants should be able to join immediately.
      2. **Agenda** — optionally enter the agenda. Type or paste items one per line; use numbering (1.1, 1.2) or indentation for sub-items. Click the chips on the right to classify each line as heading, subheading, or ignore. Switch between Plaintext and Markdown format with the toggle.
-     3. **Participants** — optionally pre-add attendees. Enter names one per line. Append `[Chair]` for chairpersons and `[FLINTA]` for FLINTA* quotation.
-     4. **Review** — confirm all details and click **Create Meeting**.
-2. Set the current meeting:
+     3. **Invites** — select which committee members should receive an invite email. All members are selected by default. Members without an email address are shown but greyed out. Choose a **Language** (EN/DE) and **Timezone** for the email, and optionally add a **Custom message**. If email sending is not configured, this step is skipped.
+     4. **Review** — confirm all details and click **Create Meeting**. If invites are enabled, emails with ICS calendar attachments are sent automatically after creation.
+2. Edit a meeting:
+   - Click the **Edit** button on a meeting row to change its name, description, or date/time after creation.
+3. Manage committee members:
+   - Below the meetings list, the **Members** panel lets you manage who belongs to this committee.
+   - **Add by email**: Enter an email address, full name, and role. The member does not need a sitewide account — they will receive a personalized invite link.
+   - **Assign account**: Select an existing account from the dropdown and assign a role.
+   - Edit roles, quotation status, or remove members from the member table.
+4. Send invite emails:
+   - From the meeting moderation page, use **Send Invites** to email meeting invitations to selected members.
+   - Choose language, timezone, and add an optional custom message.
+   - Emails include an ICS calendar attachment when the meeting has a date/time set.
+   - Email-only members receive a personalized link with an invite secret. Account-based members receive a direct meeting link.
+5. Set the current meeting:
    - In the meetings list, switch on **Active** for the meeting you are running now.
    - Confirm only one meeting is marked **Active**.
-3. Control participant entry:
+6. Control participant entry:
    - Use the **Signup Open** switch for the active meeting.
    - Keep it enabled while people are joining, then disable it when entry should stop.
-4. Open meeting tools:
+7. Open meeting tools:
    - Use **Manage** on the meeting row to open moderation controls.
    - Use **View** to check the live participant-facing page.
-5. Close out old or test meetings:
+8. Close out old or test meetings:
    - Click **Delete** on meetings you no longer need and confirm.
 
 ## What you should see
