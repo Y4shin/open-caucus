@@ -15,7 +15,7 @@
 	import VotesPanelSection from './VotesPanelSection.svelte';
 	import SpeakersSection from './SpeakersSection.svelte';
 	import AttendeeRow from '$lib/components/ui/AttendeeRow.svelte';
-	import { agendaClient, attendeeClient, meetingClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
+	import { agendaClient, attendeeClient, committeeClient, meetingClient, moderationClient, speakerClient, voteClient } from '$lib/api/index.js';
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { session } from '$lib/stores/session.svelte.js';
 	import type { AgendaPointRecord } from '$lib/gen/conference/agenda/v1/agenda_pb.js';
@@ -54,6 +54,10 @@
 	let recoveryData = $state<AttendeeRecoveryView | null>(null);
 	let recoveryLoading = $state(false);
 	let recoveryCopied = $state(false);
+
+	// Email invite state
+	let emailEnabled = $state(false);
+	let inviteSending = $state(false);
 
 	onDestroy(() => {
 		pageActions.clear();
@@ -435,6 +439,42 @@
 		return attendeeRows();
 	}
 
+	// Fetch emailEnabled from committee overview on mount
+	$effect(() => {
+		if (!session.loaded || !session.authenticated) return;
+		(async () => {
+			try {
+				const res = await committeeClient.getCommitteeOverview({ committeeSlug: slug });
+				emailEnabled = res.overview?.emailEnabled ?? false;
+			} catch {
+				emailEnabled = false;
+			}
+		})();
+	});
+
+	async function sendInviteEmails() {
+		if (inviteSending) return;
+		inviteSending = true;
+		actionError = '';
+		actionNotice = '';
+		try {
+			const res = await committeeClient.sendInviteEmails({
+				committeeSlug: slug,
+				meetingId,
+				baseUrl: window.location.origin,
+				memberIds: []
+			});
+			let msg: string = m.moderate_send_invites_success({ count: res.sentCount });
+			if (res.skippedCount > 0) {
+				msg += ' ' + m.moderate_send_invites_skipped({ count: res.skippedCount });
+			}
+			actionNotice = msg;
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to send invite emails.');
+		} finally {
+			inviteSending = false;
+		}
+	}
 
 </script>
 
@@ -569,6 +609,20 @@
 											<button type="submit" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Sign yourself up" title="Sign yourself up" aria-label="Sign yourself up" disabled={attendeeActionPending !== ''}><LegacyIcon name="person-raised" class="h-4 w-4" /></button>
 										</form>
 										<button type="button" class="btn btn-sm btn-square tooltip tooltip-left" data-tip="Show signup QR" title="Show signup QR" aria-label="Show signup QR" onclick={openJoinQrDialog}><LegacyIcon name="qr-code" class="h-4 w-4" /></button>
+										<div class="tooltip tooltip-left" data-tip={!emailEnabled ? m.email_not_configured_short() : m.moderate_send_invites_button()}>
+											<button
+												type="button"
+												class="btn btn-sm btn-outline"
+												disabled={!emailEnabled || inviteSending}
+												onclick={sendInviteEmails}
+											>
+												{#if inviteSending}
+													<AppSpinner />
+												{:else}
+													{m.moderate_send_invites_button()}
+												{/if}
+											</button>
+										</div>
 									</div>
 								</div>
 								<div id="attendee-list-container">

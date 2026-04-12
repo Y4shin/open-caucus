@@ -63,6 +63,11 @@ Existing non-empty values are kept unless --force is provided.`,
 			"OAUTH_PROVISIONING_MODE": "auto_create",
 			"OIDC_DEV_USERS_FILE":     "dev/users.yaml",
 			"OIDC_DEV_GROUPS_CLAIM":   "groups",
+			"EMAIL_ENABLED":           "true",
+			"EMAIL_SMTP_HOST":         "localhost",
+			"EMAIL_SMTP_PORT":         "1025",
+			"EMAIL_FROM_ADDRESS":      "noreply@open-caucus.dev",
+			"EMAIL_FROM_NAME":         "Open Caucus (Dev)",
 		}
 		placeholderByKey := map[string]string{
 			"HOST":                    "0.0.0.0",
@@ -79,6 +84,11 @@ Existing non-empty values are kept unless --force is provided.`,
 			"OAUTH_PROVISIONING_MODE": "preprovisioned",
 			"OIDC_DEV_USERS_FILE":     "dev/users.yaml",
 			"OIDC_DEV_GROUPS_CLAIM":   "groups",
+			"EMAIL_ENABLED":           "false",
+			"EMAIL_SMTP_HOST":         "",
+			"EMAIL_SMTP_PORT":         "587",
+			"EMAIL_FROM_ADDRESS":      "",
+			"EMAIL_FROM_NAME":         "Open Caucus",
 		}
 
 		newContent, changedKeys, err := applyEnvUpdates(content, updates, placeholderByKey, force)

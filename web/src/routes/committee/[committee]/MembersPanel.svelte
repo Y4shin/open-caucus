@@ -9,7 +9,7 @@
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import * as m from '$lib/paraglide/messages';
 
-	let { slug }: { slug: string } = $props();
+	let { slug, emailEnabled = false }: { slug: string; emailEnabled?: boolean } = $props();
 
 	let members = $state<MemberRecord[]>([]);
 	let assignableAccounts = $state<AssignableAccount[]>([]);

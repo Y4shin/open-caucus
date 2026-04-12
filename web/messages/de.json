@@ -279,7 +279,6 @@
 	"meeting_attendee_recovery_alt": "Gäste-Wiederherstellungs-QR-Code",
 	"common_copy_url": "URL kopieren",
 	"common_copied": "Kopiert!",
-	"common_close": "Schließen",
 	"meeting_agenda_tools_page_title": "Tagesordnungstools: {meeting}",
 	"meeting_agenda_tools_subtitle": "Tagesordnungspunkt-Tools: {agendaPoint}",
 	"meeting_agenda_tools_attachments_heading": "Anhänge",
@@ -496,9 +495,7 @@
 	"votes_secret_actions_hint": "Manuelle Aktionen sind bei offener oder auszählender Abstimmung verfügbar.",
 	"votes_secret_ballot_hint": "Geheime Stimmzettel können zuerst registriert und später ausgezählt werden.",
 	"votes_vote_name_placeholder": "Name der Abstimmung",
-
 	"theme_switcher_auto_button": "Auto",
-
 	"quotation_enabled_heading": "Aktiv (in Prioritätsreihenfolge)",
 	"quotation_disabled_heading": "Deaktiviert",
 	"quotation_none_enabled": "Keine Quotierungsregeln aktiv. Redner:innen werden nur nach Meldezeit sortiert.",
@@ -523,7 +520,6 @@
 	"quotation_bucket_returning": "Wiederholung",
 	"quotation_preview_heading": "Vorschau: Wie Redner:innen sortiert werden",
 	"quotation_preview_description": "Beispiel mit 4 Redner:innen zur Veranschaulichung der aktuellen Einstellungen.",
-
 	"members_heading": "Mitglieder",
 	"members_empty": "Noch keine Mitglieder.",
 	"members_add_heading": "Mitglied hinzufügen",
@@ -543,5 +539,12 @@
 	"wizard_step_invites": "Einladungen",
 	"wizard_invites_description": "Wählen Sie Mitglieder aus, die per E-Mail eingeladen werden sollen. Alle sind standardmäßig ausgewählt.",
 	"wizard_invites_count": "Einladungen werden an {count} Mitglied(er) gesendet",
-	"wizard_invites_email_disabled": "E-Mail-Versand ist nicht konfiguriert. Einladungen werden nicht gesendet."
+	"wizard_invites_email_disabled": "E-Mail-Versand ist nicht konfiguriert. Einladungen werden nicht gesendet.",
+	"email_not_configured_hint": "E-Mail-Versand ist nicht konfiguriert. Kontaktieren Sie Ihren Administrator, um Einladungs-E-Mails zu aktivieren.",
+	"email_not_configured_short": "E-Mail nicht konfiguriert",
+	"wizard_send_invites_toggle": "Einladungs-E-Mails versenden",
+	"wizard_invites_will_not_send": "Einladungs-E-Mails werden nicht versendet.",
+	"moderate_send_invites_button": "Einladungs-E-Mails senden",
+	"moderate_send_invites_success": "Einladungs-E-Mails an {count} Mitglied(er) gesendet.",
+	"moderate_send_invites_skipped": "{count} Mitglied(er) übersprungen (keine Kontaktdaten)."
 }

@@ -40,6 +40,7 @@ message CommitteeOverview {
   conference.common.v1.CommitteeReference committee = 1;
   repeated CommitteeOverviewMeeting meetings = 2;
   repeated conference.common.v1.Capability capabilities = 3;
+  bool email_enabled = 4; // true if SMTP email sending is configured
 }
 
 message ListMyCommitteesRequest {}

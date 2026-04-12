@@ -70,13 +70,22 @@ tasks:
       - task --parallel oidc-dev:run run
 
   dev:oidc:
-    desc: Run OIDC dev provider, Go backend, and Vite SPA dev server together
+    desc: Run OIDC dev provider, Go backend, Vite SPA dev server, and Mailpit together
     cmds:
       - task: env:populate
       - task: oidc-dev:generate-users
         vars:
           CLI_ARGS: --force
-      - task --parallel oidc-dev:run:vite dev:go:vite dev:web
+      - task --parallel oidc-dev:run:vite dev:go:vite dev:web dev:mailpit
+
+  dev:mailpit:
+    desc: Run Mailpit mock SMTP server (SMTP on :1025, Web UI on :8025)
+    cmds:
+      - |
+        echo "Starting Mailpit (SMTP :1025, Web UI http://localhost:8025)..."
+        docker run --rm --name open-caucus-mailpit \
+          -p 1025:1025 -p 8025:8025 \
+          axllent/mailpit:latest
 
   docker:up:
     desc: Start app + local OIDC in Docker Compose (includes setup bootstrap)

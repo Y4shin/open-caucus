@@ -155,6 +155,7 @@ type CommitteeOverview struct {
 	Committee     *v1.CommitteeReference      `protobuf:"bytes,1,opt,name=committee,proto3" json:"committee,omitempty"`
 	Meetings      []*CommitteeOverviewMeeting `protobuf:"bytes,2,rep,name=meetings,proto3" json:"meetings,omitempty"`
 	Capabilities  []*v1.Capability            `protobuf:"bytes,3,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
+	EmailEnabled  bool                        `protobuf:"varint,4,opt,name=email_enabled,json=emailEnabled,proto3" json:"email_enabled,omitempty"` // true if SMTP email sending is configured
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -208,6 +209,13 @@ func (x *CommitteeOverview) GetCapabilities() []*v1.Capability {
 		return x.Capabilities
 	}
 	return nil
+}
+
+func (x *CommitteeOverview) GetEmailEnabled() bool {
+	if x != nil {
+		return x.EmailEnabled
+	}
+	return false
 }
 
 type ListMyCommitteesRequest struct {
@@ -1615,11 +1623,12 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\ameeting\x18\x01 \x01(\v2&.conference.common.v1.MeetingReferenceR\ameeting\x12!\n" +
 	"\fcan_moderate\x18\x02 \x01(\bR\vcanModerate\x12\x19\n" +
 	"\bcan_join\x18\x03 \x01(\bR\acanJoin\x12\"\n" +
-	"\rcan_view_live\x18\x04 \x01(\bR\vcanViewLive\"\xf1\x01\n" +
+	"\rcan_view_live\x18\x04 \x01(\bR\vcanViewLive\"\x96\x02\n" +
 	"\x11CommitteeOverview\x12F\n" +
 	"\tcommittee\x18\x01 \x01(\v2(.conference.common.v1.CommitteeReferenceR\tcommittee\x12N\n" +
 	"\bmeetings\x18\x02 \x03(\v22.conference.committees.v1.CommitteeOverviewMeetingR\bmeetings\x12D\n" +
-	"\fcapabilities\x18\x03 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\"\x19\n" +
+	"\fcapabilities\x18\x03 \x03(\v2 .conference.common.v1.CapabilityR\fcapabilities\x12#\n" +
+	"\remail_enabled\x18\x04 \x01(\bR\femailEnabled\"\x19\n" +
 	"\x17ListMyCommitteesRequest\"g\n" +
 	"\x18ListMyCommitteesResponse\x12K\n" +
 	"\n" +

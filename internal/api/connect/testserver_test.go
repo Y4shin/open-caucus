@@ -102,7 +102,7 @@ func newCombinedAPITestServerWithOpts(t *testing.T, committeeGroupPrefix string)
 
 	// Committee service
 	committeePath, committeeHandler := committeesv1connect.NewCommitteeServiceHandler(
-		NewCommitteeHandler(committeeservice.New(repo), memberservice.New(repo, &email.MockSender{})),
+		NewCommitteeHandler(committeeservice.New(repo, false), memberservice.New(repo, &email.MockSender{})),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+committeePath, mw.Get("session")(http.StripPrefix("/api", committeeHandler)))

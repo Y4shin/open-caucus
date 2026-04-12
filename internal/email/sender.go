@@ -110,8 +110,10 @@ func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody str
 // NoopSender discards all emails. Used when email is not configured.
 type NoopSender struct{}
 
-func (s *NoopSender) Enabled() bool                                                 { return false }
-func (s *NoopSender) Send(_ context.Context, _, _, _, _ string) error { return nil }
+func (s *NoopSender) Enabled() bool { return false }
+func (s *NoopSender) Send(_ context.Context, _, _, _, _ string) error {
+	return fmt.Errorf("email sending is not configured")
+}
 
 // MockSender records sent emails for testing.
 type MockSender struct {

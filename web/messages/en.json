@@ -279,7 +279,6 @@
 	"meeting_attendee_recovery_alt": "Guest Recovery QR Code",
 	"common_copy_url": "Copy URL",
 	"common_copied": "Copied!",
-	"common_close": "Close",
 	"meeting_agenda_tools_page_title": "Agenda Tools: {meeting}",
 	"meeting_agenda_tools_subtitle": "Agenda Point Tools: {agendaPoint}",
 	"meeting_agenda_tools_attachments_heading": "Attachments",
@@ -496,9 +495,7 @@
 	"votes_secret_actions_hint": "Manual secret actions are available while vote is open or counting.",
 	"votes_secret_ballot_hint": "Secret ballots can be registered first and counted later.",
 	"votes_vote_name_placeholder": "Vote name",
-
 	"theme_switcher_auto_button": "Auto",
-
 	"quotation_enabled_heading": "Active (in priority order)",
 	"quotation_disabled_heading": "Disabled",
 	"quotation_none_enabled": "No quotation rules active. Speakers sorted by request time only.",
@@ -523,7 +520,6 @@
 	"quotation_bucket_returning": "Returning",
 	"quotation_preview_heading": "Preview: How speakers would be sorted",
 	"quotation_preview_description": "Example with 4 speakers showing the effect of current settings.",
-
 	"members_heading": "Members",
 	"members_empty": "No members yet.",
 	"members_add_heading": "Add Member",
@@ -543,5 +539,12 @@
 	"wizard_step_invites": "Invites",
 	"wizard_invites_description": "Select members to invite by email. All members are selected by default.",
 	"wizard_invites_count": "Invites will be sent to {count} member(s)",
-	"wizard_invites_email_disabled": "Email sending is not configured. Invites will not be sent."
+	"wizard_invites_email_disabled": "Email sending is not configured. Invites will not be sent.",
+	"email_not_configured_hint": "Email sending is not configured. Contact your administrator to enable invite emails.",
+	"email_not_configured_short": "Email not configured",
+	"wizard_send_invites_toggle": "Send invite emails",
+	"wizard_invites_will_not_send": "Invite emails will not be sent.",
+	"moderate_send_invites_button": "Send Invite Emails",
+	"moderate_send_invites_success": "Invite emails sent to {count} member(s).",
+	"moderate_send_invites_skipped": "{count} member(s) skipped (no contact info)."
 }

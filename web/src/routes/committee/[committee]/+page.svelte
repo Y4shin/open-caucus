@@ -205,7 +205,7 @@
 			</section>
 		</div>
 
-			<MembersPanel slug={slug ?? ''} />
+			<MembersPanel slug={slug ?? ''} emailEnabled={committeeState.data?.emailEnabled ?? false} />
 	{:else}
 		<section class="card border border-base-300 bg-base-200 p-4 mt-4" data-testid="committee-active-meeting-card">
 			<h3 class="text-lg font-semibold">{m.committee_active_meeting_heading()}</h3>
@@ -231,5 +231,5 @@
 {/if}
 
 {#if canManage}
-	<MeetingWizard bind:this={wizardRef} slug={slug ?? ''} onCreated={loadCommittee} />
+	<MeetingWizard bind:this={wizardRef} slug={slug ?? ''} onCreated={loadCommittee} emailEnabled={committeeState.data?.emailEnabled ?? false} />
 {/if}

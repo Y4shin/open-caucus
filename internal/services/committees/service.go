@@ -16,11 +16,12 @@ import (
 )
 
 type Service struct {
-	repo repository.Repository
+	repo         repository.Repository
+	emailEnabled bool
 }
 
-func New(repo repository.Repository) *Service {
-	return &Service{repo: repo}
+func New(repo repository.Repository, emailEnabled bool) *Service {
+	return &Service{repo: repo, emailEnabled: emailEnabled}
 }
 
 func (s *Service) ListMyCommittees(ctx context.Context) (*committeesv1.ListMyCommitteesResponse, error) {
@@ -122,6 +123,7 @@ func (s *Service) GetCommitteeOverview(ctx context.Context, slug string) (*commi
 		Committee:    committeeRef,
 		Meetings:     overviewMeetings,
 		Capabilities: caps,
+		EmailEnabled: s.emailEnabled,
 	}
 
 	return &committeesv1.GetCommitteeOverviewResponse{Overview: overview}, nil

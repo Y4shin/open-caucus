@@ -119,7 +119,7 @@ func newTestServer(t *testing.T) *testServer {
 	apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
 
 	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-		apiconnect.NewCommitteeHandler(committeeservice.New(repo), memberservice.New(repo, &email.MockSender{})),
+		apiconnect.NewCommitteeHandler(committeeservice.New(repo, false), memberservice.New(repo, &email.MockSender{})),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))

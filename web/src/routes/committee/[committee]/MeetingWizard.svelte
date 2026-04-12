@@ -16,10 +16,12 @@
 
 	let {
 		slug,
-		onCreated
+		onCreated,
+		emailEnabled = false
 	}: {
 		slug: string;
 		onCreated: () => void;
+		emailEnabled?: boolean;
 	} = $props();
 
 	let dialogOpen = $state(false);
@@ -86,6 +88,7 @@
 	let membersList = $state<MemberRecord[]>([]);
 	let selectedMemberIds = $state<Set<string>>(new Set());
 	let membersLoading = $state(false);
+	let sendInvites = $state(false);
 
 	export function open() {
 		step = 1;
@@ -101,6 +104,7 @@
 		agendaLineStates = new Map();
 		membersList = [];
 		selectedMemberIds = new Set();
+		sendInvites = emailEnabled;
 		error = '';
 		submitting = false;
 		dialogOpen = true;
@@ -191,7 +195,7 @@
 				}
 			}
 
-			if (selectedMemberIds.size > 0) {
+			if (sendInvites && emailEnabled && selectedMemberIds.size > 0) {
 				await committeeClient.sendInviteEmails({
 					committeeSlug: slug,
 					meetingId,
@@ -284,16 +288,25 @@
 		{:else if step === 3}
 			<div class="space-y-3">
 				<p class="text-sm text-base-content/70">{m.wizard_invites_description()}</p>
+				{#if !emailEnabled}
+					<div class="alert alert-warning text-sm">{m.email_not_configured_hint()}</div>
+				{:else}
+					<AppSwitch
+						checked={sendInvites}
+						label={m.wizard_send_invites_toggle()}
+						onCheckedChange={(v) => { sendInvites = v; }}
+					/>
+				{/if}
 				{#if membersLoading}
 					<AppSpinner label="Loading members" />
 				{:else if membersList.length === 0}
 					<p class="text-sm text-base-content/70">{m.wizard_invites_description()}</p>
 				{:else}
 					<div class="flex gap-2 mb-2">
-						<button type="button" class="btn btn-xs btn-ghost" onclick={selectAllMembers}>Select all</button>
-						<button type="button" class="btn btn-xs btn-ghost" onclick={deselectAllMembers}>Deselect all</button>
+						<button type="button" class="btn btn-xs btn-ghost" disabled={!sendInvites || !emailEnabled} onclick={selectAllMembers}>Select all</button>
+						<button type="button" class="btn btn-xs btn-ghost" disabled={!sendInvites || !emailEnabled} onclick={deselectAllMembers}>Deselect all</button>
 					</div>
-					<ul class="space-y-1 max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-200/30 p-3">
+					<ul class="space-y-1 max-h-64 overflow-y-auto rounded-box border border-base-300 bg-base-200/30 p-3 {!sendInvites || !emailEnabled ? 'opacity-50' : ''}">
 						{#each membersList as member}
 							{@const hasContact = !!(member.email || member.username)}
 							<li class="flex items-center gap-2 {hasContact ? '' : 'opacity-50'}">
@@ -301,7 +314,7 @@
 									class="checkbox checkbox-sm"
 									type="checkbox"
 									checked={selectedMemberIds.has(member.userId)}
-									disabled={!hasContact}
+									disabled={!hasContact || !sendInvites || !emailEnabled}
 									onchange={() => toggleMember(member.userId)}
 								/>
 								<span class="text-sm">{member.fullName}</span>
@@ -345,7 +358,11 @@
 				{/if}
 				<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
 					<h4 class="text-sm font-semibold">{m.wizard_step_invites()}</h4>
-					<p class="text-sm text-base-content/70">{m.wizard_invites_count({ count: selectedMemberIds.size })}</p>
+					{#if sendInvites && emailEnabled}
+						<p class="text-sm text-base-content/70">{m.wizard_invites_count({ count: selectedMemberIds.size })}</p>
+					{:else}
+						<p class="text-sm {!emailEnabled ? 'text-warning' : 'text-base-content/70'}">{m.wizard_invites_will_not_send()}</p>
+					{/if}
 				</div>
 			</div>
 		{/if}

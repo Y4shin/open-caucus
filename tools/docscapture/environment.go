@@ -225,7 +225,7 @@ func NewEnvironment(rawOpts EnvironmentOptions) (*Environment, error) {
 	apiMux.Handle(sessionAPIPath, mw.Get("session")(sessionAPIHandler))
 
 	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-		apiconnect.NewCommitteeHandler(committeeservice.New(repo), memberservice.New(repo, &email.NoopSender{})),
+		apiconnect.NewCommitteeHandler(committeeservice.New(repo, false), memberservice.New(repo, &email.NoopSender{})),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(committeeAPIPath, mw.Get("session")(committeeAPIHandler))

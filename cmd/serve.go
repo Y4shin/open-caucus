@@ -116,7 +116,7 @@ func newAPIMux(rt *serveRuntime) *http.ServeMux {
 	apiMux.Handle(sessionAPIPath, rt.middleware.Get("session")(sessionAPIHandler))
 
 	committeeAPIPath, committeeAPIHandler := committeesv1connect.NewCommitteeServiceHandler(
-		apiconnect.NewCommitteeHandler(committeeservice.New(rt.repo), memberservice.New(rt.repo, email.NewSender(rt.cfg.Email))),
+		apiconnect.NewCommitteeHandler(committeeservice.New(rt.repo, email.NewSender(rt.cfg.Email).Enabled()), memberservice.New(rt.repo, email.NewSender(rt.cfg.Email))),
 		connect.WithInterceptors(apiconnect.ErrorInterceptor()),
 	)
 	apiMux.Handle(committeeAPIPath, rt.middleware.Get("session")(committeeAPIHandler))

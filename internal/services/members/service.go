@@ -183,6 +183,10 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 		return nil, err
 	}
 
+	if !s.sender.Enabled() {
+		return nil, apierrors.New(apierrors.KindUnimplemented, "email sending is not configured")
+	}
+
 	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
 	if err != nil {
 		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")

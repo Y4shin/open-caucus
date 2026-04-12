@@ -32,12 +32,29 @@ services:
         condition: service_completed_successfully
     ports:
       - "8080:8080"
+      - "8025:8025"
       - "9096:9096"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9096/.well-known/openid-configuration >/dev/null || exit 1"]
       interval: 2s
       timeout: 2s
       retries: 20
+      start_period: 2s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    network_mode: "service:oidc"
+    environment:
+      MP_SMTP_BIND_ADDR: "0.0.0.0:1025"
+      MP_UI_BIND_ADDR: "0.0.0.0:8025"
+    depends_on:
+      oidc:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8025/ >/dev/null || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
       start_period: 2s
 
   app:
@@ -53,10 +70,17 @@ services:
       HOST: 0.0.0.0
       OAUTH_ISSUER_URL: http://127.0.0.1:9096
       OAUTH_REDIRECT_URL: http://127.0.0.1:8080/oauth/callback
+      EMAIL_ENABLED: "true"
+      EMAIL_SMTP_HOST: "127.0.0.1"
+      EMAIL_SMTP_PORT: "1025"
+      EMAIL_FROM_ADDRESS: "noreply@open-caucus.dev"
+      EMAIL_FROM_NAME: "Open Caucus"
     depends_on:
       setup:
         condition: service_completed_successfully
       oidc:
+        condition: service_healthy
+      mailpit:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/login >/dev/null || exit 1"]
