@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
+	"time"
 
 	"github.com/Y4shin/open-caucus/internal/config"
 )
@@ -62,6 +63,7 @@ func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody str
 	mixedBoundary := "----=_Mixed_OpenCaucus"
 
 	var msg strings.Builder
+	fmt.Fprintf(&msg, "Date: %s\r\n", time.Now().UTC().Format(time.RFC1123Z))
 	fmt.Fprintf(&msg, "From: %s\r\n", fromHeader)
 	fmt.Fprintf(&msg, "To: %s\r\n", to)
 	fmt.Fprintf(&msg, "Subject: %s\r\n", subject)
