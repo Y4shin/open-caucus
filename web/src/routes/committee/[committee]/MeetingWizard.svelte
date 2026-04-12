@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Dialog } from 'bits-ui';
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
@@ -24,7 +23,7 @@
 		emailEnabled?: boolean;
 	} = $props();
 
-	let dialogOpen = $state(false);
+	let dialogEl = $state<HTMLDialogElement | null>(null);
 	let step = $state<1 | 2 | 3 | 4>(1);
 	let submitting = $state(false);
 	let error = $state('');
@@ -90,7 +89,7 @@
 	let membersLoading = $state(false);
 	let sendInvites = $state(false);
 
-	export function open() {
+	function resetWizardState() {
 		step = 1;
 		meetingName = '';
 		meetingDescription = '';
@@ -107,8 +106,12 @@
 		sendInvites = emailEnabled;
 		error = '';
 		submitting = false;
-		dialogOpen = true;
 		loadMembersForInvites();
+	}
+
+	export function open() {
+		resetWizardState();
+		dialogEl?.showModal();
 	}
 
 	async function loadMembersForInvites() {
@@ -213,7 +216,7 @@
 				});
 			}
 
-			dialogOpen = false;
+			dialogEl?.close();
 			onCreated();
 		} catch (err) {
 			error = getDisplayError(err, 'Failed to create meeting.');
@@ -223,12 +226,10 @@
 	}
 </script>
 
-<Dialog.Root bind:open={dialogOpen}>
-	<Dialog.Portal>
-	<Dialog.Overlay class="fixed inset-0 z-40 bg-black/50" />
-	<Dialog.Content class="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-3xl rounded-box bg-base-100 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+<dialog class="modal" bind:this={dialogEl} >
+	<div class="modal-box w-11/12 max-w-3xl">
 		<div class="mb-4 flex items-center justify-between">
-			<Dialog.Title class="text-lg font-semibold">{m.committee_create_meeting_heading()}</Dialog.Title>
+			<h3 class="text-lg font-semibold">{m.committee_create_meeting_heading()}</h3>
 			<div class="flex items-center gap-2">
 				<ul class="steps steps-horizontal text-xs">
 					<li class={step >= 1 ? 'step step-primary' : 'step'}>{m.wizard_step_basics()}</li>
@@ -236,7 +237,7 @@
 					<li class={step >= 3 ? 'step step-primary' : 'step'}>{m.wizard_step_invites()}</li>
 					<li class={step >= 4 ? 'step step-primary' : 'step'}>{m.wizard_step_review()}</li>
 				</ul>
-				<button type="button" class="btn btn-sm btn-ghost" onclick={() => dialogOpen = false}>{m.common_close()}</button>
+				<button type="button" class="btn btn-sm btn-ghost" onclick={() => dialogEl?.close()}>{m.common_close()}</button>
 			</div>
 		</div>
 
@@ -351,10 +352,20 @@
 				{/if}
 				<div class="rounded-box border border-base-300 bg-base-200/30 p-3 space-y-2">
 					<h4 class="text-sm font-semibold">{m.wizard_step_invites()}</h4>
-					{#if sendInvites && emailEnabled}
-						<p class="text-sm text-base-content/70">{m.wizard_invites_count({ count: selectedMemberIds.size })}</p>
+					{#if emailEnabled}
+						<AppSwitch
+							checked={sendInvites}
+							label={m.wizard_send_invites_toggle()}
+							onCheckedChange={(v) => { sendInvites = v; }}
+						/>
+						{#if sendInvites}
+							<p class="text-sm text-base-content/70">{m.wizard_invites_count({ count: selectedMemberIds.size })}</p>
+						{:else}
+							<p class="text-sm text-base-content/70">{m.wizard_invites_will_not_send()}</p>
+						{/if}
 					{:else}
-						<p class="text-sm {!emailEnabled ? 'text-warning' : 'text-base-content/70'}">{m.wizard_invites_will_not_send()}</p>
+						<p class="text-sm text-warning">{m.wizard_invites_will_not_send()}</p>
+						<p class="text-xs text-base-content/50">{m.email_not_configured_hint()}</p>
 					{/if}
 				</div>
 			</div>
@@ -374,6 +385,6 @@
 				<button type="button" class="btn btn-sm btn-primary" onclick={submit} disabled={submitting || !canProceed()}>{m.wizard_create()}</button>
 			{/if}
 		</div>
-	</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>
+	</div>
+	<form method="dialog" class="modal-backdrop"><button aria-label="Close">Close</button></form>
+</dialog>

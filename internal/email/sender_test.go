@@ -15,7 +15,7 @@ func TestMockSender_RecordsSentEmails(t *testing.T) {
 		t.Fatalf("expected 0 sent, got %d", len(s.Sent))
 	}
 
-	err := s.Send(context.Background(), "alice@example.com", "Test Subject", "<p>html</p>", "text")
+	err := s.Send(context.Background(), "alice@example.com", "Test Subject", "<p>html</p>", "text", nil)
 	if err != nil {
 		t.Fatalf("Send returned error: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestMockSender_RecordsSentEmails(t *testing.T) {
 func TestMockSender_MultipleEmails(t *testing.T) {
 	s := &MockSender{}
 	for i := 0; i < 5; i++ {
-		_ = s.Send(context.Background(), "user@example.com", "Subj", "", "")
+		_ = s.Send(context.Background(), "user@example.com", "Subj", "", "", nil)
 	}
 	if len(s.Sent) != 5 {
 		t.Fatalf("expected 5 sent, got %d", len(s.Sent))
@@ -54,7 +54,7 @@ func TestNoopSender_ReturnsError(t *testing.T) {
 		t.Fatal("NoopSender should report disabled")
 	}
 
-	err := s.Send(context.Background(), "x@y.z", "s", "h", "t")
+	err := s.Send(context.Background(), "x@y.z", "s", "h", "t", nil)
 	if err == nil {
 		t.Fatal("NoopSender.Send should return error")
 	}

@@ -173,18 +173,18 @@
 				{/snippet}
 			</DateRangePicker.Calendar>
 
-			{#if rangeValue}
+			{#if rangeValue?.start && rangeValue?.end}
 				<div class="mt-3 border-t border-base-300 pt-3 space-y-2">
 					<div class="flex items-center gap-2">
 						<span class="text-xs font-medium text-base-content/60 w-12">{startLabel}:</span>
 						<div class="flex items-center gap-1">
 							<input type="number" min="0" max="23" class="input input-bordered input-xs w-14 text-center font-mono"
 								value={String(rangeValue.start.hour).padStart(2, '0')}
-								onchange={(e) => { if (rangeValue) rangeValue = { ...rangeValue, start: rangeValue.start.set({ hour: Math.min(23, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
+								onchange={(e) => { if (rangeValue?.start) rangeValue = { ...rangeValue, start: rangeValue.start.set({ hour: Math.min(23, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
 							<span class="text-base-content/50 font-bold">:</span>
 							<input type="number" min="0" max="59" step="5" class="input input-bordered input-xs w-14 text-center font-mono"
 								value={String(rangeValue.start.minute).padStart(2, '0')}
-								onchange={(e) => { if (rangeValue) rangeValue = { ...rangeValue, start: rangeValue.start.set({ minute: Math.min(59, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
+								onchange={(e) => { if (rangeValue?.start) rangeValue = { ...rangeValue, start: rangeValue.start.set({ minute: Math.min(59, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
@@ -192,11 +192,11 @@
 						<div class="flex items-center gap-1">
 							<input type="number" min="0" max="23" class="input input-bordered input-xs w-14 text-center font-mono"
 								value={String(rangeValue.end.hour).padStart(2, '0')}
-								onchange={(e) => { if (rangeValue) rangeValue = { ...rangeValue, end: rangeValue.end.set({ hour: Math.min(23, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
+								onchange={(e) => { if (rangeValue?.end) rangeValue = { ...rangeValue, end: rangeValue.end.set({ hour: Math.min(23, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
 							<span class="text-base-content/50 font-bold">:</span>
 							<input type="number" min="0" max="59" step="5" class="input input-bordered input-xs w-14 text-center font-mono"
 								value={String(rangeValue.end.minute).padStart(2, '0')}
-								onchange={(e) => { if (rangeValue) rangeValue = { ...rangeValue, end: rangeValue.end.set({ minute: Math.min(59, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
+								onchange={(e) => { if (rangeValue?.end) rangeValue = { ...rangeValue, end: rangeValue.end.set({ minute: Math.min(59, Math.max(0, parseInt(e.currentTarget.value) || 0)) }) }; }} />
 						</div>
 					</div>
 				</div>

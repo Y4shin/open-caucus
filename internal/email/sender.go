@@ -12,9 +12,14 @@ import (
 	"github.com/Y4shin/open-caucus/internal/config"
 )
 
+// SendOptions holds optional email attachments.
+type SendOptions struct {
+	ICSData string // optional iCalendar attachment content
+}
+
 // Sender sends emails.
 type Sender interface {
-	Send(ctx context.Context, to, subject, htmlBody, textBody string) error
+	Send(ctx context.Context, to, subject, htmlBody, textBody string, opts *SendOptions) error
 	Enabled() bool
 }
 
@@ -33,7 +38,7 @@ type SMTPSender struct {
 
 func (s *SMTPSender) Enabled() bool { return true }
 
-func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody string) error {
+func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody string, opts *SendOptions) error {
 	addr := net.JoinHostPort(s.cfg.SMTPHost, fmt.Sprintf("%d", s.cfg.SMTPPort))
 
 	from := s.cfg.FromAddress
@@ -42,24 +47,46 @@ func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody str
 		fromHeader = fmt.Sprintf("%s <%s>", s.cfg.FromName, from)
 	}
 
-	// Build MIME message with both plain text and HTML parts.
-	boundary := "----=_Part_OpenCaucus"
+	hasICS := opts != nil && opts.ICSData != ""
+	altBoundary := "----=_Alt_OpenCaucus"
+	mixedBoundary := "----=_Mixed_OpenCaucus"
+
 	var msg strings.Builder
 	fmt.Fprintf(&msg, "From: %s\r\n", fromHeader)
 	fmt.Fprintf(&msg, "To: %s\r\n", to)
 	fmt.Fprintf(&msg, "Subject: %s\r\n", subject)
 	fmt.Fprintf(&msg, "MIME-Version: 1.0\r\n")
-	fmt.Fprintf(&msg, "Content-Type: multipart/alternative; boundary=\"%s\"\r\n", boundary)
-	fmt.Fprintf(&msg, "\r\n")
+
+	if hasICS {
+		// multipart/mixed: body + ICS attachment
+		fmt.Fprintf(&msg, "Content-Type: multipart/mixed; boundary=\"%s\"\r\n", mixedBoundary)
+		fmt.Fprintf(&msg, "\r\n")
+		fmt.Fprintf(&msg, "--%s\r\n", mixedBoundary)
+		fmt.Fprintf(&msg, "Content-Type: multipart/alternative; boundary=\"%s\"\r\n", altBoundary)
+		fmt.Fprintf(&msg, "\r\n")
+	} else {
+		fmt.Fprintf(&msg, "Content-Type: multipart/alternative; boundary=\"%s\"\r\n", altBoundary)
+		fmt.Fprintf(&msg, "\r\n")
+	}
+
 	// Plain text part
-	fmt.Fprintf(&msg, "--%s\r\n", boundary)
+	fmt.Fprintf(&msg, "--%s\r\n", altBoundary)
 	fmt.Fprintf(&msg, "Content-Type: text/plain; charset=utf-8\r\n\r\n")
 	fmt.Fprintf(&msg, "%s\r\n", textBody)
 	// HTML part
-	fmt.Fprintf(&msg, "--%s\r\n", boundary)
+	fmt.Fprintf(&msg, "--%s\r\n", altBoundary)
 	fmt.Fprintf(&msg, "Content-Type: text/html; charset=utf-8\r\n\r\n")
 	fmt.Fprintf(&msg, "%s\r\n", htmlBody)
-	fmt.Fprintf(&msg, "--%s--\r\n", boundary)
+	fmt.Fprintf(&msg, "--%s--\r\n", altBoundary)
+
+	if hasICS {
+		// ICS calendar attachment
+		fmt.Fprintf(&msg, "--%s\r\n", mixedBoundary)
+		fmt.Fprintf(&msg, "Content-Type: text/calendar; charset=utf-8; method=REQUEST\r\n")
+		fmt.Fprintf(&msg, "Content-Disposition: attachment; filename=\"invite.ics\"\r\n\r\n")
+		fmt.Fprintf(&msg, "%s\r\n", opts.ICSData)
+		fmt.Fprintf(&msg, "--%s--\r\n", mixedBoundary)
+	}
 
 	// Connect and send.
 	conn, err := net.Dial("tcp", addr)
@@ -111,7 +138,7 @@ func (s *SMTPSender) Send(_ context.Context, to, subject, htmlBody, textBody str
 type NoopSender struct{}
 
 func (s *NoopSender) Enabled() bool { return false }
-func (s *NoopSender) Send(_ context.Context, _, _, _, _ string) error {
+func (s *NoopSender) Send(_ context.Context, _, _, _, _ string, _ *SendOptions) error {
 	return fmt.Errorf("email sending is not configured")
 }
 
@@ -126,11 +153,16 @@ type MockEmail struct {
 	Subject  string
 	HTMLBody string
 	TextBody string
+	ICSData  string
 }
 
 func (s *MockSender) Enabled() bool { return true }
 
-func (s *MockSender) Send(_ context.Context, to, subject, htmlBody, textBody string) error {
-	s.Sent = append(s.Sent, MockEmail{To: to, Subject: subject, HTMLBody: htmlBody, TextBody: textBody})
+func (s *MockSender) Send(_ context.Context, to, subject, htmlBody, textBody string, opts *SendOptions) error {
+	ics := ""
+	if opts != nil {
+		ics = opts.ICSData
+	}
+	s.Sent = append(s.Sent, MockEmail{To: to, Subject: subject, HTMLBody: htmlBody, TextBody: textBody, ICSData: ics})
 	return nil
 }

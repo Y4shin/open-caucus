@@ -7,10 +7,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"time"
 
 	committeesv1 "github.com/Y4shin/open-caucus/gen/go/conference/committees/v1"
 	apierrors "github.com/Y4shin/open-caucus/internal/api/errors"
 	"github.com/Y4shin/open-caucus/internal/email"
+	"github.com/Y4shin/open-caucus/internal/ics"
 	"github.com/Y4shin/open-caucus/internal/repository"
 	"github.com/Y4shin/open-caucus/internal/repository/model"
 	serviceauthz "github.com/Y4shin/open-caucus/internal/services/authz"
@@ -207,6 +209,9 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to list members", err)
 	}
 
+	// Load agenda points for the email body.
+	agendaPoints, _ := s.repo.ListAgendaPointsForMeeting(ctx, meetingID)
+
 	// Filter to requested member IDs if specified.
 	wantIDs := make(map[int64]bool)
 	if len(memberIDs) > 0 {
@@ -265,19 +270,55 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 			continue
 		}
 
+		// Build agenda items for the email.
+		agendaItems := make([]email.AgendaItem, 0)
+		if agendaPoints != nil {
+			for i, ap := range agendaPoints {
+				agendaItems = append(agendaItems, email.AgendaItem{
+					Number: strconv.Itoa(i + 1),
+					Title:  ap.Title,
+				})
+			}
+		}
+
+		// Format datetime strings.
+		startStr, endStr := "", ""
+		if meeting.StartAt != nil {
+			startStr = meeting.StartAt.Format(time.RFC3339)
+		}
+		if meeting.EndAt != nil {
+			endStr = meeting.EndAt.Format(time.RFC3339)
+		}
+
 		htmlBody, textBody, err := email.RenderMeetingInvite(email.InviteData{
 			MemberName:    m.FullName,
 			CommitteeName: committee.Name,
 			MeetingName:   meeting.Name,
+			MeetingDesc:   meeting.Description,
 			JoinURL:       joinURL,
+			StartAt:       startStr,
+			EndAt:         endStr,
+			Agenda:        agendaItems,
 		})
 		if err != nil {
 			errs = append(errs, fmt.Sprintf("render for %s: %v", m.FullName, err))
 			continue
 		}
 
+		// Generate ICS attachment if meeting has datetime.
+		var sendOpts *email.SendOptions
+		if meeting.StartAt != nil {
+			uid := fmt.Sprintf("meeting-%d@open-caucus", meetingID)
+			endTime := time.Time{}
+			if meeting.EndAt != nil {
+				endTime = *meeting.EndAt
+			}
+			icsData := ics.GenerateMeetingEvent(uid, meeting.Name, meeting.Description, *meeting.StartAt, endTime)
+			sendOpts = &email.SendOptions{ICSData: icsData}
+		}
+
 		subject := email.InviteSubject(meeting.Name, committee.Name)
-		if err := s.sender.Send(ctx, toEmail, subject, htmlBody, textBody); err != nil {
+		if err := s.sender.Send(ctx, toEmail, subject, htmlBody, textBody, sendOpts); err != nil {
 			errs = append(errs, fmt.Sprintf("send to %s: %v", toEmail, err))
 			continue
 		}

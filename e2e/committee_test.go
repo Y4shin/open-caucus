@@ -99,27 +99,44 @@ func TestChairpersonCreateMeeting(t *testing.T) {
 		t.Fatalf("click create meeting button: %v", err)
 	}
 
+	// Wait for the wizard dialog to open
+	if err := page.Locator("dialog[open] #wizard-name").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		t.Fatalf("wait wizard dialog: %v", err)
+	}
+	if err := page.Locator("#wizard-name").WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(defaultE2ETimeoutMs),
+	}); err != nil {
+		// Dump page content for debugging
+		body, _ := page.Locator("body").InnerHTML()
+		if len(body) > 2000 {
+			body = body[:2000]
+		}
+		t.Fatalf("wait wizard dialog: %v\npage body (truncated): %s", err, body)
+	}
+
 	// Step 1: Fill meeting name and proceed
 	if err := page.Locator("#wizard-name").Fill("Budget Meeting"); err != nil {
 		t.Fatalf("fill meeting name: %v", err)
 	}
-	if err := page.Locator("[role=dialog] button:has-text('Next')").Click(); err != nil {
+	if err := page.Locator("dialog[open] button:has-text('Next')").Click(); err != nil {
 		t.Fatalf("click next (step 1): %v", err)
 	}
 
 	// Step 2: Skip agenda, proceed
-	if err := page.Locator("[role=dialog] button:has-text('Next')").Click(); err != nil {
+	if err := page.Locator("dialog[open] button:has-text('Next')").Click(); err != nil {
 		t.Fatalf("click next (step 2): %v", err)
 	}
 
 	// Step 3: Skip participants, proceed
-	if err := page.Locator("[role=dialog] button:has-text('Next')").Click(); err != nil {
+	if err := page.Locator("dialog[open] button:has-text('Next')").Click(); err != nil {
 		t.Fatalf("click next (step 3): %v", err)
 	}
 
 	// Step 4: Review — click Create
 	urlBefore := page.URL()
-	if err := page.Locator("[role=dialog] button:has-text('Create Meeting')").Click(); err != nil {
+	if err := page.Locator("dialog[open] button:has-text('Create Meeting')").Click(); err != nil {
 		t.Fatalf("click create (step 4): %v", err)
 	}
 
