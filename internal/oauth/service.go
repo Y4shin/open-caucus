@@ -248,6 +248,8 @@ func (s *Service) HandleCallback(ctx context.Context, r *http.Request) (*Callbac
 		return nil, fmt.Errorf("nonce mismatch")
 	}
 
+	slog.Info("oauth id token claims", "subject", idToken.Subject, "issuer", idToken.Issuer, "claims_keys", claimKeys(claims))
+
 	// Fetch userinfo endpoint to get profile claims (name, email, etc.)
 	// that may not be included in the ID token itself.
 	tokenSource := s.oauth2Config.TokenSource(ctx, token)
@@ -257,13 +259,16 @@ func (s *Service) HandleCallback(ctx context.Context, r *http.Request) (*Callbac
 	} else {
 		var uiClaims map[string]any
 		if err := userInfo.Claims(&uiClaims); err == nil {
-			slog.Debug("oauth userinfo claims", "claims", uiClaims)
+			slog.Info("oauth userinfo claims", "claims_keys", claimKeys(uiClaims), "name", uiClaims["name"], "email", uiClaims["email"], "preferred_username", uiClaims["preferred_username"])
 			// Merge userinfo claims into ID token claims (ID token takes precedence).
+			merged := 0
 			for k, v := range uiClaims {
 				if _, exists := claims[k]; !exists {
 					claims[k] = v
+					merged++
 				}
 			}
+			slog.Info("oauth claims merged", "merged_count", merged, "total_claims", len(claims))
 		}
 	}
 
@@ -281,6 +286,8 @@ func (s *Service) HandleCallback(ctx context.Context, r *http.Request) (*Callbac
 	if principal.FullName == "" {
 		principal.FullName = principal.Username
 	}
+
+	slog.Info("oauth principal resolved", "username", principal.Username, "full_name", principal.FullName, "email", principal.Email, "groups_count", len(principal.Groups))
 
 	return &CallbackResult{
 		Target:    payload.Target,
@@ -304,6 +311,14 @@ func firstAvailableClaim(claims map[string]any, chain []string) string {
 		}
 	}
 	return ""
+}
+
+func claimKeys(claims map[string]any) []string {
+	keys := make([]string, 0, len(claims))
+	for k := range claims {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func groupsClaim(claims map[string]any, claimName string) []string {

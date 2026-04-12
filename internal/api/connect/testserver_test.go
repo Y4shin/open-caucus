@@ -45,9 +45,10 @@ import (
 )
 
 type combinedTestServer struct {
-	server *httptest.Server
-	repo   repository.Repository
-	broker broker.Broker
+	server     *httptest.Server
+	repo       repository.Repository
+	broker     broker.Broker
+	mockSender *email.MockSender
 }
 
 type combinedTestClient struct {
@@ -101,8 +102,9 @@ func newCombinedAPITestServerWithOpts(t *testing.T, committeeGroupPrefix string)
 	mux.Handle("/api"+sessionPath, mw.Get("session")(http.StripPrefix("/api", sessionHandler)))
 
 	// Committee service
+	mockSender := &email.MockSender{}
 	committeePath, committeeHandler := committeesv1connect.NewCommitteeServiceHandler(
-		NewCommitteeHandler(committeeservice.New(repo, false), memberservice.New(repo, &email.MockSender{})),
+		NewCommitteeHandler(committeeservice.New(repo, false), memberservice.New(repo, mockSender)),
 		connect.WithInterceptors(ErrorInterceptor()),
 	)
 	mux.Handle("/api"+committeePath, mw.Get("session")(http.StripPrefix("/api", committeeHandler)))
@@ -179,7 +181,7 @@ func newCombinedAPITestServerWithOpts(t *testing.T, committeeGroupPrefix string)
 		repo.Close()
 	})
 
-	return &combinedTestServer{server: server, repo: repo, broker: b}
+	return &combinedTestServer{server: server, repo: repo, broker: b, mockSender: mockSender}
 }
 
 func newCombinedTestClient(t *testing.T, ts *combinedTestServer) *combinedTestClient {

@@ -141,6 +141,7 @@ func (h *OAuthHandler) resolveAccount(ctx context.Context, principal oauth.Princ
 		if err != nil {
 			return nil, err
 		}
+		slog.Info("oauth identity found", "account_id", account.ID, "username", account.Username, "current_full_name", account.FullName, "current_email", account.Email)
 		if err := h.upsertIdentity(ctx, principal, account.ID); err != nil {
 			return nil, err
 		}
@@ -148,7 +149,12 @@ func (h *OAuthHandler) resolveAccount(ctx context.Context, principal oauth.Princ
 		fullName := strings.TrimSpace(principal.FullName)
 		email := strings.TrimSpace(principal.Email)
 		if fullName != "" || email != "" {
-			_ = h.Repository.UpdateAccountProfile(ctx, account.ID, fullName, email)
+			slog.Info("oauth updating account profile", "account_id", account.ID, "new_full_name", fullName, "new_email", email)
+			if err := h.Repository.UpdateAccountProfile(ctx, account.ID, fullName, email); err != nil {
+				slog.Error("oauth profile update failed", "account_id", account.ID, "err", err)
+			}
+		} else {
+			slog.Warn("oauth profile update skipped", "account_id", account.ID, "reason", "both full_name and email are empty from OIDC claims")
 		}
 		return account, nil
 	}

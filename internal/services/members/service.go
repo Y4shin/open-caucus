@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -251,6 +252,7 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 			} else if m.Email != nil && *m.Email != "" {
 				toEmail = *m.Email
 			} else {
+				slog.Info("email invite skipped", "member", m.FullName, "reason", "account member has no email", "account_id", *m.AccountID, "account_email", account.Email)
 				skippedCount++
 				continue
 			}
@@ -263,6 +265,7 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 			}
 			joinURL = fmt.Sprintf("%s/committee/%s/meeting/%d/join?invite_secret=%s", baseURL, slug, meetingID, secret)
 		} else {
+			slog.Info("email invite skipped", "member", m.FullName, "reason", "no email and no account")
 			skippedCount++
 			continue
 		}
@@ -340,10 +343,13 @@ func (s *Service) SendInviteEmails(ctx context.Context, slug, meetingIDStr, base
 		}
 
 		subject := email.InviteSubject(meeting.Name, committee.Name)
+		slog.Info("email sending invite", "to", toEmail, "member", m.FullName, "meeting", meeting.Name, "has_ics", sendOpts != nil)
 		if err := s.sender.Send(ctx, toEmail, subject, htmlBody, textBody, sendOpts); err != nil {
+			slog.Error("email send failed", "to", toEmail, "err", err)
 			errs = append(errs, fmt.Sprintf("send to %s: %v", toEmail, err))
 			continue
 		}
+		slog.Info("email sent successfully", "to", toEmail)
 		sentCount++
 	}
 
