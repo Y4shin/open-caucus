@@ -34,3 +34,6 @@ UPDATE meetings SET moderator_id = ? WHERE id = ?;
 
 -- name: SetMeetingDatetime :exec
 UPDATE meetings SET start_at = ?, end_at = ? WHERE id = ?;
+
+-- name: UpdateMeetingDetails :exec
+UPDATE meetings SET name = ?, description = ?, start_at = ?, end_at = ? WHERE id = ?;

@@ -3,7 +3,7 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
 	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
-	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
+	import DateRangeTimePicker from '$lib/components/ui/DateRangeTimePicker.svelte';
 	import { agendaClient, committeeClient, moderationClient } from '$lib/api/index.js';
 	import type { MemberRecord } from '$lib/gen/conference/committees/v1/committees_pb.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
@@ -255,19 +255,12 @@
 					<input class="input input-bordered input-sm w-full" id="wizard-desc" bind:value={meetingDescription} />
 				</div>
 				<AppSwitch bind:checked={signupOpen} label={m.committee_signup_label()} />
-				<div class="grid grid-cols-2 gap-3">
-					<DateTimePicker
-						bind:value={meetingStartAt}
-						label={m.wizard_start_at_label()}
-						id="wizard-start"
-					/>
-					<DateTimePicker
-						bind:value={meetingEndAt}
-						label={m.wizard_end_at_label()}
-						id="wizard-end"
-						minValue={meetingStartAt}
-					/>
-				</div>
+				<DateRangeTimePicker
+					bind:startValue={meetingStartAt}
+					bind:endValue={meetingEndAt}
+					startLabel={m.wizard_start_at_label()}
+					endLabel={m.wizard_end_at_label()}
+				/>
 			</div>
 		{:else if step === 2}
 			<div class="space-y-3">

@@ -506,6 +506,134 @@ func (x *CreateMeetingResponse) GetMeeting() *v1.MeetingReference {
 	return nil
 }
 
+type UpdateMeetingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
+	MeetingId     string                 `protobuf:"bytes,2,opt,name=meeting_id,json=meetingId,proto3" json:"meeting_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	StartAt       *string                `protobuf:"bytes,5,opt,name=start_at,json=startAt,proto3,oneof" json:"start_at,omitempty"` // ISO 8601 / RFC 3339 in UTC; null clears
+	EndAt         *string                `protobuf:"bytes,6,opt,name=end_at,json=endAt,proto3,oneof" json:"end_at,omitempty"`       // ISO 8601 / RFC 3339 in UTC; null clears
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMeetingRequest) Reset() {
+	*x = UpdateMeetingRequest{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMeetingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMeetingRequest) ProtoMessage() {}
+
+func (x *UpdateMeetingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMeetingRequest.ProtoReflect.Descriptor instead.
+func (*UpdateMeetingRequest) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *UpdateMeetingRequest) GetCommitteeSlug() string {
+	if x != nil {
+		return x.CommitteeSlug
+	}
+	return ""
+}
+
+func (x *UpdateMeetingRequest) GetMeetingId() string {
+	if x != nil {
+		return x.MeetingId
+	}
+	return ""
+}
+
+func (x *UpdateMeetingRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdateMeetingRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *UpdateMeetingRequest) GetStartAt() string {
+	if x != nil && x.StartAt != nil {
+		return *x.StartAt
+	}
+	return ""
+}
+
+func (x *UpdateMeetingRequest) GetEndAt() string {
+	if x != nil && x.EndAt != nil {
+		return *x.EndAt
+	}
+	return ""
+}
+
+type UpdateMeetingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Meeting       *v1.MeetingReference   `protobuf:"bytes,1,opt,name=meeting,proto3" json:"meeting,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMeetingResponse) Reset() {
+	*x = UpdateMeetingResponse{}
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMeetingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMeetingResponse) ProtoMessage() {}
+
+func (x *UpdateMeetingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMeetingResponse.ProtoReflect.Descriptor instead.
+func (*UpdateMeetingResponse) Descriptor() ([]byte, []int) {
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *UpdateMeetingResponse) GetMeeting() *v1.MeetingReference {
+	if x != nil {
+		return x.Meeting
+	}
+	return nil
+}
+
 type DeleteMeetingRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CommitteeSlug string                 `protobuf:"bytes,1,opt,name=committee_slug,json=committeeSlug,proto3" json:"committee_slug,omitempty"`
@@ -516,7 +644,7 @@ type DeleteMeetingRequest struct {
 
 func (x *DeleteMeetingRequest) Reset() {
 	*x = DeleteMeetingRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[9]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -528,7 +656,7 @@ func (x *DeleteMeetingRequest) String() string {
 func (*DeleteMeetingRequest) ProtoMessage() {}
 
 func (x *DeleteMeetingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[9]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -541,7 +669,7 @@ func (x *DeleteMeetingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteMeetingRequest.ProtoReflect.Descriptor instead.
 func (*DeleteMeetingRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{9}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeleteMeetingRequest) GetCommitteeSlug() string {
@@ -568,7 +696,7 @@ type DeleteMeetingResponse struct {
 
 func (x *DeleteMeetingResponse) Reset() {
 	*x = DeleteMeetingResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[10]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -580,7 +708,7 @@ func (x *DeleteMeetingResponse) String() string {
 func (*DeleteMeetingResponse) ProtoMessage() {}
 
 func (x *DeleteMeetingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[10]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -593,7 +721,7 @@ func (x *DeleteMeetingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteMeetingResponse.ProtoReflect.Descriptor instead.
 func (*DeleteMeetingResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{10}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DeleteMeetingResponse) GetMeetingId() string {
@@ -620,7 +748,7 @@ type ToggleMeetingActiveRequest struct {
 
 func (x *ToggleMeetingActiveRequest) Reset() {
 	*x = ToggleMeetingActiveRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[11]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -632,7 +760,7 @@ func (x *ToggleMeetingActiveRequest) String() string {
 func (*ToggleMeetingActiveRequest) ProtoMessage() {}
 
 func (x *ToggleMeetingActiveRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[11]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -645,7 +773,7 @@ func (x *ToggleMeetingActiveRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToggleMeetingActiveRequest.ProtoReflect.Descriptor instead.
 func (*ToggleMeetingActiveRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{11}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ToggleMeetingActiveRequest) GetCommitteeSlug() string {
@@ -672,7 +800,7 @@ type ToggleMeetingActiveResponse struct {
 
 func (x *ToggleMeetingActiveResponse) Reset() {
 	*x = ToggleMeetingActiveResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[12]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -684,7 +812,7 @@ func (x *ToggleMeetingActiveResponse) String() string {
 func (*ToggleMeetingActiveResponse) ProtoMessage() {}
 
 func (x *ToggleMeetingActiveResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[12]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -697,7 +825,7 @@ func (x *ToggleMeetingActiveResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ToggleMeetingActiveResponse.ProtoReflect.Descriptor instead.
 func (*ToggleMeetingActiveResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{12}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ToggleMeetingActiveResponse) GetMeetingId() string {
@@ -730,7 +858,7 @@ type MemberRecord struct {
 
 func (x *MemberRecord) Reset() {
 	*x = MemberRecord{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[13]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -742,7 +870,7 @@ func (x *MemberRecord) String() string {
 func (*MemberRecord) ProtoMessage() {}
 
 func (x *MemberRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[13]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -755,7 +883,7 @@ func (x *MemberRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberRecord.ProtoReflect.Descriptor instead.
 func (*MemberRecord) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{13}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *MemberRecord) GetUserId() string {
@@ -823,7 +951,7 @@ type ListCommitteeMembersRequest struct {
 
 func (x *ListCommitteeMembersRequest) Reset() {
 	*x = ListCommitteeMembersRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[14]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -835,7 +963,7 @@ func (x *ListCommitteeMembersRequest) String() string {
 func (*ListCommitteeMembersRequest) ProtoMessage() {}
 
 func (x *ListCommitteeMembersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[14]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -848,7 +976,7 @@ func (x *ListCommitteeMembersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitteeMembersRequest.ProtoReflect.Descriptor instead.
 func (*ListCommitteeMembersRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{14}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListCommitteeMembersRequest) GetCommitteeSlug() string {
@@ -867,7 +995,7 @@ type ListCommitteeMembersResponse struct {
 
 func (x *ListCommitteeMembersResponse) Reset() {
 	*x = ListCommitteeMembersResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[15]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -879,7 +1007,7 @@ func (x *ListCommitteeMembersResponse) String() string {
 func (*ListCommitteeMembersResponse) ProtoMessage() {}
 
 func (x *ListCommitteeMembersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[15]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -892,7 +1020,7 @@ func (x *ListCommitteeMembersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCommitteeMembersResponse.ProtoReflect.Descriptor instead.
 func (*ListCommitteeMembersResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{15}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListCommitteeMembersResponse) GetMembers() []*MemberRecord {
@@ -913,7 +1041,7 @@ type AssignableAccount struct {
 
 func (x *AssignableAccount) Reset() {
 	*x = AssignableAccount{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[16]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -925,7 +1053,7 @@ func (x *AssignableAccount) String() string {
 func (*AssignableAccount) ProtoMessage() {}
 
 func (x *AssignableAccount) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[16]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -938,7 +1066,7 @@ func (x *AssignableAccount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignableAccount.ProtoReflect.Descriptor instead.
 func (*AssignableAccount) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{16}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *AssignableAccount) GetAccountId() string {
@@ -971,7 +1099,7 @@ type ListAssignableAccountsRequest struct {
 
 func (x *ListAssignableAccountsRequest) Reset() {
 	*x = ListAssignableAccountsRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[17]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -983,7 +1111,7 @@ func (x *ListAssignableAccountsRequest) String() string {
 func (*ListAssignableAccountsRequest) ProtoMessage() {}
 
 func (x *ListAssignableAccountsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[17]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -996,7 +1124,7 @@ func (x *ListAssignableAccountsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAssignableAccountsRequest.ProtoReflect.Descriptor instead.
 func (*ListAssignableAccountsRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{17}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListAssignableAccountsRequest) GetCommitteeSlug() string {
@@ -1015,7 +1143,7 @@ type ListAssignableAccountsResponse struct {
 
 func (x *ListAssignableAccountsResponse) Reset() {
 	*x = ListAssignableAccountsResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[18]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1027,7 +1155,7 @@ func (x *ListAssignableAccountsResponse) String() string {
 func (*ListAssignableAccountsResponse) ProtoMessage() {}
 
 func (x *ListAssignableAccountsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[18]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1040,7 +1168,7 @@ func (x *ListAssignableAccountsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAssignableAccountsResponse.ProtoReflect.Descriptor instead.
 func (*ListAssignableAccountsResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{18}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListAssignableAccountsResponse) GetAccounts() []*AssignableAccount {
@@ -1063,7 +1191,7 @@ type AddMemberByEmailRequest struct {
 
 func (x *AddMemberByEmailRequest) Reset() {
 	*x = AddMemberByEmailRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[19]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1075,7 +1203,7 @@ func (x *AddMemberByEmailRequest) String() string {
 func (*AddMemberByEmailRequest) ProtoMessage() {}
 
 func (x *AddMemberByEmailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[19]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1088,7 +1216,7 @@ func (x *AddMemberByEmailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddMemberByEmailRequest.ProtoReflect.Descriptor instead.
 func (*AddMemberByEmailRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{19}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AddMemberByEmailRequest) GetCommitteeSlug() string {
@@ -1135,7 +1263,7 @@ type AddMemberByEmailResponse struct {
 
 func (x *AddMemberByEmailResponse) Reset() {
 	*x = AddMemberByEmailResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[20]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1147,7 +1275,7 @@ func (x *AddMemberByEmailResponse) String() string {
 func (*AddMemberByEmailResponse) ProtoMessage() {}
 
 func (x *AddMemberByEmailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[20]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1160,7 +1288,7 @@ func (x *AddMemberByEmailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddMemberByEmailResponse.ProtoReflect.Descriptor instead.
 func (*AddMemberByEmailResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{20}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *AddMemberByEmailResponse) GetMember() *MemberRecord {
@@ -1182,7 +1310,7 @@ type CommitteeAssignAccountRequest struct {
 
 func (x *CommitteeAssignAccountRequest) Reset() {
 	*x = CommitteeAssignAccountRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[21]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1194,7 +1322,7 @@ func (x *CommitteeAssignAccountRequest) String() string {
 func (*CommitteeAssignAccountRequest) ProtoMessage() {}
 
 func (x *CommitteeAssignAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[21]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1207,7 +1335,7 @@ func (x *CommitteeAssignAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitteeAssignAccountRequest.ProtoReflect.Descriptor instead.
 func (*CommitteeAssignAccountRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{21}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CommitteeAssignAccountRequest) GetCommitteeSlug() string {
@@ -1247,7 +1375,7 @@ type CommitteeAssignAccountResponse struct {
 
 func (x *CommitteeAssignAccountResponse) Reset() {
 	*x = CommitteeAssignAccountResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[22]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1259,7 +1387,7 @@ func (x *CommitteeAssignAccountResponse) String() string {
 func (*CommitteeAssignAccountResponse) ProtoMessage() {}
 
 func (x *CommitteeAssignAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[22]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1272,7 +1400,7 @@ func (x *CommitteeAssignAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitteeAssignAccountResponse.ProtoReflect.Descriptor instead.
 func (*CommitteeAssignAccountResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{22}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CommitteeAssignAccountResponse) GetMember() *MemberRecord {
@@ -1294,7 +1422,7 @@ type UpdateMemberRequest struct {
 
 func (x *UpdateMemberRequest) Reset() {
 	*x = UpdateMemberRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[23]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1306,7 +1434,7 @@ func (x *UpdateMemberRequest) String() string {
 func (*UpdateMemberRequest) ProtoMessage() {}
 
 func (x *UpdateMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[23]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1319,7 +1447,7 @@ func (x *UpdateMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateMemberRequest.ProtoReflect.Descriptor instead.
 func (*UpdateMemberRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{23}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UpdateMemberRequest) GetCommitteeSlug() string {
@@ -1359,7 +1487,7 @@ type UpdateMemberResponse struct {
 
 func (x *UpdateMemberResponse) Reset() {
 	*x = UpdateMemberResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[24]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1371,7 +1499,7 @@ func (x *UpdateMemberResponse) String() string {
 func (*UpdateMemberResponse) ProtoMessage() {}
 
 func (x *UpdateMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[24]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1384,7 +1512,7 @@ func (x *UpdateMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateMemberResponse.ProtoReflect.Descriptor instead.
 func (*UpdateMemberResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{24}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UpdateMemberResponse) GetMember() *MemberRecord {
@@ -1404,7 +1532,7 @@ type RemoveMemberRequest struct {
 
 func (x *RemoveMemberRequest) Reset() {
 	*x = RemoveMemberRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[25]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1416,7 +1544,7 @@ func (x *RemoveMemberRequest) String() string {
 func (*RemoveMemberRequest) ProtoMessage() {}
 
 func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[25]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1429,7 +1557,7 @@ func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveMemberRequest.ProtoReflect.Descriptor instead.
 func (*RemoveMemberRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{25}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *RemoveMemberRequest) GetCommitteeSlug() string {
@@ -1454,7 +1582,7 @@ type RemoveMemberResponse struct {
 
 func (x *RemoveMemberResponse) Reset() {
 	*x = RemoveMemberResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[26]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1466,7 +1594,7 @@ func (x *RemoveMemberResponse) String() string {
 func (*RemoveMemberResponse) ProtoMessage() {}
 
 func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[26]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1479,7 +1607,7 @@ func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveMemberResponse.ProtoReflect.Descriptor instead.
 func (*RemoveMemberResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{26}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{28}
 }
 
 type SendInviteEmailsRequest struct {
@@ -1494,7 +1622,7 @@ type SendInviteEmailsRequest struct {
 
 func (x *SendInviteEmailsRequest) Reset() {
 	*x = SendInviteEmailsRequest{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[27]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1506,7 +1634,7 @@ func (x *SendInviteEmailsRequest) String() string {
 func (*SendInviteEmailsRequest) ProtoMessage() {}
 
 func (x *SendInviteEmailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[27]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1519,7 +1647,7 @@ func (x *SendInviteEmailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendInviteEmailsRequest.ProtoReflect.Descriptor instead.
 func (*SendInviteEmailsRequest) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{27}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SendInviteEmailsRequest) GetCommitteeSlug() string {
@@ -1561,7 +1689,7 @@ type SendInviteEmailsResponse struct {
 
 func (x *SendInviteEmailsResponse) Reset() {
 	*x = SendInviteEmailsResponse{}
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[28]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1573,7 +1701,7 @@ func (x *SendInviteEmailsResponse) String() string {
 func (*SendInviteEmailsResponse) ProtoMessage() {}
 
 func (x *SendInviteEmailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_conference_committees_v1_committees_proto_msgTypes[28]
+	mi := &file_conference_committees_v1_committees_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1586,7 +1714,7 @@ func (x *SendInviteEmailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendInviteEmailsResponse.ProtoReflect.Descriptor instead.
 func (*SendInviteEmailsResponse) Descriptor() ([]byte, []int) {
-	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{28}
+	return file_conference_committees_v1_committees_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *SendInviteEmailsResponse) GetSentCount() int32 {
@@ -1647,6 +1775,18 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\t_start_atB\t\n" +
 	"\a_end_at\"Y\n" +
 	"\x15CreateMeetingResponse\x12@\n" +
+	"\ameeting\x18\x01 \x01(\v2&.conference.common.v1.MeetingReferenceR\ameeting\"\xe6\x01\n" +
+	"\x14UpdateMeetingRequest\x12%\n" +
+	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
+	"\n" +
+	"meeting_id\x18\x02 \x01(\tR\tmeetingId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x1e\n" +
+	"\bstart_at\x18\x05 \x01(\tH\x00R\astartAt\x88\x01\x01\x12\x1a\n" +
+	"\x06end_at\x18\x06 \x01(\tH\x01R\x05endAt\x88\x01\x01B\v\n" +
+	"\t_start_atB\t\n" +
+	"\a_end_at\"Y\n" +
+	"\x15UpdateMeetingResponse\x12@\n" +
 	"\ameeting\x18\x01 \x01(\v2&.conference.common.v1.MeetingReferenceR\ameeting\"\\\n" +
 	"\x14DeleteMeetingRequest\x12%\n" +
 	"\x0ecommittee_slug\x18\x01 \x01(\tR\rcommitteeSlug\x12\x1d\n" +
@@ -1727,11 +1867,12 @@ const file_conference_committees_v1_committees_proto_rawDesc = "" +
 	"\n" +
 	"sent_count\x18\x01 \x01(\x05R\tsentCount\x12#\n" +
 	"\rskipped_count\x18\x02 \x01(\x05R\fskippedCount\x12\x16\n" +
-	"\x06errors\x18\x03 \x03(\tR\x06errors2\xf8\v\n" +
+	"\x06errors\x18\x03 \x03(\tR\x06errors2\xea\f\n" +
 	"\x10CommitteeService\x12y\n" +
 	"\x10ListMyCommittees\x121.conference.committees.v1.ListMyCommitteesRequest\x1a2.conference.committees.v1.ListMyCommitteesResponse\x12\x85\x01\n" +
 	"\x14GetCommitteeOverview\x125.conference.committees.v1.GetCommitteeOverviewRequest\x1a6.conference.committees.v1.GetCommitteeOverviewResponse\x12p\n" +
 	"\rCreateMeeting\x12..conference.committees.v1.CreateMeetingRequest\x1a/.conference.committees.v1.CreateMeetingResponse\x12p\n" +
+	"\rUpdateMeeting\x12..conference.committees.v1.UpdateMeetingRequest\x1a/.conference.committees.v1.UpdateMeetingResponse\x12p\n" +
 	"\rDeleteMeeting\x12..conference.committees.v1.DeleteMeetingRequest\x1a/.conference.committees.v1.DeleteMeetingResponse\x12\x82\x01\n" +
 	"\x13ToggleMeetingActive\x124.conference.committees.v1.ToggleMeetingActiveRequest\x1a5.conference.committees.v1.ToggleMeetingActiveResponse\x12\x85\x01\n" +
 	"\x14ListCommitteeMembers\x125.conference.committees.v1.ListCommitteeMembersRequest\x1a6.conference.committees.v1.ListCommitteeMembersResponse\x12\x8b\x01\n" +
@@ -1754,7 +1895,7 @@ func file_conference_committees_v1_committees_proto_rawDescGZIP() []byte {
 	return file_conference_committees_v1_committees_proto_rawDescData
 }
 
-var file_conference_committees_v1_committees_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_conference_committees_v1_committees_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_conference_committees_v1_committees_proto_goTypes = []any{
 	(*CommitteeListItem)(nil),              // 0: conference.committees.v1.CommitteeListItem
 	(*CommitteeOverviewMeeting)(nil),       // 1: conference.committees.v1.CommitteeOverviewMeeting
@@ -1765,73 +1906,78 @@ var file_conference_committees_v1_committees_proto_goTypes = []any{
 	(*GetCommitteeOverviewResponse)(nil),   // 6: conference.committees.v1.GetCommitteeOverviewResponse
 	(*CreateMeetingRequest)(nil),           // 7: conference.committees.v1.CreateMeetingRequest
 	(*CreateMeetingResponse)(nil),          // 8: conference.committees.v1.CreateMeetingResponse
-	(*DeleteMeetingRequest)(nil),           // 9: conference.committees.v1.DeleteMeetingRequest
-	(*DeleteMeetingResponse)(nil),          // 10: conference.committees.v1.DeleteMeetingResponse
-	(*ToggleMeetingActiveRequest)(nil),     // 11: conference.committees.v1.ToggleMeetingActiveRequest
-	(*ToggleMeetingActiveResponse)(nil),    // 12: conference.committees.v1.ToggleMeetingActiveResponse
-	(*MemberRecord)(nil),                   // 13: conference.committees.v1.MemberRecord
-	(*ListCommitteeMembersRequest)(nil),    // 14: conference.committees.v1.ListCommitteeMembersRequest
-	(*ListCommitteeMembersResponse)(nil),   // 15: conference.committees.v1.ListCommitteeMembersResponse
-	(*AssignableAccount)(nil),              // 16: conference.committees.v1.AssignableAccount
-	(*ListAssignableAccountsRequest)(nil),  // 17: conference.committees.v1.ListAssignableAccountsRequest
-	(*ListAssignableAccountsResponse)(nil), // 18: conference.committees.v1.ListAssignableAccountsResponse
-	(*AddMemberByEmailRequest)(nil),        // 19: conference.committees.v1.AddMemberByEmailRequest
-	(*AddMemberByEmailResponse)(nil),       // 20: conference.committees.v1.AddMemberByEmailResponse
-	(*CommitteeAssignAccountRequest)(nil),  // 21: conference.committees.v1.CommitteeAssignAccountRequest
-	(*CommitteeAssignAccountResponse)(nil), // 22: conference.committees.v1.CommitteeAssignAccountResponse
-	(*UpdateMemberRequest)(nil),            // 23: conference.committees.v1.UpdateMemberRequest
-	(*UpdateMemberResponse)(nil),           // 24: conference.committees.v1.UpdateMemberResponse
-	(*RemoveMemberRequest)(nil),            // 25: conference.committees.v1.RemoveMemberRequest
-	(*RemoveMemberResponse)(nil),           // 26: conference.committees.v1.RemoveMemberResponse
-	(*SendInviteEmailsRequest)(nil),        // 27: conference.committees.v1.SendInviteEmailsRequest
-	(*SendInviteEmailsResponse)(nil),       // 28: conference.committees.v1.SendInviteEmailsResponse
-	(*v1.CommitteeReference)(nil),          // 29: conference.common.v1.CommitteeReference
-	(*v1.MeetingReference)(nil),            // 30: conference.common.v1.MeetingReference
-	(*v1.Capability)(nil),                  // 31: conference.common.v1.Capability
+	(*UpdateMeetingRequest)(nil),           // 9: conference.committees.v1.UpdateMeetingRequest
+	(*UpdateMeetingResponse)(nil),          // 10: conference.committees.v1.UpdateMeetingResponse
+	(*DeleteMeetingRequest)(nil),           // 11: conference.committees.v1.DeleteMeetingRequest
+	(*DeleteMeetingResponse)(nil),          // 12: conference.committees.v1.DeleteMeetingResponse
+	(*ToggleMeetingActiveRequest)(nil),     // 13: conference.committees.v1.ToggleMeetingActiveRequest
+	(*ToggleMeetingActiveResponse)(nil),    // 14: conference.committees.v1.ToggleMeetingActiveResponse
+	(*MemberRecord)(nil),                   // 15: conference.committees.v1.MemberRecord
+	(*ListCommitteeMembersRequest)(nil),    // 16: conference.committees.v1.ListCommitteeMembersRequest
+	(*ListCommitteeMembersResponse)(nil),   // 17: conference.committees.v1.ListCommitteeMembersResponse
+	(*AssignableAccount)(nil),              // 18: conference.committees.v1.AssignableAccount
+	(*ListAssignableAccountsRequest)(nil),  // 19: conference.committees.v1.ListAssignableAccountsRequest
+	(*ListAssignableAccountsResponse)(nil), // 20: conference.committees.v1.ListAssignableAccountsResponse
+	(*AddMemberByEmailRequest)(nil),        // 21: conference.committees.v1.AddMemberByEmailRequest
+	(*AddMemberByEmailResponse)(nil),       // 22: conference.committees.v1.AddMemberByEmailResponse
+	(*CommitteeAssignAccountRequest)(nil),  // 23: conference.committees.v1.CommitteeAssignAccountRequest
+	(*CommitteeAssignAccountResponse)(nil), // 24: conference.committees.v1.CommitteeAssignAccountResponse
+	(*UpdateMemberRequest)(nil),            // 25: conference.committees.v1.UpdateMemberRequest
+	(*UpdateMemberResponse)(nil),           // 26: conference.committees.v1.UpdateMemberResponse
+	(*RemoveMemberRequest)(nil),            // 27: conference.committees.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),           // 28: conference.committees.v1.RemoveMemberResponse
+	(*SendInviteEmailsRequest)(nil),        // 29: conference.committees.v1.SendInviteEmailsRequest
+	(*SendInviteEmailsResponse)(nil),       // 30: conference.committees.v1.SendInviteEmailsResponse
+	(*v1.CommitteeReference)(nil),          // 31: conference.common.v1.CommitteeReference
+	(*v1.MeetingReference)(nil),            // 32: conference.common.v1.MeetingReference
+	(*v1.Capability)(nil),                  // 33: conference.common.v1.Capability
 }
 var file_conference_committees_v1_committees_proto_depIdxs = []int32{
-	29, // 0: conference.committees.v1.CommitteeListItem.committee:type_name -> conference.common.v1.CommitteeReference
-	30, // 1: conference.committees.v1.CommitteeOverviewMeeting.meeting:type_name -> conference.common.v1.MeetingReference
-	29, // 2: conference.committees.v1.CommitteeOverview.committee:type_name -> conference.common.v1.CommitteeReference
+	31, // 0: conference.committees.v1.CommitteeListItem.committee:type_name -> conference.common.v1.CommitteeReference
+	32, // 1: conference.committees.v1.CommitteeOverviewMeeting.meeting:type_name -> conference.common.v1.MeetingReference
+	31, // 2: conference.committees.v1.CommitteeOverview.committee:type_name -> conference.common.v1.CommitteeReference
 	1,  // 3: conference.committees.v1.CommitteeOverview.meetings:type_name -> conference.committees.v1.CommitteeOverviewMeeting
-	31, // 4: conference.committees.v1.CommitteeOverview.capabilities:type_name -> conference.common.v1.Capability
+	33, // 4: conference.committees.v1.CommitteeOverview.capabilities:type_name -> conference.common.v1.Capability
 	0,  // 5: conference.committees.v1.ListMyCommitteesResponse.committees:type_name -> conference.committees.v1.CommitteeListItem
 	2,  // 6: conference.committees.v1.GetCommitteeOverviewResponse.overview:type_name -> conference.committees.v1.CommitteeOverview
-	30, // 7: conference.committees.v1.CreateMeetingResponse.meeting:type_name -> conference.common.v1.MeetingReference
-	13, // 8: conference.committees.v1.ListCommitteeMembersResponse.members:type_name -> conference.committees.v1.MemberRecord
-	16, // 9: conference.committees.v1.ListAssignableAccountsResponse.accounts:type_name -> conference.committees.v1.AssignableAccount
-	13, // 10: conference.committees.v1.AddMemberByEmailResponse.member:type_name -> conference.committees.v1.MemberRecord
-	13, // 11: conference.committees.v1.CommitteeAssignAccountResponse.member:type_name -> conference.committees.v1.MemberRecord
-	13, // 12: conference.committees.v1.UpdateMemberResponse.member:type_name -> conference.committees.v1.MemberRecord
-	3,  // 13: conference.committees.v1.CommitteeService.ListMyCommittees:input_type -> conference.committees.v1.ListMyCommitteesRequest
-	5,  // 14: conference.committees.v1.CommitteeService.GetCommitteeOverview:input_type -> conference.committees.v1.GetCommitteeOverviewRequest
-	7,  // 15: conference.committees.v1.CommitteeService.CreateMeeting:input_type -> conference.committees.v1.CreateMeetingRequest
-	9,  // 16: conference.committees.v1.CommitteeService.DeleteMeeting:input_type -> conference.committees.v1.DeleteMeetingRequest
-	11, // 17: conference.committees.v1.CommitteeService.ToggleMeetingActive:input_type -> conference.committees.v1.ToggleMeetingActiveRequest
-	14, // 18: conference.committees.v1.CommitteeService.ListCommitteeMembers:input_type -> conference.committees.v1.ListCommitteeMembersRequest
-	17, // 19: conference.committees.v1.CommitteeService.ListAssignableAccounts:input_type -> conference.committees.v1.ListAssignableAccountsRequest
-	19, // 20: conference.committees.v1.CommitteeService.AddMemberByEmail:input_type -> conference.committees.v1.AddMemberByEmailRequest
-	21, // 21: conference.committees.v1.CommitteeService.AssignAccountToCommittee:input_type -> conference.committees.v1.CommitteeAssignAccountRequest
-	23, // 22: conference.committees.v1.CommitteeService.UpdateMember:input_type -> conference.committees.v1.UpdateMemberRequest
-	25, // 23: conference.committees.v1.CommitteeService.RemoveMember:input_type -> conference.committees.v1.RemoveMemberRequest
-	27, // 24: conference.committees.v1.CommitteeService.SendInviteEmails:input_type -> conference.committees.v1.SendInviteEmailsRequest
-	4,  // 25: conference.committees.v1.CommitteeService.ListMyCommittees:output_type -> conference.committees.v1.ListMyCommitteesResponse
-	6,  // 26: conference.committees.v1.CommitteeService.GetCommitteeOverview:output_type -> conference.committees.v1.GetCommitteeOverviewResponse
-	8,  // 27: conference.committees.v1.CommitteeService.CreateMeeting:output_type -> conference.committees.v1.CreateMeetingResponse
-	10, // 28: conference.committees.v1.CommitteeService.DeleteMeeting:output_type -> conference.committees.v1.DeleteMeetingResponse
-	12, // 29: conference.committees.v1.CommitteeService.ToggleMeetingActive:output_type -> conference.committees.v1.ToggleMeetingActiveResponse
-	15, // 30: conference.committees.v1.CommitteeService.ListCommitteeMembers:output_type -> conference.committees.v1.ListCommitteeMembersResponse
-	18, // 31: conference.committees.v1.CommitteeService.ListAssignableAccounts:output_type -> conference.committees.v1.ListAssignableAccountsResponse
-	20, // 32: conference.committees.v1.CommitteeService.AddMemberByEmail:output_type -> conference.committees.v1.AddMemberByEmailResponse
-	22, // 33: conference.committees.v1.CommitteeService.AssignAccountToCommittee:output_type -> conference.committees.v1.CommitteeAssignAccountResponse
-	24, // 34: conference.committees.v1.CommitteeService.UpdateMember:output_type -> conference.committees.v1.UpdateMemberResponse
-	26, // 35: conference.committees.v1.CommitteeService.RemoveMember:output_type -> conference.committees.v1.RemoveMemberResponse
-	28, // 36: conference.committees.v1.CommitteeService.SendInviteEmails:output_type -> conference.committees.v1.SendInviteEmailsResponse
-	25, // [25:37] is the sub-list for method output_type
-	13, // [13:25] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	32, // 7: conference.committees.v1.CreateMeetingResponse.meeting:type_name -> conference.common.v1.MeetingReference
+	32, // 8: conference.committees.v1.UpdateMeetingResponse.meeting:type_name -> conference.common.v1.MeetingReference
+	15, // 9: conference.committees.v1.ListCommitteeMembersResponse.members:type_name -> conference.committees.v1.MemberRecord
+	18, // 10: conference.committees.v1.ListAssignableAccountsResponse.accounts:type_name -> conference.committees.v1.AssignableAccount
+	15, // 11: conference.committees.v1.AddMemberByEmailResponse.member:type_name -> conference.committees.v1.MemberRecord
+	15, // 12: conference.committees.v1.CommitteeAssignAccountResponse.member:type_name -> conference.committees.v1.MemberRecord
+	15, // 13: conference.committees.v1.UpdateMemberResponse.member:type_name -> conference.committees.v1.MemberRecord
+	3,  // 14: conference.committees.v1.CommitteeService.ListMyCommittees:input_type -> conference.committees.v1.ListMyCommitteesRequest
+	5,  // 15: conference.committees.v1.CommitteeService.GetCommitteeOverview:input_type -> conference.committees.v1.GetCommitteeOverviewRequest
+	7,  // 16: conference.committees.v1.CommitteeService.CreateMeeting:input_type -> conference.committees.v1.CreateMeetingRequest
+	9,  // 17: conference.committees.v1.CommitteeService.UpdateMeeting:input_type -> conference.committees.v1.UpdateMeetingRequest
+	11, // 18: conference.committees.v1.CommitteeService.DeleteMeeting:input_type -> conference.committees.v1.DeleteMeetingRequest
+	13, // 19: conference.committees.v1.CommitteeService.ToggleMeetingActive:input_type -> conference.committees.v1.ToggleMeetingActiveRequest
+	16, // 20: conference.committees.v1.CommitteeService.ListCommitteeMembers:input_type -> conference.committees.v1.ListCommitteeMembersRequest
+	19, // 21: conference.committees.v1.CommitteeService.ListAssignableAccounts:input_type -> conference.committees.v1.ListAssignableAccountsRequest
+	21, // 22: conference.committees.v1.CommitteeService.AddMemberByEmail:input_type -> conference.committees.v1.AddMemberByEmailRequest
+	23, // 23: conference.committees.v1.CommitteeService.AssignAccountToCommittee:input_type -> conference.committees.v1.CommitteeAssignAccountRequest
+	25, // 24: conference.committees.v1.CommitteeService.UpdateMember:input_type -> conference.committees.v1.UpdateMemberRequest
+	27, // 25: conference.committees.v1.CommitteeService.RemoveMember:input_type -> conference.committees.v1.RemoveMemberRequest
+	29, // 26: conference.committees.v1.CommitteeService.SendInviteEmails:input_type -> conference.committees.v1.SendInviteEmailsRequest
+	4,  // 27: conference.committees.v1.CommitteeService.ListMyCommittees:output_type -> conference.committees.v1.ListMyCommitteesResponse
+	6,  // 28: conference.committees.v1.CommitteeService.GetCommitteeOverview:output_type -> conference.committees.v1.GetCommitteeOverviewResponse
+	8,  // 29: conference.committees.v1.CommitteeService.CreateMeeting:output_type -> conference.committees.v1.CreateMeetingResponse
+	10, // 30: conference.committees.v1.CommitteeService.UpdateMeeting:output_type -> conference.committees.v1.UpdateMeetingResponse
+	12, // 31: conference.committees.v1.CommitteeService.DeleteMeeting:output_type -> conference.committees.v1.DeleteMeetingResponse
+	14, // 32: conference.committees.v1.CommitteeService.ToggleMeetingActive:output_type -> conference.committees.v1.ToggleMeetingActiveResponse
+	17, // 33: conference.committees.v1.CommitteeService.ListCommitteeMembers:output_type -> conference.committees.v1.ListCommitteeMembersResponse
+	20, // 34: conference.committees.v1.CommitteeService.ListAssignableAccounts:output_type -> conference.committees.v1.ListAssignableAccountsResponse
+	22, // 35: conference.committees.v1.CommitteeService.AddMemberByEmail:output_type -> conference.committees.v1.AddMemberByEmailResponse
+	24, // 36: conference.committees.v1.CommitteeService.AssignAccountToCommittee:output_type -> conference.committees.v1.CommitteeAssignAccountResponse
+	26, // 37: conference.committees.v1.CommitteeService.UpdateMember:output_type -> conference.committees.v1.UpdateMemberResponse
+	28, // 38: conference.committees.v1.CommitteeService.RemoveMember:output_type -> conference.committees.v1.RemoveMemberResponse
+	30, // 39: conference.committees.v1.CommitteeService.SendInviteEmails:output_type -> conference.committees.v1.SendInviteEmailsResponse
+	27, // [27:40] is the sub-list for method output_type
+	14, // [14:27] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_conference_committees_v1_committees_proto_init() }
@@ -1840,14 +1986,15 @@ func file_conference_committees_v1_committees_proto_init() {
 		return
 	}
 	file_conference_committees_v1_committees_proto_msgTypes[7].OneofWrappers = []any{}
-	file_conference_committees_v1_committees_proto_msgTypes[13].OneofWrappers = []any{}
+	file_conference_committees_v1_committees_proto_msgTypes[9].OneofWrappers = []any{}
+	file_conference_committees_v1_committees_proto_msgTypes[15].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_conference_committees_v1_committees_proto_rawDesc), len(file_conference_committees_v1_committees_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   29,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -546,5 +546,7 @@
 	"wizard_invites_will_not_send": "Invite emails will not be sent.",
 	"moderate_send_invites_button": "Send Invite Emails",
 	"moderate_send_invites_success": "Invite emails sent to {count} member(s).",
-	"moderate_send_invites_skipped": "{count} member(s) skipped (no contact info)."
+	"moderate_send_invites_skipped": "{count} member(s) skipped (no contact info).",
+	"committee_edit_meeting": "Edit",
+	"committee_save_meeting": "Save"
 }

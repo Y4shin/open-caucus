@@ -546,5 +546,7 @@
 	"wizard_invites_will_not_send": "Einladungs-E-Mails werden nicht versendet.",
 	"moderate_send_invites_button": "Einladungs-E-Mails senden",
 	"moderate_send_invites_success": "Einladungs-E-Mails an {count} Mitglied(er) gesendet.",
-	"moderate_send_invites_skipped": "{count} Mitglied(er) übersprungen (keine Kontaktdaten)."
+	"moderate_send_invites_skipped": "{count} Mitglied(er) übersprungen (keine Kontaktdaten).",
+	"committee_edit_meeting": "Bearbeiten",
+	"committee_save_meeting": "Speichern"
 }

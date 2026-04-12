@@ -4,6 +4,7 @@
 	import AppAlert from '$lib/components/ui/AppAlert.svelte';
 	import AppSwitch from '$lib/components/ui/AppSwitch.svelte';
 	import AppSpinner from '$lib/components/ui/AppSpinner.svelte';
+	import DateRangeTimePicker from '$lib/components/ui/DateRangeTimePicker.svelte';
 	import LegacyIcon from '$lib/components/ui/LegacyIcon.svelte';
 	import PaginationNav from '$lib/components/ui/PaginationNav.svelte';
 	import MeetingWizard from './MeetingWizard.svelte';
@@ -12,6 +13,8 @@
 	import { pageActions } from '$lib/stores/page-actions.svelte.js';
 	import { committeeClient, moderationClient } from '$lib/api/index.js';
 	import type { CommitteeOverview } from '$lib/gen/conference/committees/v1/committees_pb.js';
+	import { CalendarDateTime } from '@internationalized/date';
+	import { calendarDateTimeToUTC } from '$lib/utils/datetime.js';
 	import { createRemoteState } from '$lib/utils/remote.svelte.js';
 	import { getDisplayError } from '$lib/utils/errors.js';
 	import * as m from '$lib/paraglide/messages';
@@ -23,6 +26,51 @@
 	let localActiveMeetingId = $state<string | null>(null);
 	let signupTogglePendingMeetingId = $state('');
 	let wizardRef = $state<ReturnType<typeof MeetingWizard> | null>(null);
+
+	// Inline meeting editing
+	let editingMeetingId = $state<string | null>(null);
+	let editName = $state('');
+	let editDescription = $state('');
+	let editStartAt = $state<CalendarDateTime | undefined>(undefined);
+	let editEndAt = $state<CalendarDateTime | undefined>(undefined);
+
+	function parseISOToCalendarDateTime(iso: string | undefined): CalendarDateTime | undefined {
+		if (!iso) return undefined;
+		const d = new Date(iso);
+		if (isNaN(d.getTime())) return undefined;
+		return new CalendarDateTime(d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes());
+	}
+
+	function startEditing(meetingId: string, name: string, description: string, startAt?: string, endAt?: string) {
+		editingMeetingId = meetingId;
+		editName = name;
+		editDescription = description;
+		editStartAt = parseISOToCalendarDateTime(startAt);
+		editEndAt = parseISOToCalendarDateTime(endAt);
+	}
+
+	function cancelEditing() {
+		editingMeetingId = null;
+	}
+
+	async function saveEditing() {
+		if (!editingMeetingId || !editName.trim()) return;
+		actionError = '';
+		try {
+			await committeeClient.updateMeeting({
+				committeeSlug: slug,
+				meetingId: editingMeetingId,
+				name: editName.trim(),
+				description: editDescription.trim(),
+				startAt: editStartAt ? calendarDateTimeToUTC(editStartAt) : undefined,
+				endAt: editEndAt ? calendarDateTimeToUTC(editEndAt) : undefined
+			});
+			editingMeetingId = null;
+			await loadCommittee();
+		} catch (err) {
+			actionError = getDisplayError(err, 'Failed to update meeting.');
+		}
+	}
 
 	$effect(() => {
 		pageActions.set([], { backHref: '/home' });
@@ -138,6 +186,28 @@
 					<ul class="list rounded-box border border-base-300 bg-base-100" data-testid="committee-meeting-list">
 						{#each committeeState.data.meetings as item}
 							<li class="list-row items-center gap-3" data-testid="committee-meeting-row">
+								{#if editingMeetingId === item.meeting?.meetingId}
+									<div class="list-col-grow space-y-2">
+										<div>
+											<label class="label text-sm font-medium" for="edit-meeting-name">{m.committee_name_label()}</label>
+											<input class="input input-bordered input-sm w-full" type="text" id="edit-meeting-name" bind:value={editName} required />
+										</div>
+										<div>
+											<label class="label text-sm font-medium" for="edit-meeting-desc">{m.committee_description_label()}</label>
+											<input class="input input-bordered input-sm w-full" id="edit-meeting-desc" bind:value={editDescription} />
+										</div>
+										<DateRangeTimePicker
+											bind:startValue={editStartAt}
+											bind:endValue={editEndAt}
+											startLabel={m.wizard_start_at_label()}
+											endLabel={m.wizard_end_at_label()}
+										/>
+										<div class="flex gap-2">
+											<button type="button" class="btn btn-sm btn-primary" onclick={saveEditing}>{m.common_save()}</button>
+											<button type="button" class="btn btn-sm btn-ghost" onclick={cancelEditing}>{m.common_cancel()}</button>
+										</div>
+									</div>
+								{:else}
 								<div class="list-col-grow">
 									<div class="truncate font-medium">{item.meeting?.name}</div>
 									{#if item.meeting?.description}
@@ -162,6 +232,15 @@
 									/>
 								</div>
 								<div class="flex items-center justify-end gap-1">
+									<button
+										type="button"
+										class="btn btn-sm btn-square"
+										title={m.committee_edit_meeting()}
+										aria-label={m.committee_edit_meeting()}
+										onclick={() => startEditing(item.meeting?.meetingId ?? '', item.meeting?.name ?? '', item.meeting?.description ?? '', item.meeting?.startAt, item.meeting?.endAt)}
+									>
+										<LegacyIcon name="edit" class="h-4 w-4" />
+									</button>
 									<a
 										href={"/committee/" + slug + "/meeting/" + (item.meeting?.meetingId ?? '')}
 										class="btn btn-sm btn-square"
@@ -195,6 +274,7 @@
 										</button>
 									</form>
 								</div>
+								{/if}
 							</li>
 						{/each}
 					</ul>

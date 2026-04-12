@@ -2404,6 +2404,19 @@ func (r *Repository) SetMeetingDatetime(ctx context.Context, id int64, startAt, 
 	return nil
 }
 
+func (r *Repository) UpdateMeetingDetails(ctx context.Context, id int64, name, description string, startAt, endAt *time.Time) error {
+	if err := r.Queries.UpdateMeetingDetails(ctx, client.UpdateMeetingDetailsParams{
+		ID:          id,
+		Name:        name,
+		Description: description,
+		StartAt:     timeToNullString(startAt),
+		EndAt:       timeToNullString(endAt),
+	}); err != nil {
+		return fmt.Errorf("update meeting details: %w", err)
+	}
+	return nil
+}
+
 // SetAgendaPointQuotationOrder sets the quotation_order JSON array override for an agenda point (nil clears it).
 func (r *Repository) SetAgendaPointQuotationOrder(ctx context.Context, id int64, order *[]string) error {
 	var s sql.NullString

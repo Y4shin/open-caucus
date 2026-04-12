@@ -158,6 +158,36 @@ func (s *Service) CreateMeeting(ctx context.Context, slug, name, description str
 	}, nil
 }
 
+func (s *Service) UpdateMeeting(ctx context.Context, slug, meetingIDStr, name, description string, startAt, endAt *time.Time) (*committeesv1.UpdateMeetingResponse, error) {
+	if _, err := s.requireCommitteeManager(ctx, slug); err != nil {
+		return nil, err
+	}
+	if name == "" {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "meeting name is required")
+	}
+	if startAt != nil && endAt != nil && endAt.Before(*startAt) {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "end time must be after start time")
+	}
+
+	meetingID, err := strconv.ParseInt(meetingIDStr, 10, 64)
+	if err != nil {
+		return nil, apierrors.New(apierrors.KindInvalidArgument, "invalid meeting id")
+	}
+
+	if err := s.repo.UpdateMeetingDetails(ctx, meetingID, name, description, startAt, endAt); err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to update meeting", err)
+	}
+
+	meeting, err := s.repo.GetMeetingByID(ctx, meetingID)
+	if err != nil {
+		return nil, apierrors.Wrap(apierrors.KindInternal, "failed to load updated meeting", err)
+	}
+
+	return &committeesv1.UpdateMeetingResponse{
+		Meeting: meetingToRef(meeting, slug),
+	}, nil
+}
+
 func (s *Service) DeleteMeeting(ctx context.Context, slug, meetingIDStr string) (*committeesv1.DeleteMeetingResponse, error) {
 	if _, err := s.requireCommitteeManager(ctx, slug); err != nil {
 		return nil, err

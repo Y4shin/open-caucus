@@ -63,6 +63,16 @@ func parseOptionalUTCTime(s *string) *time.Time {
 	return &t
 }
 
+func (h *CommitteeHandler) UpdateMeeting(ctx context.Context, req *connect.Request[committeesv1.UpdateMeetingRequest]) (*connect.Response[committeesv1.UpdateMeetingResponse], error) {
+	startAt := parseOptionalUTCTime(req.Msg.StartAt)
+	endAt := parseOptionalUTCTime(req.Msg.EndAt)
+	resp, err := h.service.UpdateMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId, req.Msg.Name, req.Msg.Description, startAt, endAt)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (h *CommitteeHandler) DeleteMeeting(ctx context.Context, req *connect.Request[committeesv1.DeleteMeetingRequest]) (*connect.Response[committeesv1.DeleteMeetingResponse], error) {
 	resp, err := h.service.DeleteMeeting(ctx, req.Msg.CommitteeSlug, req.Msg.MeetingId)
 	if err != nil {

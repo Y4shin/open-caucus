@@ -221,3 +221,26 @@ func (q *Queries) SetMeetingSignupOpenWithVersion(ctx context.Context, arg SetMe
 	err := row.Scan(&version)
 	return version, err
 }
+
+const updateMeetingDetails = `-- name: UpdateMeetingDetails :exec
+UPDATE meetings SET name = ?, description = ?, start_at = ?, end_at = ? WHERE id = ?
+`
+
+type UpdateMeetingDetailsParams struct {
+	Name        string
+	Description string
+	StartAt     sql.NullString
+	EndAt       sql.NullString
+	ID          int64
+}
+
+func (q *Queries) UpdateMeetingDetails(ctx context.Context, arg UpdateMeetingDetailsParams) error {
+	_, err := q.db.ExecContext(ctx, updateMeetingDetails,
+		arg.Name,
+		arg.Description,
+		arg.StartAt,
+		arg.EndAt,
+		arg.ID,
+	)
+	return err
+}

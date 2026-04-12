@@ -42,6 +42,9 @@ const (
 	// CommitteeServiceCreateMeetingProcedure is the fully-qualified name of the CommitteeService's
 	// CreateMeeting RPC.
 	CommitteeServiceCreateMeetingProcedure = "/conference.committees.v1.CommitteeService/CreateMeeting"
+	// CommitteeServiceUpdateMeetingProcedure is the fully-qualified name of the CommitteeService's
+	// UpdateMeeting RPC.
+	CommitteeServiceUpdateMeetingProcedure = "/conference.committees.v1.CommitteeService/UpdateMeeting"
 	// CommitteeServiceDeleteMeetingProcedure is the fully-qualified name of the CommitteeService's
 	// DeleteMeeting RPC.
 	CommitteeServiceDeleteMeetingProcedure = "/conference.committees.v1.CommitteeService/DeleteMeeting"
@@ -76,6 +79,7 @@ type CommitteeServiceClient interface {
 	ListMyCommittees(context.Context, *connect.Request[v1.ListMyCommitteesRequest]) (*connect.Response[v1.ListMyCommitteesResponse], error)
 	GetCommitteeOverview(context.Context, *connect.Request[v1.GetCommitteeOverviewRequest]) (*connect.Response[v1.GetCommitteeOverviewResponse], error)
 	CreateMeeting(context.Context, *connect.Request[v1.CreateMeetingRequest]) (*connect.Response[v1.CreateMeetingResponse], error)
+	UpdateMeeting(context.Context, *connect.Request[v1.UpdateMeetingRequest]) (*connect.Response[v1.UpdateMeetingResponse], error)
 	DeleteMeeting(context.Context, *connect.Request[v1.DeleteMeetingRequest]) (*connect.Response[v1.DeleteMeetingResponse], error)
 	ToggleMeetingActive(context.Context, *connect.Request[v1.ToggleMeetingActiveRequest]) (*connect.Response[v1.ToggleMeetingActiveResponse], error)
 	// Member management (chairperson or admin)
@@ -115,6 +119,12 @@ func NewCommitteeServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			httpClient,
 			baseURL+CommitteeServiceCreateMeetingProcedure,
 			connect.WithSchema(committeeServiceMethods.ByName("CreateMeeting")),
+			connect.WithClientOptions(opts...),
+		),
+		updateMeeting: connect.NewClient[v1.UpdateMeetingRequest, v1.UpdateMeetingResponse](
+			httpClient,
+			baseURL+CommitteeServiceUpdateMeetingProcedure,
+			connect.WithSchema(committeeServiceMethods.ByName("UpdateMeeting")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteMeeting: connect.NewClient[v1.DeleteMeetingRequest, v1.DeleteMeetingResponse](
@@ -179,6 +189,7 @@ type committeeServiceClient struct {
 	listMyCommittees         *connect.Client[v1.ListMyCommitteesRequest, v1.ListMyCommitteesResponse]
 	getCommitteeOverview     *connect.Client[v1.GetCommitteeOverviewRequest, v1.GetCommitteeOverviewResponse]
 	createMeeting            *connect.Client[v1.CreateMeetingRequest, v1.CreateMeetingResponse]
+	updateMeeting            *connect.Client[v1.UpdateMeetingRequest, v1.UpdateMeetingResponse]
 	deleteMeeting            *connect.Client[v1.DeleteMeetingRequest, v1.DeleteMeetingResponse]
 	toggleMeetingActive      *connect.Client[v1.ToggleMeetingActiveRequest, v1.ToggleMeetingActiveResponse]
 	listCommitteeMembers     *connect.Client[v1.ListCommitteeMembersRequest, v1.ListCommitteeMembersResponse]
@@ -203,6 +214,11 @@ func (c *committeeServiceClient) GetCommitteeOverview(ctx context.Context, req *
 // CreateMeeting calls conference.committees.v1.CommitteeService.CreateMeeting.
 func (c *committeeServiceClient) CreateMeeting(ctx context.Context, req *connect.Request[v1.CreateMeetingRequest]) (*connect.Response[v1.CreateMeetingResponse], error) {
 	return c.createMeeting.CallUnary(ctx, req)
+}
+
+// UpdateMeeting calls conference.committees.v1.CommitteeService.UpdateMeeting.
+func (c *committeeServiceClient) UpdateMeeting(ctx context.Context, req *connect.Request[v1.UpdateMeetingRequest]) (*connect.Response[v1.UpdateMeetingResponse], error) {
+	return c.updateMeeting.CallUnary(ctx, req)
 }
 
 // DeleteMeeting calls conference.committees.v1.CommitteeService.DeleteMeeting.
@@ -257,6 +273,7 @@ type CommitteeServiceHandler interface {
 	ListMyCommittees(context.Context, *connect.Request[v1.ListMyCommitteesRequest]) (*connect.Response[v1.ListMyCommitteesResponse], error)
 	GetCommitteeOverview(context.Context, *connect.Request[v1.GetCommitteeOverviewRequest]) (*connect.Response[v1.GetCommitteeOverviewResponse], error)
 	CreateMeeting(context.Context, *connect.Request[v1.CreateMeetingRequest]) (*connect.Response[v1.CreateMeetingResponse], error)
+	UpdateMeeting(context.Context, *connect.Request[v1.UpdateMeetingRequest]) (*connect.Response[v1.UpdateMeetingResponse], error)
 	DeleteMeeting(context.Context, *connect.Request[v1.DeleteMeetingRequest]) (*connect.Response[v1.DeleteMeetingResponse], error)
 	ToggleMeetingActive(context.Context, *connect.Request[v1.ToggleMeetingActiveRequest]) (*connect.Response[v1.ToggleMeetingActiveResponse], error)
 	// Member management (chairperson or admin)
@@ -292,6 +309,12 @@ func NewCommitteeServiceHandler(svc CommitteeServiceHandler, opts ...connect.Han
 		CommitteeServiceCreateMeetingProcedure,
 		svc.CreateMeeting,
 		connect.WithSchema(committeeServiceMethods.ByName("CreateMeeting")),
+		connect.WithHandlerOptions(opts...),
+	)
+	committeeServiceUpdateMeetingHandler := connect.NewUnaryHandler(
+		CommitteeServiceUpdateMeetingProcedure,
+		svc.UpdateMeeting,
+		connect.WithSchema(committeeServiceMethods.ByName("UpdateMeeting")),
 		connect.WithHandlerOptions(opts...),
 	)
 	committeeServiceDeleteMeetingHandler := connect.NewUnaryHandler(
@@ -356,6 +379,8 @@ func NewCommitteeServiceHandler(svc CommitteeServiceHandler, opts ...connect.Han
 			committeeServiceGetCommitteeOverviewHandler.ServeHTTP(w, r)
 		case CommitteeServiceCreateMeetingProcedure:
 			committeeServiceCreateMeetingHandler.ServeHTTP(w, r)
+		case CommitteeServiceUpdateMeetingProcedure:
+			committeeServiceUpdateMeetingHandler.ServeHTTP(w, r)
 		case CommitteeServiceDeleteMeetingProcedure:
 			committeeServiceDeleteMeetingHandler.ServeHTTP(w, r)
 		case CommitteeServiceToggleMeetingActiveProcedure:
@@ -393,6 +418,10 @@ func (UnimplementedCommitteeServiceHandler) GetCommitteeOverview(context.Context
 
 func (UnimplementedCommitteeServiceHandler) CreateMeeting(context.Context, *connect.Request[v1.CreateMeetingRequest]) (*connect.Response[v1.CreateMeetingResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.CreateMeeting is not implemented"))
+}
+
+func (UnimplementedCommitteeServiceHandler) UpdateMeeting(context.Context, *connect.Request[v1.UpdateMeetingRequest]) (*connect.Response[v1.UpdateMeetingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("conference.committees.v1.CommitteeService.UpdateMeeting is not implemented"))
 }
 
 func (UnimplementedCommitteeServiceHandler) DeleteMeeting(context.Context, *connect.Request[v1.DeleteMeetingRequest]) (*connect.Response[v1.DeleteMeetingResponse], error) {

@@ -119,6 +119,7 @@ type Repository interface {
 	SetMeetingQuotationOrder(ctx context.Context, id int64, order []string) error
 	SetMeetingModerator(ctx context.Context, id int64, moderatorID *int64) error
 	SetMeetingDatetime(ctx context.Context, id int64, startAt, endAt *time.Time) error
+	UpdateMeetingDetails(ctx context.Context, id int64, name, description string, startAt, endAt *time.Time) error
 
 	// Binary blobs
 	CreateBlob(ctx context.Context, filename, contentType string, sizeBytes int64, storagePath string) (*model.BinaryBlob, error)
